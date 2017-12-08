@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from ..GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
@@ -41,16 +41,16 @@ class BindingSite(GenomicRegion):
 
     def __str__(self):
         """Give informal string representation."""
-        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
+        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp,
                   self.motif, self.orientation, self.seq ]
-        return '-'.join( [str(x) for x in infos if x] )
-        
+        return ','.join( [str(x) for x in infos if x] )
+
     def __repr__(self):
         """Return official representation of GenomicRegion."""
-        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
+        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp,
                   self.motif, self.orientation, self.seq ]
-        return ','.join( [str(x) for x in infos if x] ) 
-        
+        return ','.join( [str(x) for x in infos if x] )
+
     def __len__(self):
         """Return the length of the binding site."""
         return self.final - self.initial
@@ -60,7 +60,7 @@ class BindingSite(GenomicRegion):
 
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))
-                        
+
     def str_rna(self, pa=True):
         if pa:
             return "{0}-{1}-{2}".format(self.initial, self.final, self.orientation)

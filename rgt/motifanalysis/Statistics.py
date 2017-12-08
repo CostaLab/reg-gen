@@ -7,9 +7,9 @@
 from __future__ import print_function
 
 # Internal
-from rgt.GeneSet import GeneSet
-from rgt.Util import OverlapType
-from rgt.GenomicRegionSet import GenomicRegionSet
+from ..GeneSet import GeneSet
+from ..Util import OverlapType
+from ..GenomicRegionSet import GenomicRegionSet
 
 # External
 from numpy import asarray, argsort, sum, arange, nonzero, minimum

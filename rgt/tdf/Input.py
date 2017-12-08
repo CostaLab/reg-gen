@@ -5,24 +5,26 @@ import os
 import sys
 import pickle
 import shutil
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.AnnotationSet import AnnotationSet
-from rgt.Util import GenomeData
-from rgt.tdf.triplexTools import get_rna_region_str, rna_associated_gene, connect_rna
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..AnnotationSet import AnnotationSet
+from ..Util import GenomeData
+from ..tdf.triplexTools import get_rna_region_str, rna_associated_gene, connect_rna
+
 
 def load_dump(path, filename):
-    file = open(os.path.join(path,filename),'r')
-    object = pickle.load(file)
-    file.close()
-    print("\tLoading from file: "+filename)
-    return object
+    f = open(os.path.join(path, filename), 'r')
+    object_dump = pickle.load(f)
+    f.close()
+    print("\tLoading from file: " + filename)
+    return object_dump
+
 
 def dump(object, path, filename):
-    file = open(os.path.join(path,filename),'wb')
-    pickle.dump(object,file)
-    file.close()
-    print("\tDump to file: "+filename)
+    f = open(os.path.join(path, filename), 'wb')
+    pickle.dump(object, f)
+    f.close()
+    print("\tDump to file: " + filename)
 
 
 def check_geneset_empty(geneset, filename, outdir):
@@ -35,8 +37,10 @@ def check_geneset_empty(geneset, filename, outdir):
             pass
         sys.exit(1)
 
+
 class Input(object):
     """Process all the input files for TDF"""
+
     def __init__(self, pars):
         self.genome = GenomeData(organism=pars.organism)
         self.organism = pars.organism
@@ -84,20 +88,23 @@ class Input(object):
                                     filter_havana=self.pars.filter_havana,
                                     protein_coding=self.pars.protein_coding,
                                     known_only=self.pars.known_only)
-                self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl,
-                                                      gene_set=self.de_genes,
-                                                      regiondata=self.pars.score,
-                                                      unmaplist=True, variants=False)
+                self.target_regions, unmapped = ann.get_promoters(promoter_length=self.pars.pl, tss=self.pars.tss,
+                                                                  gene_set=self.de_genes,
+                                                                  regiondata=self.pars.score,
+                                                                  unmaplist=True, variants=False)
                 if self.pars.score:
                     self.scores = self.target_regions.get_score_dict()
 
                 #######################
                 # Non DE genes
                 self.nde_genes = GeneSet("nde genes")
-                self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
+                if self.pars.bg and self.pars.bg.endswith(".txt"):
+                    self.nde_genes.read(self.pars.bg)
+                else:
+                    self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
 
-                self.nontarget_regions = ann.get_promoters(promoterLength=self.pars.pl,
-                                                       gene_set=self.nde_genes, unmaplist=False)
+                self.nontarget_regions = ann.get_promoters(promoter_length=self.pars.pl,
+                                                           gene_set=self.nde_genes, unmaplist=False)
                 # print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
                 self.nontarget_regions.merge(namedistinct=True)
 
@@ -132,10 +139,10 @@ class Input(object):
             if self.pars.score:
                 self.scores = self.target_regions.get_score_dict()
 
-            # for rbs in self.rbss:
-            #     tr = len(self.txp.merged_dict[rbs])
-            #     self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
-            #     self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
+                # for rbs in self.rbss:
+                #     tr = len(self.txp.merged_dict[rbs])
+                #     self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
+                #     self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
 
     class RNA:
         def __init__(self, pars):
@@ -170,4 +177,3 @@ class Input(object):
             d = connect_rna(self.pars.r, self.pars.o, self.name)
             self.num_exons = d[0]
             self.seq_length = d[1]
-

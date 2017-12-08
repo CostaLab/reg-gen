@@ -12,12 +12,11 @@ Filter VCF files by pipeline described in README.
 
 """
 from __future__ import print_function
-#import pydevd;pydevd.settrace()
 from optparse import OptionParser
 import sys
-from rgt.GenomicVariantSet import GenomicVariantSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from max_density import AlgGoldwasser
+from ..GenomicVariantSet import GenomicVariantSet
+from ..GenomicRegionSet import GenomicRegionSet
+from .max_density import AlgGoldwasser
 from itertools import combinations
 from copy import copy
 

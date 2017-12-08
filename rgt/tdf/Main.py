@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 # Local Libraries
 # Distal Libraries
-from rgt import __version__
+from .. import __version__
 # from rgt.Util import Html
 from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
@@ -22,10 +22,10 @@ from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_i
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
-from rgt.tdf.Input import Input
-from rgt.tdf.Triplexes import Triplexes
-from rgt.tdf.Statistics import Statistics
-from rgt.tdf.Report import Report
+from ..tdf.Input import Input
+from ..tdf.Triplexes import Triplexes
+from ..tdf.Statistics import Statistics
+from ..tdf.Report import Report
 
 
 dir = os.getcwd()
@@ -59,7 +59,7 @@ def main():
     h_promotor = "Promoter test evaluates the association between the given lncRNA to the target promoters."
     parser_promotertest = subparsers.add_parser('promotertest', help=h_promotor)
     parser_promotertest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
-    parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for name and file path to all RNA sequences (in fasta format)")
+    # parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for name and file path to all RNA sequences (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, metavar='  ', help="Define the RNA name")
     parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for target gene list (gene symbols or Ensembl ID)")
     parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of target genes")
@@ -69,7 +69,7 @@ def main():
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism')
     parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
-
+    parser_promotertest.add_argument('-tss', type=int, default=0, metavar='  ', help="Define the distance between the promoter regions and TSS along gene body (default: %(default)s)")
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (default: %(default)s)")
     
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
@@ -212,14 +212,14 @@ def main():
                 integrate_stat(path=target)
                 summerize_stat(target=target, link_d=link_d, score=args.exp)
             # Project level index file
-            integrate_html(args.path)
+
             for item in os.listdir(args.path):
                 # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue
                 elif os.path.isdir(os.path.join(args.path, item)):
-                    integrate_html(os.path.join(args.path, item))
+
                     for it in os.listdir(os.path.join(args.path, item)):
                         # print("\t" + item + "\t" + it)
                         if it == "style": continue
@@ -227,7 +227,8 @@ def main():
                             continue
                         elif os.path.isdir(os.path.join(args.path, item, it)):
                             integrate_html(os.path.join(args.path, item, it))
-
+                    integrate_html(os.path.join(args.path, item))
+            integrate_html(args.path)
 
             # gen_heatmap(path=args.path)
             # generate_rna_exp_pv_table(root=args.path, multi_corr=False)
@@ -267,45 +268,45 @@ def main():
         if not args.organism: 
             print("Please define the organism. (hg19 or mm9)")
             sys.exit(1)
-        if not args.rn and not args.rl: 
+        if not args.rn:
             print("Please define RNA sequence name.")
             sys.exit(1)
-        if args.r and args.rl:
-            print("Both -r and -rl are given. TDF will skip -r and process -rl ")
-        if args.rl:
-            with open(args.rl) as f:
-                for line in f:
-                    line = line.strip()
-                    rn = os.path.basename(line).rpartition(".")[0]
-                    print("\tProcessing: "+rn)
-                    command = ["rgt-TDF", args.mode,
-                               "-r", line, "-rn", rn,
-                               "-o", os.path.join(args.o, rn),
-                               "-organism", args.organism ]
-                    if args.de and not args.bed: command += ["-de", args.de]
-                    if args.bed and args.bg: command += ["-bed", args.bed, "-bg", args.bg]
-
-                    if args.score: command += ["-score"]
-                    if args.rt: command += ["-rt" ]
-                    if args.pl != 1000: command += ["-pl", args.pl]
-                    if args.ccf != 40: command += ["-ccf", args.ccf]
-                    if args.obed: command += ["-obed"]
-                    if args.a != 0.05: command += ["-a", args.a]
-                    if args.filter_havana == 'F': command += ["-filter_havana", 'F']
-                    if args.protein_coding == 'T': command += ["-protein_coding", 'T']
-                    if args.known_only == 'F': command += ["-known_only", 'F']
-
-                    if args.rm > 0: command += ["-rm", args.rm ]
-                    if args.fr != 'off': command += ["-fr", args.fr ]
-                    if args.c != 2: command += ["-c", args.c ]
-                    if args.e != 20: command += ["-e", args.e ]
-                    if args.of != 1: command += ["-of", args.of ]
-                    if args.l != 15: command += ["-l", args.l ]
-                    if args.fr != 'off': command += ["-fr", args.fr ]
-                    if args.fr != 'off': command += ["-fr", args.fr ]
-                    if args.fr != 'off': command += ["-fr", args.fr ]
-                    subprocess.call(command)
-            sys.exit(0)
+        # if args.r and args.rl:
+        #     print("Both -r and -rl are given. TDF will skip -r and process -rl ")
+        # if args.rl:
+        #     with open(args.rl) as f:
+        #         for line in f:
+        #             line = line.strip()
+        #             rn = os.path.basename(line).rpartition(".")[0]
+        #             print("\tProcessing: "+rn)
+        #             command = ["rgt-TDF", args.mode,
+        #                        "-r", line, "-rn", rn,
+        #                        "-o", os.path.join(args.o, rn),
+        #                        "-organism", args.organism ]
+        #             if args.de and not args.bed: command += ["-de", args.de]
+        #             if args.bed and args.bg: command += ["-bed", args.bed, "-bg", args.bg]
+        #
+        #             if args.score: command += ["-score"]
+        #             if args.rt: command += ["-rt" ]
+        #             if args.pl != 1000: command += ["-pl", args.pl]
+        #             if args.ccf != 40: command += ["-ccf", args.ccf]
+        #             if args.obed: command += ["-obed"]
+        #             if args.a != 0.05: command += ["-a", args.a]
+        #             if args.filter_havana == 'F': command += ["-filter_havana", 'F']
+        #             if args.protein_coding == 'T': command += ["-protein_coding", 'T']
+        #             if args.known_only == 'F': command += ["-known_only", 'F']
+        #
+        #             if args.rm > 0: command += ["-rm", args.rm ]
+        #             if args.fr != 'off': command += ["-fr", args.fr ]
+        #             if args.c != 2: command += ["-c", args.c ]
+        #             if args.e != 20: command += ["-e", args.e ]
+        #             if args.of != 1: command += ["-of", args.of ]
+        #             if args.l != 15: command += ["-l", args.l ]
+        #             if args.fr != 'off': command += ["-fr", args.fr ]
+        #             if args.fr != 'off': command += ["-fr", args.fr ]
+        #             if args.fr != 'off': command += ["-fr", args.fr ]
+        #             subprocess.call(command)
+        #     sys.exit(0)
 
         t0 = time.time()
         # Normalised output path

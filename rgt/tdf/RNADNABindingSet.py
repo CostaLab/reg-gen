@@ -4,9 +4,9 @@ import numpy
 # Local Libraries
 
 # Distal Libraries
-from rgt.GenomicRegionSet import *
-from rgt.Util import OverlapType
-from BindingSiteSet import BindingSite, BindingSiteSet
+from ..GenomicRegionSet import *
+from ..Util import OverlapType
+from .BindingSiteSet import BindingSite, BindingSiteSet
 
 class RNADNABinding:
     """Describe a binding event of RNA and DNA to form a triplex 

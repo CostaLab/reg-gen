@@ -1,32 +1,39 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
-import re
-import sys
-import time
-import numpy
-import pickle
-import fnmatch
-import urllib2
+from __future__ import print_function
+
 import datetime
-from shutil import copyfile
+import fnmatch
 import multiprocessing.pool
+import pickle
+import re
+import time
+
+from shutil import copyfile
+
 import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colormat
 import matplotlib.cm as cmx
+import matplotlib.colors as colormat
+import matplotlib.pyplot as plt
+import numpy
 from matplotlib.backends.backend_pdf import PdfPages
 
+from ..AnnotationSet import AnnotationSet
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from rgt.AnnotationSet import AnnotationSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
+from ..Util import Html
+from ..motifanalysis.Statistics import multiple_test_correction
+
+if sys.version_info >= (3, 1):
+    from urllib.request import urlopen
+else:
+    import urllib2
 
 # Local test
-dir = os.getcwd()
+current_dir = os.getcwd()
+
 
 ###########################################################################################
 #                    Universal functions
@@ -44,13 +51,13 @@ def unique(a):
     return [seen.add(x) or x for x in a if x not in seen]
 
 
-def purge(dir, pattern):
-    for f in os.listdir(dir):
+def purge(directory, pattern):
+    for f in os.listdir(directory):
         if re.search(pattern, f):
-            os.remove(os.path.join(dir, f))
+            os.remove(os.path.join(directory, f))
 
 
-def gen_tags(exps, tag):
+def gen_tags(exps, tag, region_len=False):
     """Generate the unique tags from the EM according to the given tag. """
     if "factor" not in exps.fields:
         exps.add_factor_col()
@@ -61,11 +68,16 @@ def gen_tags(exps, tag):
             # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     elif tag == "regions":
-        try:
+        # try:
+        if not region_len:
             l = [exps.get_type(i, "factor") for i in exps.get_regionsnames()]
-        except:
-            # print("You must define 'factor' column in experimental matrix for grouping.")
-            sys.exit(1)
+        else:
+            l = [exps.get_type(i, "factor") + "(" + str(len(exps.get_regionsets()[i])) + ")" for i, n in
+                 enumerate(exps.get_regionsnames())]
+
+        # except:
+        #     # print("You must define 'factor' column in experimental matrix for grouping.")
+        #     sys.exit(1)
     else:
         l = exps.fieldsDict[tag]
         try:
@@ -180,9 +192,7 @@ def colormaps(exps, colorby, definedinEM):
             n = len(exps.fieldsDict["factor"].keys())
         else:
             n = len(exps.fieldsDict[colorby].keys())
-        colors = plt.cm.Set1(numpy.linspace(0, n-1, n)).tolist()
-
-
+        colors = plt.cm.Set1(numpy.linspace(0, n - 1, n)).tolist()
         # if len(exps.get_regionsnames()) < 20:
         #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu',
         #              'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
@@ -231,7 +241,7 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
 
 def output_array(array, directory, folder, filename):
     """ Write a txt file from the given array. """
-    pd = os.path.join(dir, directory, folder)
+    pd = os.path.join(current_dir, directory, folder)
     try:
         os.stat(os.path.dirname(pd))
     except:
@@ -293,11 +303,11 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
         if threshold:
             if bed1.total_coverage() == 0:
                 print(
-                "\n ** Warning : " + bed1.name + " has no length (only points) for finding intersection with given threshold.")
+                    "\n ** Warning : " + bed1.name + " has no length (only points) for finding intersection with given threshold.")
                 sys.exit(1)
             if bed2.total_coverage() == 0:
                 print(
-                "\n ** Warning : " + bed2.name + " has no length (only points) for finding intersection with given threshold.")
+                    "\n ** Warning : " + bed2.name + " has no length (only points) for finding intersection with given threshold.")
                 sys.exit(1)
             if 50 >= threshold > 0:
                 bed1.extend(-threshold, -threshold, percentage=True)
@@ -326,11 +336,11 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
 
 
 def value2str(value):
-    if (isinstance(value, str)): return value
+    if isinstance(value, str): return value
     if value == 0: return "0"
-    if (isinstance(value, int)):
+    if isinstance(value, int):
         return str(value)
-    elif (isinstance(value, float)):
+    elif isinstance(value, float):
         if value >= 1000:
             r = "{}".format(int(value))
         elif 1000 > value > 10:
@@ -378,26 +388,26 @@ def multiple_correction(dic):
                     pass
 
 
-def compute_coverage(input):
+def compute_coverage(inputs):
     """
     bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c, d
     """
     ts = time.time()
-    cov = CoverageSet(input[0].name + ".", input[0])
-    if ".bigWig" in input[1] or ".bw" in input[1]:
-        cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
+    cov = CoverageSet(inputs[0].name + ".", inputs[0])
+    if ".bigWig" in inputs[1] or ".bw" in inputs[1]:
+        cov.coverage_from_bigwig(bigwig_file=inputs[1], stepsize=inputs[4])
     else:
-        cov.coverage_from_bam(bam_file=input[1], extension_size=input[2], binsize=input[3], stepsize=input[4])
+        cov.coverage_from_bam(bam_file=inputs[1], extension_size=inputs[2], binsize=inputs[3], stepsize=inputs[4])
         cov.normRPM()
     # When bothends, consider the fliping end
-    if input[5] == 'bothends':
-        flap = CoverageSet("for flap", input[0])
-        flap.coverage_from_bam(input[1], extension_size=input[2], binsize=input[3], stepsize=input[4])
+    if inputs[5] == 'bothends':
+        flap = CoverageSet("for flap", inputs[0])
+        flap.coverage_from_bam(inputs[1], extension_size=inputs[2], binsize=inputs[3], stepsize=inputs[4])
         ffcoverage = numpy.fliplr(flap.coverage)
         cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
     # Averaging the coverage of all regions of each bed file
-    if input[6]:
-        if input[7]:
+    if inputs[6]:
+        if inputs[7]:
             result = numpy.log10(numpy.vstack(cov.coverage))  # Store the array into data list
         else:
             result = numpy.vstack(cov.coverage)  # Store the array into data list
@@ -417,9 +427,9 @@ def compute_coverage(input):
         # print(avearr.shape)
         avearr = numpy.average(avearr, axis=0)
         # numpy.transpose(avearr)
-        result = [input[8], input[9], input[10], input[11], avearr]  # Store the array into data list
+        result = [inputs[8], inputs[9], inputs[10], inputs[11], avearr]  # Store the array into data list
     te = time.time()
-    print("\tComputing " + os.path.basename(input[1]) + " . " + input[0].name + "\t\t" + str(
+    print("\tComputing " + os.path.basename(inputs[1]) + " . " + inputs[0].name + "\t\t" + str(
         datetime.timedelta(seconds=round(te - ts))))
     return result
 
@@ -475,28 +485,35 @@ def mp_count_intersect(inputs):
 
 
 def get_url(url, filename):
-    # file_name = url.split('/')[-1]
-    u = urllib2.urlopen(url)
-    print("** Loading " + url, end="")
-    f = open(filename, 'wb')
-    print(u.read(), file=f)
-    f.close()
-    print("\t... Done")
+    if sys.version_info >= (3, 1):
+        u = urlopen(url)
+        print("** Loading " + url, end="")
+        f = open(filename, 'wb')
+        print(u.read(), file=f)
+        f.close()
+        print("\t... Done")
+    else:
+        u = urllib2.urlopen(url)
+        print("** Loading " + url, end="")
+        f = open(filename, 'wb')
+        print(u.read(), file=f)
+        f.close()
+        print("\t... Done")
 
 
 def load_dump(path, filename):
     print("\tLoading from file: " + filename)
-    file = open(os.path.join(path, filename), 'r')
-    object = pickle.load(file)
-    file.close()
-    return object
+    f = open(os.path.join(path, filename), 'r')
+    ob = pickle.load(f)
+    f.close()
+    return ob
 
 
 def dump(object, path, filename):
     print("\tDump to file: " + filename)
-    file = open(os.path.join(path, filename), 'wb')
-    pickle.dump(object, file)
-    file.close()
+    f = open(os.path.join(path, filename), 'wb')
+    pickle.dump(object, f)
+    f.close()
 
 
 def read_gtf(gd, organism):
@@ -562,16 +579,12 @@ def annotation_dump(organism):
 
     # bednames = ["TSS", "TTS", "Exon start site", "Exon end site", "Intron start site", "Intron end site"]
     bednames = ["TSS", "TTS", "Exon start site", "Exon end site"]
-
     annotation = bednames
-
     return beds, bednames, annotation
-
-
 
 def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
     """Output the file in the defined folder """
-    pd = os.path.normpath(os.path.join(dir, directory, folder))
+    pd = os.path.normpath(os.path.join(current_dir, directory, folder))
     try:
         os.stat(os.path.dirname(pd))
     except:
@@ -587,12 +600,12 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
                   bbox_inches='tight', dpi=400)
     else:
         f.savefig(os.path.join(pd, filename), facecolor='w', edgecolor='w',
-                  bbox_extra_artists=(extra), bbox_inches='tight', dpi=400)
+                  bbox_extra_artists=extra, bbox_inches='tight', dpi=400)
 
     if pdf:
         try:
             pp = PdfPages(os.path.join(pd, filename) + '.pdf')
-            pp.savefig(f, bbox_extra_artists=(extra), bbox_inches='tight')
+            pp.savefig(f, bbox_extra_artists=extra, bbox_inches='tight')
             pp.close()
         except:
             print("ERROR: Problem in PDF conversion. Skipped.")
@@ -601,7 +614,7 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
 
 
 def output_parameters(parameter, directory, folder, filename):
-    pd = os.path.join(dir, directory, folder)
+    pd = os.path.join(current_dir, directory, folder)
     try:
         os.stat(os.path.dirname(pd))
     except:
@@ -617,7 +630,7 @@ def output_parameters(parameter, directory, folder, filename):
 
 
 def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
-    copyfile(em, os.path.join(dir, directory, folder, filename))
+    copyfile(em, os.path.join(current_dir, directory, folder, filename))
 
 
 def list_all_index(path):
@@ -665,6 +678,7 @@ def check_dir(path):
         os.stat(path)
     except:
         os.mkdir(path)
+
 
 def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
     '''
@@ -733,6 +747,9 @@ class NoDaemonProcess(multiprocessing.Process):
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
 class MyPool(multiprocessing.pool.Pool):
+    def __reduce__(self):
+        pass
+
     Process = NoDaemonProcess
 
 

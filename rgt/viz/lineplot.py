@@ -4,15 +4,21 @@ from __future__ import division
 import time
 import numpy
 import matplotlib.pyplot as plt
+import os
+from collections import OrderedDict, defaultdict
+from scipy.stats import stats
 
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
+from rgt.CoverageSet import CoverageSet
+from rgt.ExperimentalMatrix import ExperimentalMatrix
 from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
+
+
 # Local test
-dir = os.getcwd()
+# dir_path = os.getcwd()
+
 
 ###########################################################################################
 #                    Lineplot
@@ -20,18 +26,18 @@ dir = os.getcwd()
 
 
 class Lineplot:
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss,
-                 df, dft, fields, test, sense, strand):
+    def __init__(self, em_path, title, annotation, organism, center, extend, rs, bs, ss,
+                 df, dft, fields, test, sense, strand, flipnegative):
 
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(EMpath, test=test)
+        self.exps.read(em_path, test=test, add_region_len=True)
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f, test=test)
                 self.exps.remove_name()
-
+        # print(self.exps.fieldsDict)
         # if annotation:
         #     self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
@@ -53,10 +59,12 @@ class Lineplot:
         self.dft = dft
         self.sense = sense
         self.strand = strand
+        self.flipnegative = flipnegative
 
-    def relocate_bed(self):
         self.processed_beds = []
         self.processed_bedsF = []  # Processed beds to be flapped
+
+    def relocate_bed(self):
 
         for bed in self.beds:
             if self.center == 'bothends':
@@ -77,44 +85,53 @@ class Lineplot:
                 newbedF = allbed.filter_strand(strand="-")
                 self.processed_bedsF.append(newbedF)
             else:
-                newbed = bed.relocate_regions(center=self.center,
+                allbed = bed.relocate_regions(center=self.center,
                                               left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
                                               right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
-                self.processed_beds.append(newbed)
+                self.processed_beds.append(allbed)
 
-    def group_tags(self, groupby, sortby, colorby):
+    def group_tags(self, groupby, rowby, columnby, colorby):
         """Generate the tags for the grouping of plot
         Parameters:
             groupby = 'reads','regions','cell',or 'factor'
             colorby = 'reads','regions','cell',or 'factor'
             sortby = 'reads','regions','cell',or 'factor'
         """
-        self.tag_type = [sortby, groupby, colorby, self.dft]
-        if "None" in self.tag_type: self.tag_type.remove("None")
+        self.tag_type = [groupby, rowby, columnby, colorby, self.dft]
+        if "None" in self.tag_type:
+            self.tag_type.remove("None")
 
         if groupby == "None":
             self.group_tags = [""]
         elif groupby == "regions" and self.annotation:
             self.group_tags = self.bednames
         else:
-            self.group_tags = gen_tags(self.exps, groupby)
+            self.group_tags = gen_tags(self.exps, groupby, region_len=False)
 
-        if sortby == "None":
-            self.sort_tags = [""]
-        elif sortby == "regions" and self.annotation:
-            self.sort_tags = self.bednames
+        if rowby == "None":
+            self.row_tags = [""]
+        elif rowby == "regions" and self.annotation:
+            self.row_tags = self.bednames
         else:
-            self.sort_tags = gen_tags(self.exps, sortby)
+            self.row_tags = gen_tags(self.exps, rowby, region_len=False)
+
+        if columnby == "None":
+            self.column_tags = [""]
+        elif columnby == "regions" and self.annotation:
+            self.column_tags = self.bednames
+        else:
+            self.column_tags = gen_tags(self.exps, columnby, region_len=False)
 
         if colorby == "None":
             self.color_tags = [""]
         elif colorby == "regions" and self.annotation:
             self.color_tags = self.bednames
         else:
-            self.color_tags = gen_tags(self.exps, colorby)
+            self.color_tags = gen_tags(self.exps, colorby, region_len=False)
 
-        print("\tColumn labels:\t" + ",".join(self.group_tags))
-        print("\tRow labels:\t" + ",".join(self.sort_tags))
+        print("\tGroup labels:\t" + ",".join(self.group_tags))
+        print("\tRow labels:\t" + ",".join(self.row_tags))
+        print("\tColumn labels:\t" + ",".join(self.column_tags))
         print("\tColor labels:\t" + ",".join(self.color_tags))
 
     def gen_cues(self):
@@ -132,6 +149,7 @@ class Lineplot:
         # else:
         for bed in self.bednames:
             self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
+            # print(self.cuebed[bed])
             try:
                 self.cuebed[bed].remove("None")
             except:
@@ -143,219 +161,255 @@ class Lineplot:
 
         def annot_ind(bednames, tags):
             """Find the index for annotation tag"""
-            for ind, a in enumerate(bednames):
-                if a in tags: return ind
+            for ind, a_region in enumerate(bednames):
+                if a_region in tags: return ind
 
-        if mp > 0: ts = time.time()
+        if mp > 0:
+            ts = time.time()
         normRPM = False
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
 
         bi = 0
-        for s in self.sort_tags:
-            data[s] = OrderedDict()
-            for g in self.group_tags:
-                data[s][g] = OrderedDict()
-                for c in self.color_tags:
-                    # if self.df: data[s][g][c] = []
-                    data[s][g][c] = OrderedDict()
-                    if not self.dft:
-                        dfs = [c]
-                    else:
-                        if self.dft =="regions":
-                            dfs = self.exps.get_regionsnames()
-                        elif self.dft == "reads":
-                            dfs = self.exps.get_readsnames()
+        for g in self.group_tags:
+            data[g] = OrderedDict()
+            for r in self.row_tags:
+                data[g][r] = OrderedDict()
+                for c in self.column_tags:
+                    data[g][r][c] = OrderedDict()
+                    for cc in self.color_tags:
+                        # if self.df: data[s][g][c] = []
+                        data[g][r][c][cc] = OrderedDict()
+                        if not self.dft:
+                            dfs = [cc]
                         else:
-                            dfs = self.exps.fieldsDict[self.dft].keys()
-                    for d in dfs:
-                        data[s][g][c][d] = defaultdict(list)
-                        for bed in self.cuebed.keys():
-                            # print(self.cuebed[bed])
-                            # print(set([s,g,c,d]))
-                            # print(self.cuebed[bed].issubset(set([s,g,c,d])))
-                            if len(self.cuebed[bed].intersection(set([s, g, c, d]))) > 2 or self.cuebed[bed].issubset(
-                                    set([s, g, c, d])):
-                                # if self.cuebed[bed] <= set([s,g,c]):
-                                for bam in self.cuebam.keys():
+                            if self.dft == "regions":
+                                dfs = self.exps.get_regionsnames()
+                            elif self.dft == "reads":
+                                dfs = self.exps.get_readsnames()
+                            else:
+                                dfs = self.exps.fieldsDict[self.dft].keys()
 
-                                    # print(self.cuebam[bam])
-                                    # print(set([s,g,c]))
-                                    if self.cuebam[bam] <= set([s, g, c, d]):
-                                        i = self.bednames.index(bed)
-                                        j = self.readsnames.index(bam)
-                                        # print(bed + "." + bam)
+                        for d in dfs:
+                            data[g][r][c][cc][d] = defaultdict(list)
+                            for bed in self.cuebed.keys():
+                                # print(self.cuebed[bed])
+                                # print(set([s,g,c,d]))
+                                # print(self.cuebed[bed].issubset(set([s,g,c,d])))
+                                if len(self.cuebed[bed].intersection({g, r, c, cc, d})) > 2 or self.cuebed[
+                                    bed].issubset(
+                                    {g, r, c, cc, d}):
+                                    # if self.cuebed[bed] <= set([s,g,c]):
+                                    for bam in self.cuebam.keys():
 
-                                        # if len(self.processed_beds[i]) == 0:
-                                        #     try:
-                                        #         data[s][g][c][d].append(numpy.empty(1, dtype=object))
-                                        #     except:
-                                        #         data[s][g][c][d] = [numpy.empty(1, dtype=object)]
-                                        #     continue
-                                        #########################################################################
-                                        if mp > 0:  # Multiple processing
-                                            mp_input.append([self.processed_beds[i], self.reads[j],
-                                                             self.rs, self.bs, self.ss, self.center, heatmap, logt,
-                                                             s, g, c, d])
-                                            data[s][g][c][d] = None
+                                        # print(self.cuebam[bam])
+                                        # print(set([s,g,c]))
+                                        if self.cuebam[bam] <= {g, r, c, cc, d}:
+                                            i = self.bednames.index(bed)
+                                            j = self.readsnames.index(bam)
+                                            # print(bed + "." + bam)
 
-                                        #########################################################################
-                                        else:  # Single thread
-                                            ts = time.time()
-                                            cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
+                                            # if len(self.processed_beds[i]) == 0:
+                                            #     try:
+                                            #         data[s][g][c][d].append(numpy.empty(1, dtype=object))
+                                            #     except:
+                                            #         data[s][g][c][d] = [numpy.empty(1, dtype=object)]
+                                            #     continue
+                                            #########################################################################
+                                            if mp > 0:  # Multiple processing
+                                                mp_input.append([self.processed_beds[i], self.reads[j],
+                                                                 self.rs, self.bs, self.ss, self.center, heatmap, logt,
+                                                                 g, r, c, cc, d])
+                                                data[g][r][c][cc][d] = None
 
-                                            # print(len(self.processed_beds[i]))
-                                            if "Conservation" in [s,g,c,d]:
-                                                cov.phastCons46way_score(stepsize=self.ss)
+                                            #########################################################################
+                                            else:  # Single thread
+                                                ts = time.time()
+                                                cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
 
-                                            elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
-                                                cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
-                                            else:
-                                                if not self.sense and not self.strand:
-                                                    cov.coverage_from_bam(bam_file=self.reads[j],
-                                                                          extension_size=self.rs, binsize=self.bs,
-                                                                          stepsize=self.ss)
-                                                    if normRPM: cov.normRPM()
-                                                else:  # Sense specific
-                                                    cov.coverage_from_bam(bam_file=self.reads[j],
-                                                                          extension_size=self.rs, binsize=self.bs,
-                                                                          stepsize=self.ss, get_sense_info=self.sense,
-                                                                          get_strand_info=self.strand,
-                                                                          paired_reads=True)
-                                                    cov.array_transpose()
-                                                    if normRPM: cov.normRPM()
+                                                # print(len(self.processed_beds[i]))
+                                                if "Conservation" in [g, r, c, cc, d]:
+                                                    cov.phastCons46way_score(stepsize=self.ss)
 
-                                            # When bothends, consider the fliping end
-                                            if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                if "Conservation" in [s,g,c,d]:
-                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                    flap.phastCons46way_score(stepsize=self.ss)
-                                                    ffcoverage = numpy.fliplr(flap.coverage)
-                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
-                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                    flap.coverage_from_bigwig(bigwig_file=self.reads[j],
+                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
+                                                    j].lower():
+                                                    cov.coverage_from_bigwig(bigwig_file=self.reads[j],
+                                                                             stepsize=self.ss)
+                                                else:
+                                                    if not self.sense and not self.strand:
+                                                        cov.coverage_from_bam(bam_file=self.reads[j],
+                                                                              extension_size=self.rs, binsize=self.bs,
                                                                               stepsize=self.ss)
-                                                    ffcoverage = numpy.fliplr(flap.coverage)
-                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                                else:
-                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                    if not self.sense:
-                                                        flap.coverage_from_bam(self.reads[j], extension_size=self.rs,
-                                                                               binsize=self.bs, stepsize=self.ss)
-                                                        if normRPM: flap.normRPM()
+                                                        if normRPM: cov.normRPM()
                                                     else:  # Sense specific
-                                                        flap.coverage_from_bam(bam_file=self.reads[j],
-                                                                               extension_size=self.rs, binsize=self.bs,
-                                                                               stepsize=self.ss, get_sense_info=True,
-                                                                               paired_reads=True)
-                                                        flap.array_transpose(flip=True)
-                                                        if normRPM: flap.normRPM()
-                                                    ffcoverage = numpy.fliplr(flap.coverage)
-                                                    try: cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                                    except: pass
+                                                        cov.coverage_from_bam(bam_file=self.reads[j],
+                                                                              extension_size=self.rs, binsize=self.bs,
+                                                                              stepsize=self.ss,
+                                                                              get_sense_info=self.sense,
+                                                                              get_strand_info=self.strand,
+                                                                              paired_reads=True)
+                                                        cov.array_transpose()
+                                                        if normRPM: cov.normRPM()
 
-                                                    if self.sense:
-                                                        cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1,
-                                                                                                flap.transpose_cov1),axis=0)
-                                                        cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2,
-                                                                                                flap.transpose_cov2), axis=0)
+                                                if self.center == "midpoint" and self.flipnegative:
+                                                    for k, re in enumerate(self.processed_beds[i]):
+                                                        if re.orientation == "-":
+                                                            # print(k)
+                                                            # print(cov.coverage[k])
+                                                            cov.coverage[k] = cov.coverage[k][::-1]
 
-                                            # Averaging the coverage of all regions of each bed file
-                                            if heatmap:
-                                                if logt:
-                                                    data[s][g][c][d] = numpy.log10(numpy.vstack(
-                                                        cov.coverage) + 1)  # Store the array into data list
+                                                # When bothends, consider the fliping end
+                                                if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
+                                                    if "Conservation" in [g, r, c, cc, d]:
+                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                        flap.phastCons46way_score(stepsize=self.ss)
+                                                        ffcoverage = numpy.fliplr(flap.coverage)
+                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                         axis=0)
+                                                    elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
+                                                        j].lower():
+                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                        flap.coverage_from_bigwig(bigwig_file=self.reads[j],
+                                                                                  stepsize=self.ss)
+                                                        ffcoverage = numpy.fliplr(flap.coverage)
+                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                         axis=0)
+                                                    else:
+                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                        if not self.sense:
+                                                            flap.coverage_from_bam(self.reads[j],
+                                                                                   extension_size=self.rs,
+                                                                                   binsize=self.bs, stepsize=self.ss)
+                                                            if normRPM: flap.normRPM()
+                                                        else:  # Sense specific
+                                                            flap.coverage_from_bam(bam_file=self.reads[j],
+                                                                                   extension_size=self.rs,
+                                                                                   binsize=self.bs,
+                                                                                   stepsize=self.ss,
+                                                                                   get_sense_info=True,
+                                                                                   paired_reads=True)
+                                                            flap.array_transpose(flip=True)
+                                                            if normRPM: flap.normRPM()
+                                                        ffcoverage = numpy.fliplr(flap.coverage)
+                                                        try:
+                                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                             axis=0)
+                                                        except:
+                                                            pass
+
+                                                        if self.sense:
+                                                            cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1,
+                                                                                                    flap.transpose_cov1),
+                                                                                                   axis=0)
+                                                            cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2,
+                                                                                                    flap.transpose_cov2),
+                                                                                                   axis=0)
+
+                                                # Averaging the coverage of all regions of each bed file
+                                                if heatmap:
+                                                    if logt:
+                                                        data[g][r][c][cc][d] = numpy.log10(numpy.vstack(
+                                                            cov.coverage) + 1)  # Store the array into data list
+                                                    else:
+                                                        data[g][r][c][cc][d] = numpy.vstack(
+                                                            cov.coverage)  # Store the array into data list
                                                 else:
-                                                    data[s][g][c][d] = numpy.vstack(
-                                                        cov.coverage)  # Store the array into data list
-                                            else:
-                                                if len(cov.coverage) == 0:
-                                                    data[s][g][c][d] = None
-                                                    print("** Warning: Cannot open " + self.reads[j])
-                                                    continue
-                                                else:
-                                                    for i, car in enumerate(cov.coverage):
-                                                        if i == 0: avearr = np.array(car, ndmin=2)
-                                                        else:
-                                                            # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
-                                                            try: avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
-                                                            except: print(bed+"."+bam+"."+str(i))
-                                                    if log:
-                                                        avearr = numpy.log2(avearr+1)
-
-                                                    avearr = numpy.average(avearr, axis=0)
-                                                    if self.sense or self.strand:
+                                                    if len(cov.coverage) == 0:
+                                                        data[g][r][c][cc][d] = None
+                                                        print("** Warning: Cannot open " + self.reads[j])
+                                                        continue
+                                                    else:
+                                                        for i, car in enumerate(cov.coverage):
+                                                            if i == 0:
+                                                                avearr = numpy.array(car, ndmin=2)
+                                                            else:
+                                                                # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
+                                                                try:
+                                                                    avearr = numpy.vstack(
+                                                                        (avearr, numpy.array(car, ndmin=2)))
+                                                                except:
+                                                                    print(bed + "." + bam + "." + str(i))
                                                         if log:
-                                                            sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
-                                                            sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
-                                                        else:
-                                                            sense_1 = numpy.average(cov.transpose_cov1,axis=0)
-                                                            sense_2 = numpy.average(cov.transpose_cov2,axis=0)
-                                                    cut_end = int(self.bs/self.ss)
-                                                    avearr = avearr[cut_end:-cut_end]
-                                                    data[s][g][c][d]["all"].append(avearr)
+                                                            avearr = numpy.log10(avearr + 1)
 
-                                                    if self.sense or self.strand:
-                                                        sense_1 = sense_1[cut_end:-cut_end]
-                                                        sense_2 = sense_2[cut_end:-cut_end]
-                                                        data[s][g][c][d]["sense_1"].append(sense_1)
-                                                        data[s][g][c][d]["sense_2"].append(sense_2)
+                                                        avearr = numpy.average(avearr, axis=0)
+                                                        if self.sense or self.strand:
+                                                            if log:
+                                                                sense_1 = numpy.average(
+                                                                    numpy.log2(cov.transpose_cov1 + 1), axis=0)
+                                                                sense_2 = numpy.average(
+                                                                    numpy.log2(cov.transpose_cov2 + 1), axis=0)
+                                                            else:
+                                                                sense_1 = numpy.average(cov.transpose_cov1, axis=0)
+                                                                sense_2 = numpy.average(cov.transpose_cov2, axis=0)
+                                                        cut_end = int(self.bs / self.ss)
+                                                        avearr = avearr[cut_end:-cut_end]
+                                                        data[g][r][c][cc][d]["all"].append(avearr)
 
-                                            bi += 1
-                                            te = time.time()
-                                            print2(self.parameter,
-                                                   "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
-                                                       bed + "." + bam, ts - te))
+                                                        if self.sense or self.strand:
+                                                            sense_1 = sense_1[cut_end:-cut_end]
+                                                            sense_2 = sense_2[cut_end:-cut_end]
+                                                            data[g][r][c][cc][d]["sense_1"].append(sense_1)
+                                                            data[g][r][c][cc][d]["sense_2"].append(sense_2)
 
+                                                bi += 1
+                                                te = time.time()
+                                                print2(self.parameter,
+                                                       "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
+                                                           bed + "." + bam, ts - te))
 
         if mp > 0:
             pool = MyPool(mp)
             mp_output = pool.map(compute_coverage, mp_input)
             pool.close()
             pool.join()
-            for s in data.keys():
-                for g in data[s].keys():
-                    for c in data[s][g].keys():
-                        for d in data[s][g][c].keys():
-                            for out in mp_output:
-                                if out[0] == s and out[1] == g and out[2] == c and out[3] == d:
-                                    if self.df:
-                                        try:
-                                            data[s][g][c][d][-1].append(out[4])
-                                        except:
-                                            data[s][g][c][d] = [[out[4]]]
-                                    else:
-                                        try:
-                                            data[s][g][c][d].append(out[4])
-                                        except:
-                                            data[s][g][c][d] = [out[4]]
+            for g in data.keys():
+                for r in data[g].keys():
+                    for c in data[g][r].keys():
+                        for cc in data[g][r][c].keys():
+                            for d in data[g][r][c][cc].keys():
+                                for out in mp_output:
+                                    if out[0] == g and out[1] == r and out[2] == c and out[3] == cc and out[3] == d:
+                                        if self.df:
+                                            try:
+                                                data[g][r][c][cc][d][-1].append(out[4])
+                                            except:
+                                                data[g][r][c][cc][d] = [[out[4]]]
+                                        else:
+                                            try:
+                                                data[g][r][c][cc][d].append(out[4])
+                                            except:
+                                                data[g][r][c][cc][d] = [out[4]]
         if average:
-            for s in data.keys():
-                for g in data[s].keys():
-                    for c in data[s][g].keys():
-                        for d in data[s][g][c].keys():
-                            if isinstance(data[s][g][c][d]["all"], list) and len(data[s][g][c][d]["all"]) > 1:
-                                # print(len(data[s][g][c][d]["all"]), end="")
-                                # print(data[s][g][c][d]["all"])
-                                a = np.array(data[s][g][c][d]["all"])
-                                averaged_array = numpy.array(np.average(a, axis=0))
-                                # print(averaged_array)
-                                # sys.exit(1)
-                                data[s][g][c][d]["all"] = [averaged_array]
-                                # print(len(data[s][g][c][d]["all"]))
+            for g in data.keys():
+                for r in data[g].keys():
+                    for c in data[g][r].keys():
+                        for cc in data[g][r][c].keys():
+                            for d in data[g][r][c][cc].keys():
+                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(
+                                        data[g][r][c][cc][d]["all"]) > 1:
+                                    a = numpy.array(data[g][r][c][cc][d]["all"])
+                                    averaged_array = numpy.array(numpy.average(a, axis=0))
+                                    # print(averaged_array)
+                                    # sys.exit(1)
+                                    data[g][r][c][cc][d]["all"] = [averaged_array]
+                                    # print(len(data[s][g][c][d]["all"]))
         if self.df:
-            for s in data.keys():
-                for g in data[s].keys():
-                    for c in data[s][g].keys():
-                        for d in data[s][g][c].keys():
-                            if isinstance(data[s][g][c][d]["all"], list) and len(data[s][g][c][d]["all"]) > 1:
-                                diff = numpy.subtract(data[s][g][c][d]["all"][0], data[s][g][c][d]["all"][1])
-                                data[s][g][c][d]["df"].append(diff.tolist())
-                            else:
-                                print("Warning: There is no repetitive reads for calculating difference.\n"
-                                      "         Please add one more entry in experimental matrix.")
+            for g in data.keys():
+                for r in data[g].keys():
+                    for c in data[g][r].keys():
+                        for cc in data[g][r][c].keys():
+                            for d in data[g][r][c][cc].keys():
+                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(
+                                        data[g][r][c][cc][d]["all"]) > 1:
+                                    diff = numpy.subtract(data[g][r][c][cc][d]["all"][0],
+                                                          data[g][r][c][cc][d]["all"][1])
+                                    data[g][r][c][cc][d]["df"].append(diff.tolist())
+                                else:
+                                    print("Warning: There is no repetitive reads for calculating difference.\n"
+                                          "         Please add one more entry in experimental matrix.")
+
         self.data = data
 
     def colormap(self, colorby, definedinEM):
@@ -364,8 +418,9 @@ class Lineplot:
         for i, c in enumerate(self.color_tags):
             self.colors[c] = colors[i]
 
-    def plot(self, output, printtable=False, scol=False, srow=False, w=2, h=2):
+    def plot(self, output, printtable=False, scol=False, srow=False, w=2, h=2, ylog=False):
         linewidth = 1
+        self.fig = []
 
         rot = 30
         if len(self.data.values()[0].keys()) < 2:
@@ -375,165 +430,190 @@ class Lineplot:
         tw = len(self.data.values()[0].keys()) * w
         th = len(self.data.keys()) * (h * 0.8)
 
-        f, axs = plt.subplots(len(self.data.keys()), len(self.data.values()[0].keys()), dpi=300,
-                              figsize=(tw, th))
+        for g in self.group_tags:
 
-        yaxmax = [0] * len(self.data.values()[0])
-        sx_ymax = [0] * len(self.data.keys())
-        if self.df:
-            yaxmin = [0] * len(self.data.values()[0])
-            sx_ymin = [0] * len(self.data.keys())
+            f, axs = plt.subplots(len(self.data[g].keys()), len(self.data[g].values()[0].keys()), dpi=300,
+                                  figsize=(tw, th))
 
-        if printtable:
-            bott = self.extend + int(0.5 * self.ss)
-            pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in range(-bott, bott + 10, self.ss)]]  # Header
-        nit = len(self.data.keys())
-        for it, s in enumerate(self.data.keys()):
+            yaxmax = [0] * len(self.data[g].values()[0])
+            sx_ymax = [0] * len(self.data[g].keys())
+            if self.df:
+                yaxmin = [0] * len(self.data[g].values()[0])
+                sx_ymin = [0] * len(self.data[g].keys())
 
-            for i, g in enumerate(self.data[s].keys()):
-                try:
-                    ax = axs[it, i]
-                except:
-                    if len(self.data.keys()) == 1 and len(self.data[s].keys()) == 1:
-                        ax = axs
-                    elif len(self.data.keys()) == 1 and len(self.data[s].keys()) > 1:
-                        ax = axs[i]
-                    else:
-                        ax = axs[it]
+            if printtable:
+                bott = self.extend + int(0.5 * self.ss)
+                pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in
+                                                                          range(-bott, bott + 10, self.ss)]]  # Header
+            nit = len(self.data[g].keys())
+            for ir, r in enumerate(self.data[g].keys()):
 
-                if it == 0:
-                    if self.df:
-                        ax.set_title(g + "_df", fontsize=ticklabelsize + 2)
-                    else:
-                        ax.set_title(g, fontsize=ticklabelsize + 2)
-
-                # Processing for future output
-                for j, c in enumerate(self.data[s][g].keys()):
-
-                    for k, d in enumerate(self.data[s][g][c].keys()):
-                        if not self.data[s][g][c][d]:
-                            continue
+                for ic, c in enumerate(self.data[g][r].keys()):
+                    try:
+                        ax = axs[ir, ic]
+                    except:
+                        if len(self.data[g].keys()) == 1 and len(self.data[g][r].keys()) == 1:
+                            ax = axs
+                        elif len(self.data[g].keys()) == 1 and len(self.data[g][r].keys()) > 1:
+                            ax = axs[ic]
                         else:
-                            if not self.sense and not self.strand:
-                                if self.df: pt = self.data[s][g][c][d]["df"]
-                                else: pt = self.data[s][g][c][d]["all"]
+                            ax = axs[ir]
 
-                                for l, y in enumerate(pt):
-                                    # print(y)
-                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                                    if self.df:
-                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                    if ir == 0:
+                        if self.df:
+                            ax.set_title(c + "_df", fontsize=ticklabelsize + 2)
+                        else:
+                            ax.set_title(c, fontsize=ticklabelsize + 2)
 
-                                    x = numpy.linspace(-self.extend, self.extend, len(y))
-                                    ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
-                                    if it < nit - 1:
-                                        ax.set_xticklabels([])
-                                    # Processing for future output
-                                    if printtable: pArr.append([g, s, c, d] + list(y))
+                    # Processing for future output
+                    for j, cc in enumerate(self.data[g][r][c].keys()):
+
+                        for k, d in enumerate(self.data[g][r][c][cc].keys()):
+                            if not self.data[g][r][c][cc][d]:
+                                continue
                             else:
-                                if self.sense:
-                                    plt.text(0.5, 0.51, 'sense',transform=ax.transAxes,fontsize=ticklabelsize,
-                                             horizontalalignment='center', verticalalignment='bottom')
-                                    plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
-                                             horizontalalignment='center', verticalalignment='top')
-                                elif self.strand:
-                                    plt.text(0.5, 0.51, 'Forward strand', transform=ax.transAxes, fontsize=ticklabelsize,
-                                             horizontalalignment='center', verticalalignment='bottom')
-                                    plt.text(0.5, 0.49, 'Reverse strand', transform=ax.transAxes, fontsize=ticklabelsize,
-                                             horizontalalignment='center', verticalalignment='top')
-                                plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
-                                # print(self.data[s][g][c][d])
-                                for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
-                                    # print(y)
-                                    ymax1 = numpy.amax(y)
-                                    yaxmax[i] = max(ymax1, yaxmax[i])
-                                    sx_ymax[it] = max(ymax1, sx_ymax[it])
-                                    x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                    ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
-                                    if it < nit - 1: ax.set_xticklabels([])
-                                    # Processing for future output
-                                    if printtable: pArr.append([g, s, c, d, "+"] + list(y))
+                                if not self.sense and not self.strand:
+                                    if self.df:
+                                        pt = self.data[g][r][c][cc][d]["df"]
+                                    else:
+                                        pt = self.data[g][r][c][cc][d]["all"]
 
-                                for l, y in enumerate(self.data[s][g][c][d]["sense_2"]):
-                                    # print(y)
-                                    ymax2 = numpy.amax(y)
-                                    yaxmax[i] = max(ymax2, yaxmax[i])
-                                    sx_ymax[it] = max(ymax2, sx_ymax[it])
-                                    x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                    ax.plot(x, -y, color=self.colors[c], lw=linewidth, label=c)
-                                    if it < nit - 1: ax.set_xticklabels([])
-                                    # Processing for future output
-                                    if printtable: pArr.append([g, s, c, d, "-"] + list(y))
-                                ym = 1.2 * max(max(yaxmax), max(sx_ymax))
-                                ax.set_ylim([-ym, ym])
+                                    for l, y in enumerate(pt):
+                                        # print(y)
+                                        yaxmax[ic] = max(numpy.amax(y), yaxmax[ic])
+                                        sx_ymax[ir] = max(numpy.amax(y), sx_ymax[ir])
+                                        if self.df:
+                                            yaxmin[ic] = min(numpy.amin(y), yaxmin[ic])
+                                            sx_ymin[ir] = min(numpy.amin(y), sx_ymin[ir])
 
-                # ax.get_yaxis().set_label_coords(-0.1, 0.5)
-                ax.set_xlim([-self.extend, self.extend])
-                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
-                plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
-                ax.locator_params(axis='x', nbins=4)
-                ax.locator_params(axis='y', nbins=3)
+                                        x = numpy.linspace(-self.extend, self.extend, len(y))
+                                        ax.plot(x, y, color=self.colors[cc], lw=linewidth, label=cc)
+                                        if ir < nit - 1:
+                                            ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable:
+                                            pArr.append([g, r, c, cc, d] + list(y))
+                                else:
+                                    if self.sense:
+                                        plt.text(0.5, 0.51, 'sense', transform=ax.transAxes, fontsize=ticklabelsize,
+                                                 horizontalalignment='center', verticalalignment='bottom')
+                                        plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
+                                                 horizontalalignment='center', verticalalignment='top')
+                                    elif self.strand:
+                                        plt.text(0.5, 0.51, 'Forward strand', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
+                                                 horizontalalignment='center', verticalalignment='bottom')
+                                        plt.text(0.5, 0.49, 'Reverse strand', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
+                                                 horizontalalignment='center', verticalalignment='top')
+                                    plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
+                                    # print(self.data[s][g][c][d])
+                                    for l, y in enumerate(self.data[g][r][c][cc][d]["sense_1"]):
+                                        # print(y)
+                                        ymax1 = numpy.amax(y)
+                                        yaxmax[ic] = max(ymax1, yaxmax[ic])
+                                        sx_ymax[ir] = max(ymax1, sx_ymax[ir])
+                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                        ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
+                                        if ir < nit - 1: ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable: pArr.append([g, r, c, cc, d, "+"] + list(y))
 
-        if printtable:
-            output_array(pArr, directory=output, folder=self.title, filename="plot_table.txt")
+                                    for l, y in enumerate(self.data[g][r][c][cc][d]["sense_2"]):
+                                        # print(y)
+                                        ymax2 = numpy.amax(y)
+                                        yaxmax[ic] = max(ymax2, yaxmax[ic])
+                                        sx_ymax[ir] = max(ymax2, sx_ymax[ir])
+                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                        ax.plot(x, -y, color=self.colors[c], lw=linewidth, label=c)
+                                        if ir < nit - 1: ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable: pArr.append([g, r, c, cc, d, "-"] + list(y))
+                                    ym = 1.2 * max(max(yaxmax), max(sx_ymax))
+                                    ax.set_ylim([-ym, ym])
 
-        handles = []
-        labels =[]
-        for it, ty in enumerate(self.data.keys()):
-            try:
-                axs[it, 0].set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
-            except:
+                    # ax.get_yaxis().set_label_coords(-0.1, 0.5)
+                    ax.set_xlim([-self.extend, self.extend])
+                    plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
+                    plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
+                    ax.locator_params(axis='x', nbins=4)
+                    ax.locator_params(axis='y', nbins=3)
+
+            if printtable:
+                output_array(pArr, directory=output, folder=self.title, filename="plot_table_" + g + ".txt")
+
+            handles = []
+            labels = []
+            for ir, r in enumerate(self.data[g].keys()):
+                if ylog:
+                    nr = r + " (log10)"
+                else:
+                    nr = r
                 try:
-                    axs[it].set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
-                except:
-                    axs.set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
-
-            for i, g in enumerate(self.data[ty].keys()):
-                try: axx = axs[it, i]
+                    axs[ir, 0].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                    axs[ir, 0].get_yaxis().set_label_coords(-0.1, 0.5)
                 except:
                     try:
-                        if len(self.data.keys()) == 1:
-                            axx = axs[i]
-                        else:
-                            axx = axs[it]
-                    except: axx = axs
+                        axs[ir].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                        axs[ir].get_yaxis().set_label_coords(-0.1, 0.5)
+                    except:
+                        axs.set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                        axs.get_yaxis().set_label_coords(-0.1, 0.5)
 
-                if self.df:
-                    if scol and not srow:
-                        ymin = yaxmin[i] - abs(yaxmin[i] * 0.2)
-                        ymax = yaxmax[i] + abs(yaxmax[i] * 0.2)
-                    elif srow and not scol:
-                        ymin = sx_ymin[it] - abs(sx_ymin[it] * 0.2)
-                        ymax = sx_ymax[it] + abs(sx_ymax[it] * 0.2)
-                    elif scol and srow:
-                        ymin = min(yaxmin[i], sx_ymin[it]) - abs(min(yaxmin[i], sx_ymin[it]) * 0.2)
-                        ymax = max(yaxmax[i], sx_ymax[it]) + abs(max(yaxmax[i], sx_ymax[it]) * 0.2)
+                for ic, c in enumerate(self.data[g][r].keys()):
+                    try:
+                        axx = axs[ir, ic]
+                    except:
+                        try:
+                            if len(self.data[g].keys()) == 1:
+                                axx = axs[ic]
+                            else:
+                                axx = axs[ir]
+                        except:
+                            axx = axs
 
-                else:
-                    if scol and not srow: ymax = yaxmax[i] * 1.2
-                    elif srow and not scol: ymax = sx_ymax[it] * 1.2
-                    elif scol and srow: ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
+                    if self.df:
+                        if scol and not srow:
+                            ymin = yaxmin[ic] - abs(yaxmin[ic] * 0.2)
+                            ymax = yaxmax[ic] + abs(yaxmax[ic] * 0.2)
+                        elif srow and not scol:
+                            ymin = sx_ymin[ir] - abs(sx_ymin[ir] * 0.2)
+                            ymax = sx_ymax[ir] + abs(sx_ymax[ir] * 0.2)
+                        elif scol and srow:
+                            ymin = min(yaxmin[ic], sx_ymin[ir]) - abs(min(yaxmin[ic], sx_ymin[ir]) * 0.2)
+                            ymax = max(yaxmax[ic], sx_ymax[ir]) + abs(max(yaxmax[ic], sx_ymax[ir]) * 0.2)
+
                     else:
-                        ymax = axx.get_ylim()[1]
-                    if self.sense or self.strand: ymin = -ymax
-                    else: ymin = 0
+                        if scol and not srow:
+                            ymax = yaxmax[ic] * 1.2
+                        elif srow and not scol:
+                            ymax = sx_ymax[ir] * 1.2
+                        elif scol and srow:
+                            ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
+                        else:
+                            ymax = axx.get_ylim()[1]
+                        if self.sense or self.strand:
+                            ymin = -ymax
+                        else:
+                            ymin = 0
 
-                try: axx.set_ylim([ymin, ymax])
-                except: pass
-                hand, l = axx.get_legend_handles_labels()
-                handles += hand
-                labels += l
-        # handles, labels = ax.get_legend_handles_labels()
-        uniq_labels = unique(labels)
+                    try:
+                        axx.set_ylim([ymin, ymax])
+                    except:
+                        pass
+                    hand, lab = axx.get_legend_handles_labels()
+                    handles += hand
+                    labels += lab
+            # handles, labels = ax.get_legend_handles_labels()
+            uniq_labels = unique(labels)
 
-        plt.legend([handles[labels.index(l)] for l in uniq_labels], uniq_labels, loc='center left', handlelength=1,
-                   handletextpad=1,
-                   columnspacing=2, borderaxespad=0., prop={'size': ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+            plt.legend([handles[labels.index(l)] for l in uniq_labels], uniq_labels, loc='center left', handlelength=1,
+                       handletextpad=1,
+                       columnspacing=2, borderaxespad=0., prop={'size': ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
 
-        f.tight_layout()
-        self.fig = f
+            f.tight_layout()
+            self.fig.append(f)
 
     def gen_html(self, directory, title, align=50):
         dir_name = os.path.basename(directory)
@@ -545,7 +625,10 @@ class Lineplot:
 
         html = Html(name=html_header, links_dict=link_d,
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
-        html.add_figure("lineplot.png", align="center", width="80%")
+
+        for g in self.group_tags:
+            html.add_heading(heading=g)
+            html.add_figure("lineplot_" + g + ".png", align="center", width="80%")
 
         html.write(os.path.join(directory, title, "index.html"))
 
@@ -576,7 +659,7 @@ class Lineplot:
         html.write(os.path.join(directory, title, "parameters.html"))
 
     def hmsort(self, sort):
-        if sort == None:
+        if not sort:
             pass
         elif sort == 0:
             for t in self.data.keys():
@@ -591,7 +674,7 @@ class Lineplot:
                     # numpy.fliplr(ind)
 
                     for j, c in enumerate(self.data[t][g].keys()):
-                        d = numpy.empty(shape=(self.data[t][g][c].shape))
+                        d = numpy.empty(shape=self.data[t][g][c].shape)
                         for k, ranki in enumerate(ind):
                             d[-ranki, :] = self.data[t][g][c][k, :]
                         self.data[t][g][c] = d
@@ -605,7 +688,7 @@ class Lineplot:
                     # list(ind)
                     # print(ind)
                     for j, c in enumerate(self.data[t][g].keys()):
-                        d = numpy.empty(shape=(self.data[t][g][c].shape))
+                        d = numpy.empty(shape=self.data[t][g][c].shape)
                         for k, ranki in enumerate(ind):
                             d[-ranki, :] = self.data[t][g][c][k, :]
                         self.data[t][g][c] = d
@@ -652,7 +735,6 @@ class Lineplot:
                     # for bi, g in enumerate(self.data[t].keys()):
                     #    for bj, c in enumerate(self.data[t][g].keys()):
 
-
                     # im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
                     #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
@@ -681,7 +763,6 @@ class Lineplot:
                         cbar_ax = plt.subplot2grid((rows * ratio + 4, columns), (rows * ratio + 3, bj))
                         # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
 
-
                         # cbar = grid.cbar_axes[i//2].colorbar(im)
                         # cbar = plt.colorbar(im, cax = axs[rows,bj], ticks=[0, max_value], orientation='horizontal')
                         # cbar = axs[rows,bj].imshow(range(int(max_value)), extent=[0, int(max_value),0,0], aspect=10, extent=[-self.extend, self.extend,0,0]
@@ -694,7 +775,6 @@ class Lineplot:
                         # axs[rows,bj].set_ticks_position('none')
                         # axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
                         # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-
 
                         # cbar.set_label('Amplitute of signal')
                         max_value = int(max_value)
@@ -740,4 +820,3 @@ class Lineplot:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(outputname, title, "parameters.html"))
-
