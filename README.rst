@@ -21,19 +21,17 @@ The toolbox is made of a `core library <http://www.regulatory-genomics.org/rgt/>
 Installation
 ============
 
-The quickest and easiest way to get RGT is to to use pip:
+The quickest and easiest way to get RGT is to to use pip. First some dependencies:
+
+::
+
+    pip install --user cython numpy scipy
 
 ::
 
     pip install --user RGT
 
-This will install the full RGT suite with all dependencies.
-If you have errors, this is usually due to three dependencies
-that you can install beforehand:
-
-::
-
-    pip install --user cython numpy scipy
+This will install the full RGT suite with all other dependencies.
 
 Alternatively, you can clone this repository:
 
@@ -51,6 +49,6 @@ to manual installation:
     python setup.py install --user
 
 Detailed installation instructions and basic problem solving can be
-found at:
+found `on our website <http://www.regulatory-genomics.org/rgt/download-installation>`__.
 
-http://www.regulatory-genomics.org/rgt/download-installation
+For any issues, please write to our `support mailing list <https://groups.google.com/forum/#!forum/rgtusers>`__.
