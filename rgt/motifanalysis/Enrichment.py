@@ -616,8 +616,8 @@ def main(args):
                 fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
-                                                                     "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
-                                 "</b>",
+                                                                     "region <b>Gene Test*</b> using genes from <b>"
+                                 + curr_input.gene_set.name + "</b>",
                                  align="center", bold=False)
                 html.add_heading("* This gene test considered regions associated to the given "
                                  "gene list against regions not associated to the gene list",
