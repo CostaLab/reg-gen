@@ -69,6 +69,13 @@ def diff_analysis_run(args):
     # Initializing Error Handler
     err = ErrorHandler()
 
+    output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+    try:
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("MM_OUT_FOLDER_CREATION")
+
     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
     mpbs1.read(args.mpbs_file1)
 
@@ -377,11 +384,6 @@ def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     mean_signal_2 = (mean_signal_2 / num_fp) / args.factor2
 
     output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
-    try:
-        if not os.path.isdir(output_location):
-            os.makedirs(output_location)
-    except Exception:
-        err.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Output PWM and create logo
     pwm_fname = os.path.join(output_location, "{}.pwm".format(mpbs_name))
@@ -431,6 +433,7 @@ def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
+    #plt.close(fig)
     # Creating canvas and printing eps / pdf with merged results
     output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
     c = pyx.canvas.canvas()
