@@ -69,8 +69,10 @@ class Boxplot:
             r = os.path.abspath(rp)  # Here change the relative path into absolute path
             cov = CoverageSet(r, self.all_bed)
             cov.coverage_from_genomicset(r)
-            try: cov.normRPM()
-            except: pass
+            try:
+                cov.normRPM()
+            except:
+                pass
             c.append(cov.coverage)
         self.all_table = numpy.transpose(c)
 
@@ -179,7 +181,6 @@ class Boxplot:
                 # print(cuesbam[readname])
                 # cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
 
-
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
             # print("    "+g)
@@ -193,12 +194,12 @@ class Boxplot:
                     for i, bed in enumerate(cuesbed.keys()):
                         # print([g, a, c])
 
-                        if set([g, a, c]) >= cuesbed[bed]:
+                        if {g, a, c} >= cuesbed[bed]:
                             # print(cuesbed[bed])
                             sortDict[g][a][c] = []
                             for bam in cuesbam.keys():
 
-                                if set([g, a, c]) >= cuesbam[bam]:
+                                if {g, a, c} >= cuesbam[bam]:
                                     # print(cuesbam[bam])
                                     # print([bed, bam])
 
@@ -206,8 +207,8 @@ class Boxplot:
                                         sortDict[g][a][c].append(plotDict[bed][bam])
                                         if len(sortDict[g][a][c]) == 2:
                                             if log:
-                                                sortDict[g][a][c][0] = numpy.log(sortDict[g][a][c][0]+1)
-                                                sortDict[g][a][c][1] = numpy.log(sortDict[g][a][c][1]+1)
+                                                sortDict[g][a][c][0] = numpy.log(sortDict[g][a][c][0] + 1)
+                                                sortDict[g][a][c][1] = numpy.log(sortDict[g][a][c][1] + 1)
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],
                                                                                    sortDict[g][a][c][1]).tolist()
                                             else:
@@ -257,7 +258,6 @@ class Boxplot:
                                 figsize=(tw, th))
         # f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
 
-
         # nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
         # if nm > 30:
         # f.set_size_inches(nm * 0.25 ,nm * 0.15)
@@ -304,11 +304,11 @@ class Boxplot:
             x_ticklabels = []  # Store ticklabels
             for j, a in enumerate(self.sortDict[g].keys()):
                 # if len(a) > 10:
-                    # print(a)
+                # print(a)
                 self.xtickrotation = 70
                 self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
-                    if self.sortDict[g][a][c] == []:  # When there is no matching data, skip it
+                    if not self.sortDict[g][a][c]:  # When there is no matching data, skip it
                         continue
                     else:
                         if self.df:
@@ -444,4 +444,3 @@ class Boxplot:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(directory, title, "parameters.html"))
-

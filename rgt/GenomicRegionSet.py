@@ -429,8 +429,8 @@ class GenomicRegionSet:
 
             - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
             - organism -- Organism in order to fetch genomic data. (default hg19)
-            - promoterLength -- Length of the promoter region. (default 1000)
-            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+            - promoter_length -- Length of the promoter region. (default 1000)
+            - thresh_dist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
             - show_dis -- Show distance to the closest genes in parentheses.
 
         *Return:*
@@ -601,8 +601,8 @@ class GenomicRegionSet:
             - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched.
               (default None)
             - organism -- Organism in order to fetch genomic data. (default hg19)
-            - promoterLength -- Length of the promoter region. (default 1000)
-            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene.
+            - promoter_length -- Length of the promoter region. (default 1000)
+            - thresh_dist -- Threshold maximum distance for a coordinate to be considered associated with a gene.
               (default 50000)
 
        *Return:*
@@ -2442,7 +2442,7 @@ class GenomicRegionSet:
                     z.add(r)
         return z
 
-    def get_distance(self, y, ignore_overlap=False, strand_specific=False, threshDist=50000):
+    def get_distance(self, y, ignore_overlap=False, strand_specific=False, thresh_dist=50000):
         """Return a list of distances between the closest regions from two region sets."""
         if not self.sorted: self.sort()
         if not y.sorted: y.sort()
@@ -2491,7 +2491,7 @@ class GenomicRegionSet:
                         elif s.chrom == y[j].chrom and pre_inter > 0:
                             j = pre_inter
                         cont_loop = False
-                    elif 0 < d < threshDist:
+                    elif 0 < d < thresh_dist:
                         if s > y[j]:
                             asso_names["close_l"] = [[s.name, "-" + str(d), y[j].name]]
                         elif s < y[j]:

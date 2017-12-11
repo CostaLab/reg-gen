@@ -420,7 +420,7 @@ class AnnotationSet:
         mapped_gene_list = []
         unmapped_gene_list = []
 
-        if output_dict: maping_dict = {}
+        if output_dict: mapping_dict = {}
         # Iterating on gene names
         for gene_name in gene_set.genes:
 
@@ -434,7 +434,7 @@ class AnnotationSet:
                 mapped_gene_list.append(gene_name)
                 sym = self.get_official_symbol(gene_name)
                 if output_dict and sym and gene_name:
-                    maping_dict[gene_name] = sym
+                    mapping_dict[gene_name] = sym
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
@@ -445,12 +445,12 @@ class AnnotationSet:
                     for e in alias_list:
                         mapped_gene_list.append(e)
                         if output_dict and e and gene_name:
-                            maping_dict[e] = gene_name
+                            mapping_dict[e] = gene_name
 
                 except Exception:
                     unmapped_gene_list.append(gene_name)
         if output_dict:
-            return mapped_gene_list, unmapped_gene_list, maping_dict
+            return mapped_gene_list, unmapped_gene_list, mapping_dict
         else:
             return mapped_gene_list, unmapped_gene_list
 
@@ -576,11 +576,11 @@ class AnnotationSet:
         Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters.
         The ID of each gene will be put in the NAME field of each GenomicRegion.
         Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual
-        length is promoterLength+1.
+        length is promoter_length+1.
 
         *Keyword arguments:*
 
-            - promoterLength -- The length of the promoter region.
+            - promoter_length -- The length of the promoter region.
             - gene_set -- A set of genes to narrow the search.
             - unmaplist -- If True than also return the unmappable genes list (default = False).
 
@@ -595,7 +595,7 @@ class AnnotationSet:
         unmapped_gene_list = None
 
         if gene_set:
-            mapped_gene_list, unmapped_gene_list, maping_dict = self.fix_gene_names(gene_set, output_dict=True)
+            mapped_gene_list, unmapped_gene_list, mapping_dict = self.fix_gene_names(gene_set, output_dict=True)
 
         # Fetching genes
 
@@ -624,7 +624,7 @@ class AnnotationSet:
 
             if gene_set:
                 try:
-                    gr.name = maping_dict[e[self.GeneField.GENE_ID]]
+                    gr.name = mapping_dict[e[self.GeneField.GENE_ID]]
                 except:
                     gr.name = e[self.GeneField.GENE_ID]
             elif gene_id:
