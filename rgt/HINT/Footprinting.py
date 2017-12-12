@@ -148,23 +148,81 @@ def atac_seq(args):
         bias_table = BiasTable().load_table(table_file_name_F=table_F,
                                             table_file_name_R=table_R)
 
-    initial_clip = 50 if not args.initial_clip else args.initial_clip
-    sg_window_size = 9 if not args.sg_window_size else args.sg_window_size
-    norm_per = 98 if not args.norm_per else args.norm_per
-    slope_per = 98 if not args.slope_per else args.slope_per
-    downstream_ext = 1 if not args.downstream_ext else args.downstream_ext
-    upstream_ext = 0 if not args.upstream_ext else args.upstream_ext
-    region_total_ext = 0 if not args.region_total_ext else args.region_total_ext
-    forward_shift = 5 if not args.forward_shift else args.forward_shift
-    reverse_shift = -4 if not args.reverse_shift else args.reverse_shift
-    fp_max_size = 50 if not args.fp_max_size else args.fp_max_size
-    fp_min_size = 5 if not args.fp_min_size else args.fp_min_size
-    fp_ext = 5 if not args.fp_ext else args.fp_ext
-    tc_ext = 100 if not args.tc_ext else args.tc_ext
-    if args.paired_end:
-        fp_state = 8 if not args.fp_state else args.fp_state
+    if args.initial_clip is None:
+        initial_clip = 50
     else:
-        fp_state = 6 if not args.fp_state else args.fp_state
+        initial_clip = args.initial_clip
+
+    if args.sg_window_size is None:
+        sg_window_size = 9
+    else:
+        sg_window_size = args.sg_window_size
+
+    if args.norm_per is None:
+        norm_per = 98
+    else:
+        norm_per = args.norm_per
+
+    if args.slope_per is None:
+        slope_per = 98
+    else:
+        slope_per = args.slope_per
+
+    if args.downstream_ext is None:
+        downstream_ext = 1
+    else:
+        downstream_ext = args.downstream_ext
+
+    if args.upstream_ext is None:
+        upstream_ext = 0
+    else:
+        upstream_ext = args.upstream_ext
+
+    if args.forward_shift is None:
+        forward_shift = 5
+    else:
+        forward_shift = args.forward_shift
+
+    if args.reverse_shift is None:
+        reverse_shift = -4
+    else:
+        reverse_shift = args.reverse_shift
+
+    if args.region_total_ext is None:
+        region_total_ext = 0
+    else:
+        region_total_ext = args.region_total_ext
+
+    if args.fp_max_size is None:
+        fp_max_size = 50
+    else:
+        fp_max_size = args.fp_max_size
+
+    if args.fp_min_size is None:
+        fp_min_size = 5
+    else:
+        fp_min_size = args.fp_min_size
+
+    if args.fp_ext is None:
+        fp_ext = 5
+    else:
+        fp_ext = args.fp_ext
+
+    if args.tc_ext is None:
+        tc_ext = 100
+    else:
+        tc_ext = args.tc_ext
+
+    if args.paired_end:
+        if args.fp_state is None:
+            fp_state = 8
+        else:
+            fp_state = args.fp_state
+    else:
+        if args.fp_state is None:
+            fp_state = 6
+        else:
+            fp_state = args.fp_state
 
     # Initializing result set
     footprints = GenomicRegionSet(args.output_prefix)
@@ -183,7 +241,7 @@ def atac_seq(args):
     fasta = Fastafile(genome_data.get_genome())
 
     if args.paired_end:
-        for region in regions:
+        for region in original_regions:
             input_sequence = list()
 
             signal_bc_f_max_145, signal_bc_r_max_145 = \
@@ -233,7 +291,13 @@ def atac_seq(args):
             input_sequence.append(signal_bc_r_min_145)
             input_sequence.append(signal_bc_r_min_145_slope)
 
-            posterior_list = hmm.predict(np.array(input_sequence).T)
+            # Applying HMM
+            try:
+                posterior_list = hmm.predict(np.array(input_sequence).T)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
+                    region.final)]) + "). This iteration will be skipped.")
+                continue
 
             if args.fp_bed_fname is not None:
                 output_bed_file(region.chrom, region.initial, region.final, posterior_list, args.fp_bed_fname, fp_state)
@@ -241,17 +305,16 @@ def atac_seq(args):
             # Formatting results
             start_pos = 0
             flag_start = False
-            fp_state_nb = fp_state
             for k in range(region.initial, region.initial + len(posterior_list)):
                 curr_index = k - region.initial
                 if flag_start:
-                    if posterior_list[curr_index] != fp_state_nb:
+                    if posterior_list[curr_index] != fp_state:
                         if k - start_pos < fp_max_size:
                             fp = GenomicRegion(region.chrom, start_pos, k)
                             footprints.add(fp)
                         flag_start = False
                 else:
-                    if posterior_list[curr_index] == fp_state_nb:
+                    if posterior_list[curr_index] == fp_state:
                         flag_start = True
                         start_pos = k
             if flag_start:
@@ -259,7 +322,7 @@ def atac_seq(args):
                     fp = GenomicRegion(region.chrom, start_pos, region.final)
                     footprints.add(fp)
     else:
-        for region in regions:
+        for region in original_regions:
 
             input_sequence = list()
             atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
@@ -273,24 +336,28 @@ def atac_seq(args):
             input_sequence.append(atac_norm_r)
             input_sequence.append(atac_slope_r)
 
-            posterior_list = hmm.predict(np.array(input_sequence).T)
+            try:
+                posterior_list = hmm.predict(np.array(input_sequence).T)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
+                    region.final)]) + "). This iteration will be skipped.")
+                continue
 
             if args.fp_bed_fname is not None:
                 output_bed_file(region.chrom, region.initial, region.final, posterior_list, args.fp_bed_fname, fp_state)
             # Formatting results
             start_pos = 0
             flag_start = False
-            fp_state_nb = fp_state
             for k in range(region.initial, region.initial + len(posterior_list)):
                 curr_index = k - region.initial
                 if flag_start:
-                    if posterior_list[curr_index] != fp_state_nb:
+                    if posterior_list[curr_index] != fp_state:
                         if k - start_pos < fp_max_size:
                             fp = GenomicRegion(region.chrom, start_pos, k)
                             footprints.add(fp)
                         flag_start = False
                 else:
-                    if posterior_list[curr_index] == fp_state_nb:
+                    if posterior_list[curr_index] == fp_state:
                         flag_start = True
                         start_pos = k
             if flag_start:

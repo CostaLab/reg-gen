@@ -1,4 +1,3 @@
-# Import
 import os
 import numpy as np
 from pysam import Samfile, Fastafile
@@ -14,7 +13,7 @@ from scipy import stats
 from argparse import SUPPRESS
 
 # Internal
-from ..Util import AuxiliaryFunctions, GenomeData
+from ..Util import ErrorHandler, AuxiliaryFunctions, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 
@@ -67,6 +66,16 @@ def diff_analysis_args(parser):
 
 
 def diff_analysis_run(args):
+    # Initializing Error Handler
+    err = ErrorHandler()
+
+    output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+    try:
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("MM_OUT_FOLDER_CREATION")
+
     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
     mpbs1.read(args.mpbs_file1)
 
@@ -179,12 +188,15 @@ def diff_analysis_run(args):
         output_factor(args, args.factor1, args.factor2)
 
     ps_tc_results_by_tf = dict()
+
     for mpbs_name in mpbs_name_list:
         num_fp = len(signal_dict_by_tf_1[mpbs_name])
 
         # print the line plot for each factor
-        line_plot(args, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
-                  pwm_dict_by_tf[mpbs_name])
+        fig, ax = plt.subplots()
+        line_plot(args, err, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
+                  pwm_dict_by_tf[mpbs_name], fig, ax)
+        plt.close(fig)
 
         ps_tc_results_by_tf[mpbs_name] = list()
 
@@ -196,6 +208,7 @@ def diff_analysis_run(args):
             ps_tc_results_by_tf[mpbs_name].append(res)
 
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    scatter_plot(args, stat_results_by_tf)
     output_stat_results(args, stat_results_by_tf)
 
 
@@ -362,7 +375,7 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
     return factor1, factor2
 
 
-def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
+def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
     # compute the average signal
     mean_signal_1 = np.zeros(args.window_size)
     mean_signal_2 = np.zeros(args.window_size)
@@ -373,14 +386,16 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     mean_signal_1 = (mean_signal_1 / num_fp) / args.factor1
     mean_signal_2 = (mean_signal_2 / num_fp) / args.factor2
 
+    output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+
     # Output PWM and create logo
-    pwm_fname = os.path.join(args.output_location, "{}.pwm".format(mpbs_name))
+    pwm_fname = os.path.join(output_location, "{}.pwm".format(mpbs_name))
     pwm_file = open(pwm_fname, "w")
     for e in ["A", "C", "G", "T"]:
         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
     pwm_file.close()
 
-    logo_fname = os.path.join(args.output_location, "{}.logo.eps".format(mpbs_name))
+    logo_fname = os.path.join(output_location, "{}.logo.eps".format(mpbs_name))
     pwm = motifs.read(open(pwm_fname), "pfm")
     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -391,7 +406,7 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     end = (args.window_size / 2) - 1
     x = np.linspace(start, end, num=args.window_size)
 
-    fig, ax = plt.subplots()
+    #fig, ax = plt.subplots()
 
     ax.plot(x, mean_signal_1, color='red', label=args.condition1)
     ax.plot(x, mean_signal_2, color='blue', label=args.condition2)
@@ -417,12 +432,12 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 40))
 
-    figure_name = os.path.join(args.output_location, "{}.line.eps".format(mpbs_name))
+    figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
     # Creating canvas and printing eps / pdf with merged results
-    output_fname = os.path.join(args.output_location, "{}.eps".format(mpbs_name))
+    output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
     c = pyx.canvas.canvas()
     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
     c.insert(pyx.epsfile.epsfile(0.45, 0.8, logo_fname, width=16.5, height=3))
@@ -435,13 +450,41 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     os.remove(pwm_fname)
 
 
+def scatter_plot(args, stat_results_by_tf):
+    tc_diff = list()
+    ps_diff = list()
+    mpbs_names = list()
+    for mpbs_name in stat_results_by_tf.keys():
+        mpbs_names.append(mpbs_name)
+        tc_diff.append(stat_results_by_tf[mpbs_name][-2])
+        ps_diff.append(stat_results_by_tf[mpbs_name][2])
+
+    fig, ax = plt.subplots(figsize=(12,12))
+    ax.scatter(tc_diff, ps_diff, alpha=0.0)
+    for i, txt in enumerate(mpbs_names):
+        ax.annotate(txt, (tc_diff[i], ps_diff[i]), alpha=0.6)
+    ax.margins(0.05)
+
+    tc_diff_mean = np.mean(tc_diff)
+    ps_diff_mean = np.mean(ps_diff)
+    ax.axvline(x=tc_diff_mean, linewidth=2, linestyle='dashed')
+    ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
+
+    ax.set_xlabel("TC DIFF of {} - {}".format(args.condition1, args.condition2), fontweight='bold')
+    ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold', rotation=90)
+
+    figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
+    fig.savefig(figure_name, format="pdf", dpi=300)
+
+
 def output_stat_results(args, stat_results_by_tf):
-    output_fname = os.path.join(args.output_location, "footprint_statistics.txt")
+    output_fname = os.path.join(args.output_location, "{}_{}_statistics.txt".format(args.condition1, args.condition2))
     header = ["Motif",
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
               "TC_Diff_{}_{}".format(args.condition1, args.condition2), "P_values"]
+
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
         for mpbs_name in stat_results_by_tf.keys():
