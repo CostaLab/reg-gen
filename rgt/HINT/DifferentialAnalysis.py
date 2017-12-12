@@ -473,7 +473,6 @@ def scatter_plot(args, stat_results_by_tf):
     ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold', rotation=90)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
-    #fig.tight_layout()
     fig.savefig(figure_name, format="pdf", dpi=300)
 
 
