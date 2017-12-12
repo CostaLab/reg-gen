@@ -188,12 +188,13 @@ def diff_analysis_run(args):
         output_factor(args, args.factor1, args.factor2)
 
     ps_tc_results_by_tf = dict()
+    fig, ax = plt.subplots()
     for mpbs_name in mpbs_name_list:
         num_fp = len(signal_dict_by_tf_1[mpbs_name])
 
         # print the line plot for each factor
         line_plot(args, err, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
-                  pwm_dict_by_tf[mpbs_name])
+                  pwm_dict_by_tf[mpbs_name], fig, ax)
 
         ps_tc_results_by_tf[mpbs_name] = list()
 
@@ -372,7 +373,7 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
     return factor1, factor2
 
 
-def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
+def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
     # compute the average signal
     mean_signal_1 = np.zeros(args.window_size)
     mean_signal_2 = np.zeros(args.window_size)
@@ -403,7 +404,7 @@ def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     end = (args.window_size / 2) - 1
     x = np.linspace(start, end, num=args.window_size)
 
-    fig, ax = plt.subplots()
+    #fig, ax = plt.subplots()
 
     ax.plot(x, mean_signal_1, color='red', label=args.condition1)
     ax.plot(x, mean_signal_2, color='blue', label=args.condition2)
@@ -430,10 +431,10 @@ def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict):
     ax.spines['bottom'].set_position(('outward', 40))
 
     figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
-    fig.tight_layout()
+    #fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
-    #plt.close(fig)
+    plt.clf()
     # Creating canvas and printing eps / pdf with merged results
     output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
     c = pyx.canvas.canvas()
@@ -472,7 +473,7 @@ def scatter_plot(args, stat_results_by_tf):
     ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold', rotation=90)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
-    fig.tight_layout()
+    #fig.tight_layout()
     fig.savefig(figure_name, format="pdf", dpi=300)
 
 

@@ -291,7 +291,13 @@ def atac_seq(args):
             input_sequence.append(signal_bc_r_min_145)
             input_sequence.append(signal_bc_r_min_145_slope)
 
-            posterior_list = hmm.predict(np.array(input_sequence).T)
+            # Applying HMM
+            try:
+                posterior_list = hmm.predict(np.array(input_sequence).T)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
+                    region.final)]) + "). This iteration will be skipped.")
+                continue
 
             if args.fp_bed_fname is not None:
                 output_bed_file(region.chrom, region.initial, region.final, posterior_list, args.fp_bed_fname, fp_state)
@@ -330,7 +336,12 @@ def atac_seq(args):
             input_sequence.append(atac_norm_r)
             input_sequence.append(atac_slope_r)
 
-            posterior_list = hmm.predict(np.array(input_sequence).T)
+            try:
+                posterior_list = hmm.predict(np.array(input_sequence).T)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
+                    region.final)]) + "). This iteration will be skipped.")
+                continue
 
             if args.fp_bed_fname is not None:
                 output_bed_file(region.chrom, region.initial, region.final, posterior_list, args.fp_bed_fname, fp_state)
