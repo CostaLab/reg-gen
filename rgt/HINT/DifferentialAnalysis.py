@@ -188,13 +188,15 @@ def diff_analysis_run(args):
         output_factor(args, args.factor1, args.factor2)
 
     ps_tc_results_by_tf = dict()
-    fig, ax = plt.subplots()
+
     for mpbs_name in mpbs_name_list:
         num_fp = len(signal_dict_by_tf_1[mpbs_name])
 
         # print the line plot for each factor
+        fig, ax = plt.subplots()
         line_plot(args, err, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
                   pwm_dict_by_tf[mpbs_name], fig, ax)
+        plt.close(fig)
 
         ps_tc_results_by_tf[mpbs_name] = list()
 
@@ -431,10 +433,9 @@ def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, 
     ax.spines['bottom'].set_position(('outward', 40))
 
     figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
-    #fig.tight_layout()
+    fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
-    plt.clf()
     # Creating canvas and printing eps / pdf with merged results
     output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
     c = pyx.canvas.canvas()
