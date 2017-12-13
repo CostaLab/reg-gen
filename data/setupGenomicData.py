@@ -98,7 +98,8 @@ gencode_url = "ftp://ftp.sanger.ac.uk/pub/gencode/"
 if options.hg19:
 
     output_location = path.join(curr_dir, "hg19")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_hg19.fa")
@@ -114,8 +115,6 @@ if options.hg19:
         for chr_name in chr_list:
             print("Downloading hg19 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
-            if path.isfile(gz_file_name):
-                remove(gz_file_name)
             download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
@@ -153,7 +152,8 @@ if options.hg19:
 if options.hg38:
 
     output_location = path.join(curr_dir, "hg38")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_hg38.fa")
@@ -207,7 +207,8 @@ if options.hg38:
 if options.mm9:
 
     output_location = path.join(curr_dir, "mm9")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm9.fa")
@@ -223,7 +224,6 @@ if options.mm9:
         for chr_name in chr_list:
             print("Downloading MM9 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
-            if path.isfile(gz_file_name): remove(gz_file_name)
             download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
@@ -261,7 +261,8 @@ if options.mm9:
 if options.mm10:
 
     output_location = path.join(curr_dir, "mm10")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm10.fa")
@@ -309,7 +310,8 @@ if options.mm10:
 if options.zv9:
 
     output_location = path.join(curr_dir, "zv9")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_zv9_ensembl_release_79.fa")
@@ -325,8 +327,6 @@ if options.zv9:
         for chr_name in chr_list:
             print("Downloading ZV9 genome (chromosome " + chr_name + ")")
             gz_file_name = path.join(output_location, "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz")
-            if path.isfile(gz_file_name): remove(gz_file_name)
-            # Danio_rerio.Zv9.dna.chromosome.8.fa.gz
             download(gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
@@ -365,7 +365,8 @@ if options.zv9:
 if options.zv10:
 
     output_location = path.join(curr_dir, "zv10")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_zv10_ensembl_release_84.fa")
@@ -381,8 +382,6 @@ if options.zv10:
         for chr_name in chr_list:
             print("Downloading ZV10 genome (chromosome " + chr_name + ")")
             gz_file_name = path.join(output_location, "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz")
-            if path.isfile(gz_file_name): remove(gz_file_name)
-            # Danio_rerio.GRCz10.dna.chromosome.8.fa.gz
             download(gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
@@ -428,7 +427,8 @@ if options.hg38_rm:
                     "scRNA.bed", "snRNA.bed", "srpRNA.bed", "tRNA.bed" ]
 
     output_location = path.join(curr_dir, "hg38", "repeat_maskers")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     to_remove = []
     for masker in gen_root_url:
@@ -450,7 +450,8 @@ if options.hg19_rm:
                     "RNA.rmask.gz", "Other.rmask.gz", "Unknown.rmask.gz" ]
 
     output_location = path.join(curr_dir, "hg19", "repeat_maskers")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
     to_remove = []
     for masker in gen_root_url:
