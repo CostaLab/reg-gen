@@ -196,7 +196,8 @@ def compute_extension_sizes(signal_statics, report=True):
           inputs_files are in the same format
     Return:
         signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes
-
+    Bad Aspect: we include read_size and extension_sizes together,
+     so only if we use compute_extension_size we are going to use it;;
     signal_statics includes stats, fname data, and dimesions, the same as inputs_statics
     """
     start = 0
@@ -223,40 +224,28 @@ def compute_extension_sizes(signal_statics, report=True):
                 signal_statics['data'][i][j]['read_size'] = read_size
                 signal_statics['data'][i][j]['extension_size'] = e
         print('end of compute extension size for signal files ', file=sys.stderr)
-    """
-    if inputs_statics:
-        print("Computing inputs read extension sizes for ChIP-seq profiles", file=sys.stderr)
-        inputs_extension_sizes = np.ones(file_dimension, int) * (-1)
-        inputs_read_sizes = np.ones(file_dimension, int) * -1
-
-        for i in range(file_dimension[0]):
-            for j in range(file_dimension[1]):
-
-                read_size, ie, scores = get_extension_size(inputs_statics['data'][i][j]['fname'], inputs_statics['data'][i][j]['stats_data'], start=start, end=end, stepsize=ext_stepsize)
-                inputs_extension_sizes[i][j] = ie
-                inputs_read_sizes[i][j] = read_size
-
-                if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j]) * 0.3:
-                    # we need to make sure how many files for one sample, it's on dims and divide it
-                    inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - \
-                                                   inputs_read_sizes[i][j]
-                    print('adjust input extension size')
-                inputs_statics['data'][i][j]['read_size'] = read_size
-                inputs_statics['data'][i][j]['extension_size'] = inputs_extension_sizes[i][j]
-
-        print('end of compute extension size for inputs files ', file=sys.stderr)
-
-        for i in range(file_dimension[0]):
-            for j in range(file_dimension[1]): 
-                if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j]) * 0.3:
-                    # we need to make sure how many files for one sample, it's on dims and divide it
-                    inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - \
-                                                   inputs_read_sizes[i][j]
-        """
     if report and ext_data_list:
         print(ext_data_list, signal_extension_sizes)
 
     return signal_extension_sizes, read_sizes
+
+
+def adjust_extension_sizes(signal_statics, inputs_statics):
+    """we test if the inputs data are good for process, if not we need to adjust values for it"""
+    file_dimension = signal_statics['dim']
+    exts_inputs = []
+    for i in range(file_dimension[0]):
+        exts_inputs.append([])
+        for j in range(file_dimension[1]):
+            if inputs_statics['data'][i][j]['extension_size'] + inputs_statics['data'][i][j]['read_size'] < (
+                        signal_statics['data'][i][j]['extension_size'] + signal_statics['data'][i][j]['read_size']) * 0.3:
+                # we need to make sure how many files for one sample, it's on dims and divide it
+                inputs_statics['data'][i][j]['extension_size'] = np.mean([ signal_statics['data'][i][k]['extension_size'] +
+                                                                           signal_statics['data'][i][k]['read_size'] for k in range(file_dimension[1]) ]) \
+                                                                 - inputs_statics['data'][i][j]['read_size']
+            exts_inputs[i].append(inputs_statics['data'][i][j]['extension_size'])
+
+    return exts_inputs
 
 
 def update_statics_extension_sizes(statics, exts_list):

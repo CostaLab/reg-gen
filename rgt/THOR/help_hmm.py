@@ -98,7 +98,9 @@ def _valid_posteriors(posteriors, obs, dim):
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
-    x may be an array or a single float"""
+    x may be an array or a single float
+    why do we use fabs, but not real data??? Another question is we get only one distribution or two??
+    """
     res = []
     if type(x) is np.ndarray:
         for el in x:
@@ -125,6 +127,10 @@ def _plot_func(plot_data, outputdir):
     for i in range(2):
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i]))  # plot_data [(m, v, p)], 2 elements
         maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
+        if maxs[i] > 0.0:
+            continue
+        else:
+            maxs[i].append(max(tmp))
 
     for i in range(2):
         x = np.linspace(0, max(plot_data[i][0]), int(np.ceil(max(plot_data[i][0]))))
@@ -135,7 +141,7 @@ def _plot_func(plot_data, outputdir):
             # and save datapoints to files
             ext = 'original'
             if j == 1:
-                plt.xlim([0, maxs[0]])
+                plt.xlim([0, maxs[0]]) #here some error happens
                 plt.ylim([0, maxs[1]])
                 ext = 'norm'
             ax = plt.subplot(111)
@@ -154,6 +160,7 @@ def _plot_func(plot_data, outputdir):
 def _get_sm_data_rep(one_sample_cov, sample_size):
     """Return list of (mean, var) points for samples 0 and 1
     overall_coverage is a list of sparse matrix
+    here what we could do is :
     """
     # firstly to get union of non-zeros sum columns
     tmp_cov = sum(one_sample_cov)
@@ -214,7 +221,7 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break  # restart for loop
         # after loop successfully ends, we are done; but when exception happens, we can't make it end
-        if len(res) == 2 or not loop_num:
+        if len(res) == dim[0] or not loop_num:
             done = True
     if report:
         _plot_func(plot_data, outputdir)
@@ -226,5 +233,17 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
         res = [np.array([0, 0]), np.array([0, 0])]
     # here sth wrong, cause we got two different p for each sample and then build different function
     # then when we apply this function, we should apply to different samples, not just one!!!
-    return lambda x: _func_quad_2p(x, p[0], p[1]), res
+    # if at end we only use one mean-var distribution, so how should we deal with it ??
+    # return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
+    return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
 
+
+def fit_states_mean_var():
+    """we have different states, and in each states, we could get different mean and var in different conditions
+    What we can do is: training data get all parameters from it
+
+    Arguments: different states and different data availabel
+      then for each state and each condition; we gather bins with same means together and then count the variance of it
+      After it, we fit data
+    """
+    pass

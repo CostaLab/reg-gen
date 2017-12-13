@@ -34,7 +34,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import configuration
-print(configuration.FOLDER_REPORT_PICS+'add one')
 
 from neg_bin import NegBin
 
@@ -60,6 +59,7 @@ def get_init_parameters(s0, s1, s2, report, **info):
         ## here feel something not correct, here it just use all data
         mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+        # var is counted from the function, right ?? But those are initial parameters, so doesn't matter
         # what did we do before it ?? in mean-var-distribution and now here??
         # we get training data and we can draw plot of it
         if report:
@@ -190,9 +190,9 @@ class NegBinRepHMM(_BaseHMM):
         
         self.neg_distr = np.matrix([raw1, raw2]) #matrix of all Neg. Bin. Distributions, columns=HMM's state (3), row=#samples (2)
         
-    def get_alpha(self, m):
+    def get_alpha(self, m, i):
         """Return alpha for a given mu based on empirical variance"""
-        var = self.func(m)
+        var = self.func[i](m)
         try:
             return max((var - m) / m**2, 1e-300)
         except Warning:
@@ -322,7 +322,7 @@ class NegBinRepHMM(_BaseHMM):
             self.mu[0,2] = self.mu[1,1]
             self.mu[1,0] = self.mu[0,0]
         
-        self.alpha = np.matrix([map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)])
+        self.alpha = np.matrix([map(lambda m: self.get_alpha(m, i), np.asarray(self.mu[i])[0]) for i in range(self.n_features)])
         self._update_distr(self.mu, self.alpha)
        
     def merge_distr(self):

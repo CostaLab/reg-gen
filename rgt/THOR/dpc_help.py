@@ -54,7 +54,7 @@ def merge_output(signal_statics, options, no_bw_files, chrom_sizes):
             temp_bed = npath(options.name + '-s%s-rep%s_temp.bed'% (i, j))
 
             files = [options.name + '-' + str(num) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
-            if len(no_bw_files) > dim[0]*dim[1]:
+            if len(files) > 1:
                 files = filter(lambda x: isfile(x), files)
                 t = ['bigWigMerge'] + files + [temp_bed]
                 c = " ".join(t)
@@ -71,9 +71,9 @@ def merge_output(signal_statics, options, no_bw_files, chrom_sizes):
                 os.remove(temp_bed)
                 os.remove(temp_bed + ".sort")
             else:
-                ftarget = [options.name + '-s%s-rep%s.bw' %(i, j) for num in no_bw_files]
-                for i in range(len(ftarget)):
-                    c = ['mv', files[i], ftarget[i]]
+                ftarget = [options.name + '-s%s-rep%s.bw' %(i, j)]
+                for k in range(len(ftarget)):
+                    c = ['mv', files[k], ftarget[k]]
                     c = " ".join(c)
                     os.system(c)
 
@@ -134,15 +134,16 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
 
         tmp_pos = [strand_pos]
         tmp_neg = [strand_neg]
-        #merge bins
-        while merge and i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
+        #merge bins, here are some problems maybe happpen about the conditions
+        while merge and i+1 < len(tmp_peaks) and e >= tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
             v1 = map(add, v1, tmp_peaks[i+1][3])
             v2 = map(add, v2, tmp_peaks[i+1][4])
             tmp_pos.append(tmp_peaks[i+1][6])
             tmp_neg.append(tmp_peaks[i+1][7])
             i += 1
-
+        v1 = list(v1)
+        v2 = list(v2)
         side = 'l' if strand == '+' else 'r'
         pvalues.append((v1, v2, side, distr))
 
@@ -304,7 +305,8 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
     elapsed_time = time.time() - start
     if configuration.VERBOSE:
         print('Normalize ChIP-seq profiles using time %.3f s' % (elapsed_time), file=sys.stderr)
-
+    ## we need to change data from float into interger
+    cov_set.sm_change_data_2int()
     return cov_set
 
 
@@ -437,7 +439,7 @@ def handle_input():
     parser.add_option_group(group)
 
     (options, args) = parser.parse_args()
-    options.save_wig = False
+    options.save_wig = True
     options.exts_inputs = None
     options.verbose = True
     options.hmm_free_para = False

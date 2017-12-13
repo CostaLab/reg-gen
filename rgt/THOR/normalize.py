@@ -69,7 +69,7 @@ def write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename):
                 print(p, q, file=f)
 
 
-def get_bin_from_covs(cov, step_times=10):
+def get_bin_from_covs(cov, step_times=10, sample_size=5000):
     """
     We need to check the requirmetns for Diaz method; It's for non-overlapping bins
     Arguments:
@@ -77,6 +77,7 @@ def get_bin_from_covs(cov, step_times=10):
     # here how could we get the bins for coverage if we use sm_coverage representation??
     Still we could use the todense function to tansform it, or to use sparse matrix generate new bins;
     Can we do it ???
+    we need to do a sampling and use less data here.
     """
     # we use list to store them then we transfer them into array...
     cov_counts = []
@@ -102,7 +103,7 @@ def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
         max_value = fabs(pq_list[max_index][1] - pq_list[max_index][0])
     else:
         count_list.sort(key=lambda a: a[0])
-        if not zero_counts:
+        if not zero_counts: # as we still need to filter data
             count_list = filter(lambda x: x[0] != 0.0, count_list)
         pre_pq_list = list(_accumulate(count_list))
         # get k, a from Diaz et al., 2012, compute p, q from Diaz et al., 2012
@@ -122,7 +123,6 @@ def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,s
         covs, inputs_cov should include binsize and step_size such information and then combine with step_times to get more information
     normalization to inputs and get factors
         """
-
     # first get new bin from cov
     cov_counts = get_bin_from_covs(cov, step_times=step_times)
     inputs_cov_counts = get_bin_from_covs(inputs_cov, step_times=step_times)
@@ -183,19 +183,12 @@ def trim4TMM( m_values, a_values, m_threshold=80, a_threshold=95):
 #  cuase we need to use sum and duplicate then we need to use sparse matrix, better ?? Then we could change it here
 def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     """Normalize with TMM approach, based on PePr
-      ref, we use the mean of two samples and compare to it
-      data_rep present the data..
       we accept overall_coverage as one parameter, and deal with it;
       coverall_coverage [ signal_0[ file_0, file_1, file_2], signal_1[ file_0, file_1, file_2] ]
-      But each file is sparse_matrix, and now we need to get non-zeros columns
-
     """
     factors_signal = []
     dim = overall_coverage['dim']
-    # at least one file has one read in it...
-    # or we could get mask_ref with all data are over 0
     # non_zeros columns for all coverage from each file
-    # but we should change the value of overall_coverage; we just need to get factors
     valid_indices = None
     for i in range(dim[0]):
         for j in range(dim[1]):
@@ -203,8 +196,7 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
                 valid_indices = set(overall_coverage['data'][i][j].indices)
             else:
                 valid_indices &= set(overall_coverage['data'][i][j].indices)
-    #mask_ref = reduce(lambda x, y: set(x) & set(y),
-    #                         [overall_coverage[i][j].indices for j in range(dim[1]) for i in range(dim[0])])
+
     mask_ref = list(valid_indices)
     sm_ref = reduce(lambda x,y: x+y, [overall_coverage['data'][i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
     ref = sm_ref.data/float(dim[0]*dim[1])
@@ -213,11 +205,14 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
         factors_signal.append([])
         for j in range(dim[1]):  # normalize all replicates
             # get the data for each sample under each condition
-            data_rep = overall_coverage['data'][i][j][:, mask_ref].data
+            data_rep = np.squeeze(overall_coverage['data'][i][j][:, mask_ref].toarray())
             # here we sample data but in Manuel method, he uses the biggest ones...
             # we sort data by order which data_rep + ref descends and then choose the highest ones
-            tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 50000):]
-            # tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
+            # here we want to find the meeting points, so we need to get enough data whatever we could use it
+            # tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 20000):]
+            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 20000))
+            # tmp_idx = np.intersect1d(tmp_idx, np.squeeze(np.nonzero(data_rep > 0.5)))
+
             tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]
             # calculate m_values and a_values
@@ -301,10 +296,6 @@ def get_gc_content_proportion(seq):
 
 if __name__ == "__main__":
     ## test correctness of this function compared to old method
-    # old method
-
-    # new method
-
     class Cov(object):
         pass
     cov = Cov()

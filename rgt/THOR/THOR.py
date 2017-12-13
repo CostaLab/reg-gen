@@ -37,7 +37,7 @@ from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
-from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes, is_stats_valid
+from get_statistics import *
 from MultiCoverageSet import get_training_set, transform_data_for_HMM
 # External
 
@@ -77,9 +77,9 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 
     tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Scaling factors")
 
-    func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
-                                          verbose=options.verbose, outputdir=options.outputdir,
-                                          report=True, poisson=options.poisson)
+    ## change these relationship between this two replicates
+    # I will do it by using 12 data points for it; Othersides, the function differs into two conditions
+    ## read
     exp_data.compute_sm_putative_region_index()
      
     print('Compute HMM\'s training set', file=sys.stderr)
@@ -87,6 +87,14 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     training_data, s0, s1, s2 = get_training_set(exp_data, True, options.name, options.foldchange,
                                                        options.threshold, options.size_ts, 0)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2, report=True)
+
+    # after we make sure the data and then we build this relationship;; Or whatever for one genes?? But we consider for all genes
+    # if we uses the same var and mean relationship for all samples, it's fine to put it before states
+    # but now we want to relate it to different states;; then we consider it after training sets
+    func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
+                                          verbose=options.verbose, outputdir=options.outputdir,
+                                          report=True, poisson=options.poisson)
+
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
 
     print('Train HMM', file=sys.stderr)
@@ -114,14 +122,17 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
         if not exp_data.data_valid:
             print('less data and then consider next chromasome',file=sys.stderr)
             continue
-
+        options.save_bw = False
         ## After this step, we have already normalized data, so we could output normalization data
-        """
         if options.save_input:
+            print("Begin: output nomalized inputs read data into file", file=sys.stderr)
             exp_data.output_input_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
-        if options.save_wig:
+            print("End: output nomalized inputs read data into file", file=sys.stderr)
+        if options.save_bw:
+            print("Begin : output nomalized signal read data into file", file=sys.stderr)
             exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
-        """
+            print("End: output nomalized signal read data into file", file=sys.stderr)
+
         no_bw_files.append(i)
         exp_data.compute_sm_putative_region_index()
 
@@ -147,7 +158,8 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
     _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
     _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
     
-    merge_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
+    if options.save_bw:
+        merge_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
 
 
 def main():
@@ -158,35 +170,35 @@ def main():
     region_giver = RegionGiver(chrom_sizes_file, options.regions)
     # get statistic information for each file
     # stats_total, stats_data, read_size, and other parts..
-
     signal_statics = get_file_statistics(bamfiles, region_giver)
     region_giver.update_regions(signal_statics)
 
-    inputs_statics = None
-    # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-    # inputs_statics = get_file_statistics(inputs_files, region_giver)
-    # region_giver.update_regions(inputs_statics)
-    # compute extension size if option.ext are not given
-    # for testing..
-    options.exts = [71,64,91,96] #[70,95,115,90]
-    # options.inputs_exts = [228,228,231,231]
+    options.exts = [225, 225, 225, 230] # [165,125,150,150] # [71,64,91,96]
+    options.exts_inputs = [230, 230, 230, 230] #[140,215,140,140]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
     else:
-        options.exts, _ = compute_extension_sizes(signal_statics)
+        options.exts, _ = compute_extension_sizes(signal_statics, options.report)
     tracker.write(text=" ".join(map(lambda x: str(x), options.exts)),
                   header="Extension size for signal files (rep1, rep2, input1, input2)")
-    if inputs_statics:
+
+    if inputs_files:
+        inputs_statics = get_file_statistics(inputs_files, region_giver)  # None
+        region_giver.update_regions(inputs_statics)
         if options.exts_inputs:
-            # less one step how to get inputs size and then give it
             update_statics_extension_sizes(inputs_statics,options.exts_inputs)
         else:
-            options.exts_inputs, _ = compute_extension_sizes(inputs_statics)
-        tracker.write(text=" ".join(map(lambda x: str(x), options.exts)),
+            options.exts_inputs, _ = compute_extension_sizes(inputs_statics, options.report)
+            # Foe given data we don't need to adjust data;; Only what we have we need to do
+            options.exts = adjust_extension_sizes(inputs_statics, signal_statics)
+            options.exts_inputs = adjust_extension_sizes(signal_statics, inputs_statics)
+        tracker.write(text=" ".join(map(lambda x: str(x), options.exts_inputs)),
                   header="Extension size for inputs files (rep1, rep2, input1, input2)")
+    else:
+        inputs_statics = None
     # one function to transform these parameters, after we read and do it into callback function??
     # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
-    options.scaling_factors_ip = [[0.5567, 0.806], [0.822, 0.716]]
+    # options.scaling_factors_ip = [[0.75940216055215548, 0.90398630007239622], [1.0896493434245285, 0.92734361836773005]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
 

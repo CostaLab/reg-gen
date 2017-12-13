@@ -258,9 +258,10 @@ class MultiCoverageSet(): # DualCoverageSet
             else:
                 self.scores += signal_rate
 
-    def compute_sm_putative_region_index(self, l=10, eta=0.7):
+    def compute_sm_putative_region_index(self, l=8, eta=1.0):
         """Compute putative differential peak regions as follows:
         - score must be > 0, i.e. everthing
+        - how should we define l to make it adjust to data??
         - overall coverage in library 1 and 2 must be > 3"""
         try:
             self._compute_sm_score()
@@ -275,7 +276,21 @@ class MultiCoverageSet(): # DualCoverageSet
         except:
             self.indices_of_interest = None
 
-    def output_input_bw(self, filename, chrom_sizes_file):
+    def sm_change_data_2int(self):
+        """change read counts into another format
+        default: change float into integer by using 'int'
+        """
+        # change data for each cov sm_coverage and sm_cov.sm_overall_cov.data, the other will change at same time
+        for i in range(self.dim[0]):
+            for j in range(self.dim[1]):
+                cov = self.covs[i][j]
+                cov.sm_overall_cov.data = np.rint(cov.sm_overall_cov.data)  # we could assume all values are non-negative
+                cov.sm_overall_cov.eliminate_zeros()
+                ## if some is bellow 0, we need to delete it
+                cov.sm_overall_strand_cov.data = np.rint(cov.sm_overall_strand_cov.data)
+                cov.sm_overall_strand_cov.eliminate_zeros()
+
+    def output_input_bw(self, filename, chrom_sizes_file, save_wig=False):
         """output inputs as bigwig file"""
         for sig in range(self.dim[0]):
             for rep in range(self.dim[1]):
@@ -285,21 +300,22 @@ class MultiCoverageSet(): # DualCoverageSet
                 t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
                 c = " ".join(t)
                 os.system(c)
-                #if not save_wig:
-                #    os.remove(tmp_path)
+                if not save_wig:
+                    os.remove(tmp_path)
 
-    def output_signal_bw(self, filename, chrom_sizes_file):
+    def output_signal_bw(self, filename, chrom_sizes_file, save_wig=False):
         """Output signal files as bigwig files"""
         for sig in range(self.dim[0]):
             for rep in range(self.dim[1]):
                 # self.covs[sig][rep].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes_file, save_wig=save_wig)
-                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep)
+                tmp_path = filename + '-s%s-rep%s.wig' %(sig, rep)
                 write_wig(self.covs[sig][rep], tmp_path)
-                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
+                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename+'-s%s-rep%s.bw' %(sig, rep)]
                 c = " ".join(t)
                 os.system(c)
-                #if not save_wig:
-                #    os.remove(tmp_path)
+                if not save_wig:
+                    os.remove(tmp_path)
+
 
 
 def cov_to_smatrix(cov):
@@ -328,13 +344,18 @@ def sm_subtract(cov, sm_cs):
     """subtract coverage set in sparse matrix format"""
     # firstly test if they have same region; else not do it!!
     assert set(cov.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
-    cov.sm_overall_cov.data -= sm_cs.sm_overall_cov.data
+    # here one problem is that data are in different dimension, so
+    cov.sm_overall_cov.data -= np.ravel(sm_cs.sm_overall_cov[:, cov.sm_overall_cov.indices].toarray())
     cov.sm_overall_cov.data = np.clip(cov.sm_overall_cov.data, 0,
                                       cov.sm_overall_cov.max())  # make negative into zeros
     cov.sm_overall_cov.eliminate_zeros()  # eliminate zeros elements in matrix
-
-    # do process on overall_strand_coverage
-    cov.sm_overall_strand_cov.data -= sm_cs.sm_overall_strand_cov.data
+    # do process on overall_strand_coverage, one thing we keep connection between cov and overall_covs
+    # so we can only deal with data;
+    ## cov.sm_overall_strand_cov -= sm_cs.sm_overall_strand_cov, same effect like this
+    row_indptr = cov.sm_overall_strand_cov.indptr
+    for row_idx in range(len(row_indptr)-1):
+        cov.sm_overall_strand_cov.data[row_indptr[row_idx]:row_indptr[row_idx+1]] -= \
+            np.ravel(sm_cs.sm_overall_strand_cov[row_idx, cov.sm_overall_strand_cov.indices[row_indptr[row_idx]:row_indptr[row_idx+1]]].toarray())
     cov.sm_overall_strand_cov.data = np.clip(cov.sm_overall_strand_cov.data, 0,
                                       cov.sm_overall_strand_cov.max())  # make negative into zeros
     cov.sm_overall_strand_cov.eliminate_zeros()  # eliminate zeros elements in matrix
@@ -401,13 +422,10 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
             signal_diff.data = np.abs(signal_diff.data)
 
     # order of list doesn't matter
-    diff_cov = np.percentile(filter(lambda x: x > 0, signal_diff.data), min_t) / exp_data.dim[1]  # get the mean of each
+    diff_cov = np.percentile(filter(lambda x: x > 0, signal_diff.data), min_t) / float(exp_data.dim[1])  # get the mean of each
 
-    # if test:
-    #    diff_cov, threshold = 2, 1.5
-    # here we append s0, s1 and s2;; So if once failure, but it append it into that; which is not right!!
-    # compute training set parameters, re-compute training set if criteria do not hold
-
+    if test:
+        diff_cov, threshold = 2, 1.5
     done = False
     while not done:
         s0, s1, s2, tmp = [], [], [], []
@@ -460,7 +478,7 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
                 np.logical_and(el[:, 1] < np.percentile(el[:, 1], 98.5) * (el[:, 1] > np.percentile(el[:, 1], 1.5)),
                                el[:, 2] < np.percentile(el[:, 2], 98.5) * (el[:, 2] > np.percentile(el[:, 2], 1.5))))]
             """
-            el = el[np.where(np.logical_and(el[:, 1]<np.percentile(el[:, 1], 98), el[:, 2]<np.percentile(el[:, 2], 98)))]
+            el = el[np.where(np.logical_and(el[:, 1]<np.percentile(el[:, 1], 90), el[:, 2]<np.percentile(el[:, 2], 90)))]
 
         all_data.append(el)
 
@@ -496,7 +514,6 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
 
     if configuration.DEBUG:
         output_training_set(name, s0_v, s1_v, s2_v)
-
     return training_data, s0_v, s1_v, s2_v
 
 
@@ -518,13 +535,15 @@ def output_training_set(name, s0_v, s1_v, s2_v):
 def write_wig(sm_cov, filename):
     """Output coverage in filename of wig format."""
     f = open(filename, 'w')
-    i = 0
+    print('track type=wiggle_0', file=f)
     for region in sm_cov.genomicRegions:
-        print('variableStep chrom=' + str(region.chrom) + ' span=' + str(sm_cov.stepsize), file=f)
-        c = sm_cov.coverage[i]
-        i += 1
+        print('variableStep\tchrom=' + str(region.chrom) + '\tspan=' + str(sm_cov.stepsize), file=f)
+        c = sm_cov.sm_overall_cov # we need to use nomalized data to do it; And then it is sm_overall_cov
         for j in c.indices:
-            print(j * sm_cov.stepsize + ((sm_cov.binsize-sm_cov.stepsize)/2), c[:,j], file=f)
+            if int(c[:,j].data) > 0 : # only output non zeros data
+                # print(j * sm_cov.stepsize + ((sm_cov.binsize-sm_cov.stepsize)/2), int(c[:,j].data), file=f)
+                data="\t".join([str(j * sm_cov.stepsize + ((sm_cov.binsize-sm_cov.stepsize)/2)), str(int(c[:,j].data))])
+                print(data, file=f)
     f.close()
 
 
