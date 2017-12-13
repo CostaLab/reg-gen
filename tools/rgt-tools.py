@@ -315,6 +315,12 @@ if __name__ == "__main__":
                                             help="[BED] Standardize the chromosomes.")
     parser_bedschrom.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
+    ############### BED seperate strand ################################
+    parser_bedstrand = subparsers.add_parser('bed_strand',
+                                             help="[BED] Seperate the BED files by strandness")
+    parser_bedstrand.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedstrand.add_argument('-o', metavar='output', type=str, help="Input directory")
+
     ############### BED add overlapping region name ################################
     parser_adddata = subparsers.add_parser('bed_add_data',
                                              help="[BED] Add overlapping region name")
@@ -1291,6 +1297,23 @@ if __name__ == "__main__":
         nbed = bed.standard_chrom()
         nbed.write(args.i)
 
+
+    ############### BED seperate strand ###########################
+    #
+    elif args.mode == "bed_strand":
+        print(tag + ": [BED] Seperate by strandness")
+        bed = GenomicRegionSet(args.i)
+        bed.read(args.i)
+        fwd = GenomicRegionSet("FWD")
+        rev = GenomicRegionSet("REV")
+        for r in bed:
+            if r.orientation == "+":
+                fwd.add(r)
+            elif r.orientation == "-":
+                rev.add(r)
+        name = os.path.basename(args.i).rpartition(".")[0]
+        fwd.write(os.path.join(args.o, name+"_FWD.bed"))
+        rev.write(os.path.join(args.o, name+"_REV.bed"))
 
     ############### BED add overlapping region name ###########################
     #

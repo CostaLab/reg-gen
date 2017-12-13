@@ -735,7 +735,7 @@ def main():
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.col, args.c, args.row):
+            if "reads" not in (args.g, args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
             # if "regions" not in (args.col, args.c, args.row):
