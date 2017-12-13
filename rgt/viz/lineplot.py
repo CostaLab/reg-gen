@@ -533,7 +533,7 @@ class Lineplot:
                                     ym = 1.2 * max(max(yaxmax), max(sx_ymax))
                                     ax.set_ylim([-ym, ym])
 
-                    # ax.get_yaxis().set_label_coords(-0.1, 0.5)
+                    # ax.get_yaxis().set_label_coords(-2, 0.5)
                     ax.set_xlim([-self.extend, self.extend])
                     plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
                     plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
@@ -545,6 +545,7 @@ class Lineplot:
 
             handles = []
             labels = []
+            ylabel_x = 0.1
             for ir, r in enumerate(self.data[g].keys()):
                 if ylog:
                     nr = r + " (log10)"
@@ -552,14 +553,14 @@ class Lineplot:
                     nr = r
                 try:
                     axs[ir, 0].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
-                    axs[ir, 0].get_yaxis().set_label_coords(-0.1, 0.5)
+                    axs[ir, 0].get_yaxis().set_label_coords(-ylabel_x, 0.5)
                 except:
                     try:
                         axs[ir].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
-                        axs[ir].get_yaxis().set_label_coords(-0.1, 0.5)
+                        axs[ir].get_yaxis().set_label_coords(-ylabel_x, 0.5)
                     except:
                         axs.set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
-                        axs.get_yaxis().set_label_coords(-0.1, 0.5)
+                        axs.get_yaxis().set_label_coords(-ylabel_x, 0.5)
 
                 for ic, c in enumerate(self.data[g][r].keys()):
                     try:
