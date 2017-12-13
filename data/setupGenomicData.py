@@ -12,6 +12,14 @@ from optparse import OptionParser
 from os import system, path, remove, mkdir
 from sys import platform
 
+
+def download(url, prefix, output=None):
+    if output:
+        system("wget -c --tries=0 --read-timeout=30 " + url + " -O " + path.join(prefix, output))
+    else:
+        system("wget -c --tries=0 --read-timeout=30 " + url + " -P " + prefix)
+
+
 # Optional Input
 usage_message = "python setupGenomicData.py [options]"
 
@@ -102,17 +110,21 @@ if options.hg19:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/"
         chr_list = ["chr" + str(e) for e in range(1, 23) + ["X", "Y", "M"]]
         output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
         for chr_name in chr_list:
             print("Downloading hg19 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
-            if path.isfile(gz_file_name): remove(gz_file_name)
-            system("wget -c " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
+            if path.isfile(gz_file_name):
+                remove(gz_file_name)
+            download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
-            remove(gz_file_name)
+            to_remove.append(gz_file_name)
             print("OK")
         output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.v19.annotation.gtf")
@@ -125,7 +137,7 @@ if options.hg19:
         gtf_output_file_name_gz = path.join(output_location, "gencode.v19.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading hg19 GTF (gene annotation) from genode")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -157,7 +169,7 @@ if options.hg38:
         print("Downloading hg38 genome")
         gz_file_name = path.join(output_location, "GRCh38.primary_assembly.genome.fa.gz")
         # if(path.isfile(gz_file_name)): remove(gz_file_name)
-        system("wget -c " + gen_root_url + " -P " + output_location)
+        download(gen_root_url, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_genome_file.write(gz_file.read())
         gz_file.close()
@@ -176,7 +188,7 @@ if options.hg38:
         gtf_output_file_name_gz = path.join(output_location, "gencode.v24.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading hg19 GTF (gene annotation) from genode")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -207,17 +219,20 @@ if options.mm9:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/mm9/chromosomes/"
         chr_list = ["chr" + str(e) for e in range(1, 20) + ["X", "Y", "M"]]
         output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
         for chr_name in chr_list:
             print("Downloading MM9 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
             if path.isfile(gz_file_name): remove(gz_file_name)
-            system("wget -c " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
+            download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
-            remove(gz_file_name)
+            to_remove.append(gz_file_name)
             print("OK")
         output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.vM1.annotation.gtf")
@@ -230,7 +245,7 @@ if options.mm9:
         gtf_output_file_name_gz = path.join(output_location, "gencode.vM1.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM9 GTF (gene annotation)")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -259,7 +274,7 @@ if options.mm10:
         output_genome_file = open(output_genome_file_name, "w")
         print("Downloading mm10 genome")
         gz_file_name = path.join(output_location, "GRCm38.primary_assembly.genome.fa.gz")
-        system("wget -c " + gen_root_url + " -P " + output_location)
+        download(gen_root_url, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_genome_file.write(gz_file.read())
         gz_file.close()
@@ -278,7 +293,7 @@ if options.mm10:
         gtf_output_file_name_gz = path.join(output_location, "gencode.vM11.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM10 GTF (gene annotation)")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -306,19 +321,20 @@ if options.zv9:
         gen_root_url = "ftp://ftp.ensembl.org/pub/release-79/fasta/danio_rerio/dna/"
         chr_list = [str(e) for e in range(1, 25)] + ["MT"]
         output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
         for chr_name in chr_list:
             print("Downloading ZV9 genome (chromosome " + chr_name + ")")
             gz_file_name = path.join(output_location, "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz")
             if path.isfile(gz_file_name): remove(gz_file_name)
             # Danio_rerio.Zv9.dna.chromosome.8.fa.gz
-            system(
-                "wget -c " + gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
+            download(gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
-            remove(gz_file_name)
             print("OK")
         output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "Danio_rerio.Zv9.79.gtf")
@@ -332,7 +348,7 @@ if options.zv9:
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.Zv9.79.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading ZV9 GTF (gene annotation)")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -361,19 +377,20 @@ if options.zv10:
         gen_root_url = "ftp://ftp.ensembl.org/pub/release-84/fasta/danio_rerio/dna/"
         chr_list = [str(e) for e in range(1, 25)] + ["MT"]
         output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
         for chr_name in chr_list:
             print("Downloading ZV10 genome (chromosome " + chr_name + ")")
             gz_file_name = path.join(output_location, "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz")
             if path.isfile(gz_file_name): remove(gz_file_name)
             # Danio_rerio.GRCz10.dna.chromosome.8.fa.gz
-            system(
-                "wget -c " + gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
+            download(gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
-            remove(gz_file_name)
             print("OK")
         output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "Danio_rerio.GRCz10.84.gtf")
@@ -387,7 +404,7 @@ if options.zv10:
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.GRCz10.84.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading ZV10 GTF (gene annotation)")
-        system("wget -c " + gtf_url + " -P " + output_location)
+        download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -413,16 +430,18 @@ if options.hg38_rm:
     output_location = path.join(curr_dir, "hg38", "repeat_maskers")
     if not path.exists(output_location): mkdir(output_location)
 
+    to_remove = []
     for masker in gen_root_url:
         output_file = open(path.join(output_location, masker), "w")
         gz_file_name = path.join(output_location, masker + ".gz")
-        system("wget -c " + root_url + masker + ".gz" + " -P " + output_location)
+        download(root_url + masker + ".gz", output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_file.write(gz_file.read())
         gz_file.close()
-        remove(gz_file_name)
         print(path.join(output_location, masker) + "\t.....OK")
         output_file.close()
+    for gz_file_name in to_remove:
+        remove(gz_file_name)
 
 if options.hg19_rm:
     root_url = "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/variations/"
@@ -433,19 +452,20 @@ if options.hg19_rm:
     output_location = path.join(curr_dir, "hg19", "repeat_maskers")
     if not path.exists(output_location): mkdir(output_location)
 
+    to_remove = []
     for masker in gen_root_url:
         bedname = masker.split(".")[0]+".bed"
         output_file = open(path.join(output_location, bedname), "w")
         gz_file_name = path.join(output_location, masker)
-        system("wget -c " + root_url + masker + " -P " + output_location)
+        download(root_url + masker, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_file.write(gz_file.read())
         gz_file.close()
-        remove(gz_file_name)
         print(path.join(output_location, bedname) + "\t.....OK")
         output_file.close()
-
-
+        to_remove.append(gz_file_name)
+    for gz_file_name in to_remove:
+        remove(gz_file_name)
 
 
 if options.mm9_rm:
@@ -461,21 +481,25 @@ if options.mm9_rm:
                     "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Unknown.bed"]
 
     output_location = path.join(curr_dir, "mm9", "repeat_maskers")
-    if not path.exists(output_location): mkdir(output_location)
+    if not path.exists(output_location):
+        mkdir(output_location)
 
+    to_remove = []
     for masker in gen_root_url:
         bedname = path.basename(masker).replace("mm9_repmask_", "").replace(".gz", "")
 
         if ".gz" in masker:
             output_file = open(path.join(output_location, bedname), "w")
             gz_file_name = path.join(output_location, path.basename(masker))
-            system("wget -c " + masker + " -P " + output_location)
+            download(masker, output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_file.write(gz_file.read())
             gz_file.close()
-            remove(gz_file_name)
             output_file.close()
+            to_remove.append(gz_file_name)
         else:
-            system("wget -c " + masker + path.join(output_location, bedname))
+            download(masker, output_location, output=bedname)
 
         print(path.join(output_location, bedname) + "\t.....OK")
+    for gz_file_name in to_remove:
+        remove(gz_file_name)
