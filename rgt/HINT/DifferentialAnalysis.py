@@ -63,6 +63,8 @@ def diff_analysis_args(parser):
                         help="Path where the output bias table files will be written. DEFAULT: current directory")
     parser.add_argument("--output-prefix", type=str, metavar="STRING", default="differential",
                         help="The prefix for results files. DEFAULT: differential")
+    parser.add_argument("--standardize", action="store_true", default=False,
+                        help="If set, the signal will be rescaled to (0, 1) for plotting.")
 
 
 def diff_analysis_run(args):
@@ -194,7 +196,7 @@ def diff_analysis_run(args):
 
         # print the line plot for each factor
         fig, ax = plt.subplots()
-        line_plot(args, err, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
+        line_plot(args, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
                   pwm_dict_by_tf[mpbs_name], fig, ax)
         plt.close(fig)
 
@@ -375,7 +377,7 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
     return factor1, factor2
 
 
-def line_plot(args, err, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
+def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
     # compute the average signal
     mean_signal_1 = np.zeros(args.window_size)
     mean_signal_2 = np.zeros(args.window_size)
@@ -549,3 +551,12 @@ def get_stat_results(ps_tc_results_by_tf):
         stat_results_by_tf[mpbs_name].append(pvalue)
 
     return stat_results_by_tf
+
+
+def standard(vector):
+    max_ = max(vector)
+    min_ = min(vector)
+    if max_ > min_:
+        return [(e - min_) / (max_ - min_) for e in vector]
+    else:
+        return vector
