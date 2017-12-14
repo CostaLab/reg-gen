@@ -10,8 +10,6 @@ import sys
 import os
 import numpy as np
 
-from rgt.THOR.RegionGiver import RegionGiver
-
 
 def get_read_statistics(fname, chroms):
     """ return how many chromosomes are in each files and how many reads are correspondes to each file
@@ -58,7 +56,7 @@ def get_read_statistics(fname, chroms):
     return stats_total, stats_data, isspatial
 
 
-def get_file_statistics(fnames,region_giver):
+def get_file_statistics(fnames, region_giver):
     """ get read statistical data for a file list, return a dictionary for each file"""
     if isinstance(fnames[0], list):
         file_dimension = (len(fnames), len(fnames[0]))
@@ -71,7 +69,8 @@ def get_file_statistics(fnames,region_giver):
         statics.append([])
         for j in range(file_dimension[1]):
             stats_total, stats_data, isspatial = get_read_statistics(fnames[i][j], chroms)
-            statics[i].append({'fname':fnames[i][j], 'stats_total':stats_total,'stats_data':stats_data, 'isspatial':isspatial})
+            read_size = get_read_size(fnames[i][j], stats_data)
+            statics[i].append({'fname':fnames[i][j], 'stats_total':stats_total,'stats_data':stats_data, 'isspatial':isspatial, 'read_size':read_size})
     # we could get different stats_data and we need to unify them...
     return {'data':statics, 'dim':file_dimension}
 
@@ -135,62 +134,68 @@ def init(bam_filename, stats_data):
     """:return cov_f and cov_r in dictionary
      cov_f forward coverage, left-most position
      cov_r reverse coverage, right-most position
+     One problem here is that we don't need to dip into many chroms
+     Since there will be sth repetive; So we just read one data
     """
     cov_f, cov_r = {},{} # store forward and reverse strand data
-    sample_dis = get_sample_dis(stats_data, 200000)
 
     f = pysam.Samfile(bam_filename, "rb")
-
-    for chrom_idx in range(len(stats_data)):
-        i = 0
-        for read in f.fetch(stats_data[chrom_idx][0]):
-            # print(stats_data[chrom_idx][0])
-            if i >= sample_dis[chrom_idx]:
-                break
-            if not read.is_unmapped:
-                if read.is_reverse: # choose right-most pos for reverse strand
-                    cov_r[read.pos] = 1
-                else:
-                    cov_f[read.pos] = 1
-            i += 1
-        # print(i)
+    i =0
+    for read in f.fetch(stats_data[-1][0]):
+        if i >= 200000:
+            break
+        if not read.is_unmapped:
+            if read.is_reverse: # not choose right-most pos for reverse strand
+                cov_r[read.pos] = 1
+            else:
+                cov_f[read.pos] = 1
+        i += 1
     if not cov_f and not cov_r:
         return None, None
     else:
         return cov_f, cov_r
 
 
-def ccf(cov_f, cov_r, k):
-    """Return value of cross-correlation function"""
-    #sums = 0
-    forward_keys = set(cov_f.keys())
-    reverse_keys = set(map(lambda x: x - k, cov_r.keys()))
-    keys = forward_keys & reverse_keys  # union of positions
+def h(forward_keys, reverse_keys, pos):
+    """:return h value for pos in fforward keys an reverese_keys"""
+    if pos in forward_keys and pos in reverse_keys:
+        return 2
+    else: # no zeros, since h value we uses are based on one value
+        return 1
 
+
+def ccf(forward_keys, reverse_keys, k):
+    """Return value of cross-correlation function, but here we need a better method to estimate fragment sizes
+    w.r.t thesis from M, it uses h() function for one position in Union of forward and reverse keys
+    """
+    # sums = 0
+    tmp_reverse_keys = set([x-k for x in reverse_keys])
+    keys = forward_keys & tmp_reverse_keys  # union of positions
     return len(keys), k
 
 
-def get_extension_size(fname, stats_data, start=0, end=600, stepsize=3):
+def get_extension_size(fname, stats_data, read_size, start=0, end=600, stepsize=3):
     """return extension size for each bam files.. But it should be independent
 
     Before its name is get_fragment_size but later changed into get_extension_szie
     """
     cov_f, cov_r = init(fname, stats_data)
     if cov_f and cov_r:
-        read_size = get_read_size(fname, stats_data)
         # start = max(read_size, start - read_size)
         start = max(0, start - read_size)
-        r = [ccf(cov_f, cov_r, k) for k in range(start, end, stepsize)]
+        forward_keys = set(cov_f.keys()) # left-most position for forward strand
+        reverse_keys = set(cov_r.keys())  # not right-most position for reverse strand
+        r = [ccf(forward_keys, reverse_keys, k) for k in range(start, end, stepsize)]
         cov_f.clear()
         cov_r.clear()
-        return read_size, max(r)[1], sorted(r, reverse=True)
+        return max(r)[1], sorted(r, reverse=True)
     else:
         cov_r.clear()
         cov_f.clear()
-        return None, None, None
+        return None, None
 
 
-def compute_extension_sizes(signal_statics, report=True):
+def compute_extension_sizes(signal_statics, report=False):
     """Compute Extension sizes for bamfiles and input files
     Argument: signal_files are in a list format are: [[sample1_file1, sample1_file2], [sample2_file1, sample2_file2]]
           inputs_files are in the same format
@@ -204,30 +209,25 @@ def compute_extension_sizes(signal_statics, report=True):
     end = 600
     ext_stepsize = 5
     ext_data_list = []
-    signal_extension_sizes, read_sizes = None, None
-    # inputs_extension_sizes, inputs_read_sizes = None, None
 
-    # compute extension size for all signal files
     if signal_statics:
         print("Computing read extension sizes", file=sys.stderr)
         file_dimension = signal_statics['dim']
-        signal_extension_sizes = np.ones(file_dimension, int) * -1
-        read_sizes = np.ones(file_dimension, int) * -1
+        signal_extension_sizes = []
 
         for i in range(file_dimension[0]):
+            signal_extension_sizes.append([])
             for j in range(file_dimension[1]):
-
-                read_size, e, ext_data = get_extension_size(signal_statics['data'][i][j]['fname'], signal_statics['data'][i][j]['stats_data'],  start=start, end=end, stepsize=ext_stepsize)
-                read_sizes[i][j] = read_size
-                signal_extension_sizes[i][j] = e
+                ext_size, ext_data = get_extension_size(signal_statics['data'][i][j]['fname'], signal_statics['data'][i][j]['stats_data'], \
+                                                 read_size=signal_statics['data'][i][j]['read_size'], start=start, end=end, stepsize=ext_stepsize)
+                signal_extension_sizes[i].append(ext_size)
                 ext_data_list.append(ext_data)
-                signal_statics['data'][i][j]['read_size'] = read_size
-                signal_statics['data'][i][j]['extension_size'] = e
+                signal_statics['data'][i][j]['extension_size'] = ext_size
         print('end of compute extension size for signal files ', file=sys.stderr)
-    if report and ext_data_list:
-        print(ext_data_list, signal_extension_sizes)
 
-    return signal_extension_sizes, read_sizes
+        if report and ext_data_list:
+            print(ext_data_list, signal_extension_sizes)
+        return signal_extension_sizes
 
 
 def adjust_extension_sizes(signal_statics, inputs_statics):

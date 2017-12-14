@@ -267,8 +267,8 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         norm_regionset.read(options.norm_regions)
     else:
         norm_regionset = None
-    # options.binsize = 1000
-    # options.stepsize = 500
+    options.binsize = 1000
+    options.stepsize = 500
     print("Begin reading", file=sys.stderr)
     start = time.time()
     cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
@@ -360,6 +360,12 @@ class HelpfulOptionParser(OptionParser):
     def callback_list_float(self,  value, parser):
         setattr(parser.values,self.dest, map(lambda x: float(x), value.split(',')))
 
+    def transform_list_with_dim(self,list_data, dim):
+        """for example like: list for len and then we transform it into list with one certain dimension"""
+        tmp = np.asarray(list_data)
+        tmp=tmp.reshape(dim)
+        return map(list,tmp)
+
 
 def handle_input():
     parser = HelpfulOptionParser(usage=__doc__)
@@ -397,6 +403,8 @@ def handle_input():
                       help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for "
                            "each BAM file in config file. If option is not chosen, follow normalization strategy "
                            "(TMM or HK approach) [default: %default]")
+    parser.add_option("--call-peaks", dest="call_peaks", default=True, action="store_true",
+                      help="DO call peaks, if setting False, only output normalized bigWig files. [default: %default]")
     parser.add_option("--save-input", dest="save_input", default=False, action="store_true",
                       help="Save input-DNA file if available. [default: %default]")
     parser.add_option("--version", dest="version", default=False, action="store_true",
@@ -552,5 +560,7 @@ def handle_input():
 
     if options.exts_inputs is None:
         options.exts_inputs = []
+
+    options.call_peaks = True
 
     return options, bamfiles, genome, chrom_sizes, dims, inputs

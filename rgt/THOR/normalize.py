@@ -195,7 +195,7 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
             if valid_indices is None:
                 valid_indices = set(overall_coverage['data'][i][j].indices)
             else:
-                valid_indices &= set(overall_coverage['data'][i][j].indices)
+                valid_indices |= set(overall_coverage['data'][i][j].indices)
 
     mask_ref = list(valid_indices)
     sm_ref = reduce(lambda x,y: x+y, [overall_coverage['data'][i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
@@ -209,9 +209,9 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
             # here we sample data but in Manuel method, he uses the biggest ones...
             # we sort data by order which data_rep + ref descends and then choose the highest ones
             # here we want to find the meeting points, so we need to get enough data whatever we could use it
-            # tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 20000):]
-            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 20000))
-            # tmp_idx = np.intersect1d(tmp_idx, np.squeeze(np.nonzero(data_rep > 0.5)))
+            tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 20000):]
+            # tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 20000))
+            tmp_idx = np.intersect1d(tmp_idx, np.squeeze(np.nonzero(data_rep > 0.5)))
 
             tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]

@@ -201,7 +201,6 @@ class MultiCoverageSet(): # DualCoverageSet
 
                     sm_scale(self.covs[i][j], factors_ip[i][j])
 
-        self.factors_ip = factors_ip
         return factors_ip
 
     def sm_index2coordinates(self, index):
@@ -263,18 +262,21 @@ class MultiCoverageSet(): # DualCoverageSet
         - score must be > 0, i.e. everthing
         - how should we define l to make it adjust to data??
         - overall coverage in library 1 and 2 must be > 3"""
-        try:
-            self._compute_sm_score()
-            threshold = 2.0 / (eta*self.overall_coverage['data'][0][0].shape[-1])  # before it's considered if it's zero, now add some thresholds.
-            # threshold = 0.0
-            # if we use the method before , we could see, all scores are from data greater than 0
-            # second condition, we need average reads in one column bigger than l
-            signal_sum = 0
-            for i in range(self.dim[0]):
-                signal_sum += sum(self.overall_coverage['data'][i])
-            self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_sum > l*self.dim[1]).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
-        except:
-            self.indices_of_interest = None
+
+        self._compute_sm_score()
+        threshold = 2.0 / (eta*self.overall_coverage['data'][0][0].shape[-1])  # before it's considered if it's zero, now add some thresholds.
+        # threshold = 0.0
+        # if we use the method before , we could see, all scores are from data greater than 0
+        # second condition, we need average reads in one column bigger than l
+        signal_sum = 0
+        for i in range(self.dim[0]):
+            signal_sum += sum(self.overall_coverage['data'][i])
+        l = np.percentile(signal_sum.data, 90)
+        self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_sum > l*self.dim[1]).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
+        if len(self.indices_of_interest) < 50:
+            return False
+        else:
+            return True
 
     def sm_change_data_2int(self):
         """change read counts into another format
@@ -286,7 +288,6 @@ class MultiCoverageSet(): # DualCoverageSet
                 cov = self.covs[i][j]
                 cov.sm_overall_cov.data = np.rint(cov.sm_overall_cov.data)  # we could assume all values are non-negative
                 cov.sm_overall_cov.eliminate_zeros()
-                ## if some is bellow 0, we need to delete it
                 cov.sm_overall_strand_cov.data = np.rint(cov.sm_overall_strand_cov.data)
                 cov.sm_overall_strand_cov.eliminate_zeros()
 
@@ -315,7 +316,6 @@ class MultiCoverageSet(): # DualCoverageSet
                 os.system(c)
                 if not save_wig:
                     os.remove(tmp_path)
-
 
 
 def cov_to_smatrix(cov):
@@ -462,7 +462,7 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
         if not test and (len(s1) < 100 or len(s2) < 100):
             diff_cov = max(diff_cov - 15, 1)
             threshold = max(threshold - 0.1, 1.1)
-        else:
+        elif  s0 and s1 and  s2:
             done = True
 
     if configuration.DEBUG:
