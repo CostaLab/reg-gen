@@ -188,7 +188,8 @@ def get_extension_size(fname, stats_data, read_size, start=0, end=600, stepsize=
         r = [ccf(forward_keys, reverse_keys, k) for k in range(start, end, stepsize)]
         cov_f.clear()
         cov_r.clear()
-        return max(r)[1], sorted(r, reverse=True)
+        r = sorted(r, reverse=True)
+        return r[0][1], r
     else:
         cov_r.clear()
         cov_f.clear()
@@ -207,7 +208,7 @@ def compute_extension_sizes(signal_statics, report=False):
     """
     start = 0
     end = 600
-    ext_stepsize = 5
+    ext_stepsize = 3
     ext_data_list = []
 
     if signal_statics:
@@ -253,7 +254,7 @@ def update_statics_extension_sizes(statics, exts_list):
     if statics and exts_list:
         for i in range(statics['dim'][0]):
             for j in range(statics['dim'][1]):
-                statics['data'][i][j]['extension_size'] = exts_list[i*statics['dim'][1] + j]
+                statics['data'][i][j]['extension_size'] = exts_list[i][j]
 
 
 if __name__ == "__main__":

@@ -24,14 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Python
 from __future__ import print_function
-import sys
 
 # Internal
 import configuration
-from dpc_help import get_peaks, initialize, merge_output, handle_input
+from input_parser import handle_input
+from peak_calling import get_peaks, initialize
 from help_hmm import fit_sm_mean_var_distr
 from tracker import Tracker
-from postprocessing import _output_BED, _output_narrowPeak
+from postprocessing import output_BED, output_narrowPeak, merge_bw_output
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
@@ -53,7 +53,7 @@ def _write_info(tracker, report, **data):
     tracker.write(text=data['init_alpha'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (alpha)")
     tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
     tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
-    tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
+    # tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
     # print(configuration.FOLDER_REPORT)
     if report:
         tracker.make_html(configuration.FOLDER_REPORT)
@@ -69,35 +69,30 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     estimate parameters: all data included
     Return: distribution parameters
     """
-    # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
-
     exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
                           signal_statics=signal_statics, inputs_statics=inputs_statics)
 
     tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Scaling factors")
 
     data_valid = exp_data.compute_sm_putative_region_index()
-    if not data_valid:
-        print('data is not valid, so no peak calling')
+    if not data_valid: # less than 50 peaks we consider
+        print('putative region is not enough, less than 50, so no peak calling', file=sys.stderr)
+        sys.exit()
+
+    func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
+                                            verbose=options.verbose, outputdir=options.outputdir,
+                                            report=True, poisson=options.poisson)
 
     print('Compute HMM\'s training set', file=sys.stderr)
-    training_data, s0, s1, s2 = get_training_set(exp_data, True, options.name, options.foldchange,
-                                                       options.threshold, options.size_ts, 0)
+    training_data, s0, s1, s2 = get_training_set(exp_data, options.name, options.foldchange,
+                                                       options.threshold, options.size_ts, 3, test=False)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2, report=True)
-
-    # after we make sure the data and then we build this relationship;; Or whatever for one genes?? But we consider for all genes
-    # if we uses the same var and mean relationship for all samples, it's fine to put it before states
-    # but now we want to relate it to different states;; then we consider it after training sets
-    func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
-                                          verbose=options.verbose, outputdir=options.outputdir,
-                                          report=True, poisson=options.poisson)
 
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
 
     print('Train HMM', file=sys.stderr)
     m.fit([training_data], options.hmm_free_para)
     distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
-    del exp_data
     return m, func_para, init_mu, init_alpha, distr
 
 
@@ -117,7 +112,6 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
         exp_data = initialize(options=options, strand_cov=True, genome_path=genome, regionset=regionset, mask_file=region_giver.mask_file,
                               signal_statics=signal_statics, inputs_statics=inputs_statics)
 
-
         options.save_bw = False
         ## After this step, we have already normalized data, so we could output normalization data
         if options.save_input:
@@ -128,40 +122,34 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
             print("Begin : output nomalized signal read data into file", file=sys.stderr)
             exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
             print("End: output nomalized signal read data into file", file=sys.stderr)
-
         no_bw_files.append(i)
-
         # if we accept command to stop here, then we don't call diff-peaks, but only output normalized files
         if not options.call_peaks:
             continue
-
-        data_valid = exp_data.compute_sm_putative_region_index()
-        if not data_valid:
-            print('data is not valid, so no peak calling')
+        # after training we don't need to verify the number of putative_region
+        exp_data.compute_sm_putative_region_index()
 
         cov_data = exp_data.get_sm_covs(exp_data.indices_of_interest)
         states = m.predict(transform_data_for_HMM(cov_data))
-        
         inst_ratios, inst_pvalues, inst_output = get_peaks(states=states, cov_set=exp_data,
                                                            distr=distr, merge=options.merge, exts=options.exts,
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
                                                            merge_bin=options.merge_bin)
-
         output += inst_output
         pvalues += inst_pvalues
         ratios += inst_ratios
+
+    if options.save_bw:
+        merge_bw_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
 
     if options.call_peaks: # if we don't have call_peaks, we only output nomalized data
         res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output,
                                                                                options.no_correction, options.name,
                                                                                options.singlestrand)
 
-        _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
-        _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
-    
-    if options.save_bw:
-        merge_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
+        output_BED(options.name, res_output, res_pvalues, res_filter_pass)
+        output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
 
 
 def main():
@@ -175,9 +163,6 @@ def main():
     signal_statics = get_file_statistics(bamfiles, region_giver)
     region_giver.update_regions(signal_statics)
 
-    # compute extension size for signal files
-    options.exts = [225, 225, 225, 230] # [165,125,150,150] # [71,64,91,96]
-    options.exts_inputs = [230, 230, 230, 230] #[140,215,140,140]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
     else:

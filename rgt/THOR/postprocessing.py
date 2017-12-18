@@ -26,11 +26,15 @@ from __future__ import print_function
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
-# import re
+import os
 from scipy.stats.mstats import zscore
-from rgt.motifanalysis.Statistics import multiple_test_correction
 import numpy as np
-from numpy import log10
+import matplotlib.pyplot as plt
+
+from rgt.Util import npath
+from rgt.motifanalysis.Statistics import multiple_test_correction
+
+import configuration
 
 
 def merge_data(regions):
@@ -48,26 +52,7 @@ def merge_data(regions):
         el.data = str((c1, c2, max(logpvalue)))
 
 
-def output(name, regions):
-    color = {'+': '255,0,0', '-': '0,255,0'}
-    output = []
-    
-    for i, el in enumerate(regions):
-        tmp = el.data.split(',')
-        #counts = ",".join(map(lambda x: re.sub("\D", "", x), tmp[:len(tmp)-1]))
-        main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
-        int_sep = ';' #sep counts in <counts>
-        counts = ",".join(tmp).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
-        pvalue = float(tmp[len(tmp)-1].replace(")", "").strip())
-        
-        output.append("\t".join([el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
-              color[el.orientation], 0, counts]), pvalue)
-    
-    return output
-
 def merge_delete(ext_size, merge, peak_list, pvalue_list):
-#     peaks_gain = read_diffpeaks(path)
-    
     regions_plus = GenomicRegionSet('regions') #pot. mergeable
     regions_minus = GenomicRegionSet('regions') #pot. mergeable
     regions_unmergable = GenomicRegionSet('regions')
@@ -75,6 +60,9 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     for i, t in enumerate(peak_list):
         chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
+        # change c1, c2 into integer
+        # c1 = map(int, c1)
+        # c2 = map(int, c2)
         r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '', \
                           orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
         if end - start > ext_size:
@@ -88,8 +76,7 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
                     regions_minus.add(r)
                 else:
                     regions_unmergable.add(r)
-                    
-                    
+
     if merge:
         regions_plus.extend(ext_size/2, ext_size/2)
         regions_plus.merge()
@@ -112,6 +99,7 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     return results
 
+
 def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name, singlestrand):
     """Filter DPs by strang lag and pvalue"""
     if not singlestrand:
@@ -121,12 +109,12 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
         pv_pass = [True] * len(pvalues)
         pvalues = map(lambda x: 10**-x, pvalues)
         
-        _output_BED(name + '-uncor', output, pvalues, pv_pass)
-        _output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
+        output_BED(name + '-uncor', output, pvalues, pv_pass)
+        output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
         
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
-        pv_pass = np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False)
+        pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
     
     if not singlestrand:
         filter_pass = np.bitwise_and(ratios_pass, pv_pass)
@@ -139,7 +127,8 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
     
     return output, pvalues, filter_pass
 
-def _output_BED(name, output, pvalues, filter):
+
+def output_BED(name, output, pvalues, filter):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
@@ -147,7 +136,7 @@ def _output_BED(name, output, pvalues, filter):
     
     for i in range(len(pvalues)):
         c, s, e, strand, counts = output[i]
-        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        p_tmp = -np.log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
         counts = ';'.join(counts.split(';')[:2] + [str(p_tmp)])
         
         if filter[i]:
@@ -155,25 +144,76 @@ def _output_BED(name, output, pvalues, filter):
     
     f.close()
 
-def _output_narrowPeak(name, output, pvalues, filter):
+
+def output_narrowPeak(name, output, pvalues, filter):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
     f = open(name + '-diffpeaks.narrowPeak', 'w')
     for i in range(len(pvalues)):
         c, s, e, strand, _ = output[i]
-        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        p_tmp = -np.log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
         if filter[i]:
             print(c, s, e, 'Peak' + str(i), 0, strand, 0, p_tmp, 0, -1, sep='\t', file=f)
     f.close()
-    
-def filter_deadzones(bed_deadzones, peak_regions):
-    """Filter by peaklist by deadzones"""
-    deadzones = GenomicRegionSet('deadzones')
-    deadzones.read(bed_deadzones)
-    peak_regions = peak_regions.subtract(deadzones, whole_region=True)
-    
-    return peak_regions
-    
+
+
+def merge_bw_output(signal_statics, options, no_bw_files, chrom_sizes):
+    dim = signal_statics['dim']
+
+    for i in range(dim[0]):
+        for j in range(dim[1]):
+            ## here are to output bed files for each signal file and output files
+            temp_bed = npath(options.name + '-s%s-rep%s_temp.bed'% (i, j))
+
+            files = [options.name + '-' + str(num) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
+            if len(files) > 1:
+                files = filter(lambda x: os.path.isfile(x), files)
+                t = ['bigWigMerge'] + files + [temp_bed]
+                c = " ".join(t)
+                os.system(c)
+
+                os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + temp_bed + ' > ' + temp_bed +'.sort')
+
+                t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' % (i, j)]
+                c = " ".join(t)
+                os.system(c)
+
+                for f in files:
+                    os.remove(f)
+                os.remove(temp_bed)
+                os.remove(temp_bed + ".sort")
+            else:
+                ftarget = [options.name + '-s%s-rep%s.bw' %(i, j)]
+                for k in range(len(ftarget)):
+                    c = ['mv', files[k], ftarget[k]]
+                    c = " ".join(c)
+                    os.system(c)
+
+
+def _output_ext_data(ext_data_list, bamfiles):
+    """Output textfile and png file of read size estimation"""
+    names = [os.path.splitext(os.path.basename(bamfile))[0] for bamfile in bamfiles]
+
+    for k, ext_data in enumerate(ext_data_list):
+        f = open(configuration.FOLDER_REPORT_DATA + 'fragment_size_estimate_' + names[k] + '.data', 'w')
+        for d in ext_data:
+            print(d[0], d[1], sep='\t', file=f)
+        f.close()
+
+    for i, ext_data in enumerate(ext_data_list):
+        d1 = map(lambda x: x[0], ext_data)
+        d2 = map(lambda x: x[1], ext_data)
+        ax = plt.subplot(111)
+        plt.xlabel('shift')
+        plt.ylabel('convolution')
+        plt.title('Fragment Size Estimation')
+        plt.plot(d2, d1, label=names[i])
+
+    ax.legend()
+    plt.savefig(configuration.FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
+    plt.close()
+
+
 if __name__ == '__main__':
     ext_size1 = int(sys.argv[1]) #100
     ext_size2 = int(sys.argv[2]) #100
@@ -184,7 +224,4 @@ if __name__ == '__main__':
     #regions_minus = merge_delete(path, ext_size2, '-', merge)
     
     i = 0
-    i = output(regions, i)
-    #i = output(regions_minus, i, '-')
-    
-    
+

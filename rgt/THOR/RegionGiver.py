@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import sys
 
-# from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 
@@ -72,7 +71,7 @@ class RegionGiver:
                         self.chrom_sizes_dict[chrom] = end
         elif not self.regionset:
             self.regionset = GenomicRegionSet('')
-            print("Call DPs on whole genome.", file=sys.stderr)
+            print("Process on whole genome.", file=sys.stderr)
             with open(chrom_file) as f:
                 for line in f:
                     line = line.strip()
@@ -81,16 +80,6 @@ class RegionGiver:
                     self.regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
                     self.chrom_sizes_dict[chrom] = end
 
-        """
-        if  ignored_regions_file: 
-            with open( ignored_regions_file) as f:
-                for line in f:
-                    if line:
-                        line = line.strip()
-                        line = line.split()
-                        c, s, e = line[0], int(line[1]), int(line[2])
-                        self.ignored_regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-        """
         if not self.regionset.sequences:
             print('something wrong here', file=sys.stderr)
             sys.exit(2)

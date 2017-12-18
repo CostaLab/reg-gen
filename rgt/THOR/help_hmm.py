@@ -126,11 +126,11 @@ def _plot_func(plot_data, outputdir):
     maxs = []  # max for x (mean), max for y (var)
     for i in range(2):
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i]))  # plot_data [(m, v, p)], 2 elements
-        maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
+        maxs.append(max(tmp[tmp < np.percentile(tmp, 95)]))
         if maxs[i] > 0.0:
             continue
         else:
-            maxs[i].append(max(tmp))
+            maxs[i]= max(tmp)
 
     for i in range(2):
         x = np.linspace(0, max(plot_data[i][0]), int(np.ceil(max(plot_data[i][0]))))
@@ -174,33 +174,32 @@ def _get_sm_data_rep(one_sample_cov, sample_size):
     vars = np.var(cov,axis=0)
     ms = np.insert(np.squeeze(np.asarray(ms)), len(idx),0)
     vars = np.insert(np.squeeze(np.asarray(vars)),len(idx),0)
-    # we add 0 to ms and vars, but consider computation time, could we find a better way??
-    # idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
-    #                   vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
     idx = np.logical_and(ms < np.percentile(ms, 99.75),vars < np.percentile(vars, 99.75))
     final_ms = ms[idx]
     final_vars = vars[idx]
     return final_ms, final_vars
 
 
-def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=10000):
+def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson):
     """Estimate empirical distribution (quadr.) based on empirical distribution
     On paper, it says for smaller samples, we use this, but for big samples, should we change methods ???
     change this method and combine it with get_data_rep;
     main thing is repeat to get data
     """
-    plot_data = []  # means, vars, paras
-    dim = overall_coverage['dim'] # now it's a list, so we can't do it , but we could use dictionary and add dimension into it
-    done = False
-    # for this function, if we get bad result, we do it again, to get better samples again
-    # and fit it again...until a good fit
-    loop_num = 10
-    while not done:
-        res = []
-        loop_num -= 1
-        for i in range(dim[0]):
-            try:
-                m, v = _get_sm_data_rep(overall_coverage['data'][i], sample_size)
+    dim = overall_coverage['dim']
+    if poisson:
+        print("Use Poisson distribution as emission", file=sys.stderr)
+        res = [np.array([0, 0]) for i in range(dim[1])]
+        return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
+    else:
+        plot_data = []  # means, vars, paras
+        # and fit it again...until a good fit or come to loop end
+        loop_num = 10
+        while True:
+            res = []
+            loop_num -= 1
+            for i in range(dim[0]):
+                m, v = _get_sm_data_rep(overall_coverage['data'][i], 5000)
 
                 if debug:
                     np.save(str(name) + "-emp-data" + str(i) + ".npy", zip(m,v))
@@ -216,26 +215,16 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
 
                 res.append(p)
                 plot_data.append((m, v, p))
+            # after loop successfully ends, we are done; but when exception happens, we can't make it end
+            if len(res) == dim[0]:
+                if report:
+                    _plot_func(plot_data, outputdir)
+                #  we got two different p for each sample and then build different functions
+                return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
 
-            except RuntimeError:
-                print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
-                break  # restart for loop
-        # after loop successfully ends, we are done; but when exception happens, we can't make it end
-        if len(res) == dim[0] or not loop_num:
-            done = True
-    if report:
-        _plot_func(plot_data, outputdir)
-
-    if poisson:
-        print("Use Poisson distribution as emission", file=sys.stderr)
-        p[0] = 0
-        p[1] = 0 # here it should be 0, we assume var = mean
-        res = [np.array([0, 0]), np.array([0, 0])]
-    # here sth wrong, cause we got two different p for each sample and then build different function
-    # then when we apply this function, we should apply to different samples, not just one!!!
-    # if at end we only use one mean-var distribution, so how should we deal with it ??
-    # return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
-    return [lambda x: _func_quad_2p(x, p[0], p[1]) for p in res], res
+            if loop_num <= 0:
+                print("Loop to get better mean- var fitting fails, exit system", file=sys.stderr)
+                sys.exit()
 
 
 def fit_states_mean_var():

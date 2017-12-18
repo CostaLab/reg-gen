@@ -58,7 +58,7 @@ class MultiCoverageSet(): # DualCoverageSet
 
                         del covs[i][j].coverage, covs[i][j].coverageorig, covs[i][j].overall_cov, covs[i][j].cov_strand_all, tmp_strand
                         # want to save memory spaces but should we also delete coveragerig??
-                        covs[i][j].coverage = tmp
+                        covs[i][j].coverage = tmp # here coverage keep original read data, but sm_overall_cov represent the changed data
                         covs[i][j].sm_overall_cov = sparse.hstack(covs[i][j].coverage, format='csr')
 
             return covs
@@ -161,13 +161,13 @@ class MultiCoverageSet(): # DualCoverageSet
 
         if inputs_statics and not factors_inputs:
             factors_inputs = []
-            print("Compute factors", file=sys.stderr)
+            print("Compute input normalization factors", file=sys.stderr)
 
             for i in range(signal_statics['dim'][0]):
                 factors_inputs.append([])
                 for j in range(signal_statics['dim'][1]):
                 # get_normalization_factor is 1-to-1 so, we use only covs, step_times is the times of original coverage bin size
-                    _, factor = get_normalization_factor_by_cov(self.covs[i][j], self.inputs_covs[i][j], step_times=3, zero_counts=0, \
+                    _, factor = get_normalization_factor_by_cov(self.covs[i][j], self.inputs_covs[i][j], step_times=1000/self.binsize, zero_counts=0, \
                                                     filename=name + '-norm' + str(i), debug=configuration.DEBUG,two_samples=False)
                     factors_inputs[i].append(factor)
 
@@ -221,6 +221,7 @@ class MultiCoverageSet(): # DualCoverageSet
         chrm_name = self.regionset[order].chrom
         # use binsize and step.size to get i
         start = index * self.stepsize
+        # here differs with Manuel method, he uses only step_size, not the bin_size; but bin_size it should be here
         end = min(start + self.binsize, self.regionset[order].final)
         return chrm_name, start, end
 
@@ -248,8 +249,8 @@ class MultiCoverageSet(): # DualCoverageSet
         """
         self.scores = None
         for i in range(self.dim[0]):
-            # get signal_avg for all data in one sample # here maybe sth wrong
-            signal_sum = sum([self.overall_coverage['data'][i][j].sum() for j in range(self.dim[1])])
+            # get signal_avg for all data in one sample # here differs to Manuel methods but get same results by using next threshold
+            signal_sum = sum([self.overall_coverage['data'][i][j].sum() for j in range(self.dim[1])]) ## /float(self.overall_coverage['data'][i][j].shape[-1])
             # use signal_avg to compare to each element in overall_coverage columns
             signal_rate = sum(self.overall_coverage['data'][i])/signal_sum
             if self.scores is None:
@@ -257,7 +258,7 @@ class MultiCoverageSet(): # DualCoverageSet
             else:
                 self.scores += signal_rate
 
-    def compute_sm_putative_region_index(self, l=8, eta=1.0):
+    def compute_sm_putative_region_index(self, l=10, eta=1.0):
         """Compute putative differential peak regions as follows:
         - score must be > 0, i.e. everthing
         - how should we define l to make it adjust to data??
@@ -271,7 +272,7 @@ class MultiCoverageSet(): # DualCoverageSet
         signal_sum = 0
         for i in range(self.dim[0]):
             signal_sum += sum(self.overall_coverage['data'][i])
-        l = np.percentile(signal_sum.data, 90)
+        # l = min(np.percentile(signal_sum.data, 90), l)
         self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_sum > l*self.dim[1]).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
         if len(self.indices_of_interest) < 50:
             return False
@@ -286,9 +287,12 @@ class MultiCoverageSet(): # DualCoverageSet
         for i in range(self.dim[0]):
             for j in range(self.dim[1]):
                 cov = self.covs[i][j]
-                cov.sm_overall_cov.data = np.rint(cov.sm_overall_cov.data)  # we could assume all values are non-negative
+                # here difference from old methods are, we round read value but old method only cut them
+                # cov.sm_overall_cov.data = np.rint(cov.sm_overall_cov.data)  # we could assume all values are non-negative
+                cov.sm_overall_cov.data = cov.sm_overall_cov.data.astype(int)
                 cov.sm_overall_cov.eliminate_zeros()
-                cov.sm_overall_strand_cov.data = np.rint(cov.sm_overall_strand_cov.data)
+                # cov.sm_overall_strand_cov.data = np.rint(cov.sm_overall_strand_cov.data)
+                cov.sm_overall_strand_cov.data = cov.sm_overall_strand_cov.data.astype(int)
                 cov.sm_overall_strand_cov.eliminate_zeros()
 
     def output_input_bw(self, filename, chrom_sizes_file, save_wig=False):
@@ -403,7 +407,7 @@ def transform_data_for_HMM(training_cov):
     return np.concatenate(tmp,axis=1)
 
 
-def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
+def get_training_set(exp_data, name, threshold, min_t, y=1000, ex=2, test=False):
     """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>.
        If first sample can't represent data, we need to resample it from population, self.indices_of_interest..
        Other way, we could build the samples for training, but then it will cause other troubles, maybe...
@@ -421,8 +425,9 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
             signal_diff = signal_diff - sum(exp_data.overall_coverage['data'][i])
             signal_diff.data = np.abs(signal_diff.data)
 
-    # order of list doesn't matter
-    diff_cov = np.percentile(filter(lambda x: x > 0, signal_diff.data), min_t) / float(exp_data.dim[1])  # get the mean of each
+    # we consider 0 difference of it;; I worry that zeros would be much, we could run both programs
+    # and see the results;; If they are same, so difference
+    diff_cov = np.percentile(filter(lambda x: x>0,signal_diff.data), min_t) / float(exp_data.dim[1])  # get the mean of each
 
     if test:
         diff_cov, threshold = 2, 1.5
@@ -435,7 +440,7 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
 
         for idx in sample(exp_data.indices_of_interest, min(y, len(exp_data.indices_of_interest))):
             covs_list = exp_data.get_sm_covs(idx)  # only return data not indices
-            cov1 = np.mean(covs_list[0])  # use avg to present covs
+            cov1 = np.mean(covs_list[0])  # use avg to present covs, if we uses integer???
             cov2 = np.mean(covs_list[1])
             # apply criteria for initial peak calling
             if (cov1 / max(float(cov2), 1) > threshold and cov1 + cov2 > diff_cov / 2) or cov1 - cov2 > diff_cov:
@@ -448,12 +453,10 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
         # on side data is smaller , then we use reverse data to build training data
         if len(s1) < 100 / 2 and len(s2) > 2 * 100:
             # should append data until same length
-            # s1 = map(lambda x: (x[0], x[2], x[1]), s2)
             append_data = sample(s2, k=200-len(s1))
             append_data = map(lambda x: (x[0], x[2], x[1]), append_data)
             s1.extend(append_data)
         if len(s2) < 100 / 2 and len(s1) > 2 * 100:
-            # s2 = map(lambda x: (x[0], x[2], x[1]), s1)
             append_data = sample(s1, k=200-len(s1))
             append_data = map(lambda x: (x[0], x[2], x[1]), append_data)
             s2.extend(append_data)
@@ -462,7 +465,7 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
         if not test and (len(s1) < 100 or len(s2) < 100):
             diff_cov = max(diff_cov - 15, 1)
             threshold = max(threshold - 0.1, 1.1)
-        elif  s0 and s1 and  s2:
+        elif s0 and s1 and s2:
             done = True
 
     if configuration.DEBUG:
@@ -472,30 +475,22 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
     for el in [s0, s1, s2]:
         el = np.asarray(el)
         if not test:
-            # here the condition we can't judge if it's good
-            """
-            el = el[np.where(
-                np.logical_and(el[:, 1] < np.percentile(el[:, 1], 98.5) * (el[:, 1] > np.percentile(el[:, 1], 1.5)),
-                               el[:, 2] < np.percentile(el[:, 2], 98.5) * (el[:, 2] > np.percentile(el[:, 2], 1.5))))]
-            """
-            el = el[np.where(np.logical_and(el[:, 1]<np.percentile(el[:, 1], 90), el[:, 2]<np.percentile(el[:, 2], 90)))]
-
+            el = el[np.where(np.logical_and(el[:, 1]<np.percentile(el[:, 1], 95), el[:, 2]<np.percentile(el[:, 2], 95)))]
         all_data.append(el)
 
-    training_size = min(min([len(all_data[i]) for i in range(3)]),y)
-    # get good enough training data sets
+    training_size = min(min([len(all_data[i]) for i in range(3)]), y)
+    # get good enough training data sets, to avoid zeros counts
     for i in range(len(all_data)):
         if isvalid_training_data(all_data[i], 0.5):
             ss = sample(all_data[i], training_size)
             limits = 10
             while not isvalid_training_data(ss, 0.3) and limits:
                 ss = sample(all_data[i], training_size)
-                limits -= 1
-            all_data[i]=ss
+                limits -= 1 # do sample until 10 times
+            all_data[i] = ss
         else:
-            ## need to go back to sample_methods again
-            ## if we could also judge it before we do it, it would be great
-            pass
+            print('training data with low quality', file=sys.stderr)
+            sys.exit()
 
     # first column is idx information
     training_indices = set() #set([all_data[i][:, 0] for i in range(len(all_data))])
@@ -504,10 +499,9 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
             idx = range(max(0, int(data[0]) - ex), int(data[0]) + ex + 1)
             training_indices |= set(idx)
     training_indices = list(training_indices)
-
     training_cov = exp_data.get_sm_covs(training_indices)
-
     training_data = transform_data_for_HMM(training_cov)
+
     s0_v = map(lambda x: (x[1], x[2]), all_data[0])
     s1_v = map(lambda x: (x[1], x[2]), all_data[1])
     s2_v = map(lambda x: (x[1], x[2]), all_data[2])
@@ -517,9 +511,8 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
     return training_data, s0_v, s1_v, s2_v
 
 
-def write_test_samples( name, l):
+def write_test_samples(name, l):
     f = open(name, 'w')
-
     for el1, el2 in l:
         print(el1, el2, sep='\t', file=f)
     f.close()

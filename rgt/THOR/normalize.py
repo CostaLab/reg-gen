@@ -96,7 +96,7 @@ def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
     if two_sample:
         count_list.sort(key=lambda x: x[0] + x[1])
         if not zero_counts:
-            count_list = filter(lambda x: x[0] != 0.0 or x[1] != 0.0, count_list)
+            count_list = filter(lambda x: x[0] > 0.5 or x[1] > 0.5, count_list)
         pre_pq_list = list(_accumulate(count_list))
         pq_list = pre_pq_list
         max_index = int(len(pq_list) * 0.5)
@@ -104,7 +104,7 @@ def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
     else:
         count_list.sort(key=lambda a: a[0])
         if not zero_counts: # as we still need to filter data
-            count_list = filter(lambda x: x[0] != 0.0, count_list)
+            count_list = filter(lambda x: x[0] > 0.5, count_list)
         pre_pq_list = list(_accumulate(count_list))
         # get k, a from Diaz et al., 2012, compute p, q from Diaz et al., 2012
         pq_list = map(lambda x: [x[0] / float(pre_pq_list[-1][0]), x[1] / float(pre_pq_list[-1][1])], pre_pq_list)
@@ -129,9 +129,7 @@ def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,s
     # combine them together by zip
     count_list = zip(cov_counts, inputs_cov_counts)
     count_list = map(list, count_list)
-    # after using zip, it creats a list but we can't change it, it's sad; So we need to change it
-    # Maybe we don't need to use zip...
-    # then count pq_list after it we get other features
+
     pq_list, max_index, max_value, factor1, factor2 = _get_lists_from_cov(count_list, zero_counts, two_samples)
     if debug:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
@@ -144,15 +142,12 @@ def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,s
         s1 = sum([i for (i, j) in pq_list[:int(len(pq_list) * l)]])
         s2 = sum([j for (i, j) in pq_list[:int(len(pq_list) * l)]])
 
-        # print("norm sums half: ", s1, s2, file=sys.stderr)
-
         if s1 > s2:
             return 2, factor1
         else:
             return 1, factor1
     else:
         return -1, factor1
-
 
 ## get signal normalization factors
 def trim4TMM( m_values, a_values, m_threshold=80, a_threshold=95):
@@ -188,31 +183,16 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     """
     factors_signal = []
     dim = overall_coverage['dim']
-    # non_zeros columns for all coverage from each file
-    valid_indices = None
-    for i in range(dim[0]):
-        for j in range(dim[1]):
-            if valid_indices is None:
-                valid_indices = set(overall_coverage['data'][i][j].indices)
-            else:
-                valid_indices |= set(overall_coverage['data'][i][j].indices)
-
-    mask_ref = list(valid_indices)
-    sm_ref = reduce(lambda x,y: x+y, [overall_coverage['data'][i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
-    ref = sm_ref.data/float(dim[0]*dim[1])
+    sm_ref = reduce(lambda x,y: x+y, [overall_coverage['data'][i][j] for i in range(dim[0]) for j in range(dim[1])])
 
     for i in range(dim[0]):
         factors_signal.append([])
         for j in range(dim[1]):  # normalize all replicates
-            # get the data for each sample under each condition
+            mask_ref = np.intersect1d(sm_ref.indices, overall_coverage['data'][i][j].indices)
             data_rep = np.squeeze(overall_coverage['data'][i][j][:, mask_ref].toarray())
-            # here we sample data but in Manuel method, he uses the biggest ones...
-            # we sort data by order which data_rep + ref descends and then choose the highest ones
-            # here we want to find the meeting points, so we need to get enough data whatever we could use it
-            tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 20000):]
-            # tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 20000))
-            tmp_idx = np.intersect1d(tmp_idx, np.squeeze(np.nonzero(data_rep > 0.5)))
+            ref = np.squeeze(sm_ref[:,mask_ref].toarray()) / float(dim[0] * dim[1])
 
+            tmp_idx = np.argsort(ref + data_rep)[-min(len(data_rep), 10000):]
             tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]
             # calculate m_values and a_values
