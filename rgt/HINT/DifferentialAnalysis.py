@@ -209,9 +209,9 @@ def diff_analysis_run(args):
             res = get_ps_tc_results(signal_1, signal_2, motif_len_dict[mpbs_name])
             ps_tc_results_by_tf[mpbs_name].append(res)
 
-    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+    #stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    #scatter_plot(args, stat_results_by_tf)
+    #output_stat_results(args, stat_results_by_tf)
 
 
 def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
