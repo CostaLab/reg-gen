@@ -37,9 +37,6 @@ import configuration
 import warnings
 warnings.filterwarnings('error')
 
-import matplotlib as mpl
-#see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 

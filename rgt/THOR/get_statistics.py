@@ -29,8 +29,8 @@ def get_read_statistics(fname, chroms):
     stats_total = [] # whole information in file including 0 reads
 
     isspatial = False
-    isspatial_sum = 0
     isspatial_max = 0
+    isspatial_len = 0
 
     for chrom in chroms:
         for each_stats in stats_tmp:
@@ -40,12 +40,12 @@ def get_read_statistics(fname, chroms):
             if chrom in tmp:
                 if tmp[2] > 0: # read_mapped data >0 will be recorded in stats_data
                     stats_total.append(tmp)
-                    isspatial_sum += tmp[2]
                     if tmp[2] > isspatial_max:
                         isspatial_max = tmp[2]
+                        isspatial_len = tmp[1]
                 break
 
-    if isspatial_max < isspatial_sum * 0.15:
+    if isspatial_max < isspatial_len * 0.15:
          isspatial = True
          # data is spatial, and we use biggest 5 stats_data as new stats_data
          new_stats_nums = [tmp[2] for tmp in stats_total]

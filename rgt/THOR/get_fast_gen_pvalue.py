@@ -71,6 +71,7 @@ def compute_pvalue(distr, N, side, current_p, x):
     """Compute log2 pvalue"""
     sum_num = []
     sum_denum = []
+    N = int(N)
     it = range(N / 2 + 1) if side == 'r' else range(N + 1, -1, -1)
 
     for i in it:

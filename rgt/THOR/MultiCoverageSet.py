@@ -231,15 +231,15 @@ class MultiCoverageSet(): # DualCoverageSet
          strand_cov1 in format [file_0: [forwards: ],[reverse: ]],[file_1:: [forward: ],[reverse: ] ]
         _get_sm_covs: return all covs according to one idx, [0_sample_0, 0_sample_1, 1_sample_0,1_sample_1]
         """
-        cov1 = [np.squeeze(self.overall_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
-        cov2 = [np.squeeze(self.overall_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
+        cov1 = np.squeeze([self.overall_coverage['data'][0][j][:, indices].toarray() for j in range(self.dim[1])])
+        cov2 = np.squeeze([self.overall_coverage['data'][1][j][:, indices].toarray() for j in range(self.dim[1])])
         if strand_cov: # one thing is that strand_cov we don't do normalization, and then results show in file, but how about cov???
             # strand_cov should also be changed w.r.t normalization data
-            strand_cov1 = [np.squeeze(self.overall_strand_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
-            strand_cov2 = [np.squeeze(self.overall_strand_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
-            return np.asarray([cov1, cov2]), np.asarray([strand_cov1, strand_cov2])
+            strand_cov1 = np.squeeze([self.overall_strand_coverage['data'][0][j][:, indices].toarray() for j in range(self.dim[1])])
+            strand_cov2 = np.squeeze([self.overall_strand_coverage['data'][1][j][:, indices].toarray() for j in range(self.dim[1])])
+            return [cov1, cov2], [strand_cov1, strand_cov2]
         else:
-            return np.asarray([cov1, cov2])
+            return [cov1, cov2]
 
     def _compute_sm_score(self):
         """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it
@@ -331,7 +331,7 @@ def cov_to_smatrix(cov):
 def sm_scale(cov, factor):
     """we scale sparse matrix representation with factor"""
     cov.sm_overall_cov.data *= factor
-    cov.sm_overall_strand_cov.data *= factor
+    # cov.sm_overall_strand_cov.data *= factor
 
 
 def sm_add(cov, sm_cs):
@@ -341,7 +341,7 @@ def sm_add(cov, sm_cs):
     # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
     # self.sm_overall_cov is 1-D array
     cov.sm_overall_cov.data += sm_cs.sm_overall_cov.data  # we could assume all values are non-negative
-    cov.sm_overall_strand_cov.data += sm_cs.sm_overall_strand_cov.data
+    # cov.sm_overall_strand_cov.data += sm_cs.sm_overall_strand_cov.data
 
 
 def sm_subtract(cov, sm_cs):
@@ -356,6 +356,7 @@ def sm_subtract(cov, sm_cs):
     # do process on overall_strand_coverage, one thing we keep connection between cov and overall_covs
     # so we can only deal with data;
     ## cov.sm_overall_strand_cov -= sm_cs.sm_overall_strand_cov, same effect like this
+    """
     row_indptr = cov.sm_overall_strand_cov.indptr
     for row_idx in range(len(row_indptr)-1):
         cov.sm_overall_strand_cov.data[row_indptr[row_idx]:row_indptr[row_idx+1]] -= \
@@ -363,7 +364,7 @@ def sm_subtract(cov, sm_cs):
     cov.sm_overall_strand_cov.data = np.clip(cov.sm_overall_strand_cov.data, 0,
                                       cov.sm_overall_strand_cov.max())  # make negative into zeros
     cov.sm_overall_strand_cov.eliminate_zeros()  # eliminate zeros elements in matrix
-
+    """
 
 def cov_normalization_by_gc_content(cov, hv, avg_T, genome_fpath,delta=0.2):
     """After we get gc-factor from one input-coverage, and then we apply it on coverage from one signal file

@@ -122,14 +122,12 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
     else:
         filter_pass = pv_pass
     
-    assert len(output) == len(pvalues)
-    assert len(filter_pass) == len(pvalues)
-    
     return output, pvalues, filter_pass
 
 
 def output_BED(name, output, pvalues, filter):
-    f = open(name + '-diffpeaks.bed', 'w')
+
+    f = open(name, 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
     bedscore = 1000
@@ -144,11 +142,50 @@ def output_BED(name, output, pvalues, filter):
     
     f.close()
 
+def output_peaks(name, output,pvalues, filter, output_narrow=True,separate_peaks=False):
+    """output peaks files.
+    output_narrow=True -- Also output narrow peaks
+    separate_peaks=True -- it will output peaks into gain and lose files
+    """
+    if not separate_peaks:
+        output_BED(name + '_diffpeaks', output, pvalues,filter)
+        if output_narrow:
+            output_narrowPeak(name + '-diffpeaks.narrow', output, pvalues, filter)
+    else:
+        # first to create gain or lose data list
+        gains, loses = separate_peaks(output, pvalues, filter)
+        # pass gain / lose list to output_BED
+        output_BED(name + '_diffpeaks_gain', gains[0], gains[1], gains[2])
+        output_BED(name + '_diffpeaks_lose', loses[0], loses[1], loses[2])
+        if output_narrow:
+            output_narrowPeak(name + '_diffpeaks_gain.narrow', gains[0], gains[1], gains[2])
+            output_narrowPeak(name + '_diffpeaks_lose.narrow', loses[0], loses[1], loses[2])
+
+
+
+def separate_peaks(output, pvalues, filter):
+    """accept both output and pvalues, maybe also filter; not clean codes"""
+    gain_peaks, lose_peaks = [], []
+    gain_pvalues, lose_pvalues = [], []
+    gain_filter, lose_filter = [], []
+    for i in range(len(pvalues)):  ## add name parameter here
+        strand = output[i].orientation
+        output[i].orientation = '.'
+        if filter[i]:
+            if strand == '+':
+                gain_peaks.append(output[i])
+                gain_pvalues.append(pvalues[i])
+                gain_filter.append(filter[i])
+            elif strand == '-':
+                lose_peaks.append(output[i])
+                lose_pvalues.append(pvalues[i])
+                lose_filter.append(filter[i])
+    return [gain_peaks, gain_pvalues, gain_filter],  [lose_peaks, lose_pvalues, lose_filter]
 
 def output_narrowPeak(name, output, pvalues, filter):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
-    f = open(name + '-diffpeaks.narrowPeak', 'w')
+    f = open(name, 'w')
     for i in range(len(pvalues)):
         c, s, e, strand, _ = output[i]
         p_tmp = -np.log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint

@@ -70,7 +70,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     Return: distribution parameters
     """
     exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
-                          signal_statics=signal_statics, inputs_statics=inputs_statics)
+                          signal_statics=signal_statics, inputs_statics=inputs_statics, verbose=True)
 
     tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Scaling factors")
 
@@ -98,7 +98,9 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 
 def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
-    output, pvalues, ratios, no_bw_files = [], [], [], []
+    no_bw_files = []
+    output, pvalues, ratios = [], [], []
+    # pcutoff_output, pcutoff_pvalues, pcutoff_ratios = {}, {}, {}
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
     
     for i, regionset in enumerate(region_giver):
@@ -136,6 +138,17 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
                                                            merge_bin=options.merge_bin)
+        """
+        for pi_value in inst_output.keys():
+            if pi_value not in pcutoff_output.keys():
+                pcutoff_output[pi_value] = []
+                pcutoff_pvalues[pi_value] = []
+                pcutoff_ratios[pi_value] = []
+
+            pcutoff_output[pi_value] += inst_output[pi_value]
+            pcutoff_pvalues[pi_value] += inst_pvalues[pi_value]
+            pcutoff_ratios[pi_value] += inst_ratios[pi_value]
+        """
         output += inst_output
         pvalues += inst_pvalues
         ratios += inst_ratios
@@ -153,14 +166,14 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
 
 
 def main():
-    options, bamfiles, genome, chrom_sizes_file, dims, inputs_files = handle_input()
+    options, signal_files, genome, chrom_sizes_file, dims, inputs_files = handle_input()
 
-    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes_file, dims, inputs_files, options, __version__)
+    tracker = Tracker(options.name + '-setup.info', signal_files, genome, chrom_sizes_file, dims, inputs_files, options, __version__)
     region_giver = RegionGiver(chrom_sizes_file, options.regions)
 
     # get statistic information for each file
     # stats_total, stats_data, read_size, and other parts..
-    signal_statics = get_file_statistics(bamfiles, region_giver)
+    signal_statics = get_file_statistics(signal_files, region_giver)
     region_giver.update_regions(signal_statics)
 
     if options.exts:
@@ -185,10 +198,7 @@ def main():
                   header="Extension size for inputs files (rep1, rep2, input1, input2)")
     else:
         inputs_statics = None
-    # we do it directly after we read it
-    # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
-    # options.scaling_factors_ip = [[0.75940216055215548, 0.90398630007239622], [1.0896493434245285, 0.92734361836773005]]
-    # pass stats_total, stats_data, extension sizes to train_HMM
+
     m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
 
     # we need to change region_giver and update the valid_regions

@@ -63,67 +63,50 @@ def get_data_block(filepath, feature):
         return data
 
 
+def get_file_path(file_name):
+    file_path = npath(file_name)
+    if not isfile(file_path):
+        print("file %s does not exist!" % file_path, file=sys.stderr)
+        sys.exit()
+    return file_path
+
+
 def input_parser(filepath):
-    bamfiles_1 = get_data_block(filepath, "rep1")
-    bamfiles_1 = map(npath, bamfiles_1)
+    """read file name from config file and then assign real paths to them"""
+    rep1 = get_data_block(filepath, "rep1")
+    rep1 = map(get_file_path, rep1)
 
-    for bamfile in bamfiles_1:
-        if not isfile(bamfile):
-            print("BAM file %s does not exist!" % bamfile, file=sys.stderr)
-            sys.exit()
+    rep2 = get_data_block(filepath, "rep2")
+    rep2 = map(get_file_path, rep2)
+    if len(rep1) != len(rep2):
+        print('Signal files do not have same replicates', file=sys.stderr)
+        sys.exit()
+    chrom_sizes_fname = get_data_block(filepath, "chrom_sizes")
+    chrom_sizes_file = get_file_path(chrom_sizes_fname)
 
-    bamfiles_2 = get_data_block(filepath, "rep2")
-    bamfiles_2 = map(npath, bamfiles_2)
+    inputs1 = get_data_block(filepath, "inputs1")
+    inputs1 = map(get_file_path, inputs1)
 
-    for bamfile in bamfiles_2:
-        if not isfile(bamfile):
-            print("BAM file %s does not exist!" % bamfile, file=sys.stderr)
-            sys.exit()
+    inputs2 = get_data_block(filepath, "inputs2")
+    inputs2 = map(get_file_path, inputs2)
 
-    # genome is optional, so if we get an empty list
-    # we set it to None, otherwise we normalise the path
+    if not inputs1 and not inputs2:
+        inputs = None
+    elif len(inputs1) != len(rep1) or len(inputs2) == len(rep2):
+        print('Inputs files do not correspond to signal files',file=sys.stderr)
+        sys.exit()
+    else:
+        inputs = [inputs1, inputs2]
+
     genome = get_data_block(filepath, "genome")
     if genome:
-        genome = npath(genome)
-        if not isfile(genome):
-            print("Genome file %s does not exist!" % genome, file=sys.stderr)
-            sys.exit()
+        genome = get_file_path(genome)
     else:
-         genome = None
+        genome = None
 
-    chrom_sizes_file = npath(get_data_block(filepath, "chrom_sizes"))
-    if chrom_sizes_file:
-        chrom_sizes_file = npath(chrom_sizes_file)
-        if not isfile(chrom_sizes_file):
-            print("chrom size file %s does not exist!" % chrom_sizes_file, file=sys.stderr)
-            sys.exit()
-    else:
-        chrom_sizes_file = None
+    dims = [2, len(rep1)]
+    return [rep1, rep2], genome, chrom_sizes_file, inputs, dims
 
-    inputs_1 = get_data_block(filepath, "inputs1")
-    inputs_1 = map(npath, inputs_1)
-
-    for bamfile in inputs_1:
-        if not isfile(bamfile):
-            print("BAM file %s does not exist!" % bamfile, file=sys.stderr)
-            sys.exit()
-
-    inputs_2 = get_data_block(filepath, "inputs2")
-    inputs_2 = map(npath, inputs_2)
-    for bamfile in inputs_1:
-        if not isfile(bamfile):
-            print("BAM file %s does not exist!" % bamfile, file=sys.stderr)
-            sys.exit()
-
-
-    dims = [2, len(bamfiles_1)]
-    
-    if not inputs_1 and not inputs_2:
-        inputs = None
-    else:
-        inputs = [inputs_1, inputs_2]
-
-    return [bamfiles_1, bamfiles_2], genome, chrom_sizes_file, inputs, dims
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -175,6 +158,9 @@ class HelpfulOptionParser(OptionParser):
     def callback_list_float(self, option, opt, value, parser):
         setattr(parser.values,option.dest, map(lambda x: float(x), value.split(',')))
 
+    def callback_list_string(self, option, opt, value, parser):
+        setattr(parser.values, option.dest, value.split(','))
+
     def transform_list_with_dim(self,list_data, dim):
         """for example like: list for len and then we transform it into list with one certain dimension"""
         tmp = np.asarray(list_data)
@@ -191,6 +177,25 @@ class HelpfulOptionParser(OptionParser):
 
 def handle_input():
     parser = HelpfulOptionParser(usage=__doc__)
+
+    ## add bam option for file input through commmand line
+    parser.add_option("--rep1", dest="rep1", default=None, type='str', action='callback',
+                      callback=parser.callback_list_string,
+                      help="Give input .bam files . [default: %default]")
+    parser.add_option("--rep2", dest="rep2", default=None, type='str', action='callback',
+                      callback=parser.callback_list_string,
+                      help="Give signal .bam files . [default: %default]")
+    # one difference to use only orgamism names, no chrom-sizes names; we use it or we keep old?? Keep old now
+    parser.add_option("--chrom_sizes", dest="chrom_sizes_file", default=None, type="str",
+                      help="Define chrom_sizes from file. [default: %default]")
+    parser.add_option("--genome", dest="genome", default=None, type="str",
+                      help="Give genome. [default: %default]")
+    parser.add_option("--inputs1", dest="inputs1", default=None, type='str', action='callback',
+                      callback=parser.callback_list_string,
+                      help="Give input bam files to handle biases for signal 1 files.. [default: %default]")
+    parser.add_option("--inputs2", dest="inputs2", default=None, type='str', action='callback',
+                      callback=parser.callback_list_string,
+                      help="Give inputs bam files to handle biases for signal 2 files.. [default: %default]")
 
     parser.add_option("-n", "--name", default=None, dest="name", type="string",
                       help="Experiment's name and prefix for all files that are created.")
@@ -228,8 +233,16 @@ def handle_input():
                       help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for "
                            "each BAM file in config file. If option is not chosen, follow normalization strategy "
                            "(TMM or HK approach) [default: %default]")
+    # if we need to call peaks s
     parser.add_option("--call-peaks", dest="call_peaks", default=True, action="store_true",
                       help="DO call peaks, if setting False, only output normalized bigWig files. [default: %default]")
+    # if we need to output gain and lose peaks separately
+    parser.add_option("--separate-peaks", dest="separate_peaks", default=False, action="store_true",
+                      help="Output gain and lose peaks separately. [default: %default]")
+    # if we need to attach names into results
+    parser.add_option("--add-gene-name", dest="add_gene_name", default=False, action="store_true",
+                      help="Attach names into results [default: %default]")
+
     parser.add_option("--save-input", dest="save_input", default=False, action="store_true",
                       help="Save input-DNA file if available. [default: %default]")
     parser.add_option("--version", dest="version", default=False, action="store_true",
@@ -248,8 +261,6 @@ def handle_input():
                      help="Output debug information. Warning: space consuming! [default: %default]")
     group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true",
                      help="Do not normalize towards GC content. [default: %default]")
-    group.add_option("--norm-regions", default=None, dest="norm_regions", type="str",
-                     help="Restrict normalization to particular regions (BED format). [default: %default]")
     group.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",
                      help="Fold change parameter to define training set (t_1, see paper). [default: %default]")
     group.add_option("-t", "--threshold", dest="threshold", default=95, type="float",
@@ -282,17 +293,48 @@ def handle_input():
         print(__version__)
         sys.exit()
 
-    if len(args) != 1:
-        parser.error("Please give config file")
+        # config file is required and then we read config file and get parameters
+    if len(args) == 1:
+        # parser.error("Please give config file")
+        config_path = npath(args[0])
+        if isfile(config_path):
+            signal_files, options.genome, chrom_sizes_file, inputs_files, dims = input_parser(config_path)
+        else:
+            parser.error("Config file %s does not exist!" % config_path)
+    else:
+        # Now we want to change to command line methods..and I would like to define another function
+        if not options.rep1 or not options.rep2:
+            parser.error('BamFiles not given')
+        else:
+            # this code is used to replicate the samples if input sample just one  under each condition
+            if len(options.rep1) == 1:
+                options.rep1.append(options.rep1)
+            if len(options.rep2) == 1:
+                options.rep2.append(options.rep2)
+            signal_files = [map(get_file_path, options.rep1), map(get_file_path, options.rep2)]
+            dims = [2, len(options.rep1)]
 
-    config_path = npath(args[0])
+        if not options.chrom_sizes_file:
+            parser.error('Chrom_sizes file not given')
+        else:## here, one side we need to verify if it's valid file
+            chrom_sizes_file = get_file_path(options.chrom_sizes_file)
 
-    if not isfile(config_path):
-        parser.error("Config file %s does not exist!" % config_path)
+        # set inputs parameters
+        inputs_files = None
+        if options.inputs1 and options.inputs2:
+            if len(options.inputs1) == 1:
+                options.inputs1.append(options.inputs1)
+            if len(options.inputs2) == 1:
+                options.inputs2.append(options.inputs2)
 
-    bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
+            if len(options.inputs1) != len(options.rep1) or len(options.inputs2) == len(options.rep2):
+                parser.error('Inputs files do not correspond to signal files')
 
-    if not genome:
+            inputs_files = [map(get_file_path, options.inputs1), map(get_file_path, options.inputs2)]
+        if options.genome:
+            options.genome = get_file_path(options.genome)
+
+    if not options.genome:
         options.no_gc_content = True
 
     if options.exts and not parser.is_valid_dim(options.exts, dims):
@@ -310,7 +352,7 @@ def handle_input():
     if options.scaling_factors_ip:
         options.scaling_factors_ip = parser.transform_list_with_dim(options.scaling_factors_ip, dim=dims)
 
-    if not inputs and options.factors_inputs:
+    if not inputs_files and options.factors_inputs:
         print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)
         options.factors_inputs = None
 
@@ -368,12 +410,12 @@ def handle_input():
         configuration.OUTPUTDIR = options.outputdir
         configuration.NAME = options.name
 
-    if not inputs:
+    if not inputs_files:
         print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)
 
-    if not genome:
+    if not options.genome:
         print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr)
 
     options.call_peaks = True
 
-    return options, bamfiles, genome, chrom_sizes, dims, inputs
+    return options, signal_files, options.genome, chrom_sizes_file, dims, inputs_files

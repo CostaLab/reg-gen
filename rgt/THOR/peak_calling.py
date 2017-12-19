@@ -32,7 +32,7 @@ import configuration
 np.random.rand(42)
 
 
-def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics):
+def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics, verbose=False):
     """Initialize the MultiCoverageSet
     Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
     Use sampling methods to initialize certain part of data
@@ -60,7 +60,7 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         options.gc_avg_T = None
         options.gc_hv, options.gc_avg_T = cov_set.normalization_by_gc_content(inputs_statics, genome_path, options.gc_hv, options.gc_avg_T, delta=0.01)
         elapsed_time = time.time() - start
-        if configuration.VERBOSE:
+        if verbose:
             print("Compute GC-content using time %.3f s"%(elapsed_time), file=sys.stderr)
 
         # we need to save values for it for return ?? If we use another; [avg_T, hv] for each inputs files.
@@ -71,7 +71,7 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         start = time.time()
         options.factors_inputs = cov_set.normalization_by_input(signal_statics, inputs_statics, options.name, options.factors_inputs)
         elapsed_time = time.time() - start
-        if configuration.VERBOSE:
+        if verbose:
             print("Normalize input-DNA using time %.3f s"%(elapsed_time), file=sys.stderr)
 
     # much complex, so we decay to change it
@@ -79,7 +79,7 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
     options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes,
                                     options.report, options.m_threshold, options.a_threshold)
     elapsed_time = time.time() - start
-    if configuration.VERBOSE:
+    if verbose:
         print('Normalize ChIP-seq profiles using time %.3f s' % (elapsed_time), file=sys.stderr)
     ## we need to change data from float into interger
     cov_set.sm_change_data_2int()
@@ -265,7 +265,7 @@ def _calpvalues_merge_bins(tmp_peaks, bin_pvalues, distr, pcutoff):
     return pcutoff_pvalues, pcutoff_peaks
 
 
-def get_peaks( cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, merge_bin, p=70):
+def get_peaks(cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     start = time.time()
     exts = np.mean(exts)
@@ -281,12 +281,12 @@ def get_peaks( cov_set, states, exts, merge, distr, pcutoff, debug, no_correctio
         cov1 = (covs_list[0]).astype(int)
         cov2 = (covs_list[1]).astype(int)
         # strand_cov1 in format [file_0: [forwards: ],[reverse: ]],[file_1:: [forward: ],[reverse: ] ]
-        cov_strand1 = np.sum(strand_covs_list[0][:,0] + strand_covs_list[1][:,0])
-        cov_strand2 = np.sum(strand_covs_list[0][:,1] + strand_covs_list[1][:,1])
+        forward_strand = np.sum(strand_covs_list[0][:,0] + strand_covs_list[1][:,0])
+        reverse_strand = np.sum(strand_covs_list[0][:,1] + strand_covs_list[1][:,1])
         ## get genome information from idx, to get chrom, end and start
         chrom, start, end = cov_set.sm_index2coordinates(idx)
         
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov_strand1, cov_strand2))
+        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, forward_strand, reverse_strand))
         side = 'l' if strand == '+' else 'r'
         tmp_data.append((cov1, cov2, side, distr))
     
