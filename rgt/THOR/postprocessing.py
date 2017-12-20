@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
 import os
 from scipy.stats.mstats import zscore
@@ -33,6 +31,8 @@ import matplotlib.pyplot as plt
 
 from rgt.Util import npath
 from rgt.motifanalysis.Statistics import multiple_test_correction
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 import configuration
 
@@ -52,145 +52,164 @@ def merge_data(regions):
         el.data = str((c1, c2, max(logpvalue)))
 
 
-def merge_delete(ext_size, merge, peak_list, pvalue_list):
-    regions_plus = GenomicRegionSet('regions') #pot. mergeable
-    regions_minus = GenomicRegionSet('regions') #pot. mergeable
-    regions_unmergable = GenomicRegionSet('regions')
-    last_orientation = ""
-    
-    for i, t in enumerate(peak_list):
-        chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
-        # change c1, c2 into integer
-        # c1 = map(int, c1)
-        # c2 = map(int, c2)
-        r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '', \
-                          orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
-        if end - start > ext_size:
-            if strand == '+':
-                if last_orientation == '+':
-                    regions_plus.add(r)
-                else:
-                    regions_unmergable.add(r)
-            elif strand == '-':
-                if last_orientation == '-':
-                    regions_minus.add(r)
-                else:
-                    regions_unmergable.add(r)
+def merge_delete(ext_size, merge, peak_list):
+    regions_plus = GenomicRegionSet('regions_plus') #pot. mergeable
+    regions_minus = GenomicRegionSet('regions_minus') #pot. mergeable
+
+    for i, r in enumerate(peak_list):
+        if r.end - r.start > ext_size:
+            if r.orientation == '+':
+                regions_plus.add(r)
+            elif r.orientation == '-':
+                regions_minus.add(r)
 
     if merge:
         regions_plus.extend(ext_size/2, ext_size/2)
         regions_plus.merge()
         regions_plus.extend(-ext_size/2, -ext_size/2)
         merge_data(regions_plus)
-        
+
         regions_minus.extend(ext_size/2, ext_size/2)
         regions_minus.merge()
         regions_minus.extend(-ext_size/2, -ext_size/2)
         merge_data(regions_minus)
-    
+    """no idea what this means"""
     results = GenomicRegionSet('regions')
     for el in regions_plus:
         results.add(el)
     for el in regions_minus:
         results.add(el)
-    for el in regions_unmergable:
-        results.add(el)
     results.sort()
-    
+
     return results
 
 
-def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name, singlestrand):
-    """Filter DPs by strang lag and pvalue"""
-    if not singlestrand:
-        zscore_ratios = zscore(ratios)
-        ratios_pass = np.where(np.bitwise_and(zscore_ratios > -2, zscore_ratios < 2) == True, True, False)
+def separate_peaks(output, pvalues, filter):
+    """accept both output and pvalues, maybe also filter; not clean codes"""
+    gain_peaks, lose_peaks = GenomicRegionSet("gain"), GenomicRegionSet("lose")
+    gain_filter, lose_filter = [], []
+    for i in range(len(pvalues)):  ## add name parameter here
+        strand = output[i].orientation
+        # this cause exception of codes : output[i].orientation = '.'
+        if filter[i]:
+            if strand == '+':# cause output is not a region, so we can't output
+                gain_peaks.add(output[i])
+                gain_filter.append(filter[i])
+            elif strand == '-':
+                lose_peaks.add(output[i])
+                lose_filter.append(filter[i])
+    return [gain_peaks, gain_filter],  [lose_peaks, lose_filter]
+
+
+def add_gene_name(peaks_set, organism_name):
+    """add genes names to output peaks"""
+    peaks = peaks_set.gene_association(organism=organism_name, promoterLength=1000,
+                                         threshDist=500000, show_dis=True)
+    return peaks
+
+
+def get_peak_column(peaks_set, col_name, in_data=True):
+    """extract one column data from peaks"""
+    cols = []
+    for peak in peaks_set:
+        if in_data:
+            cols.append(peak.data[col_name])
+        else:
+            cols.append(peak.col_name)
+    return cols
+
+
+def filter_by_pvalue_strand_lag(peaks_set, pcutoff, no_correction, name, singlestrand, separate=False):
+    """Filter DPs by strang lag and pvalue,
+    singlestrand: Allow single strand BAM file as input."""
+    # first make ratios and pvalues to be extracted from peaks_set
+    ratios = get_peak_column(peaks_set, col_name='ratio')
+    pvalues = get_peak_column(peaks_set, col_name='pvalue')
+
     if not no_correction:
         pv_pass = [True] * len(pvalues)
+        # we only create pvalues and then
         pvalues = map(lambda x: 10**-x, pvalues)
         
-        output_BED(name + '-uncor', output, pvalues, pv_pass)
-        output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
+        output_peaks(name + '-uncor', peaks_set, pvalues, pv_pass, separate=separate)
         
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
         pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
     
     if not singlestrand:
+        zscore_ratios = zscore(ratios)
+        ratios_pass = np.where(np.bitwise_and(zscore_ratios > -2, zscore_ratios < 2) == True, True, False)
         filter_pass = np.bitwise_and(ratios_pass, pv_pass)
-        assert len(pv_pass) == len(ratios_pass)
     else:
         filter_pass = pv_pass
     
-    return output, pvalues, filter_pass
+    return peaks_set, filter_pass
 
 
-def output_BED(name, output, pvalues, filter):
+def transfrom_2string(dict_data, mask_col, item_sep = ';',data_sep=':'):
+    """change data in dictionary into string, return string"""
+    result_str= ''
+    for keys, values in dict_data.items():
+        if keys in mask_col:# without no inputs
+            continue
+        if isinstance(values, list):
+            result_str += data_sep.join(map(str,values)) + item_sep
+        else:
+            result_str += str(values) + item_sep
+    return result_str.rstrip(item_sep)
+
+
+def output_BED(name, output, filter, color=None):
 
     f = open(name, 'w')
-     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
+    if not color:
+        colors = {'+': '255,0,0', '-': '0,255,0'}
+    else:
+        colors = {'.': color}
     bedscore = 1000
-    
-    for i in range(len(pvalues)):
-        c, s, e, strand, counts = output[i]
-        p_tmp = -np.log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
-        counts = ';'.join(counts.split(';')[:2] + [str(p_tmp)])
-        
+    for i in range(len(filter)):
         if filter[i]:
-            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
-    
+            c, s, e, name, strand, counts = output[i].chrom, output[i].initial, output[i].final,  output[i].name, output[i].orientation, output[i].data
+            counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue']  > 0 else sys.maxint
+            counts_str = transfrom_2string(counts, mask_col=['ratio'])
+            print(c, s, e, 'Peak' + str(i) + '_' + name, bedscore, strand, s, e, colors[strand], 0, counts_str, sep='\t', file=f)
+
     f.close()
 
-def output_peaks(name, output,pvalues, filter, output_narrow=True,separate_peaks=False):
+
+def output_peaks(name, output, filter, output_narrow=True, separate=False):
     """output peaks files.
     output_narrow=True -- Also output narrow peaks
     separate_peaks=True -- it will output peaks into gain and lose files
+    What we should do ?? Draw a graph to see relationship of ratios and pvalues, and output
+    If we all use the same data, we could get it easily, right ??
     """
-    if not separate_peaks:
-        output_BED(name + '_diffpeaks', output, pvalues,filter)
+    if not separate:
+        output_BED(name + '_diffpeaks', output, filter)
         if output_narrow:
-            output_narrowPeak(name + '-diffpeaks.narrow', output, pvalues, filter)
+            output_narrowPeak(name + '-diffpeaks.narrow', output, filter)
     else:
         # first to create gain or lose data list
-        gains, loses = separate_peaks(output, pvalues, filter)
+        gains, loses = separate_peaks(output,  filter)
         # pass gain / lose list to output_BED
-        output_BED(name + '_diffpeaks_gain', gains[0], gains[1], gains[2])
-        output_BED(name + '_diffpeaks_lose', loses[0], loses[1], loses[2])
+        output_BED(name + '_diffpeaks_gain', gains[0], gains[1], color='255,0,0')
+        output_BED(name + '_diffpeaks_lose', loses[0], loses[1], color='0,255,0')
         if output_narrow:
-            output_narrowPeak(name + '_diffpeaks_gain.narrow', gains[0], gains[1], gains[2])
-            output_narrowPeak(name + '_diffpeaks_lose.narrow', loses[0], loses[1], loses[2])
+            output_narrowPeak(name + '_diffpeaks_gain.narrow', gains[0], gains[1])
+            output_narrowPeak(name + '_diffpeaks_lose.narrow', loses[0], loses[1])
 
 
-
-def separate_peaks(output, pvalues, filter):
-    """accept both output and pvalues, maybe also filter; not clean codes"""
-    gain_peaks, lose_peaks = [], []
-    gain_pvalues, lose_pvalues = [], []
-    gain_filter, lose_filter = [], []
-    for i in range(len(pvalues)):  ## add name parameter here
-        strand = output[i].orientation
-        output[i].orientation = '.'
-        if filter[i]:
-            if strand == '+':
-                gain_peaks.append(output[i])
-                gain_pvalues.append(pvalues[i])
-                gain_filter.append(filter[i])
-            elif strand == '-':
-                lose_peaks.append(output[i])
-                lose_pvalues.append(pvalues[i])
-                lose_filter.append(filter[i])
-    return [gain_peaks, gain_pvalues, gain_filter],  [lose_peaks, lose_pvalues, lose_filter]
-
-def output_narrowPeak(name, output, pvalues, filter):
+def output_narrowPeak(name, output,filter):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
     f = open(name, 'w')
-    for i in range(len(pvalues)):
-        c, s, e, strand, _ = output[i]
-        p_tmp = -np.log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+    for i in range(len(filter)):
         if filter[i]:
-            print(c, s, e, 'Peak' + str(i), 0, strand, 0, p_tmp, 0, -1, sep='\t', file=f)
+            c, s, e, name, strand, counts = output[i].chrom, output[i].initial, output[i].final, output[i].name, output[
+                i].orientation, output[i].data
+            counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue'] > 0 else sys.maxint
+            print(c, s, e, 'Peak' + str(i) + '_' + name, 0, strand, 0, counts['pvalue'], 0, -1, sep='\t', file=f)
     f.close()
 
 
@@ -252,6 +271,7 @@ def _output_ext_data(ext_data_list, bamfiles):
 
 
 if __name__ == '__main__':
+    """
     ext_size1 = int(sys.argv[1]) #100
     ext_size2 = int(sys.argv[2]) #100
     path = sys.argv[3] # '/home/manuel/merge_test.data'
@@ -261,4 +281,8 @@ if __name__ == '__main__':
     #regions_minus = merge_delete(path, ext_size2, '-', merge)
     
     i = 0
+    """
+    counts = {'cov1':[6,9], 'cov2':[2,5], 'pvalue':3.6, 'ratio':5}
+    result= transfrom_2string(counts,mask_col=['ratio'])
+    print(result)
 

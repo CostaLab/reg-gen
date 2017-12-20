@@ -81,6 +81,7 @@ def input_parser(filepath):
     if len(rep1) != len(rep2):
         print('Signal files do not have same replicates', file=sys.stderr)
         sys.exit()
+
     chrom_sizes_fname = get_data_block(filepath, "chrom_sizes")
     chrom_sizes_file = get_file_path(chrom_sizes_fname)
 
@@ -237,11 +238,14 @@ def handle_input():
     parser.add_option("--call-peaks", dest="call_peaks", default=True, action="store_true",
                       help="DO call peaks, if setting False, only output normalized bigWig files. [default: %default]")
     # if we need to output gain and lose peaks separately
-    parser.add_option("--separate-peaks", dest="separate_peaks", default=False, action="store_true",
+    parser.add_option("--separate-peaks", dest="separate", default=False, action="store_true",
                       help="Output gain and lose peaks separately. [default: %default]")
     # if we need to attach names into results
     parser.add_option("--add-gene-name", dest="add_gene_name", default=False, action="store_true",
                       help="Attach names into results [default: %default]")
+    # if we add_gene)name is True, then we need option to get organism_name
+    parser.add_option("--organism-name ", dest="organism_name", default=None, type="string",
+                      help="If Attach names into results is true, organism_name must be given [default: %default]")
 
     parser.add_option("--save-input", dest="save_input", default=False, action="store_true",
                       help="Save input-DNA file if available. [default: %default]")
@@ -361,6 +365,9 @@ def handle_input():
     if options.factors_inputs:
         options.factors_inputs = parser.transform_list_with_dim(options.factors_inputs, dim=dims)
 
+    if options.add_gene_name and not options.organism_name:
+        parser.error("Organism_name must be given when setting add-gene-name True!")
+
     if options.regions:
         if not isfile(options.regions):
             parser.error("Region file %s does not exist!" % options.regions)
@@ -378,7 +385,7 @@ def handle_input():
         # if exist then we judge if there exists one file with peak amd if it's then we save it;
         # else, we will delete the files
         if isdir(options.outputdir):
-            if np.any(map(lambda x: re.search(r".*diffpeaks.bed$", x),os.listdir(options.outputdir))):
+            if np.any(map(lambda x: re.search(r".*diffpeak*$", x),os.listdir(options.outputdir))):
                 if parser.confirm(prompt="delete existing results?", resp=True):
                     shutil.rmtree(options.outputdir)
                 else:

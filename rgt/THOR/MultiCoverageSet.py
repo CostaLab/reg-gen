@@ -222,7 +222,7 @@ class MultiCoverageSet(): # DualCoverageSet
         # use binsize and step.size to get i
         start = index * self.stepsize
         # here differs with Manuel method, he uses only step_size, not the bin_size; but bin_size it should be here
-        end = min(start + self.binsize, self.regionset[order].final)
+        end = min(start + self.stepsize, self.regionset[order].final)
         return chrm_name, start, end
 
     def get_sm_covs(self, indices, strand_cov=False):

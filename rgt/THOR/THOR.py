@@ -31,7 +31,7 @@ from input_parser import handle_input
 from peak_calling import get_peaks, initialize
 from help_hmm import fit_sm_mean_var_distr
 from tracker import Tracker
-from postprocessing import output_BED, output_narrowPeak, merge_bw_output
+from postprocessing import output_peaks, merge_bw_output, add_gene_name
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
@@ -99,6 +99,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
     no_bw_files = []
+    peaks = []
     output, pvalues, ratios = [], [], []
     # pcutoff_output, pcutoff_pvalues, pcutoff_ratios = {}, {}, {}
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
@@ -133,11 +134,8 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
 
         cov_data = exp_data.get_sm_covs(exp_data.indices_of_interest)
         states = m.predict(transform_data_for_HMM(cov_data))
-        inst_ratios, inst_pvalues, inst_output = get_peaks(states=states, cov_set=exp_data,
-                                                           distr=distr, merge=options.merge, exts=options.exts,
-                                                           pcutoff=options.pcutoff, debug=options.debug, p=options.par,
-                                                           no_correction=options.no_correction,
-                                                           merge_bin=options.merge_bin)
+        inst_output = get_peaks(states=states, cov_set=exp_data, distr=distr, merge=options.merge, exts=options.exts, p=options.par,
+                                                           merge_bin=options.merge_bin, debug=options.debug)
         """
         for pi_value in inst_output.keys():
             if pi_value not in pcutoff_output.keys():
@@ -149,20 +147,22 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
             pcutoff_pvalues[pi_value] += inst_pvalues[pi_value]
             pcutoff_ratios[pi_value] += inst_ratios[pi_value]
         """
-        output += inst_output
-        pvalues += inst_pvalues
-        ratios += inst_ratios
+        peaks += inst_output # here maybe another way to get them together
+        # pvalues += inst_pvalues
+        # ratios += inst_ratios
 
     if options.save_bw:
         merge_bw_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
 
     if options.call_peaks: # if we don't have call_peaks, we only output nomalized data
-        res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output,
-                                                                               options.no_correction, options.name,
-                                                                               options.singlestrand)
+        # we add genes names before all outputs
+        if options.add_gene_name:
+            peaks = add_gene_name(peaks, organism_name=options.organism_name)
 
-        output_BED(options.name, res_output, res_pvalues, res_filter_pass)
-        output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
+        res_output, res_filter_pass = filter_by_pvalue_strand_lag(peaks, options.pcutoff,
+                                                                               options.no_correction, options.name,
+                                                                               options.singlestrand, separate=options.separate)
+        output_peaks(options.name, res_output, res_filter_pass, output_narrow=True, separate=options.separate)
 
 
 def main():
