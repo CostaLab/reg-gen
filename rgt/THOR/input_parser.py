@@ -93,7 +93,7 @@ def input_parser(filepath):
 
     if not inputs1 and not inputs2:
         inputs = None
-    elif len(inputs1) != len(rep1) or len(inputs2) == len(rep2):
+    elif len(inputs1) != len(rep1) or len(inputs2) != len(rep2):
         print('Inputs files do not correspond to signal files',file=sys.stderr)
         sys.exit()
     else:
@@ -235,7 +235,7 @@ def handle_input():
                            "each BAM file in config file. If option is not chosen, follow normalization strategy "
                            "(TMM or HK approach) [default: %default]")
     # if we need to call peaks s
-    parser.add_option("--call-peaks", dest="call_peaks", default=True, action="store_true",
+    parser.add_option("--call-peaks", dest="call_peaks", default=False, action="store_true",
                       help="DO call peaks, if setting False, only output normalized bigWig files. [default: %default]")
     # if we need to output gain and lose peaks separately
     parser.add_option("--separate-peaks", dest="separate", default=False, action="store_true",
@@ -423,6 +423,6 @@ def handle_input():
     if not options.genome:
         print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr)
 
-    options.call_peaks = True
+    # options.call_peaks = True
 
     return options, signal_files, options.genome, chrom_sizes_file, dims, inputs_files

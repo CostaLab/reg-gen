@@ -57,7 +57,7 @@ def merge_delete(ext_size, merge, peak_list):
     regions_minus = GenomicRegionSet('regions_minus') #pot. mergeable
 
     for i, r in enumerate(peak_list):
-        if r.end - r.start > ext_size:
+        if r.final - r.initial > ext_size:
             if r.orientation == '+':
                 regions_plus.add(r)
             elif r.orientation == '-':
@@ -84,13 +84,12 @@ def merge_delete(ext_size, merge, peak_list):
     return results
 
 
-def separate_peaks(output, pvalues, filter):
+def separate_peaks(output, filter):
     """accept both output and pvalues, maybe also filter; not clean codes"""
     gain_peaks, lose_peaks = GenomicRegionSet("gain"), GenomicRegionSet("lose")
     gain_filter, lose_filter = [], []
-    for i in range(len(pvalues)):  ## add name parameter here
+    for i in range(len(filter)):  ## add name parameter here
         strand = output[i].orientation
-        # this cause exception of codes : output[i].orientation = '.'
         if filter[i]:
             if strand == '+':# cause output is not a region, so we can't output
                 gain_peaks.add(output[i])
@@ -131,7 +130,7 @@ def filter_by_pvalue_strand_lag(peaks_set, pcutoff, no_correction, name, singles
         # we only create pvalues and then
         pvalues = map(lambda x: 10**-x, pvalues)
         
-        output_peaks(name + '-uncor', peaks_set, pvalues, pv_pass, separate=separate)
+        output_peaks(name + '-uncor', peaks_set, pv_pass, separate=separate)
         
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
@@ -160,20 +159,18 @@ def transfrom_2string(dict_data, mask_col, item_sep = ';',data_sep=':'):
     return result_str.rstrip(item_sep)
 
 
-def output_BED(name, output, filter, color=None):
+def output_BED(name, output, filter):
 
     f = open(name, 'w')
-    if not color:
-        colors = {'+': '255,0,0', '-': '0,255,0'}
-    else:
-        colors = {'.': color}
+    colors = {'+': '255,0,0', '-': '0,255,0'}
     bedscore = 1000
+
     for i in range(len(filter)):
         if filter[i]:
-            c, s, e, name, strand, counts = output[i].chrom, output[i].initial, output[i].final,  output[i].name, output[i].orientation, output[i].data
-            counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue']  > 0 else sys.maxint
+            c, s, e, name, state, counts = output[i].chrom, output[i].initial, output[i].final,  output[i].name, output[i].orientation, output[i].data
+            counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue'] > 0 else sys.maxint
             counts_str = transfrom_2string(counts, mask_col=['ratio'])
-            print(c, s, e, 'Peak' + str(i) + '_' + name, bedscore, strand, s, e, colors[strand], 0, counts_str, sep='\t', file=f)
+            print(c, s, e, 'Peak' + str(i) + '_' + name, bedscore, state, s, e, colors[state], 0, counts_str, sep='\t', file=f)
 
     f.close()
 
@@ -193,8 +190,8 @@ def output_peaks(name, output, filter, output_narrow=True, separate=False):
         # first to create gain or lose data list
         gains, loses = separate_peaks(output,  filter)
         # pass gain / lose list to output_BED
-        output_BED(name + '_diffpeaks_gain', gains[0], gains[1], color='255,0,0')
-        output_BED(name + '_diffpeaks_lose', loses[0], loses[1], color='0,255,0')
+        output_BED(name + '_diffpeaks_gain', gains[0], gains[1])
+        output_BED(name + '_diffpeaks_lose', loses[0], loses[1])
         if output_narrow:
             output_narrowPeak(name + '_diffpeaks_gain.narrow', gains[0], gains[1])
             output_narrowPeak(name + '_diffpeaks_lose.narrow', loses[0], loses[1])
@@ -206,22 +203,20 @@ def output_narrowPeak(name, output,filter):
     f = open(name, 'w')
     for i in range(len(filter)):
         if filter[i]:
-            c, s, e, name, strand, counts = output[i].chrom, output[i].initial, output[i].final, output[i].name, output[
+            c, s, e, name, state, counts = output[i].chrom, output[i].initial, output[i].final, output[i].name, output[
                 i].orientation, output[i].data
             counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue'] > 0 else sys.maxint
-            print(c, s, e, 'Peak' + str(i) + '_' + name, 0, strand, 0, counts['pvalue'], 0, -1, sep='\t', file=f)
+            print(c, s, e, 'Peak' + str(i) + '_' + name, 0, state, 0, counts['pvalue'], 0, -1, sep='\t', file=f)
     f.close()
 
 
-def merge_bw_output(signal_statics, options, no_bw_files, chrom_sizes):
-    dim = signal_statics['dim']
-
+def merge_bw_output(name, dim, no_bw_files, chrom_sizes):
     for i in range(dim[0]):
         for j in range(dim[1]):
             ## here are to output bed files for each signal file and output files
-            temp_bed = npath(options.name + '-s%s-rep%s_temp.bed'% (i, j))
+            temp_bed = npath(name + '-s%s-rep%s_temp.bed'% (i, j))
 
-            files = [options.name + '-' + str(num) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
+            files = [name + '-' + str(num) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
             if len(files) > 1:
                 files = filter(lambda x: os.path.isfile(x), files)
                 t = ['bigWigMerge'] + files + [temp_bed]
@@ -230,7 +225,7 @@ def merge_bw_output(signal_statics, options, no_bw_files, chrom_sizes):
 
                 os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + temp_bed + ' > ' + temp_bed +'.sort')
 
-                t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' % (i, j)]
+                t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, name + '-s%s-rep%s.bw' % (i, j)]
                 c = " ".join(t)
                 os.system(c)
 
@@ -239,7 +234,7 @@ def merge_bw_output(signal_statics, options, no_bw_files, chrom_sizes):
                 os.remove(temp_bed)
                 os.remove(temp_bed + ".sort")
             else:
-                ftarget = [options.name + '-s%s-rep%s.bw' %(i, j)]
+                ftarget = [name + '-s%s-rep%s.bw' %(i, j)]
                 for k in range(len(ftarget)):
                     c = ['mv', files[k], ftarget[k]]
                     c = " ".join(c)

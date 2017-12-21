@@ -45,9 +45,8 @@ def get_read_statistics(fname, chroms):
                         isspatial_len = tmp[1]
                 break
 
-    if isspatial_max < isspatial_len * 0.15:
+    if isspatial_max < isspatial_len * 0.015:
          isspatial = True
-         # data is spatial, and we use biggest 5 stats_data as new stats_data
          new_stats_nums = [tmp[2] for tmp in stats_total]
          idxs = np.argsort(new_stats_nums)[-3:]
          stats_data = [stats_total[idx] for idx in idxs]

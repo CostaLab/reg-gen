@@ -33,7 +33,23 @@ import configuration
 np.random.rand(42)
 
 
-def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics, verbose=False):
+def is_cov_sparse(signal_statics, stepsize):
+    """to test if data are sparse, then we could use sparse matrix
+    we make our estimate according to max_read counts in one chrom that is less than shape of bin size
+    """
+    is_sparse = True
+    for i in range(signal_statics['dim'][0]):
+        for j in range(signal_statics['dim'][1]):
+            stats_data = signal_statics['data'][i][j]['stats_data']
+            max_stats = stats_data[-1]
+            if max_stats[-1] < (max_stats[1]/stepsize) * 0.05:
+                is_sparse &= True
+            else:
+                return False
+    return is_sparse
+
+
+def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics, tracker=None, verbose=False):
     """Initialize the MultiCoverageSet
     Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
     Use sampling methods to initialize certain part of data
@@ -43,8 +59,9 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
     # options.stepsize = 50
     print("Begin reading", file=sys.stderr)
     start = time.time()
+    use_sm = is_cov_sparse(signal_statics, options.stepsize)
     cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
-                                      strand_cov=strand_cov, use_sm=True)
+                                      strand_cov=strand_cov, use_sm=use_sm)
 
     elapsed_time = time.time() - start
     print("End reading using time %.3f s"%(elapsed_time), file=sys.stderr)
@@ -59,21 +76,22 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         if verbose:
             print("Compute GC-content using time %.3f s"%(elapsed_time), file=sys.stderr)
 
-        # we need to save values for it for return ?? If we use another; [avg_T, hv] for each inputs files.
-
     cov_set.init_overall_coverage(strand_cov=strand_cov)
 
     if inputs_statics: # only inputs_statics exist we do it;
         start = time.time()
         options.factors_inputs = cov_set.normalization_by_input(signal_statics, inputs_statics, options.name, options.factors_inputs)
+        if tracker:
+            tracker.write(text=map(lambda x: str(x), options.factors_inputs), header="Inputs Scaling factors")
         elapsed_time = time.time() - start
         if verbose:
             print("Normalize input-DNA using time %.3f s"%(elapsed_time), file=sys.stderr)
 
-    # much complex, so we decay to change it
     start = time.time()
     options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes,
                                     options.report, options.m_threshold, options.a_threshold)
+    if tracker:
+        tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Signal Scaling factors")
     elapsed_time = time.time() - start
     if verbose:
         print('Normalize ChIP-seq profiles using time %.3f s' % (elapsed_time), file=sys.stderr)
@@ -90,10 +108,10 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     for i in range(len(DCS.indices_of_interest)):
         cov1, cov2 = DCS._get_sm_covs(i)
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
-        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
+        chrom, initial, final = DCS._index2coordinates(DCS.indices_of_interest[i])
         
-        print(chrom, start, end, states[i], cov1, cov2, sep='\t', file=g)
-        print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep='\t', file=f)
+        print(chrom, initial, final, states[i], cov1, cov2, sep='\t', file=g)
+        print(chrom, initial, final, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep='\t', file=f)
 
     f.close()
     g.close()
@@ -127,12 +145,12 @@ def _get_log_ratio(l1, l2):
 def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     """Merge consecutive peaks and compute p-value. Return list
     <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
-    peaks_set = GenomicRegionSet('peaks')
+    peaks_set = GenomicRegionSet('')
+    peaks_set.name = tmp_peaks.name
     i, j, = 0, 0
-
     while i < len(tmp_peaks):
         j+=1
-        chrom, start, end, state, data = tmp_peaks[i].chrom, tmp_peaks[i].initial, tmp_peaks[i].final, tmp_peaks[i].orientation, tmp_peaks[i].data
+        chrom, initial, final, state, data = tmp_peaks[i].chrom, tmp_peaks[i].initial, tmp_peaks[i].final, tmp_peaks[i].orientation, tmp_peaks[i].data
         c1, c2, strand_pos, strand_neg = data[0], data[1], data[2], data[3]
         v1 = c1
         v2 = c2
@@ -140,12 +158,12 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
         tmp_pos = [strand_pos]
         tmp_neg = [strand_neg]
         #merge bins, here are some problems maybe happpen about the conditions
-        while merge and i+1 < len(tmp_peaks) and e >= tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
-            e = tmp_peaks[i+1][2]
-            v1 = map(add, v1, tmp_peaks[i+1][3])
-            v2 = map(add, v2, tmp_peaks[i+1][4])
-            tmp_pos.append(tmp_peaks[i+1][6])
-            tmp_neg.append(tmp_peaks[i+1][7])
+        while merge and i+1 < len(tmp_peaks) and final >= tmp_peaks[i+1].initial and state == tmp_peaks[i+1].orientation:
+            final = tmp_peaks[i+1].final
+            v1 = map(add, v1, tmp_peaks[i+1].data[0])
+            v2 = map(add, v2, tmp_peaks[i+1].data[1])
+            tmp_pos.append(tmp_peaks[i+1].data[2])
+            tmp_neg.append(tmp_peaks[i+1].data[3])
             i += 1
         v1 = list(v1)
         v2 = list(v2)
@@ -154,7 +172,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
         pvalue = _compute_pvalue((v1, v2, side, distr))
         ratio = _get_log_ratio(tmp_pos, tmp_neg)
         # peaks.append((c, s, e, v1, v2, strand, ratio))
-        peak_region = GenomicRegion(chrom=chrom, initial=start, final=end,  orientation=state,
+        peak_region = GenomicRegion(chrom=chrom, initial=initial, final=final,  orientation=state,
                                     data={'cov1':v1, 'cov2':v2, 'pvalue':pvalue, 'ratio':ratio})
         peaks_set.add(peak_region)
         i += 1
@@ -169,7 +187,7 @@ def _calpvalues_merge_bins(tmp_peaks, bin_pvalues, distr, pcutoff):
     then above them, we get it, and then merge them..
 
     :tem_peaks
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
+        tmp_peaks.append((chrom, initial, final, cov1, cov2, strand, cov1_strand, cov2_strand))
         c, s, e, c1, c2, strand, strand_pos, strand_neg = tmp_peaks[i]
     :return
         ratio = _get_log_ratio(tmp_pos, tmp_neg)
@@ -262,7 +280,24 @@ def _calpvalues_merge_bins(tmp_peaks, bin_pvalues, distr, pcutoff):
     return pcutoff_pvalues, pcutoff_peaks
 
 
-def get_peaks(cov_set, states, exts, merge, distr, merge_bin, p=70, debug=False,):
+def get_peaks_set(peaks_set, indices):
+    """get dataf from peaks_set with indices and recombine them together"""
+    tmp_set = GenomicRegionSet('')
+    tmp_set.name = peaks_set.name
+    indices = np.ravel(indices)
+    for idx in indices:
+        tmp_set.add(peaks_set[idx])
+    return tmp_set
+
+
+def combine_2region_set(peaks):
+    """combine data a list into 2 single region set, but at first it should have such values"""
+    peaks_set = reduce(lambda x_region_set, y_region_set: x_region_set.combine(y_region_set, output=False), peaks)
+    peaks_set.name = "peaks"
+    return peaks_set
+
+
+def get_peaks(cov_set, states, exts, merge, distr, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     start = time.time()
     exts = np.mean(exts)
@@ -279,12 +314,10 @@ def get_peaks(cov_set, states, exts, merge, distr, merge_bin, p=70, debug=False,
         # strand_cov1 in format [file_0: [forwards: ],[reverse: ]],[file_1:: [forward: ],[reverse: ] ]
         forward_strand = np.sum(strand_covs_list[0][:,0] + strand_covs_list[1][:,0])
         reverse_strand = np.sum(strand_covs_list[0][:,1] + strand_covs_list[1][:,1])
-        ## get genome information from idx, to get chrom, end and start
-        chrom, start, end = cov_set.sm_index2coordinates(idx)
-        # if we use region to represent it from here, then we could do
-        peak_region = GenomicRegion(chrom=chrom, initial=start, final=end, name='', orientation=state, data=(cov1, cov2,forward_strand, reverse_strand))
+        ## get genome information from idx, to get chrom, initial and final
+        chrom, initial, final = cov_set.sm_index2coordinates(idx)
+        peak_region = GenomicRegion(chrom=chrom, initial=initial, final=final, name='', orientation=state, data=(cov1, cov2,forward_strand, reverse_strand))
         peaks_set.add(peak_region)
-        # tmp_peaks.append((chrom, start, end, cov1, cov2, state, forward_strand, reverse_strand))
         side = 'l' if states[i] == 1 else 'r'
         tmp_data.append((np.sum(cov1), np.sum(cov2), side, distr))
     
@@ -295,26 +328,12 @@ def get_peaks(cov_set, states, exts, merge, distr, merge_bin, p=70, debug=False,
     tmp_pvalues = np.array(map(_compute_pvalue, tmp_data))
     p_threshold = np.percentile(tmp_pvalues, p)
 
-    indices = tmp_pvalues > p_threshold
-    peaks_set = peaks_set[indices]
+    indices = np.where(tmp_pvalues > p_threshold)
+    peaks_set = get_peaks_set(peaks_set, indices)
 
-    peaks_set= _merge_consecutive_bins(peaks_set, distr, merge_bin) #merge consecutive peaks and compute p-value
+    peaks_set = _merge_consecutive_bins(peaks_set, distr, merge_bin) #merge consecutive peaks and compute p-value
     peaks_set = merge_delete(exts, merge, peaks_set) #postprocessing, returns GenomicRegionSet with merged regions
 
-    """
-    main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
-    int_sep = ';' #sep counts in <counts>
-    for i, el in enumerate(peaks_set):
-        tmp = el.data.split(',')
-        counts = ",".join(tmp[0:len(tmp)-1]).replace('], [', int_sep).replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
-        pvalue = float(tmp[len(tmp)-2].replace(")", "").strip())
-        ratio = float(tmp[len(tmp)-1].replace(")", "").strip())
-        
-        
-        pvalues.append(pvalue)
-        ratios.append(ratio)
-        output.append((el.chrom, el.initial, el.final, el.orientation, counts))
-    """
     elapsed_time = time.time() - start
     if configuration.VERBOSE:
         print("Compute peaks using time %.3f s" % (elapsed_time), file=sys.stderr)

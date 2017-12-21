@@ -220,10 +220,10 @@ class MultiCoverageSet(): # DualCoverageSet
         # get regionset[order] and then use idx to subtract it len, we get initial idx for it
         chrm_name = self.regionset[order].chrom
         # use binsize and step.size to get i
-        start = index * self.stepsize
+        initial = index * self.stepsize
         # here differs with Manuel method, he uses only step_size, not the bin_size; but bin_size it should be here
-        end = min(start + self.stepsize, self.regionset[order].final)
-        return chrm_name, start, end
+        final = min(initial + self.stepsize, self.regionset[order].final)
+        return chrm_name, initial, final
 
     def get_sm_covs(self, indices, strand_cov=False):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i
@@ -302,7 +302,7 @@ class MultiCoverageSet(): # DualCoverageSet
 
                 tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep)
                 write_wig(self.inputs_covs[sig][rep], tmp_path)
-                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
+                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename+'-s%s-rep%s.bw' %(sig, rep)]
                 c = " ".join(t)
                 os.system(c)
                 if not save_wig:

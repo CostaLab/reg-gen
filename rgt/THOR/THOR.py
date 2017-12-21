@@ -28,7 +28,7 @@ from __future__ import print_function
 # Internal
 import configuration
 from input_parser import handle_input
-from peak_calling import get_peaks, initialize
+from peak_calling import get_peaks, initialize, combine_2region_set
 from help_hmm import fit_sm_mean_var_distr
 from tracker import Tracker
 from postprocessing import output_peaks, merge_bw_output, add_gene_name
@@ -39,8 +39,6 @@ from rgt import __version__
 
 from get_statistics import *
 from MultiCoverageSet import get_training_set, transform_data_for_HMM
-# External
-
 
 TEST = False #enable to test THOR locally
 
@@ -70,14 +68,16 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     Return: distribution parameters
     """
     exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
-                          signal_statics=signal_statics, inputs_statics=inputs_statics, verbose=True)
-
-    tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Scaling factors")
+                          signal_statics=signal_statics, inputs_statics=inputs_statics, tracker=tracker, verbose=True)
 
     data_valid = exp_data.compute_sm_putative_region_index()
     if not data_valid: # less than 50 peaks we consider
         print('putative region is not enough, less than 50, so no peak calling', file=sys.stderr)
         sys.exit()
+
+    if not options.call_peaks:
+        print('Only get parameter for normaliza data', file=sys.stderr)
+        return options
 
     func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                             verbose=options.verbose, outputdir=options.outputdir,
@@ -99,10 +99,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
     no_bw_files = []
-    peaks = []
-    output, pvalues, ratios = [], [], []
-    # pcutoff_output, pcutoff_pvalues, pcutoff_ratios = {}, {}, {}
-    print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
+    peaks_list = []
     
     for i, regionset in enumerate(region_giver):
         chrom = regionset.sequences[0].chrom
@@ -112,16 +109,17 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
             continue
         else:
             print("- taking into account %s" %chrom , file=sys.stderr)
+
         exp_data = initialize(options=options, strand_cov=True, genome_path=genome, regionset=regionset, mask_file=region_giver.mask_file,
                               signal_statics=signal_statics, inputs_statics=inputs_statics)
 
         options.save_bw = False
         ## After this step, we have already normalized data, so we could output normalization data
-        if options.save_input:
+        if inputs_statics and options.save_input:
             print("Begin: output nomalized inputs read data into file", file=sys.stderr)
-            exp_data.output_input_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
+            exp_data.output_input_bw(options.name +'-inputs' + '-' + str(i), region_giver.chrom_sizes_file)
             print("End: output nomalized inputs read data into file", file=sys.stderr)
-        if options.save_bw:
+        if options.save_bw or not options.call_peaks:
             print("Begin : output nomalized signal read data into file", file=sys.stderr)
             exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
             print("End: output nomalized signal read data into file", file=sys.stderr)
@@ -129,38 +127,25 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
         # if we accept command to stop here, then we don't call diff-peaks, but only output normalized files
         if not options.call_peaks:
             continue
-        # after training we don't need to verify the number of putative_region
-        exp_data.compute_sm_putative_region_index()
 
+        exp_data.compute_sm_putative_region_index()
         cov_data = exp_data.get_sm_covs(exp_data.indices_of_interest)
         states = m.predict(transform_data_for_HMM(cov_data))
-        inst_output = get_peaks(states=states, cov_set=exp_data, distr=distr, merge=options.merge, exts=options.exts, p=options.par,
-                                                           merge_bin=options.merge_bin, debug=options.debug)
-        """
-        for pi_value in inst_output.keys():
-            if pi_value not in pcutoff_output.keys():
-                pcutoff_output[pi_value] = []
-                pcutoff_pvalues[pi_value] = []
-                pcutoff_ratios[pi_value] = []
+        chrom_peaks = get_peaks(states=states, cov_set=exp_data, distr=distr, merge=options.merge, exts=options.exts, p=options.par,
+                                                           merge_bin=options.merge_bin)
+        peaks_list.append(chrom_peaks)
 
-            pcutoff_output[pi_value] += inst_output[pi_value]
-            pcutoff_pvalues[pi_value] += inst_pvalues[pi_value]
-            pcutoff_ratios[pi_value] += inst_ratios[pi_value]
-        """
-        peaks += inst_output # here maybe another way to get them together
-        # pvalues += inst_pvalues
-        # ratios += inst_ratios
-
-    if options.save_bw:
-        merge_bw_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
+    if options.save_bw or not options.call_peaks:
+        merge_bw_output(options.name, signal_statics['dim'], no_bw_files, region_giver.chrom_sizes_file)
+        if inputs_statics and options.save_input:
+            merge_bw_output(options.name+'-inputs',inputs_statics['dim'], no_bw_files, region_giver.chrom_sizes_file)
 
     if options.call_peaks: # if we don't have call_peaks, we only output nomalized data
-        # we add genes names before all outputs
+        peaks = combine_2region_set(peaks_list)
         if options.add_gene_name:
             peaks = add_gene_name(peaks, organism_name=options.organism_name)
 
-        res_output, res_filter_pass = filter_by_pvalue_strand_lag(peaks, options.pcutoff,
-                                                                               options.no_correction, options.name,
+        res_output, res_filter_pass = filter_by_pvalue_strand_lag(peaks, options.pcutoff, options.no_correction, options.name,
                                                                                options.singlestrand, separate=options.separate)
         output_peaks(options.name, res_output, res_filter_pass, output_narrow=True, separate=options.separate)
 
@@ -172,7 +157,6 @@ def main():
     region_giver = RegionGiver(chrom_sizes_file, options.regions)
 
     # get statistic information for each file
-    # stats_total, stats_data, read_size, and other parts..
     signal_statics = get_file_statistics(signal_files, region_giver)
     region_giver.update_regions(signal_statics)
 
@@ -188,7 +172,7 @@ def main():
         inputs_statics = get_file_statistics(inputs_files, region_giver)  # None
         region_giver.update_regions(inputs_statics)
         if options.exts_inputs:
-            update_statics_extension_sizes(inputs_statics,options.exts_inputs)
+            update_statics_extension_sizes(inputs_statics, options.exts_inputs)
         else:
             options.exts_inputs= compute_extension_sizes(inputs_statics, options.report)
             # Foe given data we don't need to adjust data;; Only what we have we need to do
@@ -199,13 +183,18 @@ def main():
     else:
         inputs_statics = None
 
-    m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
+    if options.call_peaks:
+        m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
+        # we need to change region_giver and update the valid_regions
+        region_giver.reset_regions()
+        print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
+        run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr)
 
-    # we need to change region_giver and update the valid_regions
-    region_giver.reset_regions()
-    run_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker, m, distr)
-    
-    _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
+        _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
+    else: # only normalize data and then stop
+        options = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
+        region_giver.reset_regions()
+        run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m=None, distr=None)
 
 
 if __name__ == "__main__":

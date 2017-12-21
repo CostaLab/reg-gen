@@ -79,18 +79,15 @@ def get_bin_from_covs(cov, step_times=10, sample_size=5000):
     Can we do it ???
     we need to do a sampling and use less data here.
     """
-    # we use list to store them then we transfer them into array...
     cov_counts = []
-    # so first we need to dig into cov and then get the that sizes
-    # here if we use sparse matrix, could we also do this ??
-    tmp_cov = np.ravel(cov.sm_overall_cov.todense()) # into one-dimension view
     step_size = (cov.binsize/cov.stepsize) * step_times
+    tmp_cov = np.ravel(cov.sm_overall_cov.todense())  # into one-dimension view
     # one problem is range of it, at end, we also want to get the last bin sizes then,
     for bin_idx in range(0, len(tmp_cov), step_size):
-        bin_sum = sum(tmp_cov[bin_idx:(bin_idx+step_size):(cov.binsize/cov.stepsize)])
+        bin_sum = sum(tmp_cov[bin_idx:(bin_idx + step_size):(cov.binsize / cov.stepsize)])
         cov_counts.append(bin_sum)
-    return cov_counts
 
+    return cov_counts
 
 def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
     if two_sample:
