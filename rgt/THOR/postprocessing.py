@@ -31,7 +31,6 @@ import matplotlib.pyplot as plt
 
 from rgt.Util import npath
 from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 import configuration
@@ -170,7 +169,7 @@ def output_BED(name, output, filter):
             c, s, e, name, state, counts = output[i].chrom, output[i].initial, output[i].final,  output[i].name, output[i].orientation, output[i].data
             counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue'] > 0 else sys.maxint
             counts_str = transfrom_2string(counts, mask_col=['ratio'])
-            print(c, s, e, 'Peak' + str(i) + '_' + name, bedscore, state, s, e, colors[state], 0, counts_str, sep='\t', file=f)
+            print(c, s, e, 'Peak' + str(i) + '_' + str(name), bedscore, state, s, e, colors[state], 0, counts_str, sep='\t', file=f)
 
     f.close()
 
@@ -206,7 +205,7 @@ def output_narrowPeak(name, output,filter):
             c, s, e, name, state, counts = output[i].chrom, output[i].initial, output[i].final, output[i].name, output[
                 i].orientation, output[i].data
             counts['pvalue'] = -np.log10(counts['pvalue']) if counts['pvalue'] > 0 else sys.maxint
-            print(c, s, e, 'Peak' + str(i) + '_' + name, 0, state, 0, counts['pvalue'], 0, -1, sep='\t', file=f)
+            print(c, s, e, 'Peak' + str(i) + '_' + str(name), 0, state, 0, counts['pvalue'], 0, -1, sep='\t', file=f)
     f.close()
 
 

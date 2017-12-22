@@ -72,7 +72,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 
     data_valid = exp_data.compute_sm_putative_region_index()
     if not data_valid: # less than 50 peaks we consider
-        print('putative region is not enough, less than 50, so no peak calling', file=sys.stderr)
+        print('putative region is not enough, less than 50, please check data', file=sys.stderr)
         sys.exit()
 
     if not options.call_peaks:

@@ -65,7 +65,7 @@ class MultiCoverageSet(): # DualCoverageSet
         else:
             return None
 
-    def init_overall_coverage(self, strand_cov=True):
+    def init_overall_coverage(self, strand_cov=True, use_sm=True):
         """Convert coverage data (and optionally strand data) to matrix list"""
         # overall_coverage format are [[coverage_0_0 , coverage_0_1 ], [ coverage_1_0, coverag_1_1 ]]
         self.overall_coverage = {'dim':self.dim, 'data':[]} # here we could add bins size into dim
@@ -222,7 +222,7 @@ class MultiCoverageSet(): # DualCoverageSet
         # use binsize and step.size to get i
         initial = index * self.stepsize
         # here differs with Manuel method, he uses only step_size, not the bin_size; but bin_size it should be here
-        final = min(initial + self.stepsize, self.regionset[order].final)
+        final = min(initial + self.binsize, self.regionset[order].final)
         return chrm_name, initial, final
 
     def get_sm_covs(self, indices, strand_cov=False):
@@ -272,7 +272,7 @@ class MultiCoverageSet(): # DualCoverageSet
         signal_sum = 0
         for i in range(self.dim[0]):
             signal_sum += sum(self.overall_coverage['data'][i])
-        # l = min(np.percentile(signal_sum.data, 90), l)
+        l = max(np.percentile(signal_sum.data, 80), l)
         self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_sum > l*self.dim[1]).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
         if len(self.indices_of_interest) < 50:
             return False
@@ -331,7 +331,7 @@ def cov_to_smatrix(cov):
 def sm_scale(cov, factor):
     """we scale sparse matrix representation with factor"""
     cov.sm_overall_cov.data *= factor
-    # cov.sm_overall_strand_cov.data *= factor
+    cov.sm_overall_strand_cov.data *= factor
 
 
 def sm_add(cov, sm_cs):
@@ -341,7 +341,7 @@ def sm_add(cov, sm_cs):
     # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
     # self.sm_overall_cov is 1-D array
     cov.sm_overall_cov.data += sm_cs.sm_overall_cov.data  # we could assume all values are non-negative
-    # cov.sm_overall_strand_cov.data += sm_cs.sm_overall_strand_cov.data
+    cov.sm_overall_strand_cov.data += sm_cs.sm_overall_strand_cov.data
 
 
 def sm_subtract(cov, sm_cs):
@@ -356,7 +356,7 @@ def sm_subtract(cov, sm_cs):
     # do process on overall_strand_coverage, one thing we keep connection between cov and overall_covs
     # so we can only deal with data;
     ## cov.sm_overall_strand_cov -= sm_cs.sm_overall_strand_cov, same effect like this
-    """
+
     row_indptr = cov.sm_overall_strand_cov.indptr
     for row_idx in range(len(row_indptr)-1):
         cov.sm_overall_strand_cov.data[row_indptr[row_idx]:row_indptr[row_idx+1]] -= \
@@ -364,7 +364,7 @@ def sm_subtract(cov, sm_cs):
     cov.sm_overall_strand_cov.data = np.clip(cov.sm_overall_strand_cov.data, 0,
                                       cov.sm_overall_strand_cov.max())  # make negative into zeros
     cov.sm_overall_strand_cov.eliminate_zeros()  # eliminate zeros elements in matrix
-    """
+
 
 def cov_normalization_by_gc_content(cov, hv, avg_T, genome_fpath,delta=0.2):
     """After we get gc-factor from one input-coverage, and then we apply it on coverage from one signal file
@@ -408,7 +408,7 @@ def transform_data_for_HMM(training_cov):
     return np.concatenate(tmp,axis=1)
 
 
-def get_training_set(exp_data, name, threshold, min_t, y=1000, ex=2, test=False):
+def get_training_set(exp_data, name, threshold, min_t=80, y=1000, ex=2, test=False):
     """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>.
        If first sample can't represent data, we need to resample it from population, self.indices_of_interest..
        Other way, we could build the samples for training, but then it will cause other troubles, maybe...
@@ -482,7 +482,7 @@ def get_training_set(exp_data, name, threshold, min_t, y=1000, ex=2, test=False)
     training_size = min(min([len(all_data[i]) for i in range(3)]), y)
     # get good enough training data sets, to avoid zeros counts
     for i in range(len(all_data)):
-        if isvalid_training_data(all_data[i], 0.5):
+        if isvalid_training_data(all_data[i], 0.4):
             ss = sample(all_data[i], training_size)
             limits = 10
             while not isvalid_training_data(ss, 0.3) and limits:

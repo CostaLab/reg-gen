@@ -42,7 +42,7 @@ def is_cov_sparse(signal_statics, stepsize):
         for j in range(signal_statics['dim'][1]):
             stats_data = signal_statics['data'][i][j]['stats_data']
             max_stats = stats_data[-1]
-            if max_stats[-1] < (max_stats[1]/stepsize) * 0.05:
+            if max_stats[-1] < (max_stats[1]/stepsize) * 0.1:
                 is_sparse &= True
             else:
                 return False
@@ -55,11 +55,10 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
     Use sampling methods to initialize certain part of data
     Get exp_data, we have one pattern, 0.1
     """
-    # options.binsize = 100
-    # options.stepsize = 50
     print("Begin reading", file=sys.stderr)
     start = time.time()
     use_sm = is_cov_sparse(signal_statics, options.stepsize)
+    print("Using sparse matrix to store data", file=sys.stderr)
     cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
                                       strand_cov=strand_cov, use_sm=use_sm)
 
@@ -180,7 +179,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     return peaks_set
 
 
-def _calpvalues_merge_bins(tmp_peaks, bin_pvalues, distr, pcutoff):
+def _calpvalues_merge_bins(tmp_peaks, bin_pvalues, pcutoff):
     """ we calculate firstly p-values for each bin and then filter them using pcutoff values,
     at end we merge bins with similar p-values
     pcutoff: two format, one is just one value, secondly, one array, [start, end, steps]
@@ -319,7 +318,7 @@ def get_peaks(cov_set, states, exts, merge, distr, merge_bin, p=70):
         peak_region = GenomicRegion(chrom=chrom, initial=initial, final=final, name='', orientation=state, data=(cov1, cov2,forward_strand, reverse_strand))
         peaks_set.add(peak_region)
         side = 'l' if states[i] == 1 else 'r'
-        tmp_data.append((np.sum(cov1), np.sum(cov2), side, distr))
+        tmp_data.append((np.mean(cov1), np.mean(cov2), side, distr))
     
     if not tmp_data:
         print('no data', file=sys.stderr)

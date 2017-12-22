@@ -235,7 +235,7 @@ def handle_input():
                            "each BAM file in config file. If option is not chosen, follow normalization strategy "
                            "(TMM or HK approach) [default: %default]")
     # if we need to call peaks s
-    parser.add_option("--call-peaks", dest="call_peaks", default=False, action="store_true",
+    parser.add_option("--call-peaks", dest="call_peaks", default=True, action="store_true",
                       help="DO call peaks, if setting False, only output normalized bigWig files. [default: %default]")
     # if we need to output gain and lose peaks separately
     parser.add_option("--separate-peaks", dest="separate", default=False, action="store_true",

@@ -223,7 +223,7 @@ def compute_extension_sizes(signal_statics, report=False):
                 signal_extension_sizes[i].append(ext_size)
                 ext_data_list.append(ext_data)
                 signal_statics['data'][i][j]['extension_size'] = ext_size
-        print('end of compute extension size for signal files ', file=sys.stderr)
+        print('end of compute extension size', file=sys.stderr)
 
         if report and ext_data_list:
             print(ext_data_list, signal_extension_sizes)
