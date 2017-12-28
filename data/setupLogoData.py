@@ -7,6 +7,8 @@
 ###################################################################################################
 
 # Import
+from __future__ import print_function
+
 from optparse import OptionParser
 from os import path, walk, mkdir
 from sys import platform
@@ -56,7 +58,8 @@ if platform not in supported_platforms:
 
 # Creating logos
 output_logos_dir = path.join(curr_dir, "logos")
-if not path.exists(output_logos_dir): mkdir(output_logos_dir)
+if not path.exists(output_logos_dir):
+    mkdir(output_logos_dir)
 for dir_name, subdir_list, file_list in walk(path.join(curr_dir, "motifs")):
     base_name = path.basename(dir_name)
     if ((options.hocomoco and base_name == "hocomoco") or
@@ -68,13 +71,14 @@ for dir_name, subdir_list, file_list in walk(path.join(curr_dir, "motifs")):
             mkdir(output_dir)
         else:
             continue
-        print "Creating logos for " + base_name
+        print("Creating logos for " + base_name)
         for pwm_file_name in file_list:
             pwm_full_file_name = path.join(dir_name, pwm_file_name)
-            if pwm_file_name.split(".")[-1] != "pwm": continue
+            if pwm_file_name.split(".")[-1] != "pwm":
+                continue
             pwm_file = open(pwm_full_file_name, "r")
             logo_file_name = path.join(output_dir, ".".join(pwm_file_name.split(".")[:-1]) + ".png")
             pwm = motifs.read(pwm_file, "pfm")
             pwm.weblogo(logo_file_name, format="png_print", stack_width="medium", color_scheme="color_classic")
             pwm_file.close()
-        print "OK"
+        print("OK")
