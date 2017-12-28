@@ -23,7 +23,7 @@ from collections import OrderedDict
 from .SequenceSet import *
 from .GeneSet import GeneSet
 from .GenomicRegion import GenomicRegion
-from .Util import GenomeData, OverlapType, Library_path
+from .Util import GenomeData, OverlapType, LibraryPath
 
 # External
 from pysam import Fastafile
@@ -863,7 +863,7 @@ class GenomicRegionSet:
 
     def intersect_c(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         # Determine path of shared library
-        Lib = Library_path()
+        Lib = LibraryPath()
         lib = cdll.LoadLibrary(Lib.get_c_rgt())
         # C-Binding of intersect overlap function
         intersect_overlap_c = lib.intersectGenomicRegionSetsOverlap
@@ -1530,7 +1530,7 @@ class GenomicRegionSet:
 
     def jaccard_c(self, query):
         # Determine path of shared library
-        Lib = Library_path()
+        Lib = LibraryPath()
         lib = cdll.LoadLibrary(Lib.get_c_rgt())
 
         # Bind library

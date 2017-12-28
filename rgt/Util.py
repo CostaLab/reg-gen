@@ -344,7 +344,7 @@ class ImageData(ConfigurationFile):
         return self.viz_logo
 
 
-class Library_path(ConfigurationFile):
+class LibraryPath(ConfigurationFile):
     """Represent the path to triplexator. Inherits ConfigurationFile."""
 
     def __init__(self):
