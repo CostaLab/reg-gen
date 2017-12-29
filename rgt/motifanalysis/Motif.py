@@ -119,3 +119,4 @@ class Thresholds:
                     # Updating dictionary
                     self.dict[fpr_name][ll[0]][fpr_values[i-1]] = float(ll[i])
             fpr_file.close()
+
