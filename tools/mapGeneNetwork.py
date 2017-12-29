@@ -34,9 +34,9 @@ if len(sys.argv) > 6:
 # starting motif databases
 motif_set = MotifSet()
 if len(sys.argv) > 7:
-  motif_set.read_file([sys.argv[7]])
+  motif_set.read_mtf([sys.argv[7]])
 else:
-  motif_set.read_file([jaspar,uniprobe,internal])
+  motif_set.read_mtf([jaspar, uniprobe, internal])
 
 # reading genes 
 factors=GeneSet("genes")
@@ -47,9 +47,9 @@ factors.read(factor_file)
 #  # use last dir name as name for condition
 #  condition=os.path.dirname(f)
 #  condition=condition.split("/")[-1]
-motif_set.read_motif_targets_enrichment(enrichment_files,pvalue)
+motif_set.read_enrichment(enrichment_files, pvalue)
 #motif_set.write_enrichment_table(pvalue,out+"/pvalue_table_"+str(pvalue*100)+".txt")
 
 ##print motif_set.motifs_map
-motif_set.write_cytoscape_network(factors,search_mode,out,targets,pvalue)
+motif_set.write_network(factors, search_mode, out, targets, pvalue)
 
