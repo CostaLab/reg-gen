@@ -7,7 +7,7 @@ uniprobe='/home/ivan/projects/reg-gen/data/motifs/uniprobe_primary.mtf'
 internal='/home/ivan/projects/reg-gen/data/motifs/internal.mtf'
 
 motif_set = MotifSet()
-motif_set.read_file([jaspar,uniprobe,internal])
+motif_set.read_mtf([jaspar, uniprobe, internal])
 
 motifs=[(l.strip("\n")).split("\t")[0] for l in open(sys.argv[1])]
 
