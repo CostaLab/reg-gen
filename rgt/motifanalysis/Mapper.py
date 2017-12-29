@@ -46,6 +46,7 @@ def options(parser):
                        help="Motif IDs will be converted to gene IDs")
     group.add_argument("--gene-to-motifs", action="store_true",
                        help="Gene IDs will be converted to motif IDs")
+
     parser.add_argument("--motif-db", choices=('jaspar_vertebrates', 'hocomoco',
                                                'uniprobe_primary', 'uniprobe_secondary'))
     parser.add_argument("--gene-db", choices=('ensembl', 'names'))

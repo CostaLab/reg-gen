@@ -18,8 +18,8 @@ echo "Exporting annotation.."
 
 sqlite3 jaspar.db '.read jaspar_anno_query.sql' > jaspar_anno.csv || { echo "failed exporting sql table"; exit 1; }
 
-echo "Cleaning up.."
-rm ._JASPAR2018.sql JASPAR2018.sql jaspar.db JASPAR2018.sql.tar.gz
+#echo "Cleaning up.."
+#rm ._JASPAR2018.sql JASPAR2018.sql jaspar.db JASPAR2018.sql.tar.gz
 
 echo "Done"
 
@@ -36,8 +36,7 @@ echo "Converting to CSV.."
 echo "TfName,GeneName,Family,UniProt" > hocomoco_anno.csv
 tail -n+2 HOCOMOCOv11_full_annotation_HUMAN_mono.tsv | cut -f1,2,14,19 | tr "\t" "," | sed -e 's/{.*}//g' >> hocomoco_anno.csv
 
-echo "Cleaning up.."
-
-rm HOCOMOCOv11_full_annotation_HUMAN_mono.tsv
+#echo "Cleaning up.."
+#rm HOCOMOCOv11_full_annotation_HUMAN_mono.tsv
 
 echo "Done"
