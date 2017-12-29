@@ -2,12 +2,11 @@
 .mode csv
 
 SELECT
-  m.ID,
-  (m.BASE_ID || '.' || m.VERSION || '.' || m.NAME) AS tf,
-  GROUP_CONCAT(DISTINCT p.ACC) AS UniProt_AC,
+  (m.BASE_ID || '.' || m.VERSION || '.' || m.NAME) AS TfName,
   (GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'symbol' THEN a.VAL END) || ';' ||
-  GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'remap_tf_name' THEN a.VAL END)) as name,
-  GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'family' THEN a.VAL END) AS family
+   GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'remap_tf_name' THEN a.VAL END)) as GeneName,
+  GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'family' THEN a.VAL END) AS Family,
+  GROUP_CONCAT(DISTINCT p.ACC) AS UniProt
 FROM MATRIX m
   JOIN (SELECT *
         FROM MATRIX_ANNOTATION a2
