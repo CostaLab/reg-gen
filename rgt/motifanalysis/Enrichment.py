@@ -43,9 +43,13 @@ def options(parser):
                         help="If an experimental matrix is provided, the input arguments will be ignored.")
     parser.add_argument("--multiple-test-alpha", type=float, metavar="FLOAT", default=0.05,
                         help="Alpha value for multiple test.")
+    parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
+                        help="New 'motif DB' folders to use instead of the ones within "
+                             "the RGTDATA folder. Each folder must contain PWM files.")
 
     group = parser.add_argument_group("Promoter-regions enrichment",
-                                      "Can only work through the experimental matrix. See documentation.")
+                                      "Used both for gene set via experimental matrix (see documentation), "
+                                      "and for reporting the gene names associated to each motif.")
     group.add_argument("--promoter-length", type=int, metavar="INT", default=1000,
                        help="Length of the promoter region (in bp) to be extracted from each gene.")
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
@@ -173,8 +177,12 @@ def main(args):
 
     # Default motif data
     motif_data = MotifData()
-
-    print(">> motif repositories:", motif_data.repositories_list)
+    if args.motif_dbs:
+        # must overwrite the default DBs
+        motif_data.set_custom(args.motif_dbs)
+        print(">> custom motif repositories:", motif_data.repositories_list)
+    else:
+        print(">> motif repositories:", motif_data.repositories_list)
 
     # Reading motif file
     selected_motifs = []
