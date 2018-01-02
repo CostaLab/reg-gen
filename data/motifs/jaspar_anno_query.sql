@@ -3,9 +3,9 @@
 
 SELECT
   (m.BASE_ID || '.' || m.VERSION || '.' || m.NAME) AS TfName,
-  replace(m.NAME, "::", "+") as GeneName,
+  replace(m.NAME, '::', '+') as GeneName,
   GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'family' THEN a.VAL END) AS Family,
-  replace(replace(GROUP_CONCAT(DISTINCT p.ACC),",",";"),"-",".") AS UniProt
+  replace(replace(GROUP_CONCAT(DISTINCT p.ACC),',',';'),'-','.') AS UniProt
 FROM MATRIX m
   JOIN (SELECT *
         FROM MATRIX_ANNOTATION a2

@@ -19,7 +19,7 @@ from ..GeneSet import GeneSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
 from ..AnnotationSet import AnnotationSet
-from .Motif import Motif, Thresholds
+from .Motif import Motif, ThresholdTable
 from .Util import bed_to_bb
 
 # External
@@ -308,7 +308,7 @@ def main(args):
         print(">> motif repositories:", motif_data.repositories_list)
 
     # Creating thresholds object
-    thresholds = Thresholds(motif_data)
+    threshold_table = ThresholdTable(motif_data)
 
     # Fetching list with all motif file names
     motif_file_names = []
@@ -323,7 +323,7 @@ def main(args):
     # Iterating on grouped file name list
     for motif_file_name in motif_file_names:
         # Append motif motif_list
-        motif_list.append(Motif(motif_file_name, args.pseudocounts, args.fpr, thresholds))
+        motif_list.append(Motif(motif_file_name, args.pseudocounts, args.fpr, threshold_table))
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:

@@ -76,7 +76,7 @@ class Motif:
         self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
 
 
-class Thresholds:
+class ThresholdTable:
     """
     Container for all motif thresholds given default FPRs.
 

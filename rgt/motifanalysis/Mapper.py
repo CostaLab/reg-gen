@@ -19,7 +19,7 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.AnnotationSet import AnnotationSet
-from Motif import Motif, Thresholds
+from Motif import Motif, ThresholdTable
 from Util import bed_to_bb
 
 # External
