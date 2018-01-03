@@ -2,17 +2,20 @@
 # Libraries
 ###################################################################################################
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
-import sys
+
+# Python
 import time
+import sys
 from random import seed
 import argparse
 
 # Internal
 from .. import __version__
-from .Match import main_matching, matching_options
-from .Enrichment import main_enrichment, enrichment_options
+import Match
+import Enrichment
+import Mapper
 
 """
 Motif matching and enrichment based on motif PSSM. Can perform either Matching (finds all putative
@@ -36,12 +39,17 @@ def main():
     subparsers = parser.add_subparsers(help='Commands:')
 
     matching = subparsers.add_parser('matching', help='find all MPBS from input files')
-    matching_options(matching)
-    matching.set_defaults(func=main_matching)
+    Match.options(matching)
+    matching.set_defaults(func=Match.main)
 
     enrichment = subparsers.add_parser('enrichment', help='calculate statistics for MPBS files')
-    enrichment_options(enrichment)
-    enrichment.set_defaults(func=main_enrichment)
+    Enrichment.options(enrichment)
+    enrichment.set_defaults(func=Enrichment.main)
+
+    # TODO
+    # mapper = subparsers.add_parser('mapper', help='map genes names to TF IDs and viceversa')
+    # Mapper.options(mapper)
+    # mapper.set_defaults(func=Mapper.main)
 
     if len(sys.argv) == 1:
         parser.print_help()
