@@ -13,13 +13,13 @@ from rgt.Util import GenomeData
 
 genome = "hg38"
 print("Checking " + genome)
-annot = AnnotationSet(genome,filter_havana=False,protein_coding=True,known_only=False)
+annot = AnnotationSet(genome, filter_havana=False, protein_coding=True, known_only=False)
 # annot = AnnotationSet(genome,filter_havana=True,protein_coding=True,known_only=True)
 print("\tloading AnnotationSet... succeeds")
 promoters = annot.get_promoters()
-print("\tPromoters "+str(len(promoters)))
+print("\tPromoters " + str(len(promoters)))
 gd = GenomeData(organism=genome)
-print("\t"+gd.get_annotation())
+print("\t" + gd.get_annotation())
 print("\tloading GenomeData... succeeds")
 
 # genome = "mm9"
@@ -51,4 +51,3 @@ print("\tloading GenomeData... succeeds")
 # gd = GenomeData(organism=genome)
 # print("\t"+gd.get_annotation())
 # print("\tloading GenomeData... succeeds")
-

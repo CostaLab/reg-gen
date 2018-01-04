@@ -15,6 +15,17 @@ import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
 
+def strmatch(pattern, string, search="exact"):
+    valid_types = ["exact", "inexact"]  # TODO: add regex support?
+
+    if search == "exact":
+        return pattern == string
+    elif search == "inexact":
+        return pattern in string
+    else:
+        raise ValueError("search must be one of these: {}".format(valid_types))
+
+
 def cmp(a, b):
     return (a > b) - (a < b)
 

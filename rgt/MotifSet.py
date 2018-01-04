@@ -13,7 +13,7 @@ import glob
 import os
 
 # Internal
-from rgt.GeneSet import GeneSet
+from rgt.Util import npath, MotifData, strmatch
 
 
 class MotifAnnotation:
@@ -40,8 +40,10 @@ class MotifAnnotation:
         self.uniprot_ids = uniprot_ids
 
     def __str__(self):
-        return "MotifAnnotation[id={},name={},database={},version={},gene_names={},family={},uniprot_ids={}]" \
-            .format(self.id, self.name, self.database, self.version, self.gene_names, self.family, self.uniprot_ids)
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 
 class MotifSet:
@@ -49,20 +51,31 @@ class MotifSet:
     Represents a set of motifs. It contains MotifAnnotation instances.
     """
 
-    def __init__(self):
+    def __init__(self, preload_motifs=False):
         self.motifs_map = {}
         self.networks = {}
         self.motifs_enrichment = {}
         self.conditions = []
 
+        if preload_motifs:
+            motif_data = MotifData()
+
+            self.read_mtf(motif_data.mtf_list)
+
     def __len__(self):
         return len(self.motifs_map)
 
     def __iter__(self):
-        return iter(self.motifs_map)
+        return iter(self.motifs_map.values())
 
     def __getitem__(self, key):
         return self.motifs_map[key]
+
+    def __str__(self):
+        return "MotifSet:"+str(self.__dict__)
+
+    def __repr__(self):
+        return self.__str__()
 
     def add(self, motif):
         """
@@ -75,7 +88,7 @@ class MotifSet:
 
         self.motifs_map[motif.name] = motif
 
-    def filter(self, values, key_type="name"):
+    def filter(self, keys, key_type="name", search="exact"):
         """
         Returns a new MotifSet containing all matching motifs. By default, it expects a list of motif names, but this
         can be configured via the key_type parameter.
@@ -83,104 +96,60 @@ class MotifSet:
         *Keyword arguments:*
 
           - values -- List of strings representing the motif to filter this set on. Actual values depend on key_type.
-          - key_type -- "name" for exact matching on the motif name; "family" for (partial) matching in the motif family
-            description; "uniprot_id" for exact matching on UniProt IDs; "gene_name" for matching on the exact
-            gene name of the motif (see also filter_by_genes for a more flexible alternative).
+          - key_type -- "name" for matching on the motif name;
+                        "family" for motif family/description;
+                        "uniprot_ids" for matching on UniProt IDs (might be more than one);
+                        "gene_names" for matching on the gene names (symbols).
+          - search -- Search mode (default = 'exact'). If "exact", only perfect matches will be accepted. If
+            "inexact", key inclusion will be considered a match. For example, is keys is ["ARNT"] and
+            key_type="gene_names" and search="inexact", all motifs corresponding to the gene names "ARNT", "ARNT2",
+            "ARNTL", etc will be included. If search="exact", only the motifs corresponding to the gene name "ARNT"
+            are included.
 
         *Return:*
 
           - motif_set -- Set of filtered motifs.
+          - motif2keys -- Dictionary mapping all found motif names to their corresponding attribute values. For example,
+            if filtering by genes, it will provide a quick mapping between motif names and all the matching gene names.
+          - key2motifs -- Inverse of motif2keys. It mapes the found values
         """
 
-        valid_keys = ["name", "gene_name", "family", "uniprot_id"]
+        if not isinstance(keys, list):
+            raise ValueError("keys must be a list")
+
+        valid_keys = ["name", "gene_names", "family", "uniprot_ids"]
 
         if key_type not in valid_keys:
-            raise ValueError("key_type must be one of", valid_keys)
-
-        # no need to iterate here if we are trying to do gene-name matching,
-        # let's delegate
-        if key_type == "gene_name":
-            gene_set = GeneSet("")
-            gene_set.genes = values
-            motif_set, _, _ = self.filter_by_genes(gene_set)
-
-            return motif_set
-
-        # in all other cases, we create a new motif set and populate it with matching motifs
+            raise ValueError("key_type must be one of {}".format(valid_keys))
 
         motif_set = MotifSet()
+        motif2keys = {}
+        key2motifs = {}
 
-        for v in values:
-            if key_type == "name" and v in self.motifs_map:
-                motif_set.add(self.motifs_map[v])
-            else:
-                for m in self.motifs_map.values():
-                    if v in getattr(m, key_type)():
+        for key in keys:
+            for m in self.motifs_map.values():
+                attr_vals = getattr(m, key_type)
+                # this is to avoid duplicating code for string-attributes and list-attributes
+                if not isinstance(attr_vals, list):
+                    attr_vals = [attr_vals]
+
+                for attr_val in attr_vals:
+                    if strmatch(key, attr_val, search=search):
                         motif_set.add(m)
 
-        return motif_set
+                        # add this motif+attribute to motif2key dict
+                        if m.name in motif2keys:
+                            motif2keys[m.name].append(attr_val)
+                        else:
+                            motif2keys[m.name] = [attr_val]
 
-    def filter_by_genes(self, genes, search="exact"):
-        """
-        This method returns a new MotifSet of motifs associated to those genes. The search has three modes:
+                        # add this attribute+motif to key2motif dict
+                        if attr_val in key2motifs:
+                            key2motifs[attr_val].append(m.name)
+                        else:
+                            key2motifs[attr_val] = [m.name]
 
-            1. 'exact' - exact match only
-            2. 'inexact' - genes with no exact match are searched for inexact match
-            3. 'all' - all genes are applied to an inexact match
-
-        *Keyword arguments:*
-
-          - genes -- GeneSet to perform the filtering.
-          - search -- Search mode (default = 'exact').
-
-        *Return:*
-
-          - motif_set -- set of filtered motifs.
-          - genes_motifs -- Dictionary of genes to motifs.
-          - motifs_genes -- Dictionary of motifs to genes.
-        """
-
-        motif_set = MotifSet()
-
-        motifs_genes = {}
-        genes_motifs = {}
-        not_found_genes = []  # keep genes for inexact search
-
-        # get the actual list of genes inside the GeneSet
-        genes = genes.genes
-
-        # exact matching
-        for motif in self.motifs_map.values():
-            for g in motif.gene_names:
-                # TODO: this can be replaced with a "match" function, to avoid re-doing
-                # inexact matching later on (depending on search parameter)
-                if g in genes:
-                    motif_set.add(motif)
-
-                    # add this motif to gene2motif dict
-                    if g in genes_motifs:
-                        genes_motifs[g].append(motif.name)
-                    else:
-                        genes_motifs[g] = [motif.name]
-
-                    # add this gene to motif2gene dict
-                    if motif.name in motifs_genes:
-                        motifs_genes[motif.name].append(g)
-                    else:
-                        motifs_genes[motif.name] = [g]
-                else:
-                    # keep genes for inexact search
-                    not_found_genes.append(g)
-
-        if search == "inexact":
-            genes = not_found_genes
-        elif search == "exact":
-            genes = []
-
-        # TODO: inexact matching - how to? We could use some string distance metric, or
-        # a "suffix approach" like there was before
-
-        return motif_set, genes_motifs, motifs_genes
+        return motif_set, motif2keys, key2motifs
 
     def read_mtf(self, mtf_filenames):
         """
@@ -195,7 +164,7 @@ class MotifSet:
         for filename in mtf_filenames:
 
             # Opening MTF file
-            mtf_file = open(filename, "r")
+            mtf_file = open(npath(filename), "r")
 
             # Reading file
             for line in mtf_file:
@@ -226,6 +195,7 @@ class MotifSet:
 
         # reading networks
         for f in glob.glob(enrichment_files):
+            f = npath(f)
             # use last dir name as name for condition
             condition = os.path.dirname(f)
             condition = condition.split("/")[-1]
@@ -295,14 +265,14 @@ class MotifSet:
         *Keyword arguments:*
 
           - genes -- Gene set.
-          - gene_mapping_search -- Gene mapping.
+          - gene_mapping_search -- Gene mapping mode. See "filter/3" for more information.
           - out_path -- Output path.
           - targets -- Gene targets.
           - threshold -- Threshold for motif acceptance.
         """
 
         # getting mapping of genes to motifs
-        [filtered_motifs, genes_motifs, _] = self.filter_by_genes(genes, gene_mapping_search)
+        [filtered_motifs, _, genes_motifs] = self.filter(genes.genes, key_type="gene_names", search=gene_mapping_search)
 
         f = open(out_path + "/mapping_tf_genes.txt", "w")
         motifs_all = {}
@@ -374,3 +344,11 @@ class MotifSet:
                 else:
                     f.write(gene + "\ttarget\n")
             f.close()
+
+
+if __name__ == "__main__":
+    ms = MotifSet(preload_motifs=True)
+    print("gene_name ARN:", ms.filter(["ARN"], key_type="gene_names", search="inexact"))
+    print("family GC:", ms.filter(["GC"], key_type="family", search="inexact"))
+    print("name CEBP:", ms.filter(["CEBP"], key_type="name", search="inexact"))
+    print("uniprot Q999:", ms.filter(["Q999"], key_type="uniprot_ids", search="inexact"))

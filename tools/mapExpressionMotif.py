@@ -21,9 +21,9 @@ search_mode = sys.argv[3]
 genes = GeneSet("DC Genes")
 genes.read_expression(geneset_file)
 
-filtered = motif_set.filter_by_motifs(motifs)
+filtered = motif_set.filter(motifs, key_type="name")
 
-[filtered_genes, g_m, m_g] = filtered.filter_by_genes(genes, search=search_mode)
+[filtered_genes, m_g, g_m] = filtered.filter(genes.genes, key_type="gene_names", search=search_mode)
 
 genes_found = []
 not_found = []
