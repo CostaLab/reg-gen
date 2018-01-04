@@ -209,9 +209,9 @@ def diff_analysis_run(args):
             res = get_ps_tc_results(signal_1, signal_2, motif_len_dict[mpbs_name])
             ps_tc_results_by_tf[mpbs_name].append(res)
 
-    #stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    #scatter_plot(args, stat_results_by_tf)
-    #output_stat_results(args, stat_results_by_tf)
+    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    scatter_plot(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf)
 
 
 def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -388,6 +388,10 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     mean_signal_1 = (mean_signal_1 / num_fp) / args.factor1
     mean_signal_2 = (mean_signal_2 / num_fp) / args.factor2
 
+    if args.standardize:
+        mean_signal_1 = standard(mean_signal_1)
+        mean_signal_2 = standard(mean_signal_2)
+
     output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
 
     # Output PWM and create logo
@@ -407,8 +411,6 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     start = -(args.window_size / 2)
     end = (args.window_size / 2) - 1
     x = np.linspace(start, end, num=args.window_size)
-
-    #fig, ax = plt.subplots()
 
     ax.plot(x, mean_signal_1, color='red', label=args.condition1)
     ax.plot(x, mean_signal_2, color='blue', label=args.condition2)
@@ -511,28 +513,26 @@ def output_mu(args, median_diff_prot, median_diff_tc):
 
 def get_stat_results(ps_tc_results_by_tf):
     stat_results_by_tf = dict()
+    pop_ps_diff = list()
+    pop_tc_diff = list()
     for mpbs_name in ps_tc_results_by_tf.keys():
         stat_results_by_tf[mpbs_name] = list()
         mean_results = np.zeros(6)
         num = 0
         for i in range(len(ps_tc_results_by_tf[mpbs_name])):
             mean_results = np.add(mean_results, np.array(ps_tc_results_by_tf[mpbs_name][i]))
+            pop_ps_diff.append(ps_tc_results_by_tf[mpbs_name][i][2])
+            pop_tc_diff.append(ps_tc_results_by_tf[mpbs_name][i][-1])
             num += 1
         mean_results = mean_results / num
         stat_results_by_tf[mpbs_name] = mean_results.tolist()
 
-    ps_diff_mu = 0
-    tc_diff_mu = 0
-    num = 0
-    for mpbs_name in stat_results_by_tf.keys():
-        ps_diff_mu += stat_results_by_tf[mpbs_name][2]
-        tc_diff_mu += stat_results_by_tf[mpbs_name][-1]
-        num += 1
+    # Two-sample Hotelling's T-Square test population and specific tf
+    population = np.array([pop_ps_diff, pop_tc_diff]).T
+    cov_pop = np.cov(population.T)
+    n1 = population.shape[0]
+    mean1 = population.mean(axis=0)
 
-    ps_diff_mu = ps_diff_mu / num
-    tc_diff_mu = tc_diff_mu / num
-
-    mu = [tc_diff_mu, ps_diff_mu]
     for mpbs_name in ps_tc_results_by_tf.keys():
         ps_diff_by_tf = list()
         tc_diff_by_tf = list()
@@ -540,13 +540,13 @@ def get_stat_results(ps_tc_results_by_tf):
             ps_diff_by_tf.append(ps_tc_results_by_tf[mpbs_name][i][2])
             tc_diff_by_tf.append(ps_tc_results_by_tf[mpbs_name][i][-1])
 
-        X = np.array([ps_diff_by_tf, tc_diff_by_tf]).T
-        x = X - mu
-        n = x.shape[0]
-        k = x.shape[1]
-        m = x.mean(axis=0)  # mean vector
-        S = np.cov(x.T)  # covariance
-        t2 = n * np.dot(np.dot(m.T, np.linalg.inv(S)), m)
+        tf = np.array([ps_diff_by_tf, tc_diff_by_tf]).T
+        cov_tf = np.cov(tf.T)
+        n2 = tf.shape[0]
+        mean2 = tf.mean(axis=0)
+
+        k = tf.shape[1]
+        t2 = np.dot(np.dot((mean1 - mean2).T, np.linalg.inv(cov_pop / n1 + cov_tf / n2)), (mean1 - mean2))
         pvalue = stats.chi2.sf(t2, k)
         stat_results_by_tf[mpbs_name].append(pvalue)
 

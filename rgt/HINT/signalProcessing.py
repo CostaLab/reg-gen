@@ -962,7 +962,8 @@ class GenomicSignal:
         else:
             return np.add(np.array(bc_f), np.array(bc_r))
 
-    def get_bias_raw_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift):
+    def get_bias_raw_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift,
+                               strand=False):
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -1034,14 +1035,22 @@ class GenomicSignal:
         bias_f = []
         bias_r = []
         raw = []
+        raw_f = []
+        raw_r = []
         bc = []
+        bc_f = []
+        bc_r = []
         for i in range((window / 2), len(signal_bias_f) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
             raw.append(signal_raw_f[i] + signal_raw_r[i])
+            raw_f.append(signal_raw_f[i])
+            raw_r.append(signal_raw_r[i])
             bc.append(nhatf + nhatr)
+            bc_f.append(nhatf)
+            bc_r.append(nhatr)
             fSum -= fLast
             fSum += signal_bias_f[i + (window / 2)]
             fLast = signal_bias_f[i - (window / 2) + 1]
@@ -1049,4 +1058,7 @@ class GenomicSignal:
             rSum += signal_bias_r[i + (window / 2)]
             rLast = signal_bias_r[i - (window / 2) + 1]
 
-        return bias_f, bias_r, raw, bc
+        if strand:
+            return bias_f, bias_r, raw, raw_f, raw_r, bc, bc_f, bc_r
+        else:
+            return bias_f, bias_r, raw, bc
