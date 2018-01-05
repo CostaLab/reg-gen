@@ -355,20 +355,25 @@ class MotifSet:
                                 all_genes.add(target)
                     else:
                         print("motif not in network: " + m + " " + str(tf) + " ")
+
             all_pairs = all_pairs.union(pairs)
             all_tfs = all_tfs.union(tfs)
 
         # printing out network
         for net_name, pairs_aux in net_pairs.items():
             f = open(out_path + "/" + net_name + "_targets.txt", "w")
+
             for pair in all_pairs:
                 # check if pair is active in the network
                 if pair in pairs_aux:
                     f.write(pair[0] + "\t" + pair[1] + "\tactive\n")
                 else:
                     f.write(pair[0] + "\t" + pair[1] + "\tinactive\n")
+
             f.close()
+
             f = open(out_path + "/" + net_name + "_genes.txt", "w")
+
             for gene in all_genes:
                 # check if gene is tf active in network
                 if gene in net_tfs[net_name]:
@@ -377,4 +382,5 @@ class MotifSet:
                     f.write(gene + "\ttf_inactive\n")
                 else:
                     f.write(gene + "\ttarget\n")
+
             f.close()
