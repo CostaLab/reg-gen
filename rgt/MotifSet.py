@@ -325,10 +325,11 @@ class MotifSet:
         all_pairs = set()
         all_tfs = set()
         all_genes = set()
-        if not targets:
-            filter_targets = False
-        else:
+
+        if targets:
             filter_targets = True
+        else:
+            filter_targets = False
 
         # using genes to motif mapping to get network in all conditions
         for net_name in self.networks:
