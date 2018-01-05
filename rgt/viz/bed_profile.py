@@ -253,7 +253,7 @@ class BedProfile:
     #         ax.set_xlabel("Length (bp)")
     #         ax.set_ylabel("Frequency")
 
-    def plot_ref(self, ref_dir, tag, other=False, strand=False):
+    def plot_ref(self, ref_dir, tag, other=False, strand=False, background=False):
         print("Processing " + tag + " ....")
         refs = []
         refs_names = []
@@ -276,7 +276,8 @@ class BedProfile:
         else:
             print("*** Error: Not a valid directory: " + ref_dir)
             sys.exit(1)
-
+        if background and len(refs) == 1:
+            background = False
         index = natsort.index_natsorted(refs_names)
         refs = natsort.order_by_index(refs, index)
         refs_names = natsort.order_by_index(refs_names, index)
@@ -289,6 +290,10 @@ class BedProfile:
             for ref in refs:
                 ref_plus.append(ref.filter_strand(strand="+"))
                 ref_minus.append(ref.filter_strand(strand="-"))
+        if background:
+            # refs_names.append("Background")
+            background_counts = [ len(ref) for ref in refs ]
+            background_prop = [ float(100) * b/sum(background_counts) for b in background_counts]
         # Counting through all references
         overlapping_counts = []
         for i, bed in enumerate(self.beds):
@@ -329,7 +334,7 @@ class BedProfile:
                 except:
                     ax = self.fig_axs
             if i == 0:
-                # print(overlapping_counts)
+
                 proportion = []
                 for counts in overlapping_counts:
                     ss = sum(counts)
@@ -337,25 +342,37 @@ class BedProfile:
                         proportion.append([x / ss * 100 for x in counts])
                     else:
                         proportion.append([0 for x in counts])
-                # print(proportion)
+                if background:
+                    if other:
+                        proportion.append(background_prop + [0])
+                        len_ref = len(refs) + 1
+                    else:
+                        proportion.append(background_prop)
+                        len_ref = len(refs)
+                    bottom = [0] * (len(self.bednames) + 1)
+                    xlabels = self.bednames + ["Background"]
+                else:
+                    len_ref = len(refs)
+                    bottom = [0] * len(self.bednames)
+                    xlabels = self.bednames
                 ptable = []
-                for j in range(len(refs_names)):
+                # print(proportion)
+                # print(len_ref)
+                for j in range(len_ref):
                     ptable.append([x[j] for x in proportion])
-                # print(ptable)
                 width = 0.6
-                bottom = [0] * len(self.bednames)
                 for j, y in enumerate(ptable):
-                    ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
+                    ax.bar(range(len(bottom)), y, width=width, bottom=bottom, color=color_list[j],
                            edgecolor="none", align='center')
                     bottom = [x + y for x, y in zip(bottom, y)]
                 ax.set_title(tag)
                 ax.yaxis.tick_left()
-                ax.set_xticks(range(len(self.bednames)))
-                ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
+                ax.set_xticks(range(len(xlabels)))
+                ax.set_xticklabels(xlabels, fontsize=7, rotation=20, ha="right")
                 ax.set_ylabel("Percentage %")
                 # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
                 ax.set_ylim([0, 100])
-                ax.set_xlim([-0.5, len(self.bednames) - 0.5])
+                ax.set_xlim([-0.5, len(xlabels) - 0.5])
                 plt.tight_layout()
 
             elif i > 0:
