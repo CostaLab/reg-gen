@@ -46,7 +46,8 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
     if not group:
         group = "."
     uniprot = hocomoco_anno[pwm_name][2]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot])
+    data_source = hocomoco_anno[pwm_name][3]
+    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source])
 
 # Sorting results by ID
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -82,8 +83,11 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
         version = ll[4]
     gene_names = jaspar_anno[pwm_name][0]
     group = jaspar_anno[pwm_name][1]
+    if not group:
+        group = "."
     uniprot = jaspar_anno[pwm_name][2]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot])
+    data_source = jaspar_anno[pwm_name][3]
+    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source])
 
 # Sorting results by ID
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -109,7 +113,7 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
     pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
     version = "1"
     gene_names = ll[1]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", "."])
+    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
 
 # Sorting results by ID
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -135,7 +139,7 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
     pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
     version = ll[1]
     gene_names = ll[2]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", "."])
+    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
 
 # Sorting results by ID
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -161,7 +165,7 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
     pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
     version = ll[1]
     gene_names = ll[2]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", "."])
+    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
 
 # Sorting results by ID and version
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])

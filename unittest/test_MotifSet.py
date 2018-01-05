@@ -54,6 +54,15 @@ class MotifSetTest(unittest.TestCase):
         ms2 = ms.filter(["ALX"], key_type="name", search="inexact")
         self.assertEqual(len(ms2.motifs_map), 3)
 
+        ms2 = ms.filter(["ALX1_HUMAN.H11MO.0.B"], key_type="name", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 1)
+
+        ms2 = ms.filter(["ALX1.*"], key_type="name", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 1)
+
+        ms2 = ms.filter(["ALX[134]_.*"], key_type="name", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 3)
+
     def test_filter_genes(self):
         ms = MotifSet(preload_motifs=True)
 
@@ -87,6 +96,18 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(m2k), 3)
         self.assertEqual(len(k2m), 3)
 
+        ms2 = ms.filter(["ALX1.*"], key_type="gene_names", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 1)
+        m2k, k2m = ms2.get_mappings(key_type="gene_names")
+        self.assertEqual(len(m2k), 1)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = ms.filter(["ALX[134]"], key_type="gene_names", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 3)
+        m2k, k2m = ms2.get_mappings(key_type="gene_names")
+        self.assertEqual(len(m2k), 3)
+        self.assertEqual(len(k2m), 3)
+
     def test_filter_family(self):
         ms = MotifSet(preload_motifs=True)
 
@@ -115,10 +136,28 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 1)
 
         ms2 = ms.filter(["factors"], key_type="family", search="inexact")
-        self.assertEqual(len(ms2.motifs_map), 637)
+        self.assertEqual(len(ms2.motifs_map), 676)
         m2k, k2m = ms2.get_mappings(key_type="family")
-        self.assertEqual(len(m2k), 637)
-        self.assertEqual(len(k2m), 58)
+        self.assertEqual(len(m2k), 676)
+        self.assertEqual(len(k2m), 59)
+
+        ms2 = ms.filter(["Paired.*factors"], key_type="family", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 35)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 35)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = ms.filter(["Paired-related.*"], key_type="family", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 35)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 35)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = ms.filter([".*factors"], key_type="family", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 676)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 676)
+        self.assertEqual(len(k2m), 59)
 
     def test_filter_uniprot(self):
         ms = MotifSet(preload_motifs=True)
@@ -142,6 +181,18 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 1)
 
         ms2 = ms.filter(["Q9H"], key_type="uniprot_ids", search="inexact")
+        self.assertEqual(len(ms2.motifs_map), 20)
+        m2k, k2m = ms2.get_mappings(key_type="uniprot_ids")
+        self.assertEqual(len(m2k), 20)
+        self.assertEqual(len(k2m), 16)
+
+        ms2 = ms.filter(["Q9H3D4"], key_type="uniprot_ids", search="regex")
+        self.assertEqual(len(ms2.motifs_map), 2)
+        m2k, k2m = ms2.get_mappings(key_type="uniprot_ids")
+        self.assertEqual(len(m2k), 2)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = ms.filter(["Q9H.*"], key_type="uniprot_ids", search="regex")
         self.assertEqual(len(ms2.motifs_map), 20)
         m2k, k2m = ms2.get_mappings(key_type="uniprot_ids")
         self.assertEqual(len(m2k), 20)

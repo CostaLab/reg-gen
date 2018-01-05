@@ -16,10 +16,10 @@ chmod 755 mysql2sqlite
 
 echo "Exporting annotation.."
 
-sqlite3 jaspar.db '.read jaspar_anno_query.sql' > jaspar_anno.csv || { echo "failed exporting sql table"; exit 1; }
+sqlite3 jaspar.db '.read jaspar_anno_query.sql' | sed -e 's/"//g' > jaspar_anno.csv || { echo "failed exporting sql table"; exit 1; }
 
-#echo "Cleaning up.."
-#rm ._JASPAR2018.sql JASPAR2018.sql jaspar.db JASPAR2018.sql.tar.gz
+echo "Cleaning up.."
+rm ._JASPAR2018.sql JASPAR2018.sql jaspar.db JASPAR2018.sql.tar.gz
 
 echo "Done"
 
@@ -33,10 +33,13 @@ wget -c http://hocomoco11.autosome.ru/final_bundle/hocomoco11/full/HUMAN/mono/HO
 
 echo "Converting to CSV.."
 
-echo "TfName,GeneName,Family,UniProt" > hocomoco_anno.csv
-tail -n+2 HOCOMOCOv11_full_annotation_HUMAN_mono.tsv | cut -f1,2,14,19 | tr "\t" "," | sed -e 's/{.*}//g' >> hocomoco_anno.csv
+echo "TfName,GeneName,Family,UniProt,Source" > hocomoco_anno.csv
+tail -n+2 HOCOMOCOv11_full_annotation_HUMAN_mono.tsv | awk -F"\t" '{print $1","$2","$14","$19","$8","}' | sed -e 's/{.*}//g' >> hocomoco_anno.csv
 
-#echo "Cleaning up.."
-#rm HOCOMOCOv11_full_annotation_HUMAN_mono.tsv
+echo "Cleaning up.."
+rm HOCOMOCOv11_full_annotation_HUMAN_mono.tsv
 
 echo "Done"
+
+echo "Re-creating Mtf file.."
+python createMtf.py

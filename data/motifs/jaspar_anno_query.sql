@@ -2,10 +2,11 @@
 .mode csv
 
 SELECT
-  (m.BASE_ID || '.' || m.VERSION || '.' || m.NAME) AS TfName,
-  replace(m.NAME, '::', '+') as GeneName,
-  GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'family' THEN a.VAL END) AS Family,
-  replace(replace(GROUP_CONCAT(DISTINCT p.ACC),',',';'),'-','.') AS UniProt
+  trim((m.BASE_ID || '.' || m.VERSION || '.' || m.NAME)) AS TfName,
+  trim(replace(m.NAME, '::', '+')) as GeneName,
+  trim(replace(GROUP_CONCAT(DISTINCT CASE WHEN a.TAG = 'family' THEN a.VAL END),',',';')) AS Family,
+  trim(replace(GROUP_CONCAT(DISTINCT p.ACC),',',';')) AS UniProt,
+  trim(GROUP_CONCAT(DISTINCT CASE WHEN a.tag = 'type' THEN a.val END)) AS Source
 FROM MATRIX m
   JOIN (SELECT *
         FROM MATRIX_ANNOTATION a2

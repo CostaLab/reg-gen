@@ -30,7 +30,7 @@ class MotifAnnotation:
       - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
     """
 
-    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids):
+    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source):
         self.tf_id = tf_id
         self.name = name
         self.database = database
@@ -38,6 +38,7 @@ class MotifAnnotation:
         self.gene_names = gene_names
         self.family = family
         self.uniprot_ids = uniprot_ids
+        self.data_source = data_source
 
     def __str__(self):
         return str(self.__dict__)
@@ -99,7 +100,8 @@ class MotifSet:
           - key_type -- "name" for matching on the motif name;
                         "family" for motif family/description;
                         "uniprot_ids" for matching on UniProt IDs (might be more than one);
-                        "gene_names" for matching on the gene names (symbols).
+                        "gene_names" for matching on the gene names (symbols);
+                        "data_source" for Chip-Seq, SELEX, etc.
           - search -- Search mode (default = 'exact'). If "exact", only perfect matches will be accepted. If
             "inexact", key inclusion will be considered a match. For example, if keys=["ARNT"] and
             key_type="gene_names" and search="inexact", all motifs corresponding to the gene names "ARNT", "ARNT2",
@@ -114,7 +116,7 @@ class MotifSet:
         if not isinstance(keys, list):
             raise ValueError("keys must be a list")
 
-        valid_keys = ["name", "gene_names", "family", "uniprot_ids"]
+        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source"]
 
         if key_type not in valid_keys:
             raise ValueError("key_type must be one of {}".format(valid_keys))
@@ -141,9 +143,11 @@ class MotifSet:
 
         *Keyword arguments:*
 
-          - key_type -- "family" for motif family/description;
+          - key_type -- "name" for matching on the motif name;
+                        "family" for motif family/description;
                         "uniprot_ids" for matching on UniProt IDs (might be more than one);
-                        "gene_names" for matching on the gene names (symbols).
+                        "gene_names" for matching on the gene names (symbols);
+                        "data_source" for Chip-Seq, SELEX, etc.
 
         *Return:*
 
@@ -152,7 +156,7 @@ class MotifSet:
           - key2motifs -- Inverse of motif2keys. It maps the key values to their corresponding motifs.
         """
 
-        valid_keys = ["gene_names", "family", "uniprot_ids"]
+        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source"]
 
         if key_type not in valid_keys:
             raise ValueError("key_type must be one of {}".format(valid_keys))
@@ -212,8 +216,9 @@ class MotifSet:
                 gene_names = line_list[4].strip().split(";")
                 tf_class = line_list[5].strip()
                 uniprot_ids = line_list[6].strip().split(";")
+                data_source = line_list[7].strip()
 
-                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids))
+                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source))
 
             # Termination
             mtf_file.close()
