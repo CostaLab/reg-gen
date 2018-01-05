@@ -378,8 +378,8 @@ if __name__ == "__main__":
                        help="[THOR] Split and filter the differential peaks from rgt-THOR")
     parser_thorsf.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_thorsf.add_argument('-o', metavar='output', default=None, type=str, help="Output directory.")
-    parser_thorsf.add_argument('-p', metavar='p-value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
-    parser_thorsf.add_argument('-fc', metavar='fold-change', type=int,default=0,
+    parser_thorsf.add_argument('-p', metavar='p-value', type=float, help="Define the cut-off of p-value (-log10) for filtering.")
+    parser_thorsf.add_argument('-fc', metavar='fold-change', type=float,default=0,
                                help="Define the cut-off of foldchange for filtering.")
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
