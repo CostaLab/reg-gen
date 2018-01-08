@@ -28,6 +28,8 @@ class MotifAnnotation:
       - family -- Class/Family of transcription factor motif (can be any string).
       - gene_names -- List of gene names for this transcription factor (usually only one, sometimes two)
       - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
+      - data_source -- A string representing the 'Source' this transcription factor was generated from,
+        eg ChiP-Seq, SELEX..
     """
 
     def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source):
