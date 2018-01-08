@@ -3,6 +3,10 @@
 # Libraries
 ###################################################################################################
 
+# Python 3 compatibility
+from __future__ import print_function
+from __future__ import division
+
 # Python
 from os.path import basename
 
@@ -65,7 +69,7 @@ class Motif:
             # FIXME: this requires a modified version of MOODS. Not sure if we actually need it.
             # self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr, 2000.0)  # 10000.0 would take too long
             self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
-            print("pseudocounts != %f -> recomputing threshold for %s: %f" % (1.0, self.name, self.threshold))
+            print(">>> recomputing threshold for %s: %f" % (self.name, self.threshold))
 
         # Evaluating if motif is palindromic
         self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
@@ -95,6 +99,9 @@ class Thresholds:
 
         # Iterating over fpr files
         for fpr_file_name in motif_data.get_fpr_list():
+
+            if not fpr_file_name:
+                continue
 
             # Initializing dictionary level 1
             fpr_name = ".".join(fpr_file_name.split("/")[-1].split(".")[:-1])

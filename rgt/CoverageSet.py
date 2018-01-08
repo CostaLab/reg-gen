@@ -712,7 +712,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
     genome_fasta = pysam.Fastafile(genome_path)
     genome = genome_fasta.fetch(reference=tmp[0])
 
-    content = help_content()
+    content = HelpContent()
     gc_content_cov = []
 
     for cov in cov_list:

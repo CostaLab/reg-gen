@@ -3,8 +3,9 @@
 # Libraries
 ###################################################################################################
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
+from __future__ import division
 
 # Internal
 from ..GeneSet import GeneSet
@@ -24,7 +25,7 @@ def ecdf(x):
     Auxiliary function for multiple_test_correction
     """
     nobs = len(x)
-    return arange(1,nobs+1)/float(nobs)
+    return arange(1, nobs+1) / float(nobs)
 
 
 def multiple_test_correction(pvals, alpha=0.05, method='indep'):
@@ -80,7 +81,7 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
 
     pvals_corrected_raw = pvals_sorted / ecdffactor
     pvals_corrected = minimum.accumulate(pvals_corrected_raw[::-1])[::-1]
-    pvals_corrected[pvals_corrected>1] = 1
+    pvals_corrected[pvals_corrected > 1] = 1
     return reject[sortrevind], pvals_corrected[sortrevind]
 
 

@@ -68,6 +68,9 @@ def diff_analysis_args(parser):
                         help="The prefix for results files. DEFAULT: differential")
     parser.add_argument("--standardize", action="store_true", default=False,
                         help="If set, the signal will be rescaled to (0, 1) for plotting.")
+    parser.add_argument("--output-profiles",  default=False, action='store_true',
+                        help="If set, the footprint profiles will be writen into a text, in which each row is a "
+                             "specific instance of the given motif. DEFAULT: False")
 
 
 def diff_analysis_run(args):
@@ -191,6 +194,11 @@ def diff_analysis_run(args):
     if args.factor1 is None or args.factor2 is None:
         args.factor1, args.factor2 = compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2)
         output_factor(args, args.factor1, args.factor2)
+
+    if args.output_profiles:
+        output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+        output_profiles(mpbs_name_list, signal_dict_by_tf_1, output_location, args.condition1)
+        output_profiles(mpbs_name_list, signal_dict_by_tf_2, output_location, args.condition2)
 
     ps_tc_results_by_tf = dict()
 
@@ -437,7 +445,7 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     ax.set_xlim(start, end)
     ax.set_ylim([min_signal, max_signal])
     ax.legend(loc="upper right", frameon=False)
-    ax.spines['bottom'].set_position(('outward', 40))
+    ax.spines['bottom'].set_position(('outward', 70))
 
     figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
@@ -582,3 +590,12 @@ def adjust_p_values(p_values):
     steps = float(len(p)) / np.arange(len(p), 0, -1)
     q = np.minimum(1, np.minimum.accumulate(steps * p[by_descend]))
     return q[by_orig]
+
+
+def output_profiles(mpbs_name_list, signal_dict_by_tf, output_location, condition):
+    for mpbs_name in mpbs_name_list:
+        num_fp = len(signal_dict_by_tf[mpbs_name])
+        output_fname = os.path.join(output_location, "{}_{}.txt".format(mpbs_name, condition))
+        with open(output_fname, "w") as f:
+            for i in range(num_fp):
+                f.write("\t".join(map(str, signal_dict_by_tf[mpbs_name][i])) + "\n")
