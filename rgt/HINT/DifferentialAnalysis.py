@@ -57,6 +57,9 @@ def diff_analysis_args(parser):
                         help="The name of condition1. DEFAULT: condition1")
     parser.add_argument("--condition2", type=str, metavar="STRING", default="condition1",
                         help="The name of condition2. DEFAULT: condition2")
+    parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.001,
+                        help="The false discovery rate. DEFAULT: 0.001")
+
 
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
@@ -466,7 +469,8 @@ def scatter_plot(args, stat_results_by_tf):
     fig, ax = plt.subplots(figsize=(12,12))
     ax.scatter(tc_diff, ps_diff, alpha=0.0)
     for i, txt in enumerate(mpbs_names):
-        ax.annotate(txt, (tc_diff[i], ps_diff[i]), alpha=0.6)
+        if stat_results_by_tf[mpbs_names][-1] < args.fdr:
+            ax.annotate(txt, (tc_diff[i], ps_diff[i]), alpha=0.6)
     ax.margins(0.05)
 
     tc_diff_mean = np.mean(tc_diff)
@@ -487,7 +491,7 @@ def output_stat_results(args, stat_results_by_tf):
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
-              "TC_Diff_{}_{}".format(args.condition1, args.condition2), "P_values"]
+              "TC_Diff_{}_{}".format(args.condition1, args.condition2), "P_values", "Adjust_p_values"]
 
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
@@ -547,8 +551,17 @@ def get_stat_results(ps_tc_results_by_tf):
 
         k = tf.shape[1]
         t2 = np.dot(np.dot((mean1 - mean2).T, np.linalg.inv(cov_pop / n1 + cov_tf / n2)), (mean1 - mean2))
-        pvalue = stats.chi2.sf(t2, k)
-        stat_results_by_tf[mpbs_name].append(pvalue)
+        p_value = stats.chi2.sf(t2, k)
+        stat_results_by_tf[mpbs_name].append(p_value)
+
+    p_values = list()
+    mpbs_name_list = stat_results_by_tf.keys()
+    for mpbs_name in mpbs_name_list:
+        p_values.append(stat_results_by_tf[mpbs_name][-1])
+
+    adjusted_p_values = adjust_p_values(p_values)
+    for idx, mpbs_name in enumerate(mpbs_name_list):
+        stat_results_by_tf[mpbs_name].append(adjusted_p_values[idx])
 
     return stat_results_by_tf
 
@@ -560,3 +573,12 @@ def standard(vector):
         return [(e - min_) / (max_ - min_) for e in vector]
     else:
         return vector
+
+
+def adjust_p_values(p_values):
+    p = np.asfarray(p_values)
+    by_descend = p.argsort()[::-1]
+    by_orig = by_descend.argsort()
+    steps = float(len(p)) / np.arange(len(p), 0, -1)
+    q = np.minimum(1, np.minimum.accumulate(steps * p[by_descend]))
+    return q[by_orig]
