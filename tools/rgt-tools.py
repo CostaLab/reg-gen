@@ -384,6 +384,7 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
+    parser_thorsf.add_argument('-m', metavar='merge', type=int, default=0, help="Define the maximum distance for merging the nearby regions")
     parser_thorsf.add_argument('-b', metavar='bin', type=int, help="Define the bin size")
     parser_thorsf.add_argument('-s', metavar='step', type=int, help="Define the step size")
 
@@ -1503,6 +1504,101 @@ if __name__ == "__main__":
 
     ############### THOR split #############################################
     elif args.mode == "thor_split":
+
+        def merging_peaks(regions, distance):
+            bed4 = GenomicRegionSet(name="bed4")
+            if distance > 0:
+                current_chrom = ""
+                current_start = 0
+                current_end = 0
+                current_strand = ""
+                list_data = []
+                for i, region in enumerate(regions):
+                    d = abs(current_end - region.initial)
+                    if current_chrom == region.chrom and current_strand == region.orientation and d < distance:
+                        list_data.append(region.data)
+                        current_end = region.final
+                    else:
+                        if len(list_data) > 1:
+                            count1 = 0
+                            count2 = 0
+                            list_p = []
+                            for d in list_data:
+                                l = d.split()
+                                if ";" in l[4]:
+                                    stat = l[4].split(";")
+                                else:
+                                    stat = l[5].split(";")
+                                list_p.append(float(stat[2]))
+                                c1 = [float(x) for x in stat[0].split(":")]
+                                c1 = sum(c1) / len(c1)
+                                count1 = count1 + c1
+                                c2 = [float(x) for x in stat[1].split(":")]
+                                c2 = sum(c2) / len(c2)
+                                count2 = count2 + c2
+                                # print(stat[1].split(":"))
+                            # print(list_data)
+                            count1 = count1 / len(list_data)
+                            count2 = count2 / len(list_data)
+                            # print([count1, count2])
+                            fc = count2 / count1
+                            p = min(list_p)
+
+                            new_d = "\t".join([str(fc), str(current_start), str(current_end),
+                                               "0,0,0", "0", ";".join([str(int(count1)), str(int(count2)), str(p)])])
+                            new_region = GenomicRegion(chrom=current_chrom,
+                                                       orientation=current_strand,
+                                                       initial=current_start,
+                                                       final=current_end,
+                                                       data=new_d)
+
+                            bed4.add(new_region)
+                            # sys.exit()
+
+                        current_chrom = region.chrom
+                        current_start = region.initial
+                        current_end = region.final
+                        current_strand = region.orientation
+                        current_data = [region.data]
+            else:
+                bed4 = regions
+            return bed4
+
+        def output_table(regions, args):
+            tabel_peaks = GenomicRegionSet("table")
+            for region in regions:
+                l = region.data.split()
+                if ";" in l[4]:
+                    s = l[4].split(";")
+                else:
+                    s = l[5].split(";")
+                # if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
+
+                s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
+                s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
+
+                # print([len(region), args.s])
+                if args.s:
+                    nbins = int(len(region) / args.s)
+                    if nbins == 0:
+                        nbins = 1
+                    ns1 = float(s1) / nbins
+                    ns2 = float(s2) / nbins
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
+                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                else:
+                    # print(region)
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
+
+                # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
+                # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
+
+                tabel_peaks.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                             orientation=region.orientation, data=data, name=region.name))
+
+            return(tabel_peaks)
+
+        # Naming
         print(tag + ": [THOR] Split the differential peaks")
         if not args.o:
             args.o = os.path.dirname(args.i)
@@ -1515,75 +1611,50 @@ if __name__ == "__main__":
         bed.read(args.i)
         print("Number of input peaks:\t"+str(len(bed)))
 
-        if args.rename and args.g:
-            bed2 = bed.gene_association(organism=args.g, strand_specific=False)
-        else:
-            bed2 = bed
-
-        for region in bed2:
+        # Filtering by FC and p value, then split the peaks
+        gain_peaks = GenomicRegionSet("gain_peaks")
+        lose_peaks = GenomicRegionSet("lost_peaks")
+        for region in bed:
             data = region.data.split()
-            # print(data)
-            # sys.exit(1)
-            if ";" in data[4]:
-                stat = data[4].split(";")
-            else:
-                stat = data[5].split(";")
+            if ";" in data[4]: stat = data[4].split(";")
+            else: stat = data[5].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
             region.data = "\t".join([str(fc)] + data[1:])
-
-        gain_peaks = GenomicRegionSet("gain_peaks")
-        lose_peaks = GenomicRegionSet("lost_peaks")
-        gain_table = GenomicRegionSet("gain_table")
-        lose_table = GenomicRegionSet("lost_table")
-
-        for region in bed2:
-            l = region.data.split()
-            # print(l)
-            # sys.exit(1)
-            if ";" in l[4]:
-                s = l[4].split(";")
-            else:
-                s = l[5].split(";")
-            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
-
-                s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
-                s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
-
-                # print([len(region), args.s])
-                if args.s:
-                    nbins = int(len(region)/args.s)
-                    ns1 = float(s1) / nbins
-                    ns2 = float(s2) / nbins
-                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
-                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
-                else:
-                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
-
-                # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
-                # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
-
-                if float(l[0]) > 0:
-                    gain_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data, name=region.name))
+            if abs(fc) > args.fc and float(stat[2]) > args.p:
+                if fc > 0:
                     gain_peaks.add(region)
-                elif float(l[0]) < 0:
-                    lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data, name=region.name))
+                elif fc < 0:
                     lose_peaks.add(region)
+        gain_peaks.sort()
+        lose_peaks.sort()
+        print("Number of gain peaks:\t" + str(len(gain_peaks)))
+        print("Number of lost peaks:\t" + str(len(lose_peaks)))
+        # Merging the close peaks
+        m_gain_peaks = merging_peaks(gain_peaks, args.m)
+        m_lost_peaks = merging_peaks(lose_peaks, args.m)
+        # Gene Association
+        if args.rename and args.g:
+            m_gain_peaks = m_gain_peaks.gene_association(organism=args.g, strand_specific=False)
+            m_lost_peaks = m_lost_peaks.gene_association(organism=args.g, strand_specific=False)
+
+        print("Number of gain peaks:\t" + str(len(m_gain_peaks)))
+        print("Number of lost peaks:\t" + str(len(m_lost_peaks)))
+        #
+        gain_table = output_table(m_gain_peaks, args)
+        lose_table = output_table(m_lost_peaks, args)
         # sort table
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
-        gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
-        lose_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
+        m_gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
+        m_lost_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))
         lose_table.write(os.path.join(args.o, name + tag + "_lost.table"))
-
-        print("Number of gain peaks:\t" + str(len(gain_peaks)))
-        print("Number of lost peaks:\t" + str(len(lose_peaks)))
+        #
+        #
         
         
     ############### getseq #############################################
