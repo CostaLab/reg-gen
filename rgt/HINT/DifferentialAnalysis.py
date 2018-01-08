@@ -211,18 +211,14 @@ def diff_analysis_run(args):
                   pwm_dict_by_tf[mpbs_name], fig, ax)
         plt.close(fig)
 
-        ps_tc_results_by_tf[mpbs_name] = list()
+        ps_tc_results_by_tf[mpbs_name] = get_ps_tc_results(args, signal_dict_by_tf_1[mpbs_name],
+                                                           signal_dict_by_tf_2[mpbs_name], motif_len_dict[mpbs_name])
 
-        for i in range(num_fp):
-            signal_1 = np.array(signal_dict_by_tf_1[mpbs_name][i]) / args.factor1
-            signal_2 = np.array(signal_dict_by_tf_2[mpbs_name][i]) / args.factor2
+    output_results(args, ps_tc_results_by_tf)
 
-            res = get_ps_tc_results(signal_1, signal_2, motif_len_dict[mpbs_name])
-            ps_tc_results_by_tf[mpbs_name].append(res)
-
-    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+#    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+#    scatter_plot(args, stat_results_by_tf)
+#    output_stat_results(args, stat_results_by_tf)
 
 
 def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -313,7 +309,18 @@ def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_
     return bc_signal
 
 
-def get_ps_tc_results(signal_1, signal_2, motif_len):
+def get_ps_tc_results(args, signal_list_1, signal_list_2, motif_len):
+    signal_1 = np.zeros(args.window_size)
+    signal_2 = np.zeros(args.window_size)
+
+    for signal in signal_list_1:
+        signal_1 = np.add(signal_1, np.array(signal))
+    for signal in signal_list_2:
+        signal_2 = np.add(signal_2, np.array(signal))
+
+    signal_1 = signal_1 / args.factor1
+    signal_2 = signal_2 / args.factor2
+
     signal_half_len = len(signal_1) / 2
 
     nc = sum(signal_1[signal_half_len - motif_len / 2:signal_half_len + motif_len / 2])
@@ -476,9 +483,9 @@ def scatter_plot(args, stat_results_by_tf):
 
     fig, ax = plt.subplots(figsize=(12,12))
     ax.scatter(tc_diff, ps_diff, alpha=0.0)
-    for i, txt in enumerate(mpbs_names):
-        if stat_results_by_tf[mpbs_names][-1] < args.fdr:
-            ax.annotate(txt, (tc_diff[i], ps_diff[i]), alpha=0.6)
+    for i, mpbs_name in enumerate(mpbs_names):
+        if stat_results_by_tf[mpbs_name][-1] < args.fdr:
+            ax.annotate(mpbs_name, (tc_diff[i], ps_diff[i]), alpha=0.6)
     ax.margins(0.05)
 
     tc_diff_mean = np.mean(tc_diff)
@@ -491,6 +498,20 @@ def scatter_plot(args, stat_results_by_tf):
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
     fig.savefig(figure_name, format="pdf", dpi=300)
+
+
+def output_results(args, ps_tc_results_by_tf):
+    mpbs_name_list = ps_tc_results_by_tf.keys()
+    header = ["Motif",
+              "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
+              "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
+              "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
+              "TC_Diff_{}_{}".format(args.condition1, args.condition2)]
+    output_fname = os.path.join(args.output_location, "{}_{}_results.txt".format(args.condition1, args.condition2))
+    with open(output_fname, "w") as f:
+        f.write("\t".join(header) + "\n")
+        for mpbs_name in mpbs_name_list:
+            f.write(mpbs_name + "\t" + "\t".join(map(str, ps_tc_results_by_tf[mpbs_name])) + "\n")
 
 
 def output_stat_results(args, stat_results_by_tf):
