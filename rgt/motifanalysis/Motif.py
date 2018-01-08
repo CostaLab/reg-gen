@@ -1,19 +1,20 @@
-
 ###################################################################################################
 # Libraries
 ###################################################################################################
 
+from __future__ import division
 # Python 3 compatibility
 from __future__ import print_function
-from __future__ import division
 
 # Python
 from os.path import basename
 
-# Internal
-
 # External
 from MOODS import tools, parsers
+
+
+# Internal
+
 
 ###################################################################################################
 # Classes
@@ -39,7 +40,7 @@ class Motif:
         max -- Maximum PSSM score possible.
         is_palindrome -- True if consensus is biologically palindromic.
         """
- 
+
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
         repository = input_file_name.split("/")[-2]
@@ -75,7 +76,7 @@ class Motif:
         self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
 
 
-class Thresholds:
+class ThresholdTable:
     """
     Container for all motif thresholds given default FPRs.
 
@@ -117,5 +118,5 @@ class Thresholds:
                 self.dict[fpr_name][ll[0]] = dict()
                 for i in range(1, len(ll)):
                     # Updating dictionary
-                    self.dict[fpr_name][ll[0]][fpr_values[i-1]] = float(ll[i])
+                    self.dict[fpr_name][ll[0]][fpr_values[i - 1]] = float(ll[i])
             fpr_file.close()

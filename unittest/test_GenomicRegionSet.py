@@ -1,28 +1,26 @@
-from __future__ import print_function
 from __future__ import division
-import sys
-import unittest
-from rgt.GenomicRegion import *
-from rgt.GenomicRegionSet import *
-import os
-from rgt.Util import GenomeData
-from rgt.Util import OverlapType
+from __future__ import print_function
 
+import unittest
+
+from rgt.GenomicRegionSet import *
+from rgt.Util import OverlapType
 
 """Unit Test"""
 
+
 class TestGenomicRegionSet(unittest.TestCase):
-    
-    def region_sets(self,listA,listB):
+
+    def region_sets(self, listA, listB):
         """ Setting two GenomicRegionSets as self.setA and self.setB for each case test. """
         self.setA = GenomicRegionSet('for Unit Test')
         for i in range(len(listA)):
             self.setA.add(GenomicRegion(chrom=listA[i][0], initial=listA[i][1], final=listA[i][2]))
-        
+
         self.setB = GenomicRegionSet('for Unit Test')
         for i in range(len(listB)):
             self.setB.add(GenomicRegion(chrom=listB[i][0], initial=listB[i][1], final=listB[i][2]))
-    
+
     def test_extend(self):
         """
         Two empty sets
@@ -31,17 +29,17 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([],
                          [])
-        self.setA.extend(100,100)
+        self.setA.extend(100, 100)
         self.assertEqual(len(self.setA.sequences), 0)
         """
         One region
         A :   -----
         R : ---------
         """
-        self.region_sets([['chr1',5,10]],
+        self.region_sets([['chr1', 5, 10]],
                          [])
         result = self.setA
-        result.extend(4,4)
+        result.extend(4, 4)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 14)
@@ -50,10 +48,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :   -----   ------         -----    -----
         R : --------=---------     ------------------
         """
-        self.region_sets([['chr1',5,10],['chr1',15,20],['chr1',40,50],['chr1',65,75]],
+        self.region_sets([['chr1', 5, 10], ['chr1', 15, 20], ['chr1', 40, 50], ['chr1', 65, 75]],
                          [])
         result = self.setA
-        result.extend(5,5)
+        result.extend(5, 5)
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0].initial, 0)
         self.assertEqual(result[0].final, 15)
@@ -68,10 +66,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :   -----   ------         -----    -----
         R : none
         """
-        self.region_sets([['chr1',5,10],['chr2',15,20],['chr3',40,50],['chr4',65,75]],
+        self.region_sets([['chr1', 5, 10], ['chr2', 15, 20], ['chr3', 40, 50], ['chr4', 65, 75]],
                          [])
         result = self.setA
-        result.extend(5,5)
+        result.extend(5, 5)
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0].initial, 0)
         self.assertEqual(result[0].final, 15)
@@ -90,19 +88,19 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :   -----
         R : ---------
         """
-        self.region_sets([['chr1',100,200]],
+        self.region_sets([['chr1', 100, 200]],
                          [])
         result = self.setA
-        result.extend(10,10,percentage=True)
+        result.extend(10, 10, percentage=True)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 90)
         self.assertEqual(result[0].final, 210)
-        
+
     def test_sort(self):
-        self.region_sets([['chr1',15,20],['chr1',40,50],['chr1',65,75],['chr1',5,10]],
+        self.region_sets([['chr1', 15, 20], ['chr1', 40, 50], ['chr1', 65, 75], ['chr1', 5, 10]],
                          [])
         self.setA.sort()
-    
+
     def test_intersect(self):
         """
         Two empty sets
@@ -114,10 +112,10 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -126,14 +124,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : none
         R : none
         """
-        self.region_sets([['chr1',5,10]],
+        self.region_sets([['chr1', 5, 10]],
                          [])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -142,13 +140,13 @@ class TestGenomicRegionSet(unittest.TestCase):
         R : none
         """
         self.region_sets([],
-                         [['chr1',5,10]])
+                         [['chr1', 5, 10]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -157,14 +155,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :        ----          ------  ------   
         R : none
         """
-        self.region_sets([['chr1',1,5],['chr1',11,20],['chr1',33,38]],
-                         [['chr1',7,9],['chr1',20,25],['chr1',26,31]])
+        self.region_sets([['chr1', 1, 5], ['chr1', 11, 20], ['chr1', 33, 38]],
+                         [['chr1', 7, 9], ['chr1', 20, 25], ['chr1', 26, 31]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -173,11 +171,11 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :       ------
         R : none
         """
-        self.region_sets([['chr1',1,5],['chr1',11,20]],
-                         [['chr1',5,11]])
+        self.region_sets([['chr1', 1, 5], ['chr1', 11, 20]],
+                         [['chr1', 5, 11]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
 
@@ -189,36 +187,37 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    .   .
         R : none
         """
-        self.region_sets([['chr1',2,2],['chr1',20,20]],
-                         [['chr1',5,5],['chr1',20,20]])
+        self.region_sets([['chr1', 2, 2], ['chr1', 20, 20]],
+                         [['chr1', 5, 5], ['chr1', 20, 20]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
 
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
-        
+
         """
         Perfect overlapping
         A : ------
         B : ------
         R : ------
         """
-        self.region_sets([['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]],
-                         [['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]])
+        self.region_sets(
+            [['chr1', 1, 10], ['chr1', 500, 550], ['chr1', 600, 650], ['chr1', 700, 750], ['chr1', 725, 800]],
+            [['chr1', 1, 10], ['chr1', 500, 550], ['chr1', 600, 650], ['chr1', 700, 750], ['chr1', 725, 800]])
         result = self.setA.intersect(self.setB, mode=OverlapType.OVERLAP, rm_duplicates=True)
-        
+
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 10)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 5)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 10)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 5)
         self.assertEqual(result[0].initial, 1)
@@ -232,13 +231,13 @@ class TestGenomicRegionSet(unittest.TestCase):
         R3:              (comp_incl)
         """
 
-        self.region_sets([['chr1',1,10]],
-                         [['chr1',7,20]])
+        self.region_sets([['chr1', 1, 10]],
+                         [['chr1', 7, 20]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 7)
         self.assertEqual(result[0].final, 10)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
@@ -254,8 +253,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R2: -------      -------- (original)
         R3:                       (comp_incl)
         """
-        self.region_sets([['chr1',1,10],['chr1',26,35]],
-                         [['chr1',7,30]])
+        self.region_sets([['chr1', 1, 10], ['chr1', 26, 35]],
+                         [['chr1', 7, 30]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 7)
@@ -280,15 +279,15 @@ class TestGenomicRegionSet(unittest.TestCase):
         R2: -------      --------     (original)
         R3:                           (comp_incl)
         """
-        self.region_sets([['chr1',1,10],['chr1',26,35]],
-                         [['chr1',7,15],['chr1',30,40]])
+        self.region_sets([['chr1', 1, 10], ['chr1', 26, 35]],
+                         [['chr1', 7, 15], ['chr1', 30, 40]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 7)
         self.assertEqual(result[0].final, 10)
         self.assertEqual(result[1].initial, 30)
         self.assertEqual(result[1].final, 35)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 1)
@@ -307,8 +306,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R3:                                                      (comp_incl) 
         """
 
-        self.region_sets([['chr1',3,30],['chr1',50,60],['chr1',70,85]],
-                         [['chr1',1,5],['chr1',10,19],['chr1',27,35],['chr1',55,75]])
+        self.region_sets([['chr1', 3, 30], ['chr1', 50, 60], ['chr1', 70, 85]],
+                         [['chr1', 1, 5], ['chr1', 10, 19], ['chr1', 27, 35], ['chr1', 55, 75]])
 
         result = self.setA.intersect(self.setB, mode=OverlapType.OVERLAP)
         self.assertEqual(len(result), 5)
@@ -331,7 +330,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[1].final, 60)
         self.assertEqual(result[2].initial, 70)
         self.assertEqual(result[2].final, 85)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -340,11 +339,11 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : chr2  -------
         R : none
         """
-        self.region_sets([['chr1',1,10]],
-                         [['chr2',1,10]])
+        self.region_sets([['chr1', 1, 10]],
+                         [['chr2', 1, 10]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 0)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 0)
 
@@ -358,8 +357,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R2: ---------------------------      (original)
         R3:                                  (comp_incl)
         """
-        self.region_sets([['chr1',1,50]],
-                         [['chr1',1,5],['chr1',10,19],['chr1',45,60]])
+        self.region_sets([['chr1', 1, 50]],
+                         [['chr1', 1, 5], ['chr1', 10, 19], ['chr1', 45, 60]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0].initial, 1)
@@ -368,12 +367,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[1].final, 19)
         self.assertEqual(result[2].initial, 45)
         self.assertEqual(result[2].final, 50)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 50)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 0)
         """
@@ -384,8 +383,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R3: ----    ------                   (comp_incl)
         """
 
-        self.region_sets([['chr1',1,5],['chr1',10,19],['chr1',45,60]],
-                         [['chr1',1,50]])
+        self.region_sets([['chr1', 1, 5], ['chr1', 10, 19], ['chr1', 45, 60]],
+                         [['chr1', 1, 50]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0].initial, 1)
@@ -394,7 +393,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[1].final, 19)
         self.assertEqual(result[2].initial, 45)
         self.assertEqual(result[2].final, 50)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0].initial, 1)
@@ -403,8 +402,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[1].final, 19)
         self.assertEqual(result[2].initial, 45)
         self.assertEqual(result[2].final, 60)
-        
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 1)
@@ -422,15 +420,15 @@ class TestGenomicRegionSet(unittest.TestCase):
                 ------
         R3:                        -------      (comp_incl)
         """
-        self.region_sets([['chr1',1,50],['chr1',20,40],['chr1',70,80]],
-                         [['chr1',25,45],['chr1',65,95]])
+        self.region_sets([['chr1', 1, 50], ['chr1', 20, 40], ['chr1', 70, 80]],
+                         [['chr1', 25, 45], ['chr1', 65, 95]])
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 25)
         self.assertEqual(result[0].final, 45)
         self.assertEqual(result[1].initial, 70)
         self.assertEqual(result[1].final, 80)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result), 3)
         self.assertEqual(result[1].initial, 20)
@@ -439,7 +437,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[0].final, 50)
         self.assertEqual(result[2].initial, 70)
         self.assertEqual(result[2].final, 80)
-        
+
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 70)
@@ -613,13 +611,13 @@ class TestGenomicRegionSet(unittest.TestCase):
         # self.assertEqual(len(result), 1)
         # self.assertEqual(result[0].initial, 15)
         # self.assertEqual(result[0].final, 20)
-    
+
     def test_remove_duplicates(self):
         """
         A : ===== -----
         R : ----- -----
         """
-        self.region_sets([['chr1',1,10],['chr1',1,10],['chr1',15,25]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 1, 10], ['chr1', 15, 25]],
                          [])
         self.setA.remove_duplicates()
         result = self.setA
@@ -632,7 +630,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A : =====--- -----
         R : =====--- -----
         """
-        self.region_sets([['chr1',1,10],['chr1',1,15],['chr1',20,25]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 1, 15], ['chr1', 20, 25]],
                          [])
         self.setA.remove_duplicates()
         result = self.setA
@@ -647,8 +645,9 @@ class TestGenomicRegionSet(unittest.TestCase):
         A : ===== ----- ------  ====
         R : ----- ----- ------  ----
         """
-        self.region_sets([['chr1',1,10],['chr1',1,10],['chr1',15,25],['chr1',30,35],['chr1',40,45],['chr1',40,45]],
-                         [])
+        self.region_sets(
+            [['chr1', 1, 10], ['chr1', 1, 10], ['chr1', 15, 25], ['chr1', 30, 35], ['chr1', 40, 45], ['chr1', 40, 45]],
+            [])
         self.setA.remove_duplicates()
         result = self.setA
         self.assertEqual(len(result), 4)
@@ -667,10 +666,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : ------[ 99 ]       [   199   ]---
         window = 100
         R :       -                           only one base overlaps with extending A
-        """   
-        self.region_sets([['chr1',200,300]],
-                         [['chr1',1,101],['chr1',499,550]])
-        result = self.setA.window(self.setB,adding_length=100)
+        """
+        self.region_sets([['chr1', 200, 300]],
+                         [['chr1', 1, 101], ['chr1', 499, 550]])
+        result = self.setA.window(self.setB, adding_length=100)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 100)
         self.assertEqual(result[0].final, 101)
@@ -680,10 +679,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         window = 200
         R : ------                        -   
         left-hand side is covered, and the right-hand side is only one base overlapped
-        """   
-        self.region_sets([['chr1',200,300]],
-                         [['chr1',1,101],['chr1',499,550]])
-        result = self.setA.window(self.setB,adding_length=200)
+        """
+        self.region_sets([['chr1', 200, 300]],
+                         [['chr1', 1, 101], ['chr1', 499, 550]])
+        result = self.setA.window(self.setB, adding_length=200)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 1)  # GenomicRegion.extend will choose 1 rather than 0
         self.assertEqual(result[0].final, 101)
@@ -694,9 +693,9 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :             --------                    ----
         window = 1000 (default)
         R :                 ----                    ----
-        """   
-        self.region_sets([['chr1',3000,3500],['chr1',4000,4500]],
-                         [['chr1',1500,2500],['chr1',5000,5500]])
+        """
+        self.region_sets([['chr1', 3000, 3500], ['chr1', 4000, 4500]],
+                         [['chr1', 1500, 2500], ['chr1', 5000, 5500]])
         result = self.setA.window(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 2000)
@@ -711,18 +710,18 @@ class TestGenomicRegionSet(unittest.TestCase):
                             ----                    ----
         window = 100
         R : none
-        """   
-        self.region_sets([['chr1',3000,3500],['chr1',4000,4500]],
-                         [['chr1',1500,2500],['chr1',5000,5500]])
-        result = self.setA.window(self.setB,adding_length=2000)
+        """
+        self.region_sets([['chr1', 3000, 3500], ['chr1', 4000, 4500]],
+                         [['chr1', 1500, 2500], ['chr1', 5000, 5500]])
+        result = self.setA.window(self.setB, adding_length=2000)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 1500)
         self.assertEqual(result[0].final, 2500)
         self.assertEqual(result[1].initial, 5000)
         self.assertEqual(result[1].final, 5500)
-        result = self.setA.window(self.setB,adding_length=100)
+        result = self.setA.window(self.setB, adding_length=100)
         self.assertEqual(len(result), 0)
-        
+
     def test_subtract(self):
         """
         A : none
@@ -730,7 +729,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         R : none
         """
         self.region_sets([],
-                         [['chr1',6,15]])
+                         [['chr1', 6, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
         """
@@ -738,7 +737,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : none
         R :    ------
         """
-        self.region_sets([['chr1',6,15]],
+        self.region_sets([['chr1', 6, 15]],
                          [])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 1)
@@ -749,8 +748,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ------
         R : ---
         """
-        self.region_sets([['chr1',1,10]],
-                         [['chr1',6,15]])
+        self.region_sets([['chr1', 1, 10]],
+                         [['chr1', 6, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
@@ -760,8 +759,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : ------
         R :       ---
         """
-        self.region_sets([['chr1',6,15]],
-                         [['chr1',1,10]])
+        self.region_sets([['chr1', 6, 15]],
+                         [['chr1', 1, 10]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 10)
@@ -771,8 +770,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : ---------
         R : none
         """
-        self.region_sets([['chr1',6,10]],
-                         [['chr1',1,15]])
+        self.region_sets([['chr1', 6, 10]],
+                         [['chr1', 1, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
         """
@@ -780,8 +779,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ---
         R : ---   ---
         """
-        self.region_sets([['chr1',1,15]],
-                         [['chr1',6,10]])
+        self.region_sets([['chr1', 1, 15]],
+                         [['chr1', 6, 10]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 1)
@@ -793,8 +792,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ------
         R : none
         """
-        self.region_sets([['chr1',6,15]],
-                         [['chr1',6,15]])
+        self.region_sets([['chr1', 6, 15]],
+                         [['chr1', 6, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
         """
@@ -802,8 +801,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :          ----------                    ----
         R :   -------                 ------
         """
-        self.region_sets([['chr1',5,30],['chr1',70,85]],
-                         [['chr1',20,50],['chr1',100,110]])
+        self.region_sets([['chr1', 5, 30], ['chr1', 70, 85]],
+                         [['chr1', 20, 50], ['chr1', 100, 110]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 5)
@@ -815,8 +814,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ------
         R :          ----   -----
         """
-        self.region_sets([['chr1',20,30],['chr1',35,55]],
-                         [['chr1',10,23],['chr1',100,110]])
+        self.region_sets([['chr1', 20, 30], ['chr1', 35, 55]],
+                         [['chr1', 10, 23], ['chr1', 100, 110]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].initial, 23)
@@ -831,8 +830,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R :   ch1     --------      -------
               ch2     -------------------
         """
-        self.region_sets([['chr1',0,30000],['chr2',0,35000]],
-                         [['chr1',20000,23000],['chr2',31000,35000]])
+        self.region_sets([['chr1', 0, 30000], ['chr2', 0, 35000]],
+                         [['chr1', 20000, 23000], ['chr2', 31000, 35000]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0].initial, 0)
@@ -846,11 +845,11 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ---    ---------         ----           ----
         R :   -   ----         ---------    -----------    --------------
         """
-        self.region_sets([['chr1',5,1000]],
-                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240]])
+        self.region_sets([['chr1', 5, 1000]],
+                         [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 5)
-        
+
         """
         A :   -----------------------              ------
                    -----     -----  -----------
@@ -858,10 +857,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         R :   -   ----         ------              ----
                    ---         ---  ----    ---
         """
-        self.region_sets([['chr1',5,100],['chr1',20,40],['chr1',60,80],['chr1',95,150],['chr1',180,220]],
-                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240]])
+        self.region_sets([['chr1', 5, 100], ['chr1', 20, 40], ['chr1', 60, 80], ['chr1', 95, 150], ['chr1', 180, 220]],
+                         [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB)
-        #print(result.sequences)
+        # print(result.sequences)
         self.assertEqual(len(result), 8)
         self.assertEqual(result[0].initial, 5)
         """
@@ -869,14 +868,13 @@ class TestGenomicRegionSet(unittest.TestCase):
         B :    ---    ---------         ----           ----
         R :   -   ----         ---------    -----------    --------------
         """
-        self.region_sets([['chr1',5,1000],['chr2',5,1000],['chr4',5,1000]],
-                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240],
-                          ['chr2',10,15],['chr2',30,70],['chr2',120,140],['chr2',200,240],
-                          ['chr4',10,15],['chr4',30,70],['chr4',120,140],['chr4',200,240]])
+        self.region_sets([['chr1', 5, 1000], ['chr2', 5, 1000], ['chr4', 5, 1000]],
+                         [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240],
+                          ['chr2', 10, 15], ['chr2', 30, 70], ['chr2', 120, 140], ['chr2', 200, 240],
+                          ['chr4', 10, 15], ['chr4', 30, 70], ['chr4', 120, 140], ['chr4', 200, 240]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 15)
-        
-        
+
     def test_merge(self):
         """
         A : none
@@ -891,7 +889,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A : -----  -----
         R : -----  -----
         """
-        self.region_sets([['chr1',1,10],['chr1',15,25]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 15, 25]],
                          [])
         self.setA.merge()
         result = self.setA
@@ -905,7 +903,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A2:    -----
         R : ------------   ----
         """
-        self.region_sets([['chr1',1,30],['chr1',11,20],['chr1',40,50]],
+        self.region_sets([['chr1', 1, 30], ['chr1', 11, 20], ['chr1', 40, 50]],
                          [])
         self.setA.merge()
         result = self.setA
@@ -919,7 +917,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A2:    ---------
         R : ------------   ----
         """
-        self.region_sets([['chr1',1,30],['chr1',20,40],['chr1',50,60]],
+        self.region_sets([['chr1', 1, 30], ['chr1', 20, 40], ['chr1', 50, 60]],
                          [])
         self.setA.merge()
         result = self.setA
@@ -932,14 +930,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         A : =======
         R : -------
         """
-        self.region_sets([['chr1',1,30],['chr1',1,30]],
+        self.region_sets([['chr1', 1, 30], ['chr1', 1, 30]],
                          [])
         self.setA.merge()
         result = self.setA
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 30)
-        
+
     def test_cluster(self):
         """
         Empty sets
@@ -954,7 +952,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :  ------- 
         R :  -------
         """
-        self.region_sets([['chr1',1,10]],
+        self.region_sets([['chr1', 1, 10]],
                          [])
         result = self.setA.cluster(10)
         self.assertEqual(len(result), 1)
@@ -965,7 +963,7 @@ class TestGenomicRegionSet(unittest.TestCase):
                   ------
         R :  -----------
         """
-        self.region_sets([['chr1',1,10],['chr1',10,20]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 10, 20]],
                          [])
         result = self.setA.cluster(10)
         self.assertEqual(len(result), 1)
@@ -976,7 +974,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         R1:  -----  -----
         R2:  ------------
         """
-        self.region_sets([['chr1',1,10],['chr1',15,25]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 15, 25]],
                          [])
         result = self.setA.cluster(1)
         self.assertEqual(len(result), 2)
@@ -1002,8 +1000,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         R4:  ------------------------------
         R5:  ------------------------------
         """
-        self.region_sets([['chr1',1,10],['chr1',15,25],['chr1',35,45],
-                          ['chr1',60,70],['chr1',90,100]],
+        self.region_sets([['chr1', 1, 10], ['chr1', 15, 25], ['chr1', 35, 45],
+                          ['chr1', 60, 70], ['chr1', 90, 100]],
                          [])
         result = self.setA.cluster(6)
         self.assertEqual(len(result), 4)
@@ -1015,13 +1013,13 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 1)
         result = self.setA.cluster(26)
         self.assertEqual(len(result), 1)
-        
+
     def test_flank(self):
         """
         A :        -----
         R1:     ---     ---
         """
-        self.region_sets([['chr1',60,75]],
+        self.region_sets([['chr1', 60, 75]],
                          [])
         result = self.setA.flank(10)
         self.assertEqual(len(result), 2)
@@ -1033,7 +1031,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :        -----     ----
         R1:   -----     =====    ----
         """
-        self.region_sets([['chr1',60,75],['chr1',90,100]],
+        self.region_sets([['chr1', 60, 75], ['chr1', 90, 100]],
                          [])
         result = self.setA.flank(15)
         self.assertEqual(len(result), 4)
@@ -1045,7 +1043,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[2].final, 90)
         self.assertEqual(result[3].initial, 100)
         self.assertEqual(result[3].final, 115)
-        
+
     def test_jaccard(self):
         """
         self           --8--      ---10---      -4-
@@ -1054,11 +1052,11 @@ class TestGenomicRegionSet(unittest.TestCase):
         similarity:   ( 5 + 4 )/[(8 + 10 + 4) + (10 +10) - (5 + 4 )]
                       = 9/33
         """
-        self.region_sets([['chr1',50,58],['chr1',70,80],['chr1',90,94]],
-                         [['chr1',45,55],['chr1',76,86]])
+        self.region_sets([['chr1', 50, 58], ['chr1', 70, 80], ['chr1', 90, 94]],
+                         [['chr1', 45, 55], ['chr1', 76, 86]])
         result = self.setA.jaccard(self.setB)
-        self.assertEqual(result, 9/33)
-    
+        self.assertEqual(result, 9 / 33)
+
     def test_get_genome_data(self):
         """hg19"""
         result = GenomicRegionSet("hg19")
@@ -1066,90 +1064,90 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 23)
         """hg19, with Mitochondria chromosome"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism="hg19",chrom_M=True)
+        result.get_genome_data(organism="hg19", chrom_M=True)
         self.assertEqual(len(result), 24)
-        
+
     def test_random_regions(self):
-        
-        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
+
+        self.region_sets([['chr1', 0, 10000], ['chr2', 0, 20000], ['chrX', 0, 30000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          total_size=100, 
-                                          overlap_result=False, 
+        result = self.setA.random_regions(organism="mm9",
+                                          total_size=100,
+                                          overlap_result=False,
                                           overlap_input=False)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
-        
-        
-        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
+        # print("Overlaps within result: ",result.within_overlap())
+
+        self.region_sets([['chr1', 0, 10000], ['chr2', 0, 20000], ['chrX', 0, 30000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          total_size=100, 
-                                          overlap_result=True, 
+        result = self.setA.random_regions(organism="mm9",
+                                          total_size=100,
+                                          overlap_result=True,
                                           overlap_input=False)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
-        
-        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
+        # print("Overlaps within result: ",result.within_overlap())
+
+        self.region_sets([['chr1', 0, 10000], ['chr2', 0, 20000], ['chrX', 0, 30000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          total_size=100, 
-                                          overlap_result=False, 
+        result = self.setA.random_regions(organism="mm9",
+                                          total_size=100,
+                                          overlap_result=False,
                                           overlap_input=True)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
-        
-        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
+        # print("Overlaps within result: ",result.within_overlap())
+
+        self.region_sets([['chr1', 0, 10000], ['chr2', 0, 20000], ['chrX', 0, 30000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          total_size=100, 
-                                          overlap_result=True, 
+        result = self.setA.random_regions(organism="mm9",
+                                          total_size=100,
+                                          overlap_result=True,
                                           overlap_input=True)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
-        
-        self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
+        # print("Overlaps within result: ",result.within_overlap())
+
+        self.region_sets([['chr1', 0, 1000], ['chr2', 0, 2000], ['chrX', 0, 3000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          multiply_factor=100, 
-                                          overlap_result=False, 
+        result = self.setA.random_regions(organism="mm9",
+                                          multiply_factor=100,
+                                          overlap_result=False,
                                           overlap_input=False)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
-        
-        self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
+        # print("Overlaps within result: ",result.within_overlap())
+
+        self.region_sets([['chr1', 0, 1000], ['chr2', 0, 2000], ['chrX', 0, 3000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
-                                          multiply_factor=100, 
-                                          overlap_result=False, 
+        result = self.setA.random_regions(organism="mm9",
+                                          multiply_factor=100,
+                                          overlap_result=False,
                                           overlap_input=False,
                                           chrom_M=True)
         result.sort()
-        #print("-"*80)
-        #print("The result random regions are: ")
-        #for s in result.sequences:
+        # print("-"*80)
+        # print("The result random regions are: ")
+        # for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
-        #print("Overlaps within result: ",result.within_overlap())
+        # print("Overlaps within result: ",result.within_overlap())
+
 
 """
     
@@ -1160,9 +1158,8 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.projection_test(self.setB)
         #print(result)
         #self.assertEqual(result, 11/31)
-"""     
-        
-if __name__ == "__main__":
+"""
 
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGenomicRegionSet)
     unittest.TextTestRunner(verbosity=3).run(suite)

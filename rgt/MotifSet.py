@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 MotifSet
 ===================
@@ -7,348 +5,377 @@ Represents a transcription factor motif and the standardization of motif annotat
 
 """
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
-import os
-import glob
 
+# Python
+import glob
+import os
 
 # Internal
+from rgt.Util import npath, MotifData, strmatch
 
-# TODO:
-# - connect motif with file and biopython object
-# - keep track of databases (???)
 
-class Motif:
-    """Represents transcription factor motifs.
+class MotifAnnotation:
+    """
+    Represents a transcription factor with all available annotation (from MTF files).
 
     *Keyword arguments:*
 
       - tf_id -- Transcription factor ID.
       - name -- Transcription factor name (symbol).
       - database -- Database/repository in which this motif was obtained from.
-      - tf_class -- Class of transcription factor motif.
-      - genes -- Genes in which transcription factor binds to.
-      - genes_suffix -- Gene suffixes.
+      - family -- Class/Family of transcription factor motif (can be any string).
+      - gene_names -- List of gene names for this transcription factor (usually only one, sometimes two)
+      - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
+      - data_source -- A string representing the 'Source' this transcription factor was generated from,
+        eg ChiP-Seq, SELEX..
     """
 
-    def __init__(self, tf_id, name, database, tf_class, genes, genes_suffix):
-        self.id = tf_id
+    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source):
+        self.tf_id = tf_id
         self.name = name
         self.database = database
-        self.tf_class = tf_class
-        self.genes = genes
-        self.genes_suffix = genes_suffix
+        self.version = version
+        self.gene_names = gene_names
+        self.family = family
+        self.uniprot_ids = uniprot_ids
+        self.data_source = data_source
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return str(self.__dict__)
 
 
 class MotifSet:
-    """Represents a set of motifs."""
+    """
+    Represents a set of motifs. It contains MotifAnnotation instances.
+    """
 
-    def __init__(self):
+    def __init__(self, preload_motifs=False):
         self.motifs_map = {}
-        self.genes_map = {}
-        self.genes_suffix_map = {}
         self.networks = {}
         self.motifs_enrichment = {}
         self.conditions = []
 
-    def add(self, new_motif):
-        """Adds a new motif to this set.
+        if preload_motifs:
+            motif_data = MotifData()
+
+            self.read_mtf(motif_data.mtf_list)
+
+    def __len__(self):
+        return len(self.motifs_map)
+
+    def __iter__(self):
+        return iter(self.motifs_map.values())
+
+    def __getitem__(self, key):
+        return self.motifs_map[key]
+
+    def __str__(self):
+        return "MotifSet:" + str(self.__dict__)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def add(self, motif):
+        """
+        Adds a new motif to this set.
 
         *Keyword arguments:*
 
-          - new_motif -- New motif to be added.
+          - motif -- Must be an instance of MotifAnnotation
         """
 
-        # new_motif=Motif(tf_id, name, database, tf_class, genes, genes_suffix)
-        try:
-            self.motifs_map[new_motif.name]
-        except:
-            self.motifs_map[new_motif.name] = new_motif
-            for g in new_motif.genes:
-                g = g.upper()
-                try:
-                    motifs_aux = self.genes_map[g]
-                    motifs_aux.append(new_motif)
-                except:
-                    self.genes_map[g] = [new_motif]
-            for g in new_motif.genes_suffix:
-                try:
-                    motifs_aux = self.genes_suffix_map[g]
-                    motifs_aux.append(new_motif)
-                except:
-                    self.genes_suffix_map[g] = [new_motif]
+        self.motifs_map[motif.name] = motif
 
-    def match_suffix(self, gene_name):
-        """Match with gene suffix
+    def filter(self, keys, key_type="name", search="exact"):
+        """
+        Returns a new MotifSet containing all matching motifs. By default, it expects a list of motif names, but this
+        can be configured via the key_type parameter.
 
         *Keyword arguments:*
 
-          - gene_name -- Gene name to perform the match.
+          - values -- List of strings representing the motif to filter this set on. Actual values depend on key_type.
+          - key_type -- "name" for matching on the motif name;
+                        "family" for motif family/description;
+                        "uniprot_ids" for matching on UniProt IDs (might be more than one);
+                        "gene_names" for matching on the gene names (symbols);
+                        "data_source" for Chip-Seq, SELEX, etc.
+          - search -- Search mode (default = 'exact'). If "exact", only perfect matches will be accepted. If
+            "inexact", key inclusion will be considered a match. For example, if keys=["ARNT"] and
+            key_type="gene_names" and search="inexact", all motifs corresponding to the gene names "ARNT", "ARNT2",
+            "ARNTL", etc will be included. If search="exact", only the motifs corresponding to the gene name "ARNT"
+            are included.
 
         *Return:*
 
-          - res -- ID of mapped genes.
+          - motif_set -- Set of filtered motifs.
         """
 
-        res = []
-        gene_name = gene_name.upper()
-        for s in self.genes_suffix_map.keys():
-            if gene_name.startswith(s):
-                res.append(s)
-        return res
+        if not isinstance(keys, list):
+            raise ValueError("keys must be a list")
 
-    def filter_by_motifs(self, motifs):
-        """Filter this motif set by defined motifs.
+        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source"]
+
+        if key_type not in valid_keys:
+            raise ValueError("key_type must be one of {}".format(valid_keys))
+
+        motif_set = MotifSet(preload_motifs=False)
+
+        for key in keys:
+            for m in self.motifs_map.values():
+                attr_vals = getattr(m, key_type)
+                # this is to avoid duplicating code for string-attributes and list-attributes
+                if not isinstance(attr_vals, list):
+                    attr_vals = [attr_vals]
+
+                for attr_val in attr_vals:
+                    if strmatch(key, attr_val, search=search):
+                        motif_set.add(m)
+
+        return motif_set
+
+    def get_mappings(self, key_type="gene_names"):
+        """
+        Returns two dictionaries, the first mapping each motif to its specified "keys" (see filter/3 for more details),
+        the second mapping each "key" to corresponding motifs.
 
         *Keyword arguments:*
 
-          - motifs -- Motifs in which to filter this set.
+          - key_type -- "name" for matching on the motif name;
+                        "family" for motif family/description;
+                        "uniprot_ids" for matching on UniProt IDs (might be more than one);
+                        "gene_names" for matching on the gene names (symbols);
+                        "data_source" for Chip-Seq, SELEX, etc.
 
         *Return:*
 
-          - motif_sets -- Filtered motif sets.
+          - motif2keys -- Dictionary mapping all motif names to their corresponding attribute values. For example,
+            if filtering by genes, it will provide a quick mapping between motif names and all the matching gene names.
+          - key2motifs -- Inverse of motif2keys. It maps the key values to their corresponding motifs.
         """
 
-        motif_sets = MotifSet()
-        for m in motifs:
-            try:
-                motif_sets.add(self.motifs_map[m])
-            except Exception:
-                print("motif not found: " + str(m))
-        return motif_sets
+        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source"]
 
-    def filter_by_genes(self, genes, search="exact"):
-        """This method returns motifs associated to genes. The search has three modes: 
-            1. 'exact' - exact match only
-            2. 'inexact' - genes with no exact match are searched for inexact matcth
-            3. 'all' - all genes are applied to an inexact match
+        if key_type not in valid_keys:
+            raise ValueError("key_type must be one of {}".format(valid_keys))
+
+        motif2keys = {}
+        key2motifs = {}
+
+        for m in self.motifs_map.values():
+            attr_vals = getattr(m, key_type)
+            # this is to avoid duplicating code for string-attributes and list-attributes
+            if not isinstance(attr_vals, list):
+                attr_vals = [attr_vals]
+
+            for attr_val in attr_vals:
+                # add this motif+attribute to motif2key dict
+                if m.name in motif2keys:
+                    motif2keys[m.name].append(attr_val)
+                else:
+                    motif2keys[m.name] = [attr_val]
+
+                # add this attribute+motif to key2motif dict
+                if attr_val in key2motifs:
+                    key2motifs[attr_val].append(m.name)
+                else:
+                    key2motifs[attr_val] = [m.name]
+
+        return motif2keys, key2motifs
+
+    def read_mtf(self, mtf_filenames):
+        """
+        Reads TF annotation in mtf (internal format; check manual) format.
 
         *Keyword arguments:*
 
-          - genes -- Gene set to perform the filtering.
-          - search -- Search mode (default = 'exact').
-
-        *Return:*
-
-          - motif_sets -- Filtered motif sets.
-          - genes_motifs -- Dictionary of genes to motifs.
-          - motifs_genes -- Dictionary of motifs to genes.
+          - file_name_list -- A string, or a list of strings, representing .mtf file paths.
         """
-        motif_sets = MotifSet()
-        motifs_genes = {}
-        genes_motifs = {}
-        not_found_genes = []  # keep genes for inexact search
-        genes = genes.genes
-        for g in genes:
-            g = g.upper()
-            try:
-                motifs = self.genes_map[g]
-                for m in motifs:
-                    motif_sets.add(m)
-                    try:
-                        genes_motifs[g].append(m.name)
-                    except:
-                        genes_motifs[g] = [m.name]
-                    try:
-                        motifs_genes[m.name].append(g)
-                    except:
-                        motifs_genes[m.name] = [g]
 
-            except:
-                not_found_genes.append(g)  # keep genes for inexact search
-        if search == "inexact":
-            genes = not_found_genes
-        elif search == "exact":
-            genes = []
-        for g in genes:
-            suffs = self.match_suffix(g)
-            for s in suffs:
-                motifs = self.genes_suffix_map[s]
-                for m in motifs:
-                    motif_sets.add(m)
-                    try:
-                        genes_motifs[g].append(m.name)
-                    except:
-                        genes_motifs[g] = [m.name]
-                    try:
-                        motifs_genes[m.name].append(g)
-                    except:
-                        motifs_genes[m.name] = [g]
-        return motif_sets, genes_motifs, motifs_genes
-
-    def read_file(self, file_name_list):
-        """Reads TF annotation in mtf (internal format; check manual) format.
-        
-        *Keyword arguments:*
-
-          - file_name_list -- A list with .mtf files.
-        """
+        if isinstance(mtf_filenames, list):
+            file_list = [filename for pattern in mtf_filenames for filename in glob.glob(npath(pattern))]
+        else:
+            file_list = glob.glob(npath(mtf_filenames))
 
         # Iterating over the file name list
-        for file_name in file_name_list:
+        for filename in file_list:
 
             # Opening MTF file
-            # try:
-            mtf_file = open(file_name, "r")
-            # except Exception: pass # TODO
+            mtf_file = open(filename, "r")
 
             # Reading file
             for line in mtf_file:
                 # Processing line
                 line_list = line.strip().split("\t")
-                tf_id = line_list[0]
-                name = line_list[1]
-                database = line_list[2]
-                tf_class = int(line_list[3])
-                genes = line_list[4].split(";")
-                genes_suffix = line_list[5].split(";")
+                tf_id = line_list[0].strip()
+                name = line_list[1].strip()
+                database = line_list[2].strip()
+                version = int(line_list[3].strip())
+                gene_names = line_list[4].strip().split(";")
+                tf_class = line_list[5].strip()
+                uniprot_ids = line_list[6].strip().split(";")
+                data_source = line_list[7].strip()
 
-                self.add(Motif(tf_id, name, database, tf_class, genes, genes_suffix))
+                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source))
 
             # Termination
             mtf_file.close()
 
-    def read_motif_targets_enrichment(self, enrichment_files, pvalue_threshold):
-        """Reads current output of motif enrichment analysis to get gene targets.
+    def read_enrichment(self, enrichment_files, threshold=1):
+        """
+        Reads current output of motif enrichment analysis to get gene targets.
 
         *Keyword arguments:*
 
-          - enrichment_files -- Enrichment files to read.
-          - pvalue_threshold -- P-value threshold for motif acceptance.
+          - enrichment_files -- One string, or a list of strings, representing enrichment file paths.
+          - threshold -- P-value threshold for motif acceptance.
         """
+
+        if isinstance(enrichment_files, list):
+            file_list = [filename for pattern in enrichment_files for filename in glob.glob(npath(pattern))]
+        else:
+            file_list = glob.glob(npath(enrichment_files))
+
         # reading networks
-        for f in glob.glob(enrichment_files):
+        for filename in file_list:
             # use last dir name as name for condition
-            condition = os.path.dirname(f)
+            condition = os.path.dirname(filename)
             condition = condition.split("/")[-1]
             self.conditions.append(condition)
+
             network = {}
-            for line in open(f):
+
+            f = open(filename, "r")
+
+            # skip header
+            next(f)
+
+            for line in f:
                 line = line.strip("\n")
                 values = line.split("\t")
                 motif = values[0]
-                try:
-                    self.motifs_map[motif]
+
+                if motif in self.motifs_map:
                     p_value = float(values[2])
                     genes = values[9].split(",")
-                    if pvalue_threshold >= p_value:
+
+                    if threshold >= p_value:
                         network[motif] = genes
-                    try:
-                        p_values = self.motifs_enrichment[motif]
-                        p_values[condition] = p_value
-                    except:
-                        p_values = {condition: p_value}
-                        self.motifs_enrichment[motif] = p_values
-                except Exception as e:
-                    print("motif not found: " + motif + str(e))
+
+                    if motif in self.motifs_enrichment:
+                        self.motifs_enrichment[motif][condition] = p_value
+                    else:
+                        self.motifs_enrichment[motif] = {condition: p_value}
+                else:
+                    print("motif not found: " + motif)
 
             self.networks[condition] = network
 
-    def write_enrichment_table(self, threshold, out_file, motifs_map):
-        """Writes enrichment table for network generation.
+            f.close()
+
+    def write_enrichment(self, out_file, threshold=1):
+        """
+        Writes enrichment table for network generation.
 
         *Keyword arguments:*
 
-          - threshold -- P-value threshold for motif acceptance.
           - out_file -- Output file name.
-          - motifs_map -- Mapping of motifs.
+          - threshold -- P-value threshold for motif acceptance.
         """
 
-        f = open(out_file, "w")
+        f = open(npath(out_file), "w")
         f.write("\t" + ("\t".join(self.conditions)) + "\n")
-        motifs = motifs_map.keys()
-        for v in self.motifs_enrichment.keys():
+
+        for v in self.motifs_enrichment:
             values = self.motifs_enrichment[v]
             filter_p = False
             p_values = []
+
             for c in self.conditions:
-                try:
+                if c in values:
                     pvalue = values[c]
                     p_values.append(str(pvalue))
+
                     if pvalue <= threshold:
                         filter_p = True
-                except:
+                else:
                     p_values.append("1")
-            if filter_p & (v in motifs):
-                genes = "|".join(motifs_map[v])
+
+            if filter_p and (v in self.motifs_map) and self.motifs_map[v].gene_names:
+                genes = "|".join(self.motifs_map[v].gene_names)
                 f.write(v + "|" + genes + "\t" + ("\t".join(p_values)) + "\n")
 
-    def write_cytoscape_network(self, genes, gene_mapping_search, out_path, targets, threshold):
-        """Write files to be used as input for cytoscape. It recieves a list of genes to map to, a mapping search strategy and path for outputting files.
+    def write_network(self, targets, out_path, threshold=1):
+        """
+        If enrichment information has been loaded before (via read_enrichment), this function creates
+        a cytoscape-compatible network into the output folder.
 
         *Keyword arguments:*
 
-          - genes -- Gene set.
-          - gene_mapping_search -- Gene mapping.
-          - out_path -- Output path.
           - targets -- Gene targets.
+          - out_path -- Output path.
           - threshold -- Threshold for motif acceptance.
         """
-        # getting mapping of genes to motifs
-        [_, genes_motifs, _] = self.filter_by_genes(genes, gene_mapping_search)
 
-        f = open(out_path + "/mapping_tf_genes.txt", "w")
-        motifs_all = {}
-        for gene in genes_motifs.keys():
-            motifs = genes_motifs[gene]
-            for m in motifs:
-                try:
-                    g = motifs_all[m]
-                    if gene not in g:
-                        motifs_all[m].append(gene)
-                except:
-                    motifs_all[m] = [gene]
-                f.write(gene + "\t" + m + "\n")
-        f.close()
+        self.write_enrichment(out_path + "/pvalue_table_" + str(threshold * 100) + ".txt", threshold)
 
-        self.write_enrichment_table(threshold, out_path + "/pvalue_table_" + str(threshold * 100) + ".txt", motifs_all)
+        out_path = npath(out_path)
+
+        _, genes_motifs = self.get_mappings(key_type="gene_names")
 
         net_pairs = {}
         net_tfs = {}
         all_pairs = set()
         all_tfs = set()
         all_genes = set()
-        if not targets:
-            filter_targets = False
-        else:
+
+        if targets:
             filter_targets = True
-            targets = [g.upper() for g in targets.genes]
+        else:
+            filter_targets = False
 
         # using genes to motif mapping to get network in all conditions
-        for net_name in self.networks.keys():
+        for net_name in self.networks:
             net = self.networks[net_name]
             pairs = set()
             tfs = set()
             net_pairs[net_name] = pairs
             net_tfs[net_name] = tfs
-            for tf in genes_motifs.keys():
+            for tf in genes_motifs:
                 motifs = genes_motifs[tf]
                 for m in motifs:
-                    try:
+                    if m in net:
                         for target in net[m]:
                             if not filter_targets or (target in targets):
                                 pairs.add((tf, target))
                                 tfs.add(tf)
                                 all_genes.add(tf)
                                 all_genes.add(target)
-                    except Exception as e:
-                        print("motif not in network: " + str(m) + " " + str(tf) + " " + str(e))
+                    else:
+                        print("motif not in network: " + m + " " + str(tf) + " ")
+
             all_pairs = all_pairs.union(pairs)
             all_tfs = all_tfs.union(tfs)
 
         # printing out network
-        for net_name in net_pairs.keys():
+        for net_name, pairs_aux in net_pairs.items():
             f = open(out_path + "/" + net_name + "_targets.txt", "w")
-            pairs_aux = net_pairs[net_name]
+
             for pair in all_pairs:
                 # check if pair is active in the network
                 if pair in pairs_aux:
                     f.write(pair[0] + "\t" + pair[1] + "\tactive\n")
                 else:
                     f.write(pair[0] + "\t" + pair[1] + "\tinactive\n")
+
             f.close()
+
             f = open(out_path + "/" + net_name + "_genes.txt", "w")
+
             for gene in all_genes:
                 # check if gene is tf active in network
                 if gene in net_tfs[net_name]:
@@ -357,4 +384,5 @@ class MotifSet:
                     f.write(gene + "\ttf_inactive\n")
                 else:
                     f.write(gene + "\ttarget\n")
+
             f.close()
