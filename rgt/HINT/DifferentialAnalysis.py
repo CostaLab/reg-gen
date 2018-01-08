@@ -60,7 +60,6 @@ def diff_analysis_args(parser):
     parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.001,
                         help="The false discovery rate. DEFAULT: 0.001")
 
-
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
                         help="Path where the output bias table files will be written. DEFAULT: current directory")
@@ -68,7 +67,7 @@ def diff_analysis_args(parser):
                         help="The prefix for results files. DEFAULT: differential")
     parser.add_argument("--standardize", action="store_true", default=False,
                         help="If set, the signal will be rescaled to (0, 1) for plotting.")
-    parser.add_argument("--output-profiles",  default=False, action='store_true',
+    parser.add_argument("--output-profiles", default=False, action='store_true',
                         help="If set, the footprint profiles will be writen into a text, in which each row is a "
                              "specific instance of the given motif. DEFAULT: False")
 
@@ -216,6 +215,7 @@ def diff_analysis_run(args):
 
     output_results(args, ps_tc_results_by_tf)
 
+
 #    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
 #    scatter_plot(args, stat_results_by_tf)
 #    output_stat_results(args, stat_results_by_tf)
@@ -313,13 +313,15 @@ def get_ps_tc_results(args, signal_list_1, signal_list_2, motif_len):
     signal_1 = np.zeros(args.window_size)
     signal_2 = np.zeros(args.window_size)
 
+    num_fp = len(signal_list_1)
+
     for signal in signal_list_1:
         signal_1 = np.add(signal_1, np.array(signal))
     for signal in signal_list_2:
         signal_2 = np.add(signal_2, np.array(signal))
 
-    signal_1 = signal_1 / args.factor1
-    signal_2 = signal_2 / args.factor2
+    signal_1 = (signal_1 / args.factor1) / num_fp
+    signal_2 = (signal_2 / args.factor2) / num_fp
 
     signal_half_len = len(signal_1) / 2
 
@@ -410,16 +412,16 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
         mean_signal_1 = standard(mean_signal_1)
         mean_signal_2 = standard(mean_signal_2)
 
-    output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
-
     # Output PWM and create logo
-    pwm_fname = os.path.join(output_location, "{}.pwm".format(mpbs_name))
+    pwm_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+                             "{}.pwm".format(mpbs_name))
     pwm_file = open(pwm_fname, "w")
     for e in ["A", "C", "G", "T"]:
         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
     pwm_file.close()
 
-    logo_fname = os.path.join(output_location, "{}.logo.eps".format(mpbs_name))
+    logo_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+                              "{}.logo.eps".format(mpbs_name))
     pwm = motifs.read(open(pwm_fname), "pfm")
     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -454,12 +456,14 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 70))
 
-    figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
+    figure_name = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+                               "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
     # Creating canvas and printing eps / pdf with merged results
-    output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
+    output_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+                                "{}.eps".format(mpbs_name))
     c = pyx.canvas.canvas()
     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
     c.insert(pyx.epsfile.epsfile(0.45, 0.8, logo_fname, width=16.5, height=3))
@@ -481,7 +485,7 @@ def scatter_plot(args, stat_results_by_tf):
         tc_diff.append(stat_results_by_tf[mpbs_name][-2])
         ps_diff.append(stat_results_by_tf[mpbs_name][2])
 
-    fig, ax = plt.subplots(figsize=(12,12))
+    fig, ax = plt.subplots(figsize=(12, 12))
     ax.scatter(tc_diff, ps_diff, alpha=0.0)
     for i, mpbs_name in enumerate(mpbs_names):
         if stat_results_by_tf[mpbs_name][-1] < args.fdr:
@@ -494,7 +498,8 @@ def scatter_plot(args, stat_results_by_tf):
     ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
 
     ax.set_xlabel("TC DIFF of {} - {}".format(args.condition1, args.condition2), fontweight='bold')
-    ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold', rotation=90)
+    ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold',
+                  rotation=90)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
     fig.savefig(figure_name, format="pdf", dpi=300)
