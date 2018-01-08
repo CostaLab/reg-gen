@@ -46,9 +46,9 @@ def main():
     Enrichment.options(enrichment)
     enrichment.set_defaults(func=Enrichment.main)
 
-    mapper = subparsers.add_parser('mapper', help='map genes names to TF IDs and viceversa')
-    Mapper.options(mapper)
-    mapper.set_defaults(func=Mapper.main)
+    # mapper = subparsers.add_parser('mapper', help='map genes names to TF IDs and viceversa')
+    # Mapper.options(mapper)
+    # mapper.set_defaults(func=Mapper.main)
 
     if len(sys.argv) == 1:
         parser.print_help()
