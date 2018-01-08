@@ -2,8 +2,11 @@
 # Libraries
 ###################################################################################################
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
+from __future__ import division
+
+# Python
 import os
 import sys
 from glob import glob
@@ -11,13 +14,13 @@ from shutil import copy
 import time
 
 # Internal
-from rgt.Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
-from Statistics import multiple_test_correction, get_fisher_dict
-from Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
+from ..Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from .Statistics import multiple_test_correction, get_fisher_dict
+from .Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
 
 # External
 from fisher import pvalue
@@ -27,7 +30,7 @@ from fisher import pvalue
 # Functions
 ###################################################################################################
 
-def enrichment_options(parser):
+def options(parser):
     parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
@@ -40,9 +43,13 @@ def enrichment_options(parser):
                         help="If an experimental matrix is provided, the input arguments will be ignored.")
     parser.add_argument("--multiple-test-alpha", type=float, metavar="FLOAT", default=0.05,
                         help="Alpha value for multiple test.")
+    parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
+                        help="New 'motif DB' folders to use instead of the ones within "
+                             "the RGTDATA folder. Each folder must contain PWM files.")
 
     group = parser.add_argument_group("Promoter-regions enrichment",
-                                      "Can only work through the experimental matrix. See documentation.")
+                                      "Used both for gene set via experimental matrix (see documentation), "
+                                      "and for reporting the gene names associated to each motif.")
     group.add_argument("--promoter-length", type=int, metavar="INT", default=1000,
                        help="Length of the promoter region (in bp) to be extracted from each gene.")
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
@@ -71,7 +78,7 @@ def enrichment_options(parser):
                         help='BED files to be enriched against the background.')
 
 
-def main_enrichment(args):
+def main(args):
     """
     Performs motif enrichment.
     """
@@ -114,13 +121,6 @@ def main_enrichment(args):
         output_location = args.output_location
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
-
-    # if the output folder doesn't exist, we create it
-    try:
-        if not os.path.isdir(output_location):
-            os.makedirs(output_location)
-    except Exception:
-        err.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Matching folder
     if args.matching_location:
@@ -177,8 +177,12 @@ def main_enrichment(args):
 
     # Default motif data
     motif_data = MotifData()
-
-    print(">> motif repositories:", motif_data.repositories_list)
+    if args.motif_dbs:
+        # must overwrite the default DBs
+        motif_data.set_custom(args.motif_dbs)
+        print(">> custom motif repositories:", motif_data.repositories_list)
+    else:
+        print(">> motif repositories:", motif_data.repositories_list)
 
     # Reading motif file
     selected_motifs = []
@@ -223,6 +227,8 @@ def main_enrichment(args):
 
             del exp_matrix
 
+            print(">> experimental matrix loaded")
+
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
     elif input_files:
@@ -231,12 +237,11 @@ def main_enrichment(args):
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
+            regions.read(os.path.abspath(input_filename))
 
-            try:
-                regions.read(os.path.abspath(input_filename))
-            except:
-                err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
+
+        print(">> input regions BED files loaded")
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
@@ -331,6 +336,14 @@ def main_enrichment(args):
     ###################################################################################################
     # Background Statistics
     ###################################################################################################
+
+    # if the output folder doesn't exist, we create it
+    # (we do this here to not create the output folder when the program fails early)
+    try:
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("ME_OUT_FOLDER_CREATION")
 
     print()
 
@@ -581,7 +594,7 @@ def main_enrichment(args):
                     logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
-                    except:
+                    except Exception:
                         os.mkdir(logo_dir_path)
 
                 # Printing statistics html - Creating data table
@@ -611,8 +624,8 @@ def main_enrichment(args):
                 fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
-                                                                     "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
-                                 "</b>",
+                                                                     "region <b>Gene Test*</b> using genes from <b>"
+                                 + curr_input.gene_set.name + "</b>",
                                  align="center", bold=False)
                 html.add_heading("* This gene test considered regions associated to the given "
                                  "gene list against regions not associated to the gene list",
@@ -722,7 +735,7 @@ def main_enrichment(args):
                 logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
-                except:
+                except Exception:
                     os.mkdir(logo_dir_path)
 
             # Printing statistics html - Creating data table
