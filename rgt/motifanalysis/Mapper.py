@@ -19,7 +19,7 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.AnnotationSet import AnnotationSet
-from Motif import Motif, Thresholds
+from Motif import Motif, ThresholdTable
 from Util import bed_to_bb
 
 # External
@@ -46,6 +46,7 @@ def options(parser):
                        help="Motif IDs will be converted to gene IDs")
     group.add_argument("--gene-to-motifs", action="store_true",
                        help="Gene IDs will be converted to motif IDs")
+
     parser.add_argument("--motif-db", choices=('jaspar_vertebrates', 'hocomoco',
                                                'uniprobe_primary', 'uniprobe_secondary'))
     parser.add_argument("--gene-db", choices=('ensembl', 'names'))

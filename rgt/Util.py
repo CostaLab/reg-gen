@@ -10,9 +10,27 @@ from __future__ import print_function
 import os
 import sys
 import shutil
+import re
 from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
+
+
+def strmatch(pattern, string, search="exact", case_insensitive=True):
+    valid_types = ["exact", "inexact", "regex"]
+
+    if case_insensitive:
+        pattern = pattern.lower()
+        string = string.lower()
+
+    if search == "exact":
+        return pattern == string
+    elif search == "inexact":
+        return pattern in string
+    elif search == "regex":
+        return re.search(pattern, string)
+    else:
+        raise ValueError("search must be one of these: {}".format(valid_types))
 
 
 def cmp(a, b):
