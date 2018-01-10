@@ -427,8 +427,8 @@ class Lineplot:
             ticklabelsize = w * 1.5
         else:
             ticklabelsize = w * 3
-        tw = len(self.data.values()[0].keys()) * w
-        th = len(self.data.keys()) * (h * 0.8)
+        tw = len(self.data.values()[0].values()[0].keys()) * w
+        th = len(self.data.values()[0].keys()) * (h * 0.8)
 
         for g in self.group_tags:
 

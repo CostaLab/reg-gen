@@ -1553,19 +1553,19 @@ if __name__ == "__main__":
                                 else:
                                     stat = l[5].split(";")
                                 list_p.append(float(stat[2]))
-                                c1 = [float(x) for x in stat[0].split(":")]
+                                c1 = [1 + float(x) for x in stat[0].split(":")]
                                 c1 = sum(c1) / len(c1)
                                 count1 = count1 + c1
-                                c2 = [float(x) for x in stat[1].split(":")]
+                                c2 = [1 + float(x) for x in stat[1].split(":")]
                                 c2 = sum(c2) / len(c2)
                                 count2 = count2 + c2
                                 # print(stat[1].split(":"))
                             # print(list_data)
-                            count1 = count1 / len(list_data)
-                            count2 = count2 / len(list_data)
+                            # count1 = count1 / len(list_data)
+                            # count2 = count2 / len(list_data)
                             # print([count1, count2])
                             fc = count2 / count1
-                            p = min(list_p)
+                            p = max(list_p)
 
                             new_d = "\t".join([str(fc), str(current_start), str(current_end),
                                                "0,0,0", "0", ";".join([str(int(count1)), str(int(count2)), str(p)])])
@@ -1574,17 +1574,19 @@ if __name__ == "__main__":
                                                        initial=current_start,
                                                        final=current_end,
                                                        data=new_d)
-
                             bed4.add(new_region)
+                        else:
+                            bed4.add(region)
                             # sys.exit()
 
                         current_chrom = region.chrom
                         current_start = region.initial
                         current_end = region.final
                         current_strand = region.orientation
-                        current_data = [region.data]
+                        list_data = [region.data]
             else:
                 bed4 = regions
+
             return bed4
 
         def output_table(regions, args):
@@ -1657,6 +1659,8 @@ if __name__ == "__main__":
         # Merging the close peaks
         m_gain_peaks = merging_peaks(gain_peaks, args.m)
         m_lost_peaks = merging_peaks(lose_peaks, args.m)
+        # m_gain_peaks = gain_peaks
+        # m_lost_peaks = lose_peaks
         # Gene Association
         if args.rename and args.g:
             m_gain_peaks = m_gain_peaks.gene_association(organism=args.g, strand_specific=False)
