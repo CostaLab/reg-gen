@@ -23,7 +23,7 @@ from ..Util import Html
 
 class BedProfile:
     def __init__(self, input_path, organism, args):
-
+        self.testing = args.test
         if os.path.isdir(input_path):
             self.beds = []
             self.bednames = []
@@ -33,6 +33,8 @@ class BedProfile:
                         name = os.path.basename(f).replace(".bed", "")
                         bed = GenomicRegionSet(name)
                         bed.read(os.path.join(dirpath, f))
+                        if args.test:
+                            bed.sequences = bed.sequences[0:10]
                         bed.sort()
                         self.beds.append(bed)
                         self.bednames.append(name)
@@ -46,6 +48,8 @@ class BedProfile:
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
                 bed.read(input_path)
+                if args.test:
+                    bed.sequences = bed.sequences[0:10]
                 bed.sort()
                 self.beds = [bed]
                 self.bednames = [name]
@@ -93,6 +97,11 @@ class BedProfile:
             self.table_h[self.bednames[i]].append("strand")
             self.tables[self.bednames[i]].append([r.orientation if r.orientation else "." for r in bed])
             self.count_table[bed.name] = {}
+        if args.coverage:
+            self.coverage = True
+        else:
+            self.coverage = False
+        self.background = []
 
     def cal_statistics(self):
         for i, bed in enumerate(self.beds):
@@ -263,6 +272,8 @@ class BedProfile:
                     name = os.path.basename(f).replace(".bed", "")
                     bed = GenomicRegionSet(name)
                     bed.read(os.path.join(ref_dir, f))
+                    if self.testing:
+                        bed.sequences = bed.sequences[0:10]
                     # bed.merge()
                     refs.append(bed)
                     refs_names.append(name)
@@ -270,6 +281,8 @@ class BedProfile:
             name = os.path.basename(ref_dir).replace(".bed", "")
             bed = GenomicRegionSet(name)
             bed.read(ref_dir)
+            if self.testing:
+                bed.sequences = bed.sequences[0:10]
             # bed.merge()
             refs.append(bed)
             refs_names.append(name)
@@ -284,6 +297,7 @@ class BedProfile:
         self.count_tableh = self.count_tableh + refs_names
         if other:
             refs_names.append("Else")
+            self.count_tableh = self.count_tableh + [tag+"_else"]
         if strand:
             ref_plus = []
             ref_minus = []
@@ -292,8 +306,25 @@ class BedProfile:
                 ref_minus.append(ref.filter_strand(strand="-"))
         if background:
             # refs_names.append("Background")
-            background_counts = [ len(ref) for ref in refs ]
-            background_prop = [ float(100) * b/sum(background_counts) for b in background_counts]
+            if self.coverage:
+                # background_counts = [len(ref) for ref in refs]
+                background_cov = [ref.total_coverage() for ref in refs]
+                background_prop = [float(100) * b / sum(background_cov) for b in background_cov]
+                if other:
+                    b = background_cov + [0]
+                else:
+                    b = background_cov
+                self.background = self.background + b
+            else:
+                background_counts = [ len(ref) for ref in refs ]
+                background_prop = [ float(100) * b/sum(background_counts) for b in background_counts]
+                if other:
+                    b = background_counts + [0]
+                else:
+                    b = background_counts
+                self.background = self.background + b
+        else:
+            self.background = self.background + [0] * len(refs)
         # Counting through all references
         overlapping_counts = []
         for i, bed in enumerate(self.beds):
@@ -302,15 +333,30 @@ class BedProfile:
                 bed_plus = bed.filter_strand(strand="+")
                 bed_minus = bed.filter_strand(strand="-")
             for j, ref in enumerate(refs):
+                # print([bed.name, ref.name])
                 if strand:
-                    cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
+                    if self.coverage:
+                        cc = bed_plus.intersect(ref_plus[j]).total_coverage() + \
+                             bed_minus.intersect(ref_minus[j]).total_coverage()
+                    else:
+                        cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
                 else:
-                    cc = bed.count_by_regionset(ref)
+                    if self.coverage:
+                        cc = bed.intersect(ref).total_coverage()
+                    else:
+                        cc = bed.count_by_regionset(ref)
                 c.append(cc)
                 self.count_table[bed.name][ref.name] = cc
 
             if other:
-                c.append(max(0, len(bed) - sum(c)))
+                if self.coverage:
+                    c.append(bed.total_coverage() - sum(c))
+                else:
+                    # c.append(max(0, len(bed) - sum(c)))
+                    remain_regions = bed.subtract(ref, whole_region=False)
+                    c.append(len(remain_regions))
+                for j, ref in enumerate(refs):
+                    self.count_table[bed.name][tag+"_else"] = c[-1]
             overlapping_counts.append(c)
         # Tables
         for i, bed in enumerate(self.beds):
@@ -442,5 +488,10 @@ class BedProfile:
                         print("\t".join(line), file=f)
         with open(os.path.join(target_dir, "count_table.txt"), "w") as f:
             print("\t".join(["Counts"] + self.count_tableh), file=f)
+            t = []
             for bed in self.bednames:
-                print("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh]), file=f)
+                t.append("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh]))
+            if self.background:
+                t.append("\t".join(["Background", "na"] + [str(v) for v in self.background]))
+            for tt in t:
+                print(tt, file=f)

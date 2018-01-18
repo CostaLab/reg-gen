@@ -1940,8 +1940,8 @@ class GenomicRegionSet:
         """
         g = GenomicRegionSet("complement_" + self.name)
         g.get_genome_data(organism, chrom_X, chrom_Y, chrom_M)
-        g.subtract(self)
-        return g
+        h = g.subtract(self)
+        return h
 
     def count_by_region(self, region):
         """Return the number of intersection regions with the given GenomicRegion.
