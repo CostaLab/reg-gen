@@ -507,7 +507,7 @@ def scatter_plot(args, stat_results_by_tf):
 
 def output_results(args, ps_tc_results_by_tf):
     mpbs_name_list = ps_tc_results_by_tf.keys()
-    header = ["Motif",
+    header = ["Motif", "Num",
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
