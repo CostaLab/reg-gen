@@ -5,22 +5,21 @@ import os
 import numpy as np
 from pysam import Samfile, Fastafile
 from Bio import motifs
-
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
-import pyx
-# Internal
-from ..Util import GenomeData
-from signalProcessing import GenomicSignal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from biasTable import BiasTable
-from ..Util import AuxiliaryFunctions
 from scipy.signal import savgol_filter
 from scipy.stats import scoreatpercentile
 from argparse import SUPPRESS
+import pyx
+
+# Internal
+from rgt.Util import GenomeData, AuxiliaryFunctions
+from rgt.HINT.signalProcessing import GenomicSignal
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.HINT.biasTable import BiasTable
+
+
 
 
 def plotting_args(parser):

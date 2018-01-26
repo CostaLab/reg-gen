@@ -3,13 +3,13 @@ import numpy as np
 from collections import Counter
 from sklearn.externals import joblib
 from scipy import linalg
+from argparse import SUPPRESS
 
 # Internal
-from ..Util import GenomeData
-from signalProcessing import GenomicSignal
-from hmm import HMM, SemiSupervisedGaussianHMM
-from biasTable import BiasTable
-from argparse import SUPPRESS
+from rgt.Util import GenomeData
+from rgt.HINT.signalProcessing import GenomicSignal
+from rgt.HINT.hmm import HMM, SemiSupervisedGaussianHMM
+from rgt.HINT.biasTable import BiasTable
 
 """
 Train a hidden Markov model (HMM) based on the annotation data

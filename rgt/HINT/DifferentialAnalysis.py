@@ -13,9 +13,9 @@ from scipy import stats
 from argparse import SUPPRESS
 
 # Internal
-from ..Util import ErrorHandler, AuxiliaryFunctions, GenomeData
+from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet
-from biasTable import BiasTable
+from rgt.HINT.biasTable import BiasTable
 
 """
 Perform differential footprints analysis based on the prediction.

@@ -1,21 +1,16 @@
 ###################################################################################################
 # Libraries
 ###################################################################################################
-
-# Python
-
 from math import log, ceil, floor, isnan
-
-# External
 import numpy as np
 from numpy import exp, array, abs, int, mat, linalg, convolve, nan_to_num
 from pysam import Samfile, Fastafile
 from pysam import __version__ as ps_version
 from scipy.stats import scoreatpercentile
 
-from .pileupRegion import PileupRegion
 # Internal
-from ..Util import AuxiliaryFunctions
+from rgt.Util import AuxiliaryFunctions
+from rgt.HINT.pileupRegion import PileupRegion
 
 """
 Processes DNase-seq and histone modification signal for
