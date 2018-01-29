@@ -236,6 +236,20 @@ def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_
     p2_w = p2 + (window / 2)
     p1_wk = p1_w - int(floor(k_nb / 2.))
     p2_wk = p2_w + int(ceil(k_nb / 2.))
+    if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+        # Return raw counts
+        bc_signal = [0.0] * (p2 - p1)
+        for read in self.bam.fetch(chrName, p1, p2):
+            if not read.is_reverse:
+                cut_site = read.pos + forward_shift
+                if p1 <= cut_site < p2:
+                    bc_signal[cut_site - p1] += 1.0
+            else:
+                cut_site = read.aend + reverse_shift - 1
+                if p1 <= cut_site < p2:
+                    bc_signal[cut_site - p1] += 1.0
+
+        return bc_signal
 
     # Raw counts
     nf = [0.0] * (p2_w - p1_w)

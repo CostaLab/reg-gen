@@ -332,7 +332,21 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+            # Return raw counts
+            nf = [0.0] * (p2 - p1)
+            nr = [0.0] * (p2 - p1)
+            for read in self.bam.fetch(chrName, p1, p2):
+                if not read.is_reverse:
+                    cut_site = read.pos + forward_shift
+                    if p1 <= cut_site < p2:
+                        nf[cut_site - p1] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if p1 <= cut_site < p2:
+                        nr[cut_site - p1] += 1.0
+
+            return nf, nr
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
@@ -425,7 +439,20 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+            # Return raw counts
+            signal = [0.0] * (p2 - p1)
+            for read in self.bam.fetch(chrName, p1, p2):
+                if not read.is_reverse:
+                    cut_site = read.pos + forward_shift
+                    if p1 <= cut_site < p2:
+                        signal[cut_site - p1] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if p1 <= cut_site < p2:
+                        signal[cut_site - p1] += 1.0
+
+            return signal
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
