@@ -4,10 +4,10 @@ import numpy as np
 from pysam import Samfile, Fastafile
 
 # Internal
-from ..Util import GenomeData, HmmData, ErrorHandler
-from ..GenomicRegionSet import GenomicRegionSet
-from biasTable import BiasTable
-from signalProcessing import GenomicSignal
+from rgt.Util import GenomeData, HmmData, ErrorHandler
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.HINT.biasTable import BiasTable
+from rgt.HINT.signalProcessing import GenomicSignal
 
 
 def tracks_args(parser):
