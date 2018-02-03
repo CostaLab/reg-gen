@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     ############### BED merge  ############################################
     # python rgt-tools.py
-    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions by name")
+    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions")
     parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedmerge.add_argument('-s', action="store_true", help="Strand specific")
@@ -859,7 +859,7 @@ if __name__ == "__main__":
                     else:
                         l = line.strip().split()
                         ranking.append([l[0],int(l[1]),int(l[2])])
-
+        # print(len(regions))
         for i, r in enumerate(regions):
             if args.order:
                 for j, reg in enumerate(ranking):
@@ -888,7 +888,7 @@ if __name__ == "__main__":
                                          ss=exon.initial, es=exon.final, 
                                          strand=exon.orientation, 
                                          reverse=True, complement=True)
-                    ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                    ss = [s[k:k+70] for k in range(0, len(s), 70)]
                     writelines += ss
 
                 with open(os.path.join(args.o, name + ".fa"), "w") as f:
@@ -898,9 +898,10 @@ if __name__ == "__main__":
 
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
-                ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                ss = [s[k:k+70] for k in range(0, len(s), 70)]
 
                 if ".fa" not in args.o:
+                    # print(i)
                     with open(os.path.join(args.o, name + ".fa"), "w") as f:
                         if not r.orientation: r.orientation = "."
                         if not args.score:

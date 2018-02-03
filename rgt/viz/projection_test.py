@@ -25,14 +25,14 @@ class Projection:
     def __init__(self, reference_path, query_path):
         # Reference
         self.rEM = ExperimentalMatrix()
-        self.rEM.read(reference_path)
-        self.rEM.remove_empty_regionset()
+        self.rEM.read(reference_path,load_bed=False)
+        # self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         # Query
         self.qEM = ExperimentalMatrix()
         self.qEM.read(query_path)
-        self.qEM.remove_empty_regionset()
+        # self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
@@ -69,11 +69,11 @@ class Projection:
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
-            rlist = [r.trim_by(background=bg) for r in self.groupedreference[ty]]
-            self.groupedreference[ty] = rlist
-
-            qlist = [q.trim_by(background=bg) for q in self.groupedquery[ty]]
-            self.groupedquery[ty] = qlist
+            # rlist = [r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            # self.groupedreference[ty] = rlist
+            #
+            # qlist = [q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            # self.groupedquery[ty] = qlist
 
     def projection_test(self, organism):
         self.bglist = OrderedDict()
@@ -104,11 +104,14 @@ class Projection:
                 self.interq_list[ty][r.name] = OrderedDict()
                 self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
-                    # print(r.name, q.name, sep="\t")
+                    # print([ty, r.name, q.name])
                     if r.name == q.name:
                         continue
                     else:
-                        bg, ratio, p, interq = r.projection_test(q, organism, extra=True, background=bgset)
+                        rr = self.rEM.get_regionset(name=r.name)
+                        # print([len(rr), len(q)])
+                        print(".", end="")
+                        bg, ratio, p, interq = rr.projection_test(q, organism, extra=True, background=bgset)
                         self.bglist[ty][r.name][q.name] = bg
                         self.qlist[ty][r.name][q.name] = ratio
                         self.plist[ty][r.name][q.name] = p
