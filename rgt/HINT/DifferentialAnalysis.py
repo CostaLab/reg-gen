@@ -18,7 +18,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
 
 """
-Perform differential footprints analysis based on the prediction.
+Perform differential footprints analysis based on the prediction of transcription factor binding sites.
 
 Authors: Eduardo G. Gusmao, Zhijian Li
 """
@@ -59,6 +59,8 @@ def diff_analysis_args(parser):
                         help="The name of condition2. DEFAULT: condition2")
     parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.05,
                         help="The false discovery rate. DEFAULT: 0.05")
+    parser.add_argument("--bias-correction", action="store_true", default=False,
+                        help="If set, all analysis will be based on bias correction signal. DEFAULT: False")
 
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
@@ -70,6 +72,62 @@ def diff_analysis_args(parser):
     parser.add_argument("--output-profiles", default=False, action='store_true',
                         help="If set, the footprint profiles will be writen into a text, in which each row is a "
                              "specific instance of the given motif. DEFAULT: False")
+
+
+def get_raw_signal(args, mpbs_name):
+    mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
+    mpbs1.read(args.mpbs_file1)
+
+    mpbs2 = GenomicRegionSet("Motif Predicted Binding Sites of Condition2")
+    mpbs2.read(args.mpbs_file2)
+
+    mpbs = mpbs1.combine(mpbs2, output=True)
+    mpbs.sort()
+
+    bam1 = Samfile(args.reads_file1, "rb")
+    bam2 = Samfile(args.reads_file2, "rb")
+
+    genome_data = GenomeData(args.organism)
+    fasta = Fastafile(genome_data.get_genome())
+
+    signal_1 = np.zeros(args.window_size)
+    signal_2 = np.zeros(args.window_size)
+    motif_len = None
+    pwm = dict()
+
+    mpbs_regions = mpbs.by_names([mpbs_name])
+
+    for region in mpbs_regions:
+        if motif_len is None:
+            motif_len = region.final - region.initial
+
+        mid = (region.final + region.initial) / 2
+        p1 = max(mid - args.window_size / 2, 0)
+        p2 = mid + args.window_size / 2
+
+        # Fetch raw signal
+        for read in bam1.fetch(region.chrom, p1, p2):
+            if not read.is_reverse:
+                cut_site = read.pos + args.forward_shift
+                if p1 <= cut_site < p2:
+                    signal_1[cut_site - p1] += 1.0
+            else:
+                cut_site = read.aend + args.reverse_shift - 1
+                if p1 <= cut_site < p2:
+                    signal_1[cut_site - p1] += 1.0
+
+        for read in bam2.fetch(region.chrom, p1, p2):
+            if not read.is_reverse:
+                cut_site = read.pos + args.forward_shift
+                if p1 <= cut_site < p2:
+                    signal_2[cut_site - p1] += 1.0
+            else:
+                cut_site = read.aend + args.reverse_shift - 1
+                if p1 <= cut_site < p2:
+                    signal_2[cut_site - p1] += 1.0
+        update_pwm(pwm, fasta, region, p1, p2)
+
+    return signal_1, signal_2, motif_len, pwm
 
 
 def diff_analysis_run(args):
@@ -336,8 +394,7 @@ def get_ps_tc_results(args, signal_list_1, signal_list_2, motif_len):
     signal_1 = (signal_1 / args.factor1) / num_fp
     signal_2 = (signal_2 / args.factor2) / num_fp
 
-    signal_1 = standard(signal_1)
-    signal_2 = standard(signal_2)
+    signal_1, signal_2 = standard(signal_1, signal_2)
 
     signal_half_len = len(signal_1) / 2
 
@@ -415,7 +472,6 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
 
 def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
     # compute the average signal
-    mpbs_filename = mpbs_name.replace("(", ".").replace("(", "")
     mean_signal_1 = np.zeros(args.window_size)
     mean_signal_2 = np.zeros(args.window_size)
     for i in range(num_fp):
@@ -426,19 +482,18 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     mean_signal_2 = (mean_signal_2 / num_fp) / args.factor2
 
     #if args.standardize:
-    mean_signal_1 = standard(mean_signal_1)
-    mean_signal_2 = standard(mean_signal_2)
+    mean_signal_1,  mean_signal_2 = standard(mean_signal_1, mean_signal_2)
 
     # Output PWM and create logo
     pwm_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
-                             "{}.pwm".format(mpbs_filename))
+                             "{}.pwm".format(mpbs_name))
     pwm_file = open(pwm_fname, "w")
     for e in ["A", "C", "G", "T"]:
         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
     pwm_file.close()
 
     logo_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
-                              "{}.logo.eps".format(mpbs_filename))
+                              "{}.logo.eps".format(mpbs_name))
     pwm = motifs.read(open(pwm_fname), "pfm")
     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -474,13 +529,13 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     ax.spines['bottom'].set_position(('outward', 70))
 
     figure_name = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
-                               "{}.line.eps".format(mpbs_filename))
+                               "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
     # Creating canvas and printing eps / pdf with merged results
     output_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
-                                "{}.eps".format(mpbs_filename))
+                                "{}.eps".format(mpbs_name))
 
     c = pyx.canvas.canvas()
     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
@@ -610,13 +665,13 @@ def get_stat_results(ps_tc_results_by_tf):
     return ps_tc_results_by_tf
 
 
-def standard(vector):
-    max_ = max(vector)
-    min_ = min(vector)
+def standard(vector1, vector2):
+    max_ = max(max(vector1), max(vector2))
+    min_ = min(min(vector1), min(vector2))
     if max_ > min_:
-        return [(e - min_) / (max_ - min_) for e in vector]
+        return [(e - min_) / (max_ - min_) for e in vector1], [(e - min_) / (max_ - min_) for e in vector2]
     else:
-        return vector
+        return vector1, vector2
 
 
 def adjust_p_values(p_values):
