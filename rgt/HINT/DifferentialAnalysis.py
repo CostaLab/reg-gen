@@ -12,8 +12,10 @@ import pyx
 from scipy.stats.mvn import mvnun
 from argparse import SUPPRESS
 
+from multiprocessing import Pool, cpu_count
+
 # Internal
-from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData
+from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData, HmmData
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
 
@@ -39,10 +41,6 @@ def diff_analysis_args(parser):
                         help="The BAM file containing the DNase-seq or ATAC-seq reads for condition 1. DEFAULT: None")
     parser.add_argument("--reads-file2", type=str, metavar="FILE", default=None,
                         help="The BAM file containing the DNase-seq or ATAC-seq reads for condition 2. DEFAULT: None")
-    parser.add_argument("--bias-table1", type=str, metavar="FILE1_F,FILE1_R", default=None,
-                        help="Bias table files for condition 1. DEFAULT: None")
-    parser.add_argument("--bias-table2", type=str, metavar="FILE2_F,FILE2_R", default=None,
-                        help="Bias table files for condition 2. DEFAULT: None")
 
     parser.add_argument("--window-size", type=int, metavar="INT", default=200,
                         help="The window size for differential analysis. DEFAULT: 200")
@@ -53,14 +51,19 @@ def diff_analysis_args(parser):
 
     parser.add_argument("--forward-shift", type=int, metavar="INT", default=5, help=SUPPRESS)
     parser.add_argument("--reverse-shift", type=int, metavar="INT", default=-4, help=SUPPRESS)
+    parser.add_argument("--bias-table1", type=str, metavar="FILE1_F,FILE1_R", default=None, help=SUPPRESS)
+    parser.add_argument("--bias-table2", type=str, metavar="FILE2_F,FILE2_R", default=None, help=SUPPRESS)
+
     parser.add_argument("--condition1", type=str, metavar="STRING", default="condition1",
                         help="The name of condition1. DEFAULT: condition1")
     parser.add_argument("--condition2", type=str, metavar="STRING", default="condition1",
                         help="The name of condition2. DEFAULT: condition2")
     parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.05,
                         help="The false discovery rate. DEFAULT: 0.05")
-    parser.add_argument("--bias-correction", action="store_true", default=False,
-                        help="If set, all analysis will be based on bias correction signal. DEFAULT: False")
+    parser.add_argument("--bc", action="store_true", default=False,
+                        help="If set, all analysis will be based on bias corrected signal. DEFAULT: False")
+    parser.add_argument("--nc", type=int, metavar="INT", default=cpu_count(),
+                        help="The number of cores. DEFAULT: 1")
 
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
@@ -74,57 +77,118 @@ def diff_analysis_args(parser):
                              "specific instance of the given motif. DEFAULT: False")
 
 
-def get_raw_signal(args, mpbs_name):
+def get_raw_signal(arguments):
+    (mpbs_name, mpbs_file1, mpbs_file2, reads_file1, reads_file2, organism,
+     window_size, forward_shift, reverse_shift) = arguments
+
     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
-    mpbs1.read(args.mpbs_file1)
+    mpbs1.read(mpbs_file1)
 
     mpbs2 = GenomicRegionSet("Motif Predicted Binding Sites of Condition2")
-    mpbs2.read(args.mpbs_file2)
+    mpbs2.read(mpbs_file2)
 
     mpbs = mpbs1.combine(mpbs2, output=True)
     mpbs.sort()
 
-    bam1 = Samfile(args.reads_file1, "rb")
-    bam2 = Samfile(args.reads_file2, "rb")
+    bam1 = Samfile(reads_file1, "rb")
+    bam2 = Samfile(reads_file2, "rb")
 
-    genome_data = GenomeData(args.organism)
+    genome_data = GenomeData(organism)
     fasta = Fastafile(genome_data.get_genome())
 
-    signal_1 = np.zeros(args.window_size)
-    signal_2 = np.zeros(args.window_size)
+    signal_1 = np.zeros(window_size)
+    signal_2 = np.zeros(window_size)
     motif_len = None
-    pwm = dict()
+    pwm = dict([("A", [0.0] * window_size), ("C", [0.0] * window_size),
+                ("G", [0.0] * window_size), ("T", [0.0] * window_size),
+                ("N", [0.0] * window_size)])
 
     mpbs_regions = mpbs.by_names([mpbs_name])
+    num_motif = len(mpbs_regions)
 
     for region in mpbs_regions:
         if motif_len is None:
             motif_len = region.final - region.initial
 
         mid = (region.final + region.initial) / 2
-        p1 = max(mid - args.window_size / 2, 0)
-        p2 = mid + args.window_size / 2
+        p1 = max(mid - window_size / 2, 0)
+        p2 = mid + window_size / 2
 
         # Fetch raw signal
         for read in bam1.fetch(region.chrom, p1, p2):
             if not read.is_reverse:
-                cut_site = read.pos + args.forward_shift
+                cut_site = read.pos + forward_shift
                 if p1 <= cut_site < p2:
                     signal_1[cut_site - p1] += 1.0
             else:
-                cut_site = read.aend + args.reverse_shift - 1
+                cut_site = read.aend + reverse_shift - 1
                 if p1 <= cut_site < p2:
                     signal_1[cut_site - p1] += 1.0
 
         for read in bam2.fetch(region.chrom, p1, p2):
             if not read.is_reverse:
-                cut_site = read.pos + args.forward_shift
+                cut_site = read.pos + forward_shift
                 if p1 <= cut_site < p2:
                     signal_2[cut_site - p1] += 1.0
             else:
-                cut_site = read.aend + args.reverse_shift - 1
+                cut_site = read.aend + reverse_shift - 1
                 if p1 <= cut_site < p2:
                     signal_2[cut_site - p1] += 1.0
+        update_pwm(pwm, fasta, region, p1, p2)
+
+    return signal_1, signal_2, motif_len, pwm, num_motif
+
+
+def get_bc_signal(arguments):
+    (mpbs_name, mpbs_file1, mpbs_file2, reads_file1, reads_file2, organism,
+     window_size, forward_shift, reverse_shift, bias_table1, bias_table2) = arguments
+
+    mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
+    mpbs1.read(mpbs_file1)
+
+    mpbs2 = GenomicRegionSet("Motif Predicted Binding Sites of Condition2")
+    mpbs2.read(mpbs_file2)
+
+    mpbs = mpbs1.combine(mpbs2, output=True)
+    mpbs.sort()
+
+    bam1 = Samfile(reads_file1, "rb")
+    bam2 = Samfile(reads_file2, "rb")
+
+    genome_data = GenomeData(organism)
+    fasta = Fastafile(genome_data.get_genome())
+
+    signal_1 = np.zeros(window_size)
+    signal_2 = np.zeros(window_size)
+    motif_len = None
+    pwm = dict([("A", [0.0] * window_size), ("C", [0.0] * window_size),
+                ("G", [0.0] * window_size), ("T", [0.0] * window_size),
+                ("N", [0.0] * window_size)])
+
+    mpbs_regions = mpbs.by_names([mpbs_name])
+
+    # Fetch bias corrected signal
+    for region in mpbs_regions:
+        if motif_len is None:
+            motif_len = region.final - region.initial
+
+        mid = (region.final + region.initial) / 2
+        p1 = max(mid - window_size / 2, 0)
+        p2 = mid + window_size / 2
+
+        # Fetch raw signal
+        signal = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam1,
+                                 bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
+                                 forward_shift=forward_shift, reverse_shift=reverse_shift)
+
+        signal_1 = np.add(signal_1, np.array(signal))
+
+        signal = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam2,
+                                 bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
+                                 forward_shift=forward_shift, reverse_shift=reverse_shift)
+
+        signal_2 = np.add(signal_2, np.array(signal))
+
         update_pwm(pwm, fasta, region, p1, p2)
 
     return signal_1, signal_2, motif_len, pwm
@@ -149,104 +213,44 @@ def diff_analysis_run(args):
 
     mpbs = mpbs1.combine(mpbs2, output=True)
     mpbs.sort()
-
     mpbs_name_list = list(set(mpbs.get_names()))
-
-    genome_data = GenomeData(args.organism)
-    fasta = Fastafile(genome_data.get_genome())
-
-    bam1 = Samfile(args.reads_file1, "rb")
-    bam2 = Samfile(args.reads_file2, "rb")
 
     signal_dict_by_tf_1 = dict()
     signal_dict_by_tf_2 = dict()
     motif_len_dict = dict()
+    motif_num_dict = dict()
     pwm_dict_by_tf = dict()
 
-    if args.bias_table1 is None or args.bias_table2 is None:
-        # differential analysis using raw reads number
+    pool = Pool(processes=args.nc)
+    # differential analysis using bias corrected signal
+    if args.bc:
+        hmm_data = HmmData()
+        table_F = hmm_data.get_default_bias_table_F_ATAC()
+        table_R = hmm_data.get_default_bias_table_R_ATAC()
+        bias_table1 = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
+        bias_table2 = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
+
+        mpbs_list = list()
         for mpbs_name in mpbs_name_list:
-            signal_dict_by_tf_1[mpbs_name] = list()
-            signal_dict_by_tf_2[mpbs_name] = list()
-            pwm_dict_by_tf[mpbs_name] = dict([("A", [0.0] * args.window_size), ("C", [0.0] * args.window_size),
-                                              ("G", [0.0] * args.window_size), ("T", [0.0] * args.window_size),
-                                              ("N", [0.0] * args.window_size)])
-            motif_len_dict[mpbs_name] = 0
+            mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                              args.organism, args.window_size, args.forward_shift, args.reverse_shift,
+                              bias_table1, bias_table2))
+        res = pool.map(get_bc_signal, mpbs_list)
 
-            mpbs_regions = mpbs.by_names([mpbs_name])
-            for region in mpbs_regions:
-                if motif_len_dict[mpbs_name] == 0:
-                    motif_len_dict[mpbs_name] = region.final - region.initial
-
-                mid = (region.final + region.initial) / 2
-                p1 = max(mid - args.window_size / 2, 0)
-                p2 = mid + args.window_size / 2
-
-                # Fetch raw signal
-                tc1 = np.zeros(args.window_size)
-                for read in bam1.fetch(region.chrom, p1, p2):
-                    if not read.is_reverse:
-                        cut_site = read.pos + args.forward_shift
-                        if p1 <= cut_site < p2:
-                            tc1[cut_site - p1] += 1.0
-                    else:
-                        cut_site = read.aend + args.reverse_shift - 1
-                        if p1 <= cut_site < p2:
-                            tc1[cut_site - p1] += 1.0
-                signal_dict_by_tf_1[mpbs_name].append(tc1.tolist())
-
-                tc2 = np.zeros(args.window_size)
-                for read in bam2.fetch(region.chrom, p1, p2):
-                    if not read.is_reverse:
-                        cut_site = read.pos + args.forward_shift
-                        if p1 <= cut_site < p2:
-                            tc2[cut_site - p1] += 1.0
-                    else:
-                        cut_site = read.aend + args.reverse_shift - 1
-                        if p1 <= cut_site < p2:
-                            tc2[cut_site - p1] += 1.0
-                signal_dict_by_tf_2[mpbs_name].append(tc2.tolist())
-                update_pwm(pwm_dict_by_tf[mpbs_name], fasta, region, p1, p2)
+    # differential analysis using raw signal
     else:
-        # using bias corrected signal
-        bias_table1 = None
-        bias_table2 = None
-        if args.bias_table1:
-            table_list = args.bias_table1.split(",")
-            bias_table1 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
-        if args.bias_table2:
-            table_list = args.bias_table2.split(",")
-            bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
-
+        mpbs_list = list()
         for mpbs_name in mpbs_name_list:
-            signal_dict_by_tf_1[mpbs_name] = list()
-            signal_dict_by_tf_2[mpbs_name] = list()
-            pwm_dict_by_tf[mpbs_name] = dict([("A", [0.0] * args.window_size), ("C", [0.0] * args.window_size),
-                                              ("G", [0.0] * args.window_size), ("T", [0.0] * args.window_size),
-                                              ("N", [0.0] * args.window_size)])
-            motif_len_dict[mpbs_name] = 0
+            mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                              args.organism, args.window_size, args.forward_shift, args.reverse_shift))
+        res = pool.map(get_raw_signal, mpbs_list)
 
-            mpbs_regions = mpbs.by_names([mpbs_name])
-            for region in mpbs_regions:
-                if motif_len_dict[mpbs_name] == 0:
-                    motif_len_dict[mpbs_name] = region.final - region.initial
-
-                mid = (region.final + region.initial) / 2
-                p1 = max(mid - args.window_size / 2, 0)
-                p2 = mid + args.window_size / 2
-
-                # Fetch bias corrected signal
-                signal_1 = get_bc_signal(chrom=region.chrom, start=p1, end=p2, bam=bam1,
-                                         bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
-                                         forward_shift=args.forward_shift, reverse_shift=args.reverse_shift)
-                signal_dict_by_tf_1[mpbs_name].append(signal_1)
-
-                signal_2 = get_bc_signal(chrom=region.chrom, start=p1, end=p2, bam=bam2,
-                                         bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
-                                         forward_shift=args.forward_shift, reverse_shift=args.reverse_shift)
-                signal_dict_by_tf_2[mpbs_name].append(signal_2)
-
-                update_pwm(pwm_dict_by_tf[mpbs_name], fasta, region, p1, p2)
+    for idx, mpbs_name in enumerate(mpbs_name_list):
+        signal_dict_by_tf_1[mpbs_name] = res[idx][0]
+        signal_dict_by_tf_2[mpbs_name] = res[idx][1]
+        motif_len_dict[mpbs_name] = res[idx][2]
+        pwm_dict_by_tf[mpbs_name] = res[idx][3]
+        motif_num_dict[mpbs_name] = res[idx][4]
 
     if args.factor1 is None or args.factor2 is None:
         args.factor1, args.factor2 = compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2)
@@ -259,26 +263,183 @@ def diff_analysis_run(args):
 
     ps_tc_results_by_tf = dict()
 
+    plots_list = list()
     for mpbs_name in mpbs_name_list:
-        num_fp = len(signal_dict_by_tf_1[mpbs_name])
+        plots_list.append((mpbs_name, motif_num_dict[mpbs_name], signal_dict_by_tf_1[mpbs_name],
+                           signal_dict_by_tf_2[mpbs_name], args.factor1, args.factor2, args.condition1,
+                           args.condition2, pwm_dict_by_tf[mpbs_name], args.output_location, args.window_size,
+                           args.standardize))
 
-        # print the line plot for each factor
-        fig, ax = plt.subplots()
-        line_plot(args, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
-                  pwm_dict_by_tf[mpbs_name], fig, ax)
-        plt.close(fig)
+    pool.map(line_plot, plots_list)
 
-        ps_tc_results_by_tf[mpbs_name] = get_ps_tc_results(args, signal_dict_by_tf_1[mpbs_name],
-                                                           signal_dict_by_tf_2[mpbs_name], motif_len_dict[mpbs_name])
+    # for mpbs_name in mpbs_name_list:
+    #     num_fp = len(signal_dict_by_tf_1[mpbs_name])
+    #
+    #     # print the line plot for each factor
+    #     fig, ax = plt.subplots()
+    #     line_plot(args, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
+    #               pwm_dict_by_tf[mpbs_name], fig, ax)
+    #     plt.close(fig)
+    #
+    #     ps_tc_results_by_tf[mpbs_name] = get_ps_tc_results(args, signal_dict_by_tf_1[mpbs_name],
+    #                                                        signal_dict_by_tf_2[mpbs_name], motif_len_dict[mpbs_name])
 
-    #output_results(args, ps_tc_results_by_tf)
+    # #output_results(args, ps_tc_results_by_tf)
+    #
+    # stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    # scatter_plot(args, stat_results_by_tf)
+    # output_stat_results(args, stat_results_by_tf)
 
-    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+
+# def diff_analysis_run(args):
+#     # Initializing Error Handler
+#     err = ErrorHandler()
+#
+#     output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+#     try:
+#         if not os.path.isdir(output_location):
+#             os.makedirs(output_location)
+#     except Exception:
+#         err.throw_error("MM_OUT_FOLDER_CREATION")
+#
+#     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
+#     mpbs1.read(args.mpbs_file1)
+#
+#     mpbs2 = GenomicRegionSet("Motif Predicted Binding Sites of Condition2")
+#     mpbs2.read(args.mpbs_file2)
+#
+#     mpbs = mpbs1.combine(mpbs2, output=True)
+#     mpbs.sort()
+#
+#     mpbs_name_list = list(set(mpbs.get_names()))
+#
+#     genome_data = GenomeData(args.organism)
+#     fasta = Fastafile(genome_data.get_genome())
+#
+#     bam1 = Samfile(args.reads_file1, "rb")
+#     bam2 = Samfile(args.reads_file2, "rb")
+#
+#     signal_dict_by_tf_1 = dict()
+#     signal_dict_by_tf_2 = dict()
+#     motif_len_dict = dict()
+#     pwm_dict_by_tf = dict()
+#
+#     if args.bias_table1 is None or args.bias_table2 is None:
+#         # differential analysis using raw reads number
+#         for mpbs_name in mpbs_name_list:
+#             signal_dict_by_tf_1[mpbs_name] = list()
+#             signal_dict_by_tf_2[mpbs_name] = list()
+#             pwm_dict_by_tf[mpbs_name] = dict([("A", [0.0] * args.window_size), ("C", [0.0] * args.window_size),
+#                                               ("G", [0.0] * args.window_size), ("T", [0.0] * args.window_size),
+#                                               ("N", [0.0] * args.window_size)])
+#             motif_len_dict[mpbs_name] = 0
+#
+#             mpbs_regions = mpbs.by_names([mpbs_name])
+#             for region in mpbs_regions:
+#                 if motif_len_dict[mpbs_name] == 0:
+#                     motif_len_dict[mpbs_name] = region.final - region.initial
+#
+#                 mid = (region.final + region.initial) / 2
+#                 p1 = max(mid - args.window_size / 2, 0)
+#                 p2 = mid + args.window_size / 2
+#
+#                 # Fetch raw signal
+#                 tc1 = np.zeros(args.window_size)
+#                 for read in bam1.fetch(region.chrom, p1, p2):
+#                     if not read.is_reverse:
+#                         cut_site = read.pos + args.forward_shift
+#                         if p1 <= cut_site < p2:
+#                             tc1[cut_site - p1] += 1.0
+#                     else:
+#                         cut_site = read.aend + args.reverse_shift - 1
+#                         if p1 <= cut_site < p2:
+#                             tc1[cut_site - p1] += 1.0
+#                 signal_dict_by_tf_1[mpbs_name].append(tc1.tolist())
+#
+#                 tc2 = np.zeros(args.window_size)
+#                 for read in bam2.fetch(region.chrom, p1, p2):
+#                     if not read.is_reverse:
+#                         cut_site = read.pos + args.forward_shift
+#                         if p1 <= cut_site < p2:
+#                             tc2[cut_site - p1] += 1.0
+#                     else:
+#                         cut_site = read.aend + args.reverse_shift - 1
+#                         if p1 <= cut_site < p2:
+#                             tc2[cut_site - p1] += 1.0
+#                 signal_dict_by_tf_2[mpbs_name].append(tc2.tolist())
+#                 update_pwm(pwm_dict_by_tf[mpbs_name], fasta, region, p1, p2)
+#     else:
+#         # using bias corrected signal
+#         bias_table1 = None
+#         bias_table2 = None
+#         if args.bias_table1:
+#             table_list = args.bias_table1.split(",")
+#             bias_table1 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
+#         if args.bias_table2:
+#             table_list = args.bias_table2.split(",")
+#             bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
+#
+#         for mpbs_name in mpbs_name_list:
+#             signal_dict_by_tf_1[mpbs_name] = list()
+#             signal_dict_by_tf_2[mpbs_name] = list()
+#             pwm_dict_by_tf[mpbs_name] = dict([("A", [0.0] * args.window_size), ("C", [0.0] * args.window_size),
+#                                               ("G", [0.0] * args.window_size), ("T", [0.0] * args.window_size),
+#                                               ("N", [0.0] * args.window_size)])
+#             motif_len_dict[mpbs_name] = 0
+#
+#             mpbs_regions = mpbs.by_names([mpbs_name])
+#             for region in mpbs_regions:
+#                 if motif_len_dict[mpbs_name] == 0:
+#                     motif_len_dict[mpbs_name] = region.final - region.initial
+#
+#                 mid = (region.final + region.initial) / 2
+#                 p1 = max(mid - args.window_size / 2, 0)
+#                 p2 = mid + args.window_size / 2
+#
+#                 # Fetch bias corrected signal
+#                 signal_1 = get_bc_signal(chrom=region.chrom, start=p1, end=p2, bam=bam1,
+#                                          bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
+#                                          forward_shift=args.forward_shift, reverse_shift=args.reverse_shift)
+#                 signal_dict_by_tf_1[mpbs_name].append(signal_1)
+#
+#                 signal_2 = get_bc_signal(chrom=region.chrom, start=p1, end=p2, bam=bam2,
+#                                          bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
+#                                          forward_shift=args.forward_shift, reverse_shift=args.reverse_shift)
+#                 signal_dict_by_tf_2[mpbs_name].append(signal_2)
+#
+#                 update_pwm(pwm_dict_by_tf[mpbs_name], fasta, region, p1, p2)
+#
+#     if args.factor1 is None or args.factor2 is None:
+#         args.factor1, args.factor2 = compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2)
+#         output_factor(args, args.factor1, args.factor2)
+#
+#     if args.output_profiles:
+#         output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+#         output_profiles(mpbs_name_list, signal_dict_by_tf_1, output_location, args.condition1)
+#         output_profiles(mpbs_name_list, signal_dict_by_tf_2, output_location, args.condition2)
+#
+#     ps_tc_results_by_tf = dict()
+#
+#     for mpbs_name in mpbs_name_list:
+#         num_fp = len(signal_dict_by_tf_1[mpbs_name])
+#
+#         # print the line plot for each factor
+#         fig, ax = plt.subplots()
+#         line_plot(args, mpbs_name, num_fp, signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
+#                   pwm_dict_by_tf[mpbs_name], fig, ax)
+#         plt.close(fig)
+#
+#         ps_tc_results_by_tf[mpbs_name] = get_ps_tc_results(args, signal_dict_by_tf_1[mpbs_name],
+#                                                            signal_dict_by_tf_2[mpbs_name], motif_len_dict[mpbs_name])
+#
+#     #output_results(args, ps_tc_results_by_tf)
+#
+#     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+#     scatter_plot(args, stat_results_by_tf)
+#     output_stat_results(args, stat_results_by_tf)
 
 
-def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
+def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
     # Parameters
     window = 50
     defaultKmerValue = 1.0
@@ -439,11 +600,9 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
     signal_1 = np.zeros(len(keys))
     signal_2 = np.zeros(len(keys))
 
-    for key in keys:
-        for i in range(len(signal_dict_by_tf_1[key])):
-            idx = keys.index(key)
-            signal_1[idx] += sum(signal_dict_by_tf_1[key][i])
-            signal_2[idx] += sum(signal_dict_by_tf_2[key][i])
+    for idx, key in enumerate(keys):
+        signal_1[idx] = sum(signal_dict_by_tf_1[key])
+        signal_2[idx] = sum(signal_dict_by_tf_2[key])
 
     # Take log
     log_tc1 = np.log(signal_1)
@@ -470,42 +629,40 @@ def compute_factors(signal_dict_by_tf_1, signal_dict_by_tf_2):
     return factor1, factor2
 
 
-def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, ax):
-    # compute the average signal
-    mean_signal_1 = np.zeros(args.window_size)
-    mean_signal_2 = np.zeros(args.window_size)
-    for i in range(num_fp):
-        mean_signal_1 = np.add(mean_signal_1, signal_tf_1[i])
-        mean_signal_2 = np.add(mean_signal_2, signal_tf_2[i])
+def line_plot(arguments):
+    (mpbs_name, num_fp, signal_1, signal_2, factor1, factor2, condition1, condition2,
+     pwm_dict, output_location, window_size, standardize) = arguments
 
-    mean_signal_1 = (mean_signal_1 / num_fp) / args.factor1
-    mean_signal_2 = (mean_signal_2 / num_fp) / args.factor2
+    mean_signal_1 = (signal_1 / num_fp) / factor1
+    mean_signal_2 = (signal_2 / num_fp) / factor2
 
-    #if args.standardize:
-    mean_signal_1,  mean_signal_2 = standard(mean_signal_1, mean_signal_2)
+    if standardize:
+        mean_signal_1, mean_signal_2 = standard(mean_signal_1, mean_signal_2)
 
     # Output PWM and create logo
-    pwm_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+    pwm_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
                              "{}.pwm".format(mpbs_name))
     pwm_file = open(pwm_fname, "w")
     for e in ["A", "C", "G", "T"]:
         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
     pwm_file.close()
 
-    logo_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+    logo_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
                               "{}.logo.eps".format(mpbs_name))
     pwm = motifs.read(open(pwm_fname), "pfm")
-    pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
+    pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
                 show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                 show_fineprint=False, show_ends=False)
 
-    start = -(args.window_size / 2)
-    end = (args.window_size / 2) - 1
-    x = np.linspace(start, end, num=args.window_size)
+    start = -(window_size / 2)
+    end = (window_size / 2) - 1
+    x = np.linspace(start, end, num=window_size)
 
-    ax.plot(x, mean_signal_1, color='red', label=args.condition1)
-    ax.plot(x, mean_signal_2, color='blue', label=args.condition2)
+    plt.close('all')
+    fig, ax = plt.subplots()
+    ax.plot(x, mean_signal_1, color='red', label=condition1)
+    ax.plot(x, mean_signal_2, color='blue', label=condition2)
     ax.text(0.15, 0.9, 'n = {}'.format(num_fp), verticalalignment='bottom', horizontalalignment='right',
             transform=ax.transAxes, fontweight='bold')
 
@@ -528,13 +685,13 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 70))
 
-    figure_name = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+    figure_name = os.path.join(output_location, "{}_{}".format(condition1, condition2),
                                "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
     # Creating canvas and printing eps / pdf with merged results
-    output_fname = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2),
+    output_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
                                 "{}.eps".format(mpbs_name))
 
     c = pyx.canvas.canvas()
@@ -545,7 +702,7 @@ def line_plot(args, mpbs_name, num_fp, signal_tf_1, signal_tf_2, pwm_dict, fig, 
 
     os.remove(figure_name)
     os.remove(logo_fname)
-    #os.remove(output_fname)
+    os.remove(output_fname)
     os.remove(pwm_fname)
 
 
@@ -685,8 +842,6 @@ def adjust_p_values(p_values):
 
 def output_profiles(mpbs_name_list, signal_dict_by_tf, output_location, condition):
     for mpbs_name in mpbs_name_list:
-        num_fp = len(signal_dict_by_tf[mpbs_name])
         output_fname = os.path.join(output_location, "{}_{}.txt".format(mpbs_name, condition))
         with open(output_fname, "w") as f:
-            for i in range(num_fp):
-                f.write("\t".join(map(str, signal_dict_by_tf[mpbs_name][i])) + "\n")
+            f.write("\t".join(map(str, signal_dict_by_tf[mpbs_name])) + "\n")
