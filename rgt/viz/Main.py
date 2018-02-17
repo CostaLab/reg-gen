@@ -84,7 +84,7 @@ def main():
                                    help='Define whether to count "else" for each reference corresponding to the labels (T or F)')
     parser_bedprofile.add_argument('-background', metavar='  ', default=None,
                                    help='Add the background to the first row of the figures (T or F)')
-    parser_bedprofile.add_argument('-coverage', action="store_true",
+    parser_bedprofile.add_argument('-coverage', action="store_true", default=False,
                                    help='Calculate the overlapping region by coverage in bp instead of simple counting')
     parser_bedprofile.add_argument('-test', action="store_true", default=False,
                                    help='test script')

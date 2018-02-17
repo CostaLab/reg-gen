@@ -291,6 +291,7 @@ class BedProfile:
             sys.exit(1)
         if background and len(refs) == 1:
             background = False
+            self.background = self.background + [len(ref) for ref in refs]
         index = natsort.index_natsorted(refs_names)
         refs = natsort.order_by_index(refs, index)
         refs_names = natsort.order_by_index(refs_names, index)
