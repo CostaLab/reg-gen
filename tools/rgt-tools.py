@@ -229,6 +229,8 @@ if __name__ == "__main__":
                                     help="Define minimum length of gene to filter out the small genes (default:0)")
     parser_bedupstream.add_argument('-r', '--reverse', action="store_true", default=False,
                                     help="Reverse the strand.")
+    parser_bedupstream.add_argument('-ds', '--downstream', action="store_true", default=False,
+                                    help="Find downstream regions instead of upstream.")
 
     ############### BED to FASTA #############################################
     parser_bed2fasta = subparsers.add_parser('bed_to_fasta', 
@@ -817,19 +819,32 @@ if __name__ == "__main__":
         target = GenomicRegionSet("target")
         # if args.min == 0: cut = float("inf")
         # elif args.min > 0: cut = args.min
+        if not args.downstream:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-        for s in gene:
-            if s.orientation == "+" and len(s) > args.min: 
-                s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "-"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
+        else:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-            elif s.orientation == "-" and len(s) > args.min: 
-                s.initial, s.final = s.final+args.d, s.final+args.d+args.l
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "+"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
         
         print(len(target))
         target.write(args.o)
