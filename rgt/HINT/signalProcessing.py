@@ -1,21 +1,16 @@
 ###################################################################################################
 # Libraries
 ###################################################################################################
-
-# Python
-
 from math import log, ceil, floor, isnan
-
-# External
 import numpy as np
 from numpy import exp, array, abs, int, mat, linalg, convolve, nan_to_num
 from pysam import Samfile, Fastafile
 from pysam import __version__ as ps_version
 from scipy.stats import scoreatpercentile
 
-from .pileupRegion import PileupRegion
 # Internal
-from ..Util import AuxiliaryFunctions
+from rgt.Util import AuxiliaryFunctions
+from rgt.HINT.pileupRegion import PileupRegion
 
 """
 Processes DNase-seq and histone modification signal for
@@ -337,7 +332,21 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+            # Return raw counts
+            nf = [0.0] * (p2 - p1)
+            nr = [0.0] * (p2 - p1)
+            for read in self.bam.fetch(chrName, p1, p2):
+                if not read.is_reverse:
+                    cut_site = read.pos + forward_shift
+                    if p1 <= cut_site < p2:
+                        nf[cut_site - p1] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if p1 <= cut_site < p2:
+                        nr[cut_site - p1] += 1.0
+
+            return nf, nr
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
@@ -430,7 +439,20 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+            # Return raw counts
+            signal = [0.0] * (p2 - p1)
+            for read in self.bam.fetch(chrName, p1, p2):
+                if not read.is_reverse:
+                    cut_site = read.pos + forward_shift
+                    if p1 <= cut_site < p2:
+                        signal[cut_site - p1] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if p1 <= cut_site < p2:
+                        signal[cut_site - p1] += 1.0
+
+            return signal
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
@@ -962,7 +984,8 @@ class GenomicSignal:
         else:
             return np.add(np.array(bc_f), np.array(bc_r))
 
-    def get_bias_raw_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift):
+    def get_bias_raw_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift,
+                               strand=False):
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -1034,14 +1057,22 @@ class GenomicSignal:
         bias_f = []
         bias_r = []
         raw = []
+        raw_f = []
+        raw_r = []
         bc = []
+        bc_f = []
+        bc_r = []
         for i in range((window / 2), len(signal_bias_f) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
             raw.append(signal_raw_f[i] + signal_raw_r[i])
+            raw_f.append(signal_raw_f[i])
+            raw_r.append(signal_raw_r[i])
             bc.append(nhatf + nhatr)
+            bc_f.append(nhatf)
+            bc_r.append(nhatr)
             fSum -= fLast
             fSum += signal_bias_f[i + (window / 2)]
             fLast = signal_bias_f[i - (window / 2) + 1]
@@ -1049,4 +1080,7 @@ class GenomicSignal:
             rSum += signal_bias_r[i + (window / 2)]
             rLast = signal_bias_r[i - (window / 2) + 1]
 
-        return bias_f, bias_r, raw, bc
+        if strand:
+            return bias_f, bias_r, raw, raw_f, raw_r, bc, bc_f, bc_r
+        else:
+            return bias_f, bias_r, raw, bc

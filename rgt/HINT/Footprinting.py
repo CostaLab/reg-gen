@@ -6,9 +6,9 @@ from argparse import SUPPRESS
 from rgt.Util import ErrorHandler, HmmData, GenomeData, OverlapType
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
-from signalProcessing import GenomicSignal
-from hmm import HMM, _compute_log_likelihood
-from biasTable import BiasTable
+from rgt.HINT.signalProcessing import GenomicSignal
+from rgt.HINT.hmm import HMM, _compute_log_likelihood
+from rgt.HINT.biasTable import BiasTable
 
 # External
 import types
