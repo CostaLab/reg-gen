@@ -272,7 +272,7 @@ def main():
     parser_lineplot.add_argument('-scol', action="store_true",
                                  help="Share y axis among columns. (default: %(default)s)")
     parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows. (default: %(default)s)")
-    parser_lineplot.add_argument('-organism', metavar='  ', default='hg19',
+    parser_lineplot.add_argument('-organism', metavar='  ',
                                  help='Define the organism. (default: %(default)s)')
     parser_lineplot.add_argument('-color', action="store_true", help=help_define_color)
     parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3,
@@ -299,6 +299,8 @@ def main():
                                  help='Show only the average of the replicates. (default: %(default)s)')
     parser_lineplot.add_argument('-flip_negative', action="store_true", default=False,
                                  help='Flip the negative strand (default: %(default)s)')
+    parser_lineplot.add_argument('-extend_outside', action="store_true", default=False,
+                                 help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
 
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -761,7 +763,8 @@ def main():
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs,
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft,
                                 fields=[args.g, args.col, args.row, args.c],
-                                test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative)
+                                test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative,
+                                outside=args.extend_outside)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
