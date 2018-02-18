@@ -27,7 +27,7 @@ from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_covera
 
 class Lineplot:
     def __init__(self, em_path, title, annotation, organism, center, extend, rs, bs, ss,
-                 df, dft, fields, test, sense, strand, flipnegative):
+                 df, dft, fields, test, sense, strand, flipnegative, outside):
 
         # Read the Experimental Matrix
         self.title = title
@@ -63,32 +63,40 @@ class Lineplot:
 
         self.processed_beds = []
         self.processed_bedsF = []  # Processed beds to be flapped
+        self.outside = outside
 
     def relocate_bed(self):
+        if not self.outside:
 
-        for bed in self.beds:
-            if self.center == 'bothends':
-                newbed = bed.relocate_regions(center='leftend',
-                                              left_length=self.extend + self.bs,
-                                              right_length=self.extend + self.bs)
-                self.processed_beds.append(newbed)
-                newbedF = bed.relocate_regions(center='rightend',
-                                               left_length=self.extend + self.bs,
-                                               right_length=self.extend + self.bs)
-                self.processed_bedsF.append(newbedF)
-            elif self.center == 'upstream' or self.center == 'downstream':
-                allbed = bed.relocate_regions(center=self.center,
-                                              left_length=self.extend + self.bs,
-                                              right_length=self.extend + self.bs)
-                newbed = allbed.filter_strand(strand="+")
-                self.processed_beds.append(newbed)
-                newbedF = allbed.filter_strand(strand="-")
-                self.processed_bedsF.append(newbedF)
-            else:
-                allbed = bed.relocate_regions(center=self.center,
-                                              left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
-                                              right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
+            for bed in self.beds:
+                if self.center == 'bothends':
+                    newbed = bed.relocate_regions(center='leftend',
+                                                  left_length=self.extend + self.bs,
+                                                  right_length=self.extend + self.bs)
+                    self.processed_beds.append(newbed)
+                    newbedF = bed.relocate_regions(center='rightend',
+                                                   left_length=self.extend + self.bs,
+                                                   right_length=self.extend + self.bs)
+                    self.processed_bedsF.append(newbedF)
+                elif self.center == 'upstream' or self.center == 'downstream':
+                    allbed = bed.relocate_regions(center=self.center,
+                                                  left_length=self.extend + self.bs,
+                                                  right_length=self.extend + self.bs)
+                    newbed = allbed.filter_strand(strand="+")
+                    self.processed_beds.append(newbed)
+                    newbedF = allbed.filter_strand(strand="-")
+                    self.processed_bedsF.append(newbedF)
+                else:
+                    allbed = bed.relocate_regions(center=self.center,
+                                                  left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
+                                                  right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
+                    self.processed_beds.append(allbed)
+        else:
+            for bed in self.beds:
+                allbed = bed.extend(left=self.extend + int(0.5 * self.bs) + 2 * self.ss,
+                                    right=self.extend + int(0.5 * self.bs) + 2 * self.ss, w_return=True)
                 self.processed_beds.append(allbed)
+
 
     def group_tags(self, groupby, rowby, columnby, colorby):
         """Generate the tags for the grouping of plot
@@ -197,9 +205,8 @@ class Lineplot:
                                 # print(self.cuebed[bed])
                                 # print(set([s,g,c,d]))
                                 # print(self.cuebed[bed].issubset(set([s,g,c,d])))
-                                if len(self.cuebed[bed].intersection({g, r, c, cc, d})) > 2 or self.cuebed[
-                                    bed].issubset(
-                                    {g, r, c, cc, d}):
+                                if len(self.cuebed[bed].intersection({g, r, c, cc, d})) > 2 or \
+                                        self.cuebed[bed].issubset({g, r, c, cc, d}):
                                     # if self.cuebed[bed] <= set([s,g,c]):
                                     for bam in self.cuebam.keys():
 
@@ -305,6 +312,20 @@ class Lineplot:
                                                             cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2,
                                                                                                     flap.transpose_cov2),
                                                                                                    axis=0)
+                                                # Extend outside
+                                                if self.outside:
+                                                    for ar in cov.coverage:
+                                                        # print(len(ar))
+                                                        ss_side = int(self.extend/self.ss)
+                                                        left_ar = ar[0:ss_side]
+                                                        right_ar = ar[-ss_side:]
+                                                        rest = ar[ss_side:-ss_side]
+
+                                                        xp = numpy.linspace(0, ss_side, len(rest))
+
+                                                        rest = numpy.interp(range(ss_side), xp=xp, fp=rest)
+                                                        ar = numpy.concatenate((left_ar, rest))
+                                                        ar = numpy.concatenate((ar, right_ar))
 
                                                 # Averaging the coverage of all regions of each bed file
                                                 if heatmap:
@@ -486,7 +507,10 @@ class Lineplot:
                                             yaxmin[ic] = min(numpy.amin(y), yaxmin[ic])
                                             sx_ymin[ir] = min(numpy.amin(y), sx_ymin[ir])
 
-                                        x = numpy.linspace(-self.extend, self.extend, len(y))
+                                        if not self.outside:
+                                            x = numpy.linspace(-self.extend, self.extend, len(y))
+                                        else:
+                                            x = numpy.linspace(-int(self.extend*1.5), int(self.extend*1.5), len(y))
                                         ax.plot(x, y, color=self.colors[cc], lw=linewidth, label=cc)
                                         if ir < nit - 1:
                                             ax.set_xticklabels([])
@@ -539,6 +563,13 @@ class Lineplot:
                     plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
                     ax.locator_params(axis='x', nbins=4)
                     ax.locator_params(axis='y', nbins=3)
+                    if self.outside:
+
+                        xlim_value = int(self.extend * 1.5)
+                        ax.set_xlim([-xlim_value, xlim_value])
+                        ax.set_xticks([-xlim_value, -int(self.extend*0.5), int(self.extend*0.5), xlim_value])
+                        ax.set_xticklabels([str(-self.extend), "Start", "End", str(self.extend)])
+
 
             if printtable:
                 output_array(pArr, directory=output, folder=self.title, filename="plot_table_" + g + ".txt")
