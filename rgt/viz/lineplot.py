@@ -180,7 +180,6 @@ class Lineplot:
                 for c in self.column_tags:
                     data[g][r][c] = OrderedDict()
                     for cc in self.color_tags:
-                        # if self.df: data[s][g][c] = []
                         data[g][r][c][cc] = OrderedDict()
                         if not self.dft:
                             dfs = [cc]
@@ -195,6 +194,9 @@ class Lineplot:
                         for d in dfs:
                             data[g][r][c][cc][d] = defaultdict(list)
                             for bed in self.cuebed.keys():
+                                i = self.bednames.index(bed)
+                                if len(self.beds[i]) == 0:
+                                    continue
                                 # print(self.cuebed[bed])
                                 # print(set([s,g,c,d]))
                                 # print(self.cuebed[bed].issubset(set([s,g,c,d])))
@@ -206,7 +208,7 @@ class Lineplot:
                                         # print(self.cuebam[bam])
                                         # print(set([s,g,c]))
                                         if self.cuebam[bam] <= {g, r, c, cc, d}:
-                                            i = self.bednames.index(bed)
+
                                             j = self.readsnames.index(bam)
                                             inputs = [bed, bam, self.processed_beds[i], self.processed_bedsF[i],
                                                       g, r, c, cc, d, self.reads[j],
