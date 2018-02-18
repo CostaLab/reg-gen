@@ -91,11 +91,13 @@ class Lineplot:
                                                   left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
                                                   right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
                     self.processed_beds.append(allbed)
+                    self.processed_bedsF.append(False)
         else:
             for bed in self.beds:
                 allbed = bed.extend(left=self.extend + int(0.5 * self.bs) + 2 * self.ss,
                                     right=self.extend + int(0.5 * self.bs) + 2 * self.ss, w_return=True)
                 self.processed_beds.append(allbed)
+                self.processed_bedsF.append(False)
 
 
     def group_tags(self, groupby, rowby, columnby, colorby):
@@ -146,15 +148,6 @@ class Lineplot:
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
 
-        # if self.annotation:
-        #     #all_tags = []
-        #     #for dictt in self.exps.fieldsDict.values():
-        #     #    for tag in dictt.keys():
-        #     #        all_tags.append(tag)
-        #     for bed in self.bednames:
-        #     #    self.cuebed[bed] = set([bed]+all_tags)
-        #         self.cuebed[bed] = set([bed])
-        # else:
         for bed in self.bednames:
             self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
             # print(self.cuebed[bed])
@@ -215,161 +208,22 @@ class Lineplot:
                                         if self.cuebam[bam] <= {g, r, c, cc, d}:
                                             i = self.bednames.index(bed)
                                             j = self.readsnames.index(bam)
+                                            inputs = [bed, bam, self.processed_beds[i], self.processed_bedsF[i],
+                                                      g, r, c, cc, d, self.reads[j],
+                                                      self.rs, self.bs, self.ss, self.center, heatmap, logt,
+                                                      self.sense, self.strand, self.flipnegative, self.center,
+                                                      self.outside, self.extend]
 
                                             #########################################################################
                                             if mp > 0:  # Multiple processing
-                                                mp_input.append([self.processed_beds[i], self.reads[j],
-                                                                 self.rs, self.bs, self.ss, self.center, heatmap, logt,
-                                                                 g, r, c, cc, d])
+                                                mp_input.append(inputs)
                                                 data[g][r][c][cc][d] = None
 
                                             #########################################################################
                                             else:  # Single thread
-                                                ts = time.time()
-                                                cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
-
-                                                # print(len(self.processed_beds[i]))
-                                                if "Conservation" in [g, r, c, cc, d]:
-                                                    cov.phastCons46way_score(stepsize=self.ss)
-
-                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
-                                                    j].lower():
-                                                    cov.coverage_from_bigwig(bigwig_file=self.reads[j],
-                                                                             stepsize=self.ss)
-                                                else:
-                                                    if not self.sense and not self.strand:
-                                                        cov.coverage_from_bam(bam_file=self.reads[j],
-                                                                              extension_size=self.rs, binsize=self.bs,
-                                                                              stepsize=self.ss)
-                                                        if normRPM: cov.normRPM()
-                                                    else:  # Sense specific
-                                                        cov.coverage_from_bam(bam_file=self.reads[j],
-                                                                              extension_size=self.rs, binsize=self.bs,
-                                                                              stepsize=self.ss,
-                                                                              get_sense_info=self.sense,
-                                                                              get_strand_info=self.strand,
-                                                                              paired_reads=True)
-                                                        cov.array_transpose()
-                                                        if normRPM: cov.normRPM()
-
-                                                if self.center == "midpoint" and self.flipnegative:
-                                                    for k, re in enumerate(self.processed_beds[i]):
-                                                        if re.orientation == "-":
-                                                            # print(k)
-                                                            # print(cov.coverage[k])
-                                                            cov.coverage[k] = cov.coverage[k][::-1]
-
-                                                # When bothends, consider the fliping end
-                                                if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                    if "Conservation" in [g, r, c, cc, d]:
-                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                        flap.phastCons46way_score(stepsize=self.ss)
-                                                        ffcoverage = numpy.fliplr(flap.coverage)
-                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
-                                                                                         axis=0)
-                                                    elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
-                                                        j].lower():
-                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                        flap.coverage_from_bigwig(bigwig_file=self.reads[j],
-                                                                                  stepsize=self.ss)
-                                                        ffcoverage = numpy.fliplr(flap.coverage)
-                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
-                                                                                         axis=0)
-                                                    else:
-                                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                        if not self.sense:
-                                                            flap.coverage_from_bam(self.reads[j],
-                                                                                   extension_size=self.rs,
-                                                                                   binsize=self.bs, stepsize=self.ss)
-                                                            if normRPM: flap.normRPM()
-                                                        else:  # Sense specific
-                                                            flap.coverage_from_bam(bam_file=self.reads[j],
-                                                                                   extension_size=self.rs,
-                                                                                   binsize=self.bs,
-                                                                                   stepsize=self.ss,
-                                                                                   get_sense_info=True,
-                                                                                   paired_reads=True)
-                                                            flap.array_transpose(flip=True)
-                                                            if normRPM: flap.normRPM()
-                                                        ffcoverage = numpy.fliplr(flap.coverage)
-                                                        try:
-                                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
-                                                                                             axis=0)
-                                                        except:
-                                                            pass
-
-                                                        if self.sense:
-                                                            cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1,
-                                                                                                    flap.transpose_cov1),
-                                                                                                   axis=0)
-                                                            cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2,
-                                                                                                    flap.transpose_cov2),
-                                                                                                   axis=0)
-                                                # Extend outside
-                                                if self.outside:
-                                                    new_arrays = []
-                                                    for ar in cov.coverage:
-                                                        # print(len(ar))
-                                                        ss_side = int(self.extend/self.ss)
-                                                        left_ar = ar[0:ss_side]
-                                                        right_ar = ar[-ss_side:]
-                                                        rest = ar[ss_side:-ss_side]
-
-                                                        xp = numpy.linspace(0, ss_side, len(rest))
-
-                                                        rest = numpy.interp(range(ss_side), xp=xp, fp=rest)
-                                                        nar = numpy.concatenate((left_ar, rest))
-                                                        nar = numpy.concatenate((nar, right_ar))
-                                                        new_arrays.append(nar)
-                                                    cov.coverage = new_arrays
-
-                                                # Averaging the coverage of all regions of each bed file
-                                                if heatmap:
-                                                    if logt:
-                                                        data[g][r][c][cc][d] = numpy.log10(numpy.vstack(
-                                                            cov.coverage) + 1)  # Store the array into data list
-                                                    else:
-                                                        data[g][r][c][cc][d] = numpy.vstack(
-                                                            cov.coverage)  # Store the array into data list
-                                                else:
-                                                    if len(cov.coverage) == 0:
-                                                        data[g][r][c][cc][d] = None
-                                                        print("** Warning: Cannot open " + self.reads[j])
-                                                        continue
-                                                    else:
-                                                        for i, car in enumerate(cov.coverage):
-                                                            if i == 0:
-                                                                avearr = numpy.array(car, ndmin=2)
-                                                            else:
-                                                                avearr = numpy.vstack((avearr, numpy.array(car, ndmin=2)))
-                                                        if log:
-                                                            avearr = numpy.log10(avearr + 1)
-
-                                                        avearr = numpy.average(avearr, axis=0)
-                                                        if self.sense or self.strand:
-                                                            if log:
-                                                                sense_1 = numpy.average(
-                                                                    numpy.log2(cov.transpose_cov1 + 1), axis=0)
-                                                                sense_2 = numpy.average(
-                                                                    numpy.log2(cov.transpose_cov2 + 1), axis=0)
-                                                            else:
-                                                                sense_1 = numpy.average(cov.transpose_cov1, axis=0)
-                                                                sense_2 = numpy.average(cov.transpose_cov2, axis=0)
-                                                        cut_end = int(self.bs / self.ss)
-                                                        avearr = avearr[cut_end:-cut_end]
-                                                        data[g][r][c][cc][d]["all"].append(avearr)
-
-                                                        if self.sense or self.strand:
-                                                            sense_1 = sense_1[cut_end:-cut_end]
-                                                            sense_2 = sense_2[cut_end:-cut_end]
-                                                            data[g][r][c][cc][d]["sense_1"].append(sense_1)
-                                                            data[g][r][c][cc][d]["sense_2"].append(sense_2)
-
+                                                cov_res = compute_coverage(inputs)
+                                                data[g][r][c][cc][d] = cov_res[-1]
                                                 bi += 1
-                                                te = time.time()
-                                                print2(self.parameter,
-                                                       "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
-                                                           bed + "." + bam, ts - te))
 
         if mp > 0:
             pool = MyPool(mp)
@@ -382,17 +236,18 @@ class Lineplot:
                         for cc in data[g][r][c].keys():
                             for d in data[g][r][c][cc].keys():
                                 for out in mp_output:
-                                    if out[0] == g and out[1] == r and out[2] == c and out[3] == cc and out[3] == d:
-                                        if self.df:
-                                            try:
-                                                data[g][r][c][cc][d][-1].append(out[4])
-                                            except:
-                                                data[g][r][c][cc][d] = [[out[4]]]
-                                        else:
-                                            try:
-                                                data[g][r][c][cc][d].append(out[4])
-                                            except:
-                                                data[g][r][c][cc][d] = [out[4]]
+                                    if out[0:5] == [g, r, c, cc, d]:
+                                        data[g][r][c][cc][d] = out[-1]
+                                        # if self.df:
+                                        #     try:
+                                        #         data[g][r][c][cc][d][-1].append(out[-1])
+                                        #     except:
+                                        #         data[g][r][c][cc][d] = [[out[-1]]]
+                                        # else:
+                                        #     try:
+                                        #         data[g][r][c][cc][d].append(out[-1])
+                                        #     except:
+                                        #         data[g][r][c][cc][d] = [out[-1]]
         if average:
             for g in data.keys():
                 for r in data[g].keys():
@@ -413,8 +268,8 @@ class Lineplot:
                     for c in data[g][r].keys():
                         for cc in data[g][r][c].keys():
                             for d in data[g][r][c][cc].keys():
-                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(
-                                        data[g][r][c][cc][d]["all"]) > 1:
+                                if isinstance(data[g][r][c][cc][d]["all"], list) and \
+                                        len(data[g][r][c][cc][d]["all"]) > 1:
                                     diff = numpy.subtract(data[g][r][c][cc][d]["all"][0],
                                                           data[g][r][c][cc][d]["all"][1])
                                     data[g][r][c][cc][d]["df"].append(diff.tolist())
