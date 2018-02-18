@@ -27,12 +27,12 @@ from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_covera
 
 class Lineplot:
     def __init__(self, em_path, title, annotation, organism, center, extend, rs, bs, ss,
-                 df, dft, fields, test, sense, strand, flipnegative, outside):
+                 df, dft, fields, test, sense, strand, flipnegative, outside, add_number):
 
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(em_path, test=test, add_region_len=True)
+        self.exps.read(em_path, test=test, add_region_len=add_number)
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f, test=test)
@@ -215,14 +215,7 @@ class Lineplot:
                                         if self.cuebam[bam] <= {g, r, c, cc, d}:
                                             i = self.bednames.index(bed)
                                             j = self.readsnames.index(bam)
-                                            # print(bed + "." + bam)
 
-                                            # if len(self.processed_beds[i]) == 0:
-                                            #     try:
-                                            #         data[s][g][c][d].append(numpy.empty(1, dtype=object))
-                                            #     except:
-                                            #         data[s][g][c][d] = [numpy.empty(1, dtype=object)]
-                                            #     continue
                                             #########################################################################
                                             if mp > 0:  # Multiple processing
                                                 mp_input.append([self.processed_beds[i], self.reads[j],
@@ -314,6 +307,7 @@ class Lineplot:
                                                                                                    axis=0)
                                                 # Extend outside
                                                 if self.outside:
+                                                    new_arrays = []
                                                     for ar in cov.coverage:
                                                         # print(len(ar))
                                                         ss_side = int(self.extend/self.ss)
@@ -324,8 +318,10 @@ class Lineplot:
                                                         xp = numpy.linspace(0, ss_side, len(rest))
 
                                                         rest = numpy.interp(range(ss_side), xp=xp, fp=rest)
-                                                        ar = numpy.concatenate((left_ar, rest))
-                                                        ar = numpy.concatenate((ar, right_ar))
+                                                        nar = numpy.concatenate((left_ar, rest))
+                                                        nar = numpy.concatenate((nar, right_ar))
+                                                        new_arrays.append(nar)
+                                                    cov.coverage = new_arrays
 
                                                 # Averaging the coverage of all regions of each bed file
                                                 if heatmap:
@@ -345,12 +341,7 @@ class Lineplot:
                                                             if i == 0:
                                                                 avearr = numpy.array(car, ndmin=2)
                                                             else:
-                                                                # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
-                                                                try:
-                                                                    avearr = numpy.vstack(
-                                                                        (avearr, numpy.array(car, ndmin=2)))
-                                                                except:
-                                                                    print(bed + "." + bam + "." + str(i))
+                                                                avearr = numpy.vstack((avearr, numpy.array(car, ndmin=2)))
                                                         if log:
                                                             avearr = numpy.log10(avearr + 1)
 

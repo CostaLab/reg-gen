@@ -301,6 +301,8 @@ def main():
                                  help='Flip the negative strand (default: %(default)s)')
     parser_lineplot.add_argument('-extend_outside', action="store_true", default=False,
                                  help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
+    parser_lineplot.add_argument('-add_region_number', action="store_true", default=False,
+                                 help="Add the number of regions in the axis label. (default: %(default))")
 
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -764,7 +766,7 @@ def main():
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft,
                                 fields=[args.g, args.col, args.row, args.c],
                                 test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative,
-                                outside=args.extend_outside)
+                                outside=args.extend_outside, add_number=args.add_region_number)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
