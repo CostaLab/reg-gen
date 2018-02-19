@@ -235,7 +235,7 @@ class ExperimentalMatrix:
                         regions.read(os.path.abspath(self.files[self.names[i]]))
                         regions.sort()
                         if test:
-                            regions.sequences = regions.sequences[0:11]
+                            regions.sequences = regions.sequences[0:10]
                 self.objectsDict[self.names[i]] = regions
 
             elif t == "genes":
