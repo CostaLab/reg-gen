@@ -194,9 +194,7 @@ class Lineplot:
                         for d in dfs:
                             data[g][r][c][cc][d] = defaultdict(list)
                             for bed in self.cuebed.keys():
-                                i = self.bednames.index(bed)
-                                if len(self.beds[i]) == 0:
-                                    continue
+
                                 # print(self.cuebed[bed])
                                 # print(set([s,g,c,d]))
                                 # print(self.cuebed[bed].issubset(set([s,g,c,d])))
@@ -208,12 +206,12 @@ class Lineplot:
                                         # print(self.cuebam[bam])
                                         # print(set([s,g,c]))
                                         if self.cuebam[bam] <= {g, r, c, cc, d}:
-
+                                            i = self.bednames.index(bed)
                                             j = self.readsnames.index(bam)
                                             inputs = [bed, bam, self.processed_beds[i], self.processed_bedsF[i],
                                                       g, r, c, cc, d, self.reads[j],
                                                       self.rs, self.bs, self.ss, self.center, heatmap, logt,
-                                                      self.sense, self.strand, self.flipnegative, self.center,
+                                                      self.sense, self.strand, self.flipnegative,
                                                       self.outside, self.extend]
 
                                             #########################################################################
@@ -240,16 +238,7 @@ class Lineplot:
                                 for out in mp_output:
                                     if out[0:5] == [g, r, c, cc, d]:
                                         data[g][r][c][cc][d] = out[-1]
-                                        # if self.df:
-                                        #     try:
-                                        #         data[g][r][c][cc][d][-1].append(out[-1])
-                                        #     except:
-                                        #         data[g][r][c][cc][d] = [[out[-1]]]
-                                        # else:
-                                        #     try:
-                                        #         data[g][r][c][cc][d].append(out[-1])
-                                        #     except:
-                                        #         data[g][r][c][cc][d] = [out[-1]]
+
         if average:
             for g in data.keys():
                 for r in data[g].keys():
@@ -260,10 +249,7 @@ class Lineplot:
                                         data[g][r][c][cc][d]["all"]) > 1:
                                     a = numpy.array(data[g][r][c][cc][d]["all"])
                                     averaged_array = numpy.array(numpy.average(a, axis=0))
-                                    # print(averaged_array)
-                                    # sys.exit(1)
                                     data[g][r][c][cc][d]["all"] = [averaged_array]
-                                    # print(len(data[s][g][c][d]["all"]))
         if self.df:
             for g in data.keys():
                 for r in data[g].keys():
