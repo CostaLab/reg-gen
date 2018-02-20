@@ -287,6 +287,13 @@ class Statistics(object):
                 except:
                     continue
 
+        with open(os.path.join(self.pars.o, "counts_random_matrix.txt"), "w") as f:
+            for l in self.region_matrix:
+                print("\t".join([str(x) for x in l]), file=f)
+        with open(os.path.join(self.pars.o, "counts_dbs.txt"), "w") as f:
+            print("\t".join([str(x) for x in self.counts_dbs.values()]), file=f)
+
+
     def dbs_motif(self, tpx):
         tpx.motif_statistics()
         for i, mode in enumerate(tpx.motifs):
