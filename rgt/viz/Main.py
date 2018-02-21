@@ -117,7 +117,7 @@ def main():
                                    help='Define the width of single panel. (default: %(default)s)')
     parser_projection.add_argument('-ph', metavar='  ', type=int, default=3,
                                    help='Define the height of single panel. (default: %(default)s)')
-    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01,
+    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0,
                                    help='Define the cutoff of the proportion. (default: %(default)s)')
 
     ################### Intersect Test ##########################################
@@ -302,7 +302,7 @@ def main():
     parser_lineplot.add_argument('-extend_outside', action="store_true", default=False,
                                  help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
     parser_lineplot.add_argument('-add_region_number', action="store_true", default=False,
-                                 help="Add the number of regions in the axis label. (default: %(default))")
+                                 help="Add the number of regions in the axis label. (default: %(default)s)")
 
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
