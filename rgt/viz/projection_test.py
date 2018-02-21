@@ -25,7 +25,7 @@ class Projection:
     def __init__(self, reference_path, query_path):
         # Reference
         self.rEM = ExperimentalMatrix()
-        self.rEM.read(reference_path,load_bed=False)
+        self.rEM.read(reference_path,load_bed=True)
         # self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
@@ -290,7 +290,6 @@ class Projection:
                             data_table.append(
                                 [str(ind_ty), r, q, rlen, qlen, propor, backv, value2str(pv), value2str(pvn)])
                             statistic_table.append([r, q, rlen, qlen, propor, backv, value2str(pv), value2str(pvn)])
-
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, sortable=True)
             output_array(statistic_table, directory=directory, folder=title, filename="statistics" + ty + ".txt")
 
