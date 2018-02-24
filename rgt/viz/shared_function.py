@@ -430,7 +430,8 @@ def compute_coverage(inputs):
                     cov.coverage[k] = cov.coverage[k][::-1]
 
         # When bothends, consider the fliping end
-        if center_end == 'bothends' or center_end == 'upstream' or center_end == 'downstream':
+        # if center_end == 'bothends' or center_end == 'upstream' or center_end == 'downstream':
+        if center_end == 'bothends':
             if "Conservation" in [g, r, c, cc, d]:
                 flap = CoverageSet("for flap", processed_bedsF)
                 flap.phastCons46way_score(stepsize=ss)

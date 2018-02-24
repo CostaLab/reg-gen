@@ -82,10 +82,12 @@ class Lineplot:
                     allbed = bed.relocate_regions(center=self.center,
                                                   left_length=self.extend + self.bs,
                                                   right_length=self.extend + self.bs)
-                    newbed = allbed.filter_strand(strand="+")
-                    self.processed_beds.append(newbed)
-                    newbedF = allbed.filter_strand(strand="-")
-                    self.processed_bedsF.append(newbedF)
+                    self.processed_beds.append(allbed)
+                    self.processed_bedsF.append(False)
+                    # newbed = allbed.filter_strand(strand="+")
+                    # self.processed_beds.append(newbed)
+                    # newbedF = allbed.filter_strand(strand="-")
+                    # self.processed_bedsF.append(newbedF)
                 else:
                     allbed = bed.relocate_regions(center=self.center,
                                                   left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
