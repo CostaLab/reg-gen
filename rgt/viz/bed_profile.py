@@ -289,6 +289,8 @@ class BedProfile:
         else:
             print("*** Error: Not a valid directory: " + ref_dir)
             sys.exit(1)
+
+
         if background and len(refs) == 1:
             background = False
             self.background = self.background + [len(ref) for ref in refs]
@@ -333,6 +335,13 @@ class BedProfile:
             if strand:
                 bed_plus = bed.filter_strand(strand="+")
                 bed_minus = bed.filter_strand(strand="-")
+                if other:
+                    sum_ref_plus = GenomicRegionSet("ref_plus")
+                    sum_ref_minus = GenomicRegionSet("ref_minus")
+            else:
+                if other:
+                    sum_ref = GenomicRegionSet("ref")
+
             for j, ref in enumerate(refs):
                 # print([bed.name, ref.name])
                 if strand:
@@ -341,11 +350,16 @@ class BedProfile:
                              bed_minus.intersect(ref_minus[j]).total_coverage()
                     else:
                         cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
+                    if other:
+                        sum_ref_plus.combine(ref_plus[j])
+                        sum_ref_minus.combine(ref_minus[j])
                 else:
                     if self.coverage:
                         cc = bed.intersect(ref).total_coverage()
                     else:
                         cc = bed.count_by_regionset(ref)
+                    if other:
+                        sum_ref.combine(ref)
                 c.append(cc)
                 self.count_table[bed.name][ref.name] = cc
 
@@ -353,8 +367,16 @@ class BedProfile:
                 if self.coverage:
                     c.append(bed.total_coverage() - sum(c))
                 else:
-                    # c.append(max(0, len(bed) - sum(c)))
-                    remain_regions = bed.subtract(ref, whole_region=False)
+                    if strand:
+                        sum_ref_plus.merge()
+                        sum_ref_minus.merge()
+
+                        remain_regions_p = bed_plus.subtract(sum_ref_plus, whole_region=True)
+                        remain_regions_m = bed_minus.subtract(sum_ref_minus, whole_region=True)
+                        remain_regions = remain_regions_p.combine(remain_regions_m, output=True)
+                    else:
+                        sum_ref.merge()
+                        remain_regions = bed.subtract(sum_ref, whole_region=True)
                     c.append(len(remain_regions))
                 for j, ref in enumerate(refs):
                     self.count_table[bed.name][tag+"_else"] = c[-1]

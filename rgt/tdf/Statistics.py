@@ -287,11 +287,7 @@ class Statistics(object):
                 except:
                     continue
 
-        with open(os.path.join(self.pars.o, "counts_random_matrix.txt"), "w") as f:
-            for l in self.region_matrix:
-                print("\t".join([str(x) for x in l]), file=f)
-        with open(os.path.join(self.pars.o, "counts_dbs.txt"), "w") as f:
-            print("\t".join([str(x) for x in self.counts_dbs.values()]), file=f)
+
 
 
     def dbs_motif(self, tpx):
@@ -394,6 +390,12 @@ class Statistics(object):
         # self.stat["DBSs_background_all"] = numpy.mean(counts_dbss)
         # try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
         # except: self.stat["p_value"] = "1"
+
+        with open(os.path.join(self.pars.o, "counts_random_matrix.txt"), "w") as f:
+            for l in self.region_matrix:
+                print("\t".join([str(x) for x in l]), file=f)
+        with open(os.path.join(self.pars.o, "counts_dbs.txt"), "w") as f:
+            print("\t".join([str(x) for x in self.counts_dbs.values()]), file=f)
 
     def target_stat(self, target_regions, tpx, tpxf):
         # self.stat["DBSs_target_all"] = str(len(self.txpf))
