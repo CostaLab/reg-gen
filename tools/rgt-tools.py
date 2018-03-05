@@ -458,6 +458,13 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-p', metavar='position', type=int, help="The start position")
     parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
+    ############### FASTA convert #############################################
+    parser_FASTAconvert = subparsers.add_parser('fasta_convert',
+                                              help="[FASTA] Convert the sequence by critiria")
+    parser_FASTAconvert.add_argument('-i', metavar='input', type=str, help="Input FASTA file")
+    parser_FASTAconvert.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_FASTAconvert.add_argument('-c', '--complement', default=False, action="store_true", help="Get the complement of the sequence")
+    parser_FASTAconvert.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
     ############### TXP to BED #############################################
     # python rgt-tools.py txp2bed -i -o
     parser_txp2bed = subparsers.add_parser('txp2bed',
@@ -1922,9 +1929,22 @@ if __name__ == "__main__":
         else:
             print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
 
+    ############### FASTA_convert #######################################
+    elif args.mode == "fasta_convert":
+        from rgt.SequenceSet import SequenceSet
 
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
 
-    ############### FASTA slicing #######################################
+        for s in seq:
+            if args.reverse:
+                s.seq.sequences = s.seq[::-1]
+            if args.complement:
+                s.seq = s.complement()
+
+        seq.write_fasta(filename=args.o)
+
+    ############### TXP to BED  #######################################
     elif args.mode == "txp2bed":
         from rgt.tdf.RNADNABindingSet import RNADNABindingSet
         txp = RNADNABindingSet("txp")

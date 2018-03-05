@@ -284,7 +284,7 @@ class Report(object):
                     #                                fill=True, color="silver", snap=False, linewidth=0,
                     #                                label="Autobinding"))
 
-                    ax.add_patch(patches.Rectangle(xy=(rbs.initial, 0.9 * max_y), width=len(rbs), height=0.05*max_y,
+                    ax.add_patch(patches.Rectangle(xy=(last_i, 0.9 * max_y), width=i - last_i, height=0.05*max_y,
                                                    fill=True, color="silver", snap=False, linewidth=0,
                                                    label="Autobinding"))
                     drawing = False

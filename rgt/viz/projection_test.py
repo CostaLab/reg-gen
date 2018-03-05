@@ -22,10 +22,10 @@ from .shared_function import output_array, group_refque, color_groupded_region, 
 
 
 class Projection:
-    def __init__(self, reference_path, query_path):
+    def __init__(self, reference_path, query_path, load_bed=True):
         # Reference
         self.rEM = ExperimentalMatrix()
-        self.rEM.read(reference_path,load_bed=True)
+        self.rEM.read(reference_path,load_bed=load_bed)
         # self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
