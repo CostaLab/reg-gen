@@ -2693,3 +2693,20 @@ class GenomicRegionSet:
             return True
         else:
             return False
+
+    def fragmentize(self, size):
+        """Fragmentize each region by the given size"""
+        z = GenomicRegionSet(self.name)
+        for r in self:
+            l = len(r)
+            if l < size:
+                z.add(r)
+            else:
+                for i in range(int(l/size)):
+                    ff = r.initial+(i+1)*size
+                    if ff > r.final:
+                        ff = r.final
+                    g = GenomicRegion(chrom=r.chrom, initial=r.initial+i*size,
+                                      final=ff, name=r.name, orientation=r.orientation)
+                    z.add(g)
+        return z

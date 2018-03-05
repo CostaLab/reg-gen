@@ -119,6 +119,8 @@ def main():
                                    help='Define the height of single panel. (default: %(default)s)')
     parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0,
                                    help='Define the cutoff of the proportion. (default: %(default)s)')
+    parser_projection.add_argument('-load', action="store_false", default=True,
+                                   help='Load the BED files later during processing, which saves memory usage when dealing with large number of BED files.')
 
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',
@@ -492,7 +494,7 @@ def main():
             print2(parameter, "\tOutput directory: " + os.path.basename(args.o))
             print2(parameter, "\tExperiment title: " + args.t)
 
-            projection = Projection(args.r, args.q)
+            projection = Projection(args.r, args.q, load_bed=args.load)
             projection.group_refque(args.g)
             projection.colors(args.c, args.color)
 
