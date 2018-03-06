@@ -1950,7 +1950,7 @@ if __name__ == "__main__":
         txp = RNADNABindingSet("txp")
         txp.read_tpx(filename=args.i, dna_fine_posi=True)
         tmp = os.path.join(os.path.dirname(args.o), "temp.bed")
-        txp.write(filename=tmp)
+        txp.write_bed(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
         os.remove(tmp)
 
