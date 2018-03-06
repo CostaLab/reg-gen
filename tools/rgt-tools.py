@@ -465,12 +465,12 @@ if __name__ == "__main__":
     parser_FASTAconvert.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
     parser_FASTAconvert.add_argument('-c', '--complement', default=False, action="store_true", help="Get the complement of the sequence")
     parser_FASTAconvert.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
-    ############### TXP to BED #############################################
+    ############### TPX to BED #############################################
     # python rgt-tools.py txp2bed -i -o
-    parser_txp2bed = subparsers.add_parser('txp2bed',
+    parser_tpx2bed = subparsers.add_parser('tpx2bed',
                                            help="[BED] Convert TXP file into BED format")
-    parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
-    parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_tpx2bed.add_argument('-i', metavar='input', type=str, help="Input TPX file")
+    parser_tpx2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ############### ENCODE Download #############################################
     # python rgt-tools.py encode -i -o
@@ -1944,11 +1944,11 @@ if __name__ == "__main__":
 
         seq.write_fasta(filename=args.o)
 
-    ############### TXP to BED  #######################################
-    elif args.mode == "txp2bed":
+    ############### TPX to BED  #######################################
+    elif args.mode == "tpx2bed":
         from rgt.tdf.RNADNABindingSet import RNADNABindingSet
         txp = RNADNABindingSet("txp")
-        txp.read_txp(filename=args.i, dna_fine_posi=True)
+        txp.read_tpx(filename=args.i, dna_fine_posi=True)
         tmp = os.path.join(os.path.dirname(args.o), "temp.bed")
         txp.write(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
