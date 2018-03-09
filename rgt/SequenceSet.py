@@ -167,7 +167,7 @@ class SequenceSet:
     def write_fasta(self, filename):
         with open(filename, "w") as f:
             for s in self:
-                print("> "+ s.name, file=f)
+                print(">"+ s.name, file=f)
                 for ss in [s.seq[i:i + 80] for i in range(0, len(s), 80)]:
                     print(ss, file=f)
 
