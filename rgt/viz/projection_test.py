@@ -193,7 +193,7 @@ class Projection:
             ax[ind_ty].set_ylabel('Percentage of intersected regions', fontsize=8)
             ax[ind_ty].set_xticks([i + 0.5 - 0.5 * width for i in range(len(r_label))])
             ax[ind_ty].set_xticklabels(r_label, rotation=30, ha="right", fontsize=8)
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax[ind_ty].tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
 
             handles, labels = ax[ind_ty].get_legend_handles_labels()
             # uniq_labels = unique(labels)
@@ -412,7 +412,7 @@ class Projection:
             ax.minorticks_off()
             ax.set_yticks([x + 0.5 for x in range(len(self.chrom_list))])
             ax.set_yticklabels(self.chrom_list, rotation=0, ha="right")
-            ax.tick_params(axis='y', which='both', top='off', bottom='off', labelbottom='on')
+            ax.tick_params(axis='y', which='both', top=False, bottom=False, labelbottom=True)
 
             ax.legend(self.disperDict[ty].keys(), loc='center left', handlelength=1, handletextpad=1,
                       columnspacing=2, borderaxespad=0., prop={'size': 10}, bbox_to_anchor=(1.05, 0.5))

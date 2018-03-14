@@ -331,7 +331,7 @@ class Report(object):
                     w += l
                 ax.text(rnalen * 0.01, max_y - 2 * h, "exon boundaries", fontsize=5, color='black')
 
-        f.tight_layout(pad=1.08)
+        # f.tight_layout(pad=1.08)
 
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
@@ -400,13 +400,13 @@ class Report(object):
         formatter = FuncFormatter(to_percent)
         # Set the formatter
         ax.yaxis.set_major_formatter(formatter)
-        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        ax.tick_params(axis='y', which='both', left=True, right=False, labelbottom=False)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_ylabel("Proportion of promoters (%)", fontsize=9, rotation=90)
 
         # X axis
         ax.set_xlim([0, len(self.stat.rbss)])
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
         ax.set_xticks([i + 0.5 for i in range(len(self.stat.rbss))])
         ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], rotation=35,
                            ha="right", fontsize=tick_size)
@@ -416,7 +416,7 @@ class Report(object):
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=9)
 
-        f.tight_layout(pad=1.08)
+        # f.tight_layout(pad=1.08)
         f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
@@ -476,8 +476,8 @@ class Report(object):
 
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
-        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
+        ax.tick_params(axis='y', which='both', left=True, right=False, labelbottom=False)
 
         # Legend
         dot_legend, = plt.plot([1, 1], color=target_color, marker='o', markersize=5, markeredgecolor="white",

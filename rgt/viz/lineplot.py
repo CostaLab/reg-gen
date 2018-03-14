@@ -614,8 +614,8 @@ class Lineplot:
                     # axs[bi, bj].locator_params(axis = 'y', nbins = 4)
                     for spine in ['top', 'right', 'left', 'bottom']:
                         axs[bi, bj].spines[spine].set_visible(False)
-                    axs[bi, bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
-                    axs[bi, bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
+                    axs[bi, bj].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
+                    axs[bi, bj].tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
 
                     # if bj > 0:
                     #    plt.setp(axs[bi, bj].get_yticklabels(),visible=False)
