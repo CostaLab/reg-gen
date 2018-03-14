@@ -331,7 +331,7 @@ class Report(object):
                     w += l
                 ax.text(rnalen * 0.01, max_y - 2 * h, "exon boundaries", fontsize=5, color='black')
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout(pad=1.08)
 
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
@@ -416,7 +416,7 @@ class Report(object):
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=9)
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout(pad=1.08)
         f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
