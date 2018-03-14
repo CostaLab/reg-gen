@@ -613,7 +613,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
         arg_ptr[i + 1] = s
-    # print(arg_ptr)
+    # print(arg_strings)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
     silentremove(os.path.join(output + ".summary"))
     silentremove(os.path.join(output + ".log"))

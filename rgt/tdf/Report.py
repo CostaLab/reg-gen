@@ -243,12 +243,13 @@ class Report(object):
             min_y = 0
 
         if ac:
-            min_y = float(max_y * (-0.09))
+            # min_y = float(max_y * (-0.09))
+            max_y = float(max_y * (1.05))
 
         # Plotting
         for rbs in sig_region:
-            rect = patches.Rectangle(xy=(rbs.initial, 0), width=len(rbs), height=max_y, facecolor=sig_color,
-                                     edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
+            rect = patches.Rectangle(xy=(rbs.initial, 0.95 * max_y), width=len(rbs), height=max_y, facecolor=sig_color,
+                                     edgecolor="none", alpha=1, lw=None, label="Significant DBD")
             ax.add_patch(rect)
 
         lw = 1.5
@@ -257,7 +258,12 @@ class Report(object):
             ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
             ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
         else:
-            ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label=linelabel)
+            ax.plot(x, all_y, color='blue', alpha=0, lw=lw, markeredgecolor="none")
+            ax.fill_between(x, 0, all_y, facecolor=target_color, alpha=1,  edgecolor="none", label=linelabel)
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            ax.yaxis.set_ticks_position('left')
+            ax.xaxis.set_ticks_position('bottom')
 
         # RNA accessbility
         if ac:
@@ -274,7 +280,11 @@ class Report(object):
                         last_i = i
                         drawing = True
                 elif drawing:
-                    ax.add_patch(patches.Rectangle((last_i, min_y), i - last_i, -min_y,
+                    # ax.add_patch(patches.Rectangle((last_i, min_y), i - last_i, -min_y,
+                    #                                fill=True, color="silver", snap=False, linewidth=0,
+                    #                                label="Autobinding"))
+
+                    ax.add_patch(patches.Rectangle(xy=(last_i, 0.9 * max_y), width=i - last_i, height=0.05*max_y,
                                                    fill=True, color="silver", snap=False, linewidth=0,
                                                    label="Autobinding"))
                     drawing = False
@@ -321,7 +331,7 @@ class Report(object):
                     w += l
                 ax.text(rnalen * 0.01, max_y - 2 * h, "exon boundaries", fontsize=5, color='black')
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout(pad=1.08)
 
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
@@ -335,9 +345,9 @@ class Report(object):
         ax.legend(legend_h, legend_l,
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
                   prop={'size': 12}, ncol=3)
-        # pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-        # pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
-        # pp.close()
+        pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
+        pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
+        pp.close()
 
     def barplot(self, filename, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
@@ -406,19 +416,19 @@ class Report(object):
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=9)
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout(pad=1.08)
         f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w',
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
-        # for tick in ax.xaxis.get_major_ticks():
-        #     tick.label.set_fontsize(12)
-        # for tick in ax.yaxis.get_major_ticks():
-        #     tick.label.set_fontsize(12)
-        # ax.xaxis.label.set_size(14)
-        # ax.yaxis.label.set_size(14)
-        # pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
-        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
-        # pp.close()
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        ax.xaxis.label.set_size(14)
+        ax.yaxis.label.set_size(14)
+        pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
+        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        pp.close()
 
     def boxplot(self, filename, matrix, sig_region, truecounts, sig_boolean, ylabel):
         """Generate the visualized plot"""
