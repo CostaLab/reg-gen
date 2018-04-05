@@ -61,24 +61,31 @@ class Sequence:
 
     def complement(self):
         """Return another Sequence which is the complement to original sequence."""
-        if self.strand == "RNA":
-            print("No complement strand for RNA " + self.name)
-            return
-        elif self.strand == "+":
-            strand = "-"
-        else:
-            strand = "-"
+        # if self.strand == "RNA":
+        #     print("No complement strand for RNA " + self.name)
+        #     return
+        # elif self.strand == "+":
+        #     strand = "-"
+        # else:
+        #     strand = "-"
 
-        seq = copy.deepcopy(self.seq)
-        seq.replace("A", "G")
-        seq.replace("G", "A")
-        seq.replace("C", "T")
-        seq.replace("T", "C")
-        seq.replace("m", "1")
-        seq.replace("1", "m")
-
-        s = Sequence(seq, name=self.name + "_complement", strand=strand)
-        return s
+        t = {"A": "T", "T": "A", "C": "G", "G": "C", "N": "N"}
+        ns = ""
+        for s in self.seq:
+            ns += t[s]
+        return ns
+        # self.seq = ns
+        #
+        # seq = copy.deepcopy(self.seq)
+        # seq.replace("A", "G")
+        # seq.replace("G", "A")
+        # seq.replace("C", "T")
+        # seq.replace("T", "C")
+        # seq.replace("m", "1")
+        # seq.replace("1", "m")
+        #
+        # s = Sequence(seq=seq, name=self.name + "_complement", strand=strand)
+        # return s
 
 
 ####################################################################################
@@ -137,7 +144,7 @@ class SequenceSet:
                     pass
                 elif line[0] == ">":
                     if pre_seq:
-                        self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
+                        self.add(Sequence(seq=seq, strand=strand, name=info))
                         pre_seq = False
                     info = line.split()[0][1:]
                     seq = ""
@@ -153,9 +160,16 @@ class SequenceSet:
                     pre_seq = True
             if not strand:
                 print("Error: There is no header in " + fasta_file)
-                self.sequences.append(Sequence(seq=seq, strand=".", name=info))
+                self.add(Sequence(seq=seq, strand=".", name=info))
             else:
-                self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
+                self.add(Sequence(seq=seq, strand=strand, name=info))
+
+    def write_fasta(self, filename):
+        with open(filename, "w") as f:
+            for s in self:
+                print(">"+ s.name, file=f)
+                for ss in [s.seq[i:i + 80] for i in range(0, len(s), 80)]:
+                    print(ss, file=f)
 
     def read_regions(self, regionset, genome_fasta, ex=0):
         genome = pysam.Fastafile(genome_fasta)

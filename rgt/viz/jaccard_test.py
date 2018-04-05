@@ -160,13 +160,13 @@ class Jaccard:
                 # axarr[i].set_ylim(bottom=0.95)
                 for spine in ['top', 'right', 'left', 'bottom']:
                     axarr[i].spines[spine].set_visible(False)
-                axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
+                axarr[i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
 
                 if i > 0:
                     plt.setp(axarr[i].get_yticklabels(), visible=False)
                     # plt.setp(axarr[i].get_yticks(),visible=False)
                     axarr[i].minorticks_off()
-                    axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
+                    axarr[i].tick_params(axis='y', which='both', left=False, right=False, labelbottom=False)
 
             plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
             axarr[-1].legend(legends[0:len(self.jlist[t][r].keys())], self.jlist[t][r].keys(), loc='center left',

@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     ############### BED merge  ############################################
     # python rgt-tools.py
-    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions by name")
+    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions")
     parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedmerge.add_argument('-s', action="store_true", help="Strand specific")
@@ -229,6 +229,8 @@ if __name__ == "__main__":
                                     help="Define minimum length of gene to filter out the small genes (default:0)")
     parser_bedupstream.add_argument('-r', '--reverse', action="store_true", default=False,
                                     help="Reverse the strand.")
+    parser_bedupstream.add_argument('-ds', '--downstream', action="store_true", default=False,
+                                    help="Find downstream regions instead of upstream.")
 
     ############### BED to FASTA #############################################
     parser_bed2fasta = subparsers.add_parser('bed_to_fasta', 
@@ -314,6 +316,12 @@ if __name__ == "__main__":
     parser_bedschrom = subparsers.add_parser('bed_standard_chrom',
                                             help="[BED] Standardize the chromosomes.")
     parser_bedschrom.add_argument('-i', metavar='input', type=str, help="Input BED file")
+
+    ############### BED seperate strand ################################
+    parser_bedstrand = subparsers.add_parser('bed_strand',
+                                             help="[BED] Seperate the BED files by strandness")
+    parser_bedstrand.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedstrand.add_argument('-o', metavar='output', type=str, help="Input directory")
 
     ############### BED add overlapping region name ################################
     parser_adddata = subparsers.add_parser('bed_add_data',
@@ -450,12 +458,19 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-p', metavar='position', type=int, help="The start position")
     parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
-    ############### TXP to BED #############################################
+    ############### FASTA convert #############################################
+    parser_FASTAconvert = subparsers.add_parser('fasta_convert',
+                                              help="[FASTA] Convert the sequence by critiria")
+    parser_FASTAconvert.add_argument('-i', metavar='input', type=str, help="Input FASTA file")
+    parser_FASTAconvert.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_FASTAconvert.add_argument('-c', '--complement', default=False, action="store_true", help="Get the complement of the sequence")
+    parser_FASTAconvert.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
+    ############### TPX to BED #############################################
     # python rgt-tools.py txp2bed -i -o
-    parser_txp2bed = subparsers.add_parser('txp2bed',
+    parser_tpx2bed = subparsers.add_parser('tpx2bed',
                                            help="[BED] Convert TXP file into BED format")
-    parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
-    parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_tpx2bed.add_argument('-i', metavar='input', type=str, help="Input TPX file")
+    parser_tpx2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ############### ENCODE Download #############################################
     # python rgt-tools.py encode -i -o
@@ -811,19 +826,32 @@ if __name__ == "__main__":
         target = GenomicRegionSet("target")
         # if args.min == 0: cut = float("inf")
         # elif args.min > 0: cut = args.min
+        if not args.downstream:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-        for s in gene:
-            if s.orientation == "+" and len(s) > args.min: 
-                s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "-"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
+        else:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-            elif s.orientation == "-" and len(s) > args.min: 
-                s.initial, s.final = s.final+args.d, s.final+args.d+args.l
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "+"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
         
         print(len(target))
         target.write(args.o)
@@ -853,7 +881,7 @@ if __name__ == "__main__":
                     else:
                         l = line.strip().split()
                         ranking.append([l[0],int(l[1]),int(l[2])])
-
+        # print(len(regions))
         for i, r in enumerate(regions):
             if args.order:
                 for j, reg in enumerate(ranking):
@@ -882,7 +910,7 @@ if __name__ == "__main__":
                                          ss=exon.initial, es=exon.final, 
                                          strand=exon.orientation, 
                                          reverse=True, complement=True)
-                    ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                    ss = [s[k:k+70] for k in range(0, len(s), 70)]
                     writelines += ss
 
                 with open(os.path.join(args.o, name + ".fa"), "w") as f:
@@ -892,9 +920,10 @@ if __name__ == "__main__":
 
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
-                ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                ss = [s[k:k+70] for k in range(0, len(s), 70)]
 
                 if ".fa" not in args.o:
+                    # print(i)
                     with open(os.path.join(args.o, name + ".fa"), "w") as f:
                         if not r.orientation: r.orientation = "."
                         if not args.score:
@@ -1292,6 +1321,23 @@ if __name__ == "__main__":
         nbed.write(args.i)
 
 
+    ############### BED seperate strand ###########################
+    #
+    elif args.mode == "bed_strand":
+        print(tag + ": [BED] Seperate by strandness")
+        bed = GenomicRegionSet(args.i)
+        bed.read(args.i)
+        fwd = GenomicRegionSet("FWD")
+        rev = GenomicRegionSet("REV")
+        for r in bed:
+            if r.orientation == "+":
+                fwd.add(r)
+            elif r.orientation == "-":
+                rev.add(r)
+        name = os.path.basename(args.i).rpartition(".")[0]
+        fwd.write(os.path.join(args.o, name+"_FWD.bed"))
+        rev.write(os.path.join(args.o, name+"_REV.bed"))
+
     ############### BED add overlapping region name ###########################
     #
     elif args.mode == "bed_add_data":
@@ -1530,19 +1576,19 @@ if __name__ == "__main__":
                                 else:
                                     stat = l[5].split(";")
                                 list_p.append(float(stat[2]))
-                                c1 = [float(x) for x in stat[0].split(":")]
+                                c1 = [1 + float(x) for x in stat[0].split(":")]
                                 c1 = sum(c1) / len(c1)
                                 count1 = count1 + c1
-                                c2 = [float(x) for x in stat[1].split(":")]
+                                c2 = [1 + float(x) for x in stat[1].split(":")]
                                 c2 = sum(c2) / len(c2)
                                 count2 = count2 + c2
                                 # print(stat[1].split(":"))
                             # print(list_data)
-                            count1 = count1 / len(list_data)
-                            count2 = count2 / len(list_data)
+                            # count1 = count1 / len(list_data)
+                            # count2 = count2 / len(list_data)
                             # print([count1, count2])
                             fc = count2 / count1
-                            p = min(list_p)
+                            p = max(list_p)
 
                             new_d = "\t".join([str(fc), str(current_start), str(current_end),
                                                "0,0,0", "0", ";".join([str(int(count1)), str(int(count2)), str(p)])])
@@ -1551,17 +1597,19 @@ if __name__ == "__main__":
                                                        initial=current_start,
                                                        final=current_end,
                                                        data=new_d)
-
                             bed4.add(new_region)
+                        else:
+                            bed4.add(region)
                             # sys.exit()
 
                         current_chrom = region.chrom
                         current_start = region.initial
                         current_end = region.final
                         current_strand = region.orientation
-                        current_data = [region.data]
+                        list_data = [region.data]
             else:
                 bed4 = regions
+
             return bed4
 
         def output_table(regions, args):
@@ -1634,6 +1682,8 @@ if __name__ == "__main__":
         # Merging the close peaks
         m_gain_peaks = merging_peaks(gain_peaks, args.m)
         m_lost_peaks = merging_peaks(lose_peaks, args.m)
+        # m_gain_peaks = gain_peaks
+        # m_lost_peaks = lose_peaks
         # Gene Association
         if args.rename and args.g:
             m_gain_peaks = m_gain_peaks.gene_association(organism=args.g, strand_specific=False)
@@ -1879,15 +1929,28 @@ if __name__ == "__main__":
         else:
             print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
 
+    ############### FASTA_convert #######################################
+    elif args.mode == "fasta_convert":
+        from rgt.SequenceSet import SequenceSet
 
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
 
-    ############### FASTA slicing #######################################
-    elif args.mode == "txp2bed":
+        for s in seq:
+            if args.reverse:
+                s.seq.sequences = s.seq[::-1]
+            if args.complement:
+                s.seq = s.complement()
+
+        seq.write_fasta(filename=args.o)
+
+    ############### TPX to BED  #######################################
+    elif args.mode == "tpx2bed":
         from rgt.tdf.RNADNABindingSet import RNADNABindingSet
         txp = RNADNABindingSet("txp")
-        txp.read_txp(filename=args.i, dna_fine_posi=True)
+        txp.read_tpx(filename=args.i, dna_fine_posi=True)
         tmp = os.path.join(os.path.dirname(args.o), "temp.bed")
-        txp.write(filename=tmp)
+        txp.write_bed(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
         os.remove(tmp)
 

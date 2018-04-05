@@ -8,6 +8,7 @@ import multiprocessing.pool
 import pickle
 import re
 import time
+from collections import defaultdict
 
 from shutil import copyfile
 
@@ -390,48 +391,140 @@ def multiple_correction(dic):
 
 def compute_coverage(inputs):
     """
-    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c, d
+    [1]  bedname, bamname, processed_beds, processed_bedsF,
+    [5]  g, r, c, cc, d, read_file,
+    [11] rs, bs, ss, center, heatmap, logt,
+    [17] sense, strand, flipnegative, center, outside, extend]
     """
     ts = time.time()
-    cov = CoverageSet(inputs[0].name + ".", inputs[0])
-    if ".bigWig" in inputs[1] or ".bw" in inputs[1]:
-        cov.coverage_from_bigwig(bigwig_file=inputs[1], stepsize=inputs[4])
+    normRPM = True
+
+    [ bedname, bamname, processed_beds, processed_bedsF, g, r, c, cc, d, read_file,
+      rs, bs, ss, center_end, heatmap, logt, sense, strand, flipnegative, outside, extend ] = inputs
+
+    res = defaultdict(list)
+
+    if len(processed_beds) == 0:
+        res["all"].append(numpy.zeros(5))
+        return [g, r, c, cc, d, res]
     else:
-        cov.coverage_from_bam(bam_file=inputs[1], extension_size=inputs[2], binsize=inputs[3], stepsize=inputs[4])
-        cov.normRPM()
-    # When bothends, consider the fliping end
-    if inputs[5] == 'bothends':
-        flap = CoverageSet("for flap", inputs[0])
-        flap.coverage_from_bam(inputs[1], extension_size=inputs[2], binsize=inputs[3], stepsize=inputs[4])
-        ffcoverage = numpy.fliplr(flap.coverage)
-        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-    # Averaging the coverage of all regions of each bed file
-    if inputs[6]:
-        if inputs[7]:
-            result = numpy.log10(numpy.vstack(cov.coverage))  # Store the array into data list
+        cov = CoverageSet(bedname + "." + bamname, processed_beds)
+
+        if "Conservation" in [g, r, c, cc, d]:
+            cov.phastCons46way_score(stepsize=ss)
+        elif ".bigwig" in read_file.lower() or ".bw" in read_file.lower():
+            cov.coverage_from_bigwig(bigwig_file=read_file, stepsize=ss)
         else:
-            result = numpy.vstack(cov.coverage)  # Store the array into data list
-    else:
-        # print(cov.coverage)
-        for i, car in enumerate(cov.coverage):
-            car = numpy.delete(car, [0, 1])
-            if i == 0:
-                avearr = np.array(car)
-                lenr = car.shape[0]
-            elif car.shape[0] == lenr:
-                avearr = numpy.vstack((avearr, car))
+            if not sense and not strand:
+                cov.coverage_from_bam(bam_file=read_file, extension_size=rs, binsize=bs, stepsize=ss)
+                if normRPM: cov.normRPM()
+            else:  # Sense specific
+                cov.coverage_from_bam(bam_file=read_file, extension_size=rs, binsize=bs, stepsize=ss,
+                                      get_sense_info=sense, get_strand_info=strand, paired_reads=True)
+                cov.array_transpose()
+                if normRPM: cov.normRPM()
+
+        if center_end == "midpoint" and flipnegative:
+            for k, re in enumerate(processed_beds):
+                if re.orientation == "-":
+                    cov.coverage[k] = cov.coverage[k][::-1]
+
+        # When bothends, consider the fliping end
+        # if center_end == 'bothends' or center_end == 'upstream' or center_end == 'downstream':
+        if center_end == 'bothends':
+            if "Conservation" in [g, r, c, cc, d]:
+                flap = CoverageSet("for flap", processed_bedsF)
+                flap.phastCons46way_score(stepsize=ss)
+                ffcoverage = numpy.fliplr(flap.coverage)
+                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                 axis=0)
+            elif ".bigwig" in read_file.lower() or ".bw" in read_file.lower():
+                flap = CoverageSet("for flap", processed_bedsF)
+                flap.coverage_from_bigwig(bigwig_file=read_file, stepsize=ss)
+                ffcoverage = numpy.fliplr(flap.coverage)
+                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
             else:
-                pass
-        # avearr = numpy.array(cov.coverage)
-        # print(avearr)
-        # print(avearr.shape)
-        avearr = numpy.average(avearr, axis=0)
-        # numpy.transpose(avearr)
-        result = [inputs[8], inputs[9], inputs[10], inputs[11], avearr]  # Store the array into data list
-    te = time.time()
-    print("\tComputing " + os.path.basename(inputs[1]) + " . " + inputs[0].name + "\t\t" + str(
-        datetime.timedelta(seconds=round(te - ts))))
-    return result
+                flap = CoverageSet("for flap", processed_bedsF)
+                if not sense:
+                    flap.coverage_from_bam(read_file, extension_size=rs, binsize=bs, stepsize=ss)
+                    if normRPM: flap.normRPM()
+                else:  # Sense specific
+                    flap.coverage_from_bam(bam_file=read_file, extension_size=rs, binsize=bs,
+                                           stepsize=ss, get_sense_info=True, paired_reads=True)
+                    flap.array_transpose(flip=True)
+                    if normRPM: flap.normRPM()
+                ffcoverage = numpy.fliplr(flap.coverage)
+                try:
+                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                except:
+                    pass
+
+                if sense:
+                    cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1, flap.transpose_cov1), axis=0)
+                    cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2, flap.transpose_cov2), axis=0)
+        # Extend outside
+        if outside:
+            new_arrays = []
+            for ar in cov.coverage:
+                ss_side = int(extend / ss) - 1
+                # if len(ar) < 2*ss_side
+                left_ar = ar[0:ss_side]
+                right_ar = ar[-ss_side:]
+                rest = ar[ss_side:-ss_side]
+
+                # print([len[ar], len(left_ar), len(rest), len(right_ar)])
+                try:
+                    xp = numpy.linspace(0, ss_side, len(rest))
+                    rest = numpy.interp(range(ss_side), xp=xp, fp=rest)
+                    nar = numpy.concatenate((left_ar, rest))
+                    nar = numpy.concatenate((nar, right_ar))
+                    new_arrays.append(nar)
+                except:
+                    print([ss_side, extend, ss, len(ar), rest])
+            cov.coverage = new_arrays
+
+        # Averaging the coverage of all regions of each bed file
+        if heatmap:
+            if logt:
+                res = numpy.log10(numpy.vstack(cov.coverage) + 1)  # Store the array into data list
+            else:
+                res = numpy.vstack(cov.coverage)  # Store the array into data list
+        else:
+            if len(cov.coverage) == 0:
+                res = None
+                print("** Warning: Cannot open " + read_file)
+            else:
+                for i, car in enumerate(cov.coverage):
+                    if i == 0:
+                        avearr = numpy.array(car, ndmin=2)
+                    else:
+                        avearr = numpy.vstack((avearr, numpy.array(car, ndmin=2)))
+                if logt:
+                    avearr = numpy.log10(avearr + 1)
+
+                avearr = numpy.average(avearr, axis=0)
+                if sense or strand:
+                    if logt:
+                        sense_1 = numpy.average(numpy.log2(cov.transpose_cov1 + 1), axis=0)
+                        sense_2 = numpy.average(numpy.log2(cov.transpose_cov2 + 1), axis=0)
+                    else:
+                        sense_1 = numpy.average(cov.transpose_cov1, axis=0)
+                        sense_2 = numpy.average(cov.transpose_cov2, axis=0)
+                cut_end = int(bs / ss)
+                avearr = avearr[cut_end:-cut_end]
+                res["all"].append(avearr)
+
+                if sense or strand:
+                    sense_1 = sense_1[cut_end:-cut_end]
+                    sense_2 = sense_2[cut_end:-cut_end]
+                    res["sense_1"].append(sense_1)
+                    res["sense_2"].append(sense_2)
+
+        result = [g, r, c, cc, d, res]  # Store the array into data list
+        te = time.time()
+        print("\tComputing " + bedname + " . " + bamname + "\t\t" +
+              str(datetime.timedelta(seconds=round(te - ts))))
+        return result
 
 
 def mp_count_intersets(inps):
