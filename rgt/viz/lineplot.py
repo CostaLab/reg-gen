@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 from collections import OrderedDict, defaultdict
 from scipy.stats import stats
-
+from scipy.interpolate import spline
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html
@@ -239,7 +239,10 @@ class Lineplot:
                             for d in data[g][r][c][cc].keys():
                                 for out in mp_output:
                                     if out[0:5] == [g, r, c, cc, d]:
-                                        data[g][r][c][cc][d] = out[-1]
+                                        if data[g][r][c][cc][d]:
+                                            data[g][r][c][cc][d]["all"].append(out[-1]["all"][0])
+                                        else:
+                                            data[g][r][c][cc][d] = out[-1]
 
         if average:
             for g in data.keys():
@@ -334,9 +337,9 @@ class Lineplot:
                                         pt = self.data[g][r][c][cc][d]["df"]
                                     else:
                                         pt = self.data[g][r][c][cc][d]["all"]
+                                    # print(pt)
 
                                     for l, y in enumerate(pt):
-                                        # print(y)
                                         yaxmax[ic] = max(numpy.amax(y), yaxmax[ic])
                                         sx_ymax[ir] = max(numpy.amax(y), sx_ymax[ir])
                                         if self.df:
@@ -347,7 +350,13 @@ class Lineplot:
                                             x = numpy.linspace(-self.extend, self.extend, len(y))
                                         else:
                                             x = numpy.linspace(-int(self.extend*1.5), int(self.extend*1.5), len(y))
-                                        ax.plot(x, y, color=self.colors[cc], lw=linewidth, label=cc)
+
+                                        ## smoothening line
+                                        xnew = numpy.linspace(x[0], x[-1], 500)
+                                        ynew = spline(x, y, xnew)
+
+                                        # ax.plot(x, y, color=self.colors[cc], lw=linewidth, label=cc)
+                                        ax.plot(xnew, ynew, color=self.colors[cc], lw=linewidth, label=cc)
                                         if ir < nit - 1:
                                             ax.set_xticklabels([])
                                         # Processing for future output
