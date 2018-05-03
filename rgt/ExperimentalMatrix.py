@@ -41,7 +41,7 @@ class ExperimentalMatrix:
         self.objectsDict = {}
         self.trash = []
 
-    def read(self, file_path, is_bedgraph=False, verbose=False, test=False, add_region_len=False):
+    def read(self, file_path, is_bedgraph=False, verbose=False, test=False, add_region_len=False, load_bed=True):
         """Read Experimental matrix file.
 
         *Keyword arguments:*
@@ -173,6 +173,7 @@ class ExperimentalMatrix:
 
         self.remove_name()
         self.load_bed_url(".")
+        self.load_bed = load_bed
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
 
         if add_region_len:
@@ -190,6 +191,12 @@ class ExperimentalMatrix:
     def get_regionsets(self):
         """Returns the RegionSets."""
         return [self.objectsDict[n] for i, n in enumerate(self.names) if self.types[i] == "regions"]
+
+    def get_regionset(self, name):
+        """Returns the RegionSets."""
+        r = GenomicRegionSet(name=name)
+        r.read(os.path.abspath(self.files[name]))
+        return r
 
     def get_regionsnames(self):
         """Returns the region names."""
@@ -221,13 +228,14 @@ class ExperimentalMatrix:
 
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
-                if is_bedgraph:
-                    regions.read(os.path.abspath(self.files[self.names[i]]), io=GRSFileIO.BedGraph)
-                else:
-                    regions.read(os.path.abspath(self.files[self.names[i]]))
-                    regions.sort()
-                    if test:
-                        regions.sequences = regions.sequences[0:11]
+                if self.load_bed:
+                    if is_bedgraph:
+                        regions.read(os.path.abspath(self.files[self.names[i]]), io=GRSFileIO.BedGraph)
+                    else:
+                        regions.read(os.path.abspath(self.files[self.names[i]]))
+                        regions.sort()
+                        if test:
+                            regions.sequences = regions.sequences[0:10]
                 self.objectsDict[self.names[i]] = regions
 
             elif t == "genes":

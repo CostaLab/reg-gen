@@ -345,7 +345,7 @@ class Boxplot:
             # axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
                 axarr[i].spines[spine].set_visible(False)
-            axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+            axarr[i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
             axarr[i].tick_params(labelsize=ticklabelsize + 1)
             if scol:
                 # plt.setp(axarr[i].get_yticklabels(),visible=False)
@@ -354,7 +354,7 @@ class Boxplot:
                 # axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
             else:
                 plt.setp(axarr[i].get_yticklabels(), visible=True)
-                axarr[i].tick_params(axis='y', which='both', left='on', right='off', labelbottom='on')
+                axarr[i].tick_params(axis='y', which='both', left=True, right=False, labelbottom=True)
                 # plt.setp(axarr[i].get_yticks(),visible=False)
 
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1,

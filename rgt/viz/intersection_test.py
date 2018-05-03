@@ -246,7 +246,7 @@ class Intersect:
             ax.yaxis.tick_left()
             ax.set_xticks([i + 0.5 - 0.5 * width for i in range(len(r_label))])
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
-            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([0, len(self.counts.values()[ai].keys()) - 0.1])
 
             ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1,
@@ -306,7 +306,7 @@ class Intersect:
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
-            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, ind_r + 0.5])
 
             # handles, labels = ax.get_legend_handles_labels()
@@ -381,7 +381,7 @@ class Intersect:
 
             ax.set_xticks(range(len(r_label)))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
-            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, ind_r + 0.5])
             ax.set_ylim([0, 100])
 
@@ -745,7 +745,7 @@ class Intersect:
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(q_label)))
             ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
-            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, len(q_label) + 0.5])
             ax.set_ylim([0, 1])
 
