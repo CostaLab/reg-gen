@@ -111,8 +111,11 @@ def get_raw_signal(arguments):
             motif_len = region.final - region.initial
 
         mid = (region.final + region.initial) / 2
-        p1 = max(mid - window_size / 2, 0)
+        p1 = mid - window_size / 2
         p2 = mid + window_size / 2
+
+        if p1 <= 0:
+            continue
 
         # Fetch raw signal
         for read in bam1.fetch(region.chrom, p1, p2):
@@ -174,21 +177,25 @@ def get_bc_signal(arguments):
             motif_len = region.final - region.initial
 
         mid = (region.final + region.initial) / 2
-        p1 = max(mid - window_size / 2, 0)
+        p1 = mid - window_size / 2
         p2 = mid + window_size / 2
 
+        if p1 <= 0:
+            continue
         # Fetch raw signal
-        signal = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam1,
+        signal1 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam1,
                                  bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
                                  forward_shift=forward_shift, reverse_shift=reverse_shift)
 
-        signal_1 = np.add(signal_1, np.array(signal))
-
-        signal = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam2,
+        signal2 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam2,
                                  bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
                                  forward_shift=forward_shift, reverse_shift=reverse_shift)
 
-        signal_2 = np.add(signal_2, np.array(signal))
+        if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
+            continue
+
+        signal_1 = np.add(signal_1, np.array(signal1))
+        signal_2 = np.add(signal_2, np.array(signal2))
 
         update_pwm(pwm, fasta, region, p1, p2)
 
@@ -273,17 +280,17 @@ def diff_analysis_run(args):
 
     pool.map(line_plot, plots_list)
 
-    # for mpbs_name in mpbs_name_list:
-    #     res = get_ps_tc_results(signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
-    #                             args.factor1, args.factor2, motif_num_dict[mpbs_name], motif_len_dict[mpbs_name])
+    for mpbs_name in mpbs_name_list:
+        res = get_ps_tc_results(signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
+                                args.factor1, args.factor2, motif_num_dict[mpbs_name], motif_len_dict[mpbs_name])
     #
     #     # only use the factors whose protection scores are greater than 0
     #     if res[0] > 0 and res[1] < 0:
-    #         ps_tc_results_by_tf[mpbs_name] = res
+        ps_tc_results_by_tf[mpbs_name] = res
     #
-    # stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    # scatter_plot(args, stat_results_by_tf)
-    # output_stat_results(args, stat_results_by_tf)
+    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    scatter_plot(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf)
 
 
 def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
