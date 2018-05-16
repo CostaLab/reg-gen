@@ -477,6 +477,8 @@ def line_plot(arguments):
     (mpbs_name, num_fp, signal_1, signal_2, factor1, factor2, condition1, condition2,
      pwm_dict, output_location, window_size, standardize) = arguments
 
+    mpbs_name = mpbs_name.replace("(", "_")
+    mpbs_name = mpbs_name.replace(")", "")
     mean_signal_1 = (signal_1 / num_fp) / factor1
     mean_signal_2 = (signal_2 / num_fp) / factor2
 
