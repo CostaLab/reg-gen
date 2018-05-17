@@ -184,12 +184,12 @@ def get_bc_signal(arguments):
             continue
         # Fetch raw signal
         signal1 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam1,
-                                 bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
-                                 forward_shift=forward_shift, reverse_shift=reverse_shift)
+                                  bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
+                                  forward_shift=forward_shift, reverse_shift=reverse_shift)
 
         signal2 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam2,
-                                 bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
-                                 forward_shift=forward_shift, reverse_shift=reverse_shift)
+                                  bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
+                                  forward_shift=forward_shift, reverse_shift=reverse_shift)
 
         if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
             continue
@@ -206,7 +206,7 @@ def diff_analysis_run(args):
     # Initializing Error Handler
     err = ErrorHandler()
 
-    output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
+    output_location = os.path.join(args.output_location, "Lineplots")
     try:
         if not os.path.isdir(output_location):
             os.makedirs(output_location)
@@ -265,7 +265,6 @@ def diff_analysis_run(args):
         output_factor(args, args.factor1, args.factor2)
 
     if args.output_profiles:
-        output_location = os.path.join(args.output_location, "{}_{}".format(args.condition1, args.condition2))
         output_profiles(mpbs_name_list, signal_dict_by_tf_1, output_location, args.condition1)
         output_profiles(mpbs_name_list, signal_dict_by_tf_2, output_location, args.condition2)
 
@@ -275,7 +274,7 @@ def diff_analysis_run(args):
     for mpbs_name in mpbs_name_list:
         plots_list.append((mpbs_name, motif_num_dict[mpbs_name], signal_dict_by_tf_1[mpbs_name],
                            signal_dict_by_tf_2[mpbs_name], args.factor1, args.factor2, args.condition1,
-                           args.condition2, pwm_dict_by_tf[mpbs_name], args.output_location, args.window_size,
+                           args.condition2, pwm_dict_by_tf[mpbs_name], output_location, args.window_size,
                            args.standardize))
 
     pool.map(line_plot, plots_list)
@@ -283,9 +282,9 @@ def diff_analysis_run(args):
     for mpbs_name in mpbs_name_list:
         res = get_ps_tc_results(signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
                                 args.factor1, args.factor2, motif_num_dict[mpbs_name], motif_len_dict[mpbs_name])
-    #
-    #     # only use the factors whose protection scores are greater than 0
-    #     if res[0] > 0 and res[1] < 0:
+        #
+        #     # only use the factors whose protection scores are greater than 0
+        #     if res[0] > 0 and res[1] < 0:
         ps_tc_results_by_tf[mpbs_name] = res
     #
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
@@ -417,8 +416,8 @@ def get_ps_tc_results(signal_1, signal_2, factor1, factor2, num_motif, motif_len
     protect_score2 = (nr - nc) / motif_len + (nl - nc) / motif_len
     tc2 = (sum(signal_2) - nc) / (len(signal_2) - motif_len)
 
-    protect_diff = protect_score1 - protect_score2
-    tc_diff = tc1 - tc2
+    protect_diff = protect_score2 - protect_score1
+    tc_diff = tc2 - tc1
     return [protect_score1, protect_score2, protect_diff, tc1, tc2, tc_diff]
 
 
@@ -486,15 +485,13 @@ def line_plot(arguments):
         mean_signal_1, mean_signal_2 = standard(mean_signal_1, mean_signal_2)
 
     # Output PWM and create logo
-    pwm_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
-                             "{}.pwm".format(mpbs_name))
+    pwm_fname = os.path.join(output_location, "{}.pwm".format(mpbs_name))
     pwm_file = open(pwm_fname, "w")
     for e in ["A", "C", "G", "T"]:
         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
     pwm_file.close()
 
-    logo_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
-                              "{}.logo.eps".format(mpbs_name))
+    logo_fname = os.path.join(output_location, "{}.logo.eps".format(mpbs_name))
     pwm = motifs.read(open(pwm_fname), "pfm")
     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -531,14 +528,12 @@ def line_plot(arguments):
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 70))
 
-    figure_name = os.path.join(output_location, "{}_{}".format(condition1, condition2),
-                               "{}.line.eps".format(mpbs_name))
+    figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
     fig.tight_layout()
     fig.savefig(figure_name, format="eps", dpi=300)
 
     # Creating canvas and printing eps / pdf with merged results
-    output_fname = os.path.join(output_location, "{}_{}".format(condition1, condition2),
-                                "{}.eps".format(mpbs_name))
+    output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
 
     c = pyx.canvas.canvas()
     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
@@ -576,9 +571,10 @@ def scatter_plot(args, stat_results_by_tf):
     ax.axvline(x=tc_diff_mean, linewidth=2, linestyle='dashed')
     ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
 
-    ax.set_xlabel("TC DIFF of {} - {}".format(args.condition1, args.condition2), fontweight='bold')
-    ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold',
-                  rotation=90)
+    ax.set_xlabel("{} $\longrightarrow$ {} \n $\Delta$ Open Chromatin Score".format(args.condition1, args.condition2),
+                  fontweight='bold', fontsize=20)
+    ax.set_ylabel("$\Delta$ Protection Score \n {} $\longrightarrow$ {}".format(args.condition1, args.condition2),
+                  fontweight='bold', rotation=90, fontsize=20)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
     fig.savefig(figure_name, format="pdf", dpi=300)
