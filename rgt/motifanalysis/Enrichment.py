@@ -7,6 +7,7 @@ from __future__ import print_function
 from __future__ import division
 
 # Python
+import base64
 import os
 import sys
 from glob import glob
@@ -67,10 +68,14 @@ def options(parser):
                             "this option are printed. Use 1.0 to print all MPBSs.")
     group.add_argument("--bigbed", action="store_true", default=False,
                        help="If this option is used, all bed files will be written as bigbed.")
-    group.add_argument("--no-copy-logos", action="store_true", default=False,
-                       help="If set, the logos to be showed on the enrichment statistics page will NOT be "
-                            "copied to a local directory; instead, the HTML result file will contain absolute "
-                            "paths to the logos in your RGTDATA folder.")
+
+    # Logo mutually exclusive:
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument("--logo-copy", action="store_true", default=False,
+                       help="The logos are copied to a local directory. The HTML report will contain relative "
+                            "paths to this directory.")
+    group.add_argument("--logo-embed", action="store_true", default=False,
+                       help="The logos are embedded directly into the HTML report.")
 
     parser.add_argument('background_file', metavar='background.bed', type=str,
                         help='BED file containing background regions.')
@@ -589,8 +594,8 @@ def main(args):
                     output_file.write(str(r) + "\n")
                 output_file.close()
 
-                # unless explicitly forbidden, we copy the logo images locally
-                if not args.no_copy_logos:
+                # we copy the logo images locally
+                if args.logo_copy:
                     logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
@@ -605,12 +610,16 @@ def main(args):
                         logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
-                            if not args.no_copy_logos:
+                            if args.logo_copy:
                                 copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                                 # use relative paths in the html
                                 # FIXME can we do it in a better way? (inside the Html class)
                                 logo_file_name = os.path.join("..", "logos", r.name + ".png")
+                            elif args.logo_embed:
+                                # encoding image with Base64 and adding HTML special URI to embed it
+                                data_uri = base64.b64encode(open(logo_file_name, 'rb').read()).decode('utf-8')
+                                logo_file_name = "data:image/png;base64,{0}".format(data_uri)
 
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
@@ -730,8 +739,8 @@ def main(args):
                 output_file.write(str(r) + "\n")
             output_file.close()
 
-            # unless explicitly forbidden, we copy the logo images locally
-            if not args.no_copy_logos:
+            # we copy the logo images locally
+            if args.logo_copy:
                 logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
@@ -746,12 +755,16 @@ def main(args):
                     logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
-                        if not args.no_copy_logos:
+                        if args.logo_copy:
                             copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                             # use relative paths in the html
                             # FIXME can we do it in a better way? (inside the Html class)
                             logo_file_name = os.path.join("..", "logos", r.name + ".png")
+                        elif args.logo_embed:
+                            # encoding image with Base64 and adding HTML special URI to embed it
+                            data_uri = base64.b64encode(open(logo_file_name, 'rb').read()).decode('utf-8')
+                            logo_file_name = "data:image/png;base64,{0}".format(data_uri)
 
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break

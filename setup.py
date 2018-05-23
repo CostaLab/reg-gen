@@ -305,7 +305,7 @@ data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.t
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
-data_config_file.write("repositories: hocomoco\n\n")
+data_config_file.write("repositories: jaspar_vertebrates\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
