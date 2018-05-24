@@ -312,7 +312,7 @@ class Report(object):
         ax.set_ylim([min_y, max_y])
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
-        ax.set_xlabel(rnaname + " sequence (nt  )", fontsize=9)
+        ax.set_xlabel(rnaname + " sequence (nt)", fontsize=9)
 
         ax.set_ylabel(ylabel, fontsize=9, rotation=90)
 
@@ -936,16 +936,9 @@ class Report(object):
             if self.stat.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
             else:
-                # try:
-                #     gn = self.ensembl2symbol[promoter.name]
-                # except:
                 gn = promoter.name
                 html.add_heading(split_gene_name(gene_name=gn, org=self.pars.organism), idtag=promoter.toString())
-                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.pars.organism +
-                #                        "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
-                #     promoter.final) +
-                #                        '" style="margin-left:50">' +
-                #                        promoter.toString(space=True) + '</a>'])
+
                 data_table = []
 
                 for j, rd in enumerate(self.stat.promoter["de"]["rd"][promoter.toString()]):
@@ -954,7 +947,6 @@ class Report(object):
                         # rbsm = rbsm.partition(":")[2].split("-")
                         if rd.rna.overlap(rbsm):
                             rbs = "<font color=\"red\">" + rbs + "</font>"
-                    # print(rd.match)
                     data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
                                        rd.dna.orientation, rd.score, rd.motif, rd.orient,
                                        '<pre><font size="2">' + "\n".join(rd.match) + "</font></pre>"])
@@ -1414,7 +1406,11 @@ class Report(object):
         ############################
         # Subpages for targeted region centered page
         # region_dbs.html
-        header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
+        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
+                         "Score of binding event", "Motif of binding by triple helix rule",
+                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel",
+                         "Binding Sequence between DNA and RNA"]
 
         html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(self.pars.o,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
@@ -1441,9 +1437,10 @@ class Report(object):
                                        "&position=" + rd.dna.chrom + "%3A" + str(rd.dna.initial) + "-" + str(
                                            rd.dna.final) +
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
-                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient,
+                                       '<pre><font size="2">' + "\n".join(rd.match) + "</font></pre>"])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     auto_width=True, clean=True)
+                                     header_titles=header_titles, auto_width=True, clean=True)
         html.write(os.path.join(self.pars.o, "region_dbs.html"))
 
         ################################################################
