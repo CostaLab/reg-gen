@@ -1959,8 +1959,8 @@ if __name__ == "__main__":
     ############### ENCODE download #######################################
     elif args.mode == "encode":
         args.i = os.path.join(os.getcwd(), args.i)
-        cmd = "xargs -n 1 curl -O -L < " + args.i
-        os.system(cmd)
+        # cmd = "xargs -n 1 curl -O -L < " + args.i
+        # os.system(cmd)
         name_dict = {}
         with open(os.path.join(args.o, "metadata.tsv")) as f:
             for line in f:
@@ -1985,8 +1985,9 @@ if __name__ == "__main__":
             id = os.path.basename(file).split(".")[0]
             if id in name_dict.keys():
                 # print(file)
+                formatf = file.split(".")[1]
                 if file.endswith("gz"):
-                    formatf = file.split(".")[1]
+
                     with gzip.open(os.path.join(args.o, file), 'rb') as infile:
                         with open(os.path.join(args.o, name_dict[id]+"."+formatf), 'wb') as outfile:
                             for line in infile:
