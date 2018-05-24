@@ -27,12 +27,14 @@ from __future__ import print_function
 import sys
 
 # Internal
-from .dpc_help import get_peaks, _fit_mean_var_distr, initialize, merge_output, handle_input
-from .tracker import Tracker
-from .postprocessing import _output_BED, _output_narrowPeak
-from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
+from ..THOR.Input import InputParsers
+from ..THOR.Tracker import Tracker
 from ..THOR.RegionGiver import RegionGiver
-from ..THOR.postprocessing import filter_by_pvalue_strand_lag
+
+from .hmm_help import get_peaks, _fit_mean_var_distr, initialize, merge_output
+# from .postprocessing import _output_BED, _output_narrowPeak
+# from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
+# from ..THOR.postprocessing import filter_by_pvalue_strand_lag
 from .. import __version__
 
 # External
@@ -57,7 +59,6 @@ def _write_info(tracker, report, **data):
 
 def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker):
     """Train HMM"""
-    
     while True:
         train_regions = region_giver.get_training_regionset()
         exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions,
@@ -149,13 +150,13 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
 
 
 def main():
-    options, bamfiles, genome, chrom_sizes, dims, inputs = handle_input()
-
+    options, bamfiles, genome, chrom_sizes, dims, inputs = InputParsers()
     tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes, dims, inputs, options, __version__)
     region_giver = RegionGiver(chrom_sizes, options.regions)
+
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome,
                                                                    chrom_sizes, dims, inputs, tracker)
-    
+    sys.exit()
     run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)

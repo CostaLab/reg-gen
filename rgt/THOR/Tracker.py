@@ -28,7 +28,6 @@ import numpy as np
 from ..Util import Html
 from collections import OrderedDict
 from os import path
-# import sys
 from datetime import datetime
 
 

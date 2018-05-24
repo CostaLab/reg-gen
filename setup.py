@@ -120,7 +120,7 @@ tools_dictionary = {
     ),
     "THOR": (
         "rgt-THOR",
-        "rgt.THOR.THOR:main",
+        "rgt.THOR.Main:main",
         ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
