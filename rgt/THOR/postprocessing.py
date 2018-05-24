@@ -75,21 +75,20 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     for i, t in enumerate(peak_list):
         chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
-        r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '', \
+        r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '',
                           orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
-        if end - start > ext_size:
-            if strand == '+':
-                if last_orientation == '+':
-                    region_plus.add(r)
-                else:
-                    regions_unmergable.add(r)
-            elif strand == '-':
-                if last_orientation == '-':
-                    region_mins.add(r)
-                else:
-                    regions_unmergable.add(r)
-                    
-                    
+        # if end - start > ext_size:
+        if strand == '+':
+            if last_orientation == '+':
+                regions_plus.add(r)
+            else:
+                regions_unmergable.add(r)
+        elif strand == '-':
+            if last_orientation == '-':
+                regions_minus.add(r)
+            else:
+                regions_unmergable.add(r)
+
     if merge:
         regions_plus.extend(ext_size/2, ext_size/2)
         regions_plus.merge()
@@ -114,6 +113,7 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
 
 def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name, singlestrand):
     """Filter DPs by strang lag and pvalue"""
+
     if not singlestrand:
         zscore_ratios = zscore(ratios)
         ratios_pass = np.where(np.bitwise_and(zscore_ratios > -2, zscore_ratios < 2) == True, True, False)

@@ -25,5 +25,6 @@ fi
 cd THOR_example_data/
 rm -rf report_* sample-*
 rgt-THOR -n sample --report THOR.config
+rgt-THOR -n sample_no --report THOR.config --no-merge-bin
 
 echo "********* THOR test completed ****************"
