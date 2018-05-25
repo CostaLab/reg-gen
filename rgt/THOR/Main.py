@@ -57,21 +57,19 @@ def _write_info(tracker, report, **data):
         tracker.make_html()
 
 
-def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker):
+def train_HMM(region_giver, options, tracker):
     """Train HMM"""
     while True:
         train_regions = region_giver.get_training_regionset()
-        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions,
-                              stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
-                              exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,
-                              debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
-                              factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes,
-                              tracker=tracker, norm_regions=options.norm_regions,
-                              scaling_factors_ip=options.scaling_factors_ip, save_wig=options.save_wig,
-                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report,
-                              chrom_sizes_dict=region_giver.get_chrom_dict(), end=True, counter=0, output_bw=False,
-                              save_input=options.save_input, m_threshold=options.m_threshold,
-                              a_threshold=options.a_threshold, rmdup=options.rmdup)
+        # options, dims, genome_path, regions, bamfiles, exts,
+        # inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content,
+        # tracker, scaling_factors_ip, report, chrom_sizes_dict, counter, end,
+        # gc_content_cov = None, avg_gc_content = None,
+        # gc_hist = None, output_bw = True, save_input = False
+
+        exp_data = initialize(options=options, regions=train_regions, tracker=tracker,
+                              chrom_sizes_dict=region_giver.get_chrom_dict(),
+                              end=True, counter=0, output_bw=False)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
             tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
             tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
@@ -105,19 +103,14 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         end = True if i == len(region_giver) - 1 else False
         print("- taking into account %s" % r.sequences[0].chrom, file=sys.stderr)
         
-        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=r,
-                              stepsize=options.stepsize, binsize=options.binsize,
+        exp_data = initialize(options=options, dims=dims, genome_path=genome, regions=r,
                               bamfiles=bamfiles, exts=exp_data.exts, inputs=inputs,
-                              exts_inputs=exp_data.exts_inputs, debug=options.debug,
-                              verbose=False, no_gc_content=options.no_gc_content,
+                              exts_inputs=exp_data.exts_inputs, verbose=False,
                               factors_inputs=exp_data.factors_inputs, chrom_sizes=chrom_sizes,
-                              tracker=tracker, norm_regions=options.norm_regions,
-                              scaling_factors_ip=exp_data.scaling_factors_ip, save_wig=options.save_wig,
-                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=False,
+                              tracker=tracker, scaling_factors_ip=exp_data.scaling_factors_ip, report=False,
                               chrom_sizes_dict=region_giver.get_chrom_dict(), gc_content_cov=exp_data.gc_content_cov,
                               avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist,
-                              end=end, counter=i, m_threshold=options.m_threshold, a_threshold=options.a_threshold,
-                              rmdup=options.rmdup)
+                              end=end, counter=i)
         if exp_data.no_data:
             continue
         
@@ -150,12 +143,11 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
 
 
 def main():
-    options, bamfiles, genome, chrom_sizes, dims, inputs = InputParsers()
-    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes, dims, inputs, options, __version__)
-    region_giver = RegionGiver(chrom_sizes, options.regions)
+    options = InputParsers()
+    tracker = Tracker(options.name + '-setup.info', options, __version__)
+    region_giver = RegionGiver(options)
 
-    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome,
-                                                                   chrom_sizes, dims, inputs, tracker)
+    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, tracker)
     sys.exit()
     run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
     

@@ -193,17 +193,20 @@ def InputParsers():
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/'))
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/data/'))
 
-    global FOLDER_REPORT
-    global FOLDER_REPORT_PICS
-    global FOLDER_REPORT_DATA
-    global OUTPUTDIR
-    global NAME
+    # global FOLDER_REPORT
+    # global FOLDER_REPORT_PICS
+    # global FOLDER_REPORT_DATA
+    # global OUTPUTDIR
+    # global NAME
+    options.folder_report = join(options.outputdir, 'report_' + basename(options.name) + "/")
+    options.folder_report_pics = join(options.outputdir, 'report_' + basename(options.name), 'pics/')
+    options.folder_report_data = join(options.outputdir, 'report_' + basename(options.name), 'pics/data/')
 
-    FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
-    FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
-    FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
-    OUTPUTDIR = options.outputdir
-    NAME = options.name
+    # FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
+    # FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
+    # FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
+    # OUTPUTDIR = options.outputdir
+    # NAME = options.name
 
     if not inputs:
         print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)
@@ -217,7 +220,13 @@ def InputParsers():
     if options.exts_inputs is None:
         options.exts_inputs = []
 
-    return options, bamfiles, genome, chrom_sizes, dims, inputs
+    options.bamfiles = bamfiles
+    options.genome = genome
+    options.chrom_sizes = chrom_sizes
+    options.inputs = inputs
+    options.dims = dims
+
+    return options
 
 
 def get_data_block(filepath, feature):

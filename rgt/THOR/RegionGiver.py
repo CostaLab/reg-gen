@@ -30,11 +30,11 @@ class RegionGiver:
     regionset = GenomicRegionSet('')
     chrom_sizes_dict = {}
     
-    def __init__(self, chrom_sizes, regions=None):
+    def __init__(self, options):
         self.counter = 0
-        if regions is not None:
+        if options.regions is not None:
             print("Call DPs on specified regions.", file=sys.stderr)
-            with open(regions) as f:
+            with open(options.regions) as f:
                 for line in f:
                     if line:
                         line = line.strip()
@@ -45,7 +45,7 @@ class RegionGiver:
                         self.chrom_sizes_dict[c] = e
         else:
             print("Call DPs on whole genome.", file=sys.stderr)
-            with open(chrom_sizes) as f:
+            with open(options.chrom_sizes) as f:
                 for line in f:
                     line = line.strip()
                     line = line.split('\t')

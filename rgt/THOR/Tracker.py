@@ -34,17 +34,17 @@ from datetime import datetime
 class Tracker:
     data = []
 
-    def __init__(self, p, bamfiles, genome, chrom_sizes, dims, inputs, options, version):
+    def __init__(self, p, options, version):
         self.file = open(p, 'w')
-        self.bamfiles = bamfiles
-        if genome is None:
+        self.bamfiles = options.bamfiles
+        if options.genome is None:
             self.genome = "None"
         else:
-            self.genome = genome
-        self.chrom_sizes = chrom_sizes
-        self.dims = dims
-        self.inputs = inputs
-        self.samples = map(lambda x: path.splitext(path.basename(x))[0], bamfiles)
+            self.genome = options.genome
+        self.chrom_sizes = options.chrom_sizes
+        self.dims = options.dims
+        self.inputs = options.inputs
+        self.samples = map(lambda x: path.splitext(path.basename(x))[0], options.bamfiles)
         self.options = options
         self.version = version
     

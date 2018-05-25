@@ -354,12 +354,12 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     return ratios, pvalues, output
 
 
-def _output_ext_data(ext_data_list, bamfiles):
+def _output_ext_data(ext_data_list, bamfiles, options):
     """Output textfile and png file of read size estimation"""
     names = [splitext(basename(bamfile))[0] for bamfile in bamfiles]
 
     for k, ext_data in enumerate(ext_data_list):
-        f = open(FOLDER_REPORT_DATA + 'fragment_size_estimate_' + names[k] + '.data', 'w')
+        f = open(options.folder_report_data + 'fragment_size_estimate_' + names[k] + '.data', 'w')
         for d in ext_data:
             print(d[0], d[1], sep='\t', file=f)
         f.close()
@@ -374,11 +374,11 @@ def _output_ext_data(ext_data_list, bamfiles):
         plt.plot(d2, d1, label=names[i])
     
     ax.legend()
-    plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
+    plt.savefig(options.folder_report_pics + 'fragment_size_estimate.png')
     plt.close()
 
 
-def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
+def _compute_extension_sizes(options):
     """Compute Extension sizes for bamfiles and input files"""
     start = 0
     end = 600
@@ -386,20 +386,20 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
     
     ext_data_list = []
     #compute extension size
-    if not exts:
+    if not options.exts:
         print("Computing read extension sizes for ChIP-seq profiles", file=sys.stderr)
-        for bamfile in bamfiles:
+        for bamfile in options.bamfiles:
             e, ext_data = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
-            exts.append(e)
+            options.exts.append(e)
             ext_data_list.append(ext_data)
     
-    if report and ext_data_list:
-        _output_ext_data(ext_data_list, bamfiles)
+    if options.report and ext_data_list:
+        _output_ext_data(ext_data_list, options.bamfiles, options=options)
     
-    if inputs and not exts_inputs:
-        exts_inputs = [5] * len(inputs)
+    if options.inputs and not options.exts_inputs:
+        options.exts_inputs = [5] * len(options.inputs)
 
-    return exts, exts_inputs
+    # return options.exts, exts_inputs
 
 
 def get_all_chrom(bamfiles):
@@ -413,23 +413,42 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
-               test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
+def initialize(options, regions, bamfiles,
+               inputs, chrom_sizes, tracker, chrom_sizes_dict, counter, end,
+               gc_content_cov=None, avg_gc_content=None,
+               gc_hist=None, output_bw=True):
+    # m_threshold = 80, a_threshold = 95, rmdup = False
+    # name = options.name
+    # stepsize = options.stepsize
+    # binsize = options.binsize
+    # exts = options.exts
+    # exts_inputs = options.exts_inputs
+    # factors_inputs = options.factors_inputs
+    # verbose = options.verbose
+    # no_gc_content = options.no_gc_content
+    # scaling_factors_ip = options.scaling_factors_ip
+    # report = options.report
+    # debug = options.debug
+    # norm_regions = options.norm_regions
+    # save_wig = options.save_wig
+    # housekeeping_genes = options.housekeeping_genes
+    # m_threshold = options.m_threshold
+    # a_threshold = options.a_threshold
+    # rmdup = options.rmdup
+    # save_input = options.save_input
+
     """Initialize the MultiCoverageSet"""
     regionset = regions
     regionset.sequences.sort()
     
-    if norm_regions:
+    if options.norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
-        norm_regionset.read(norm_regions)
+        norm_regionset.read(options.norm_regions)
     else:
         norm_regionset = None
-        
-    exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
-    
+
+    _compute_extension_sizes(options)
+    sys.exit()
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path,
                                      binsize=binsize, stepsize=stepsize, rmdup=rmdup, path_bamfiles=bamfiles,
                                      path_inputs=inputs, exts=exts, exts_inputs=exts_inputs,
