@@ -32,9 +32,9 @@ from ..THOR.Tracker import Tracker
 from ..THOR.RegionGiver import RegionGiver
 
 from .hmm_help import get_peaks, _fit_mean_var_distr, initialize, merge_output
-# from .postprocessing import _output_BED, _output_narrowPeak
-# from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
-# from ..THOR.postprocessing import filter_by_pvalue_strand_lag
+from .postprocessing import _output_BED, _output_narrowPeak
+from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
+from ..THOR.postprocessing import filter_by_pvalue_strand_lag
 from .. import __version__
 
 # External
