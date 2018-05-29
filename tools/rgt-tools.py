@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     ############### BED merge  ############################################
     # python rgt-tools.py
-    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions by name")
+    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions")
     parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedmerge.add_argument('-s', action="store_true", help="Strand specific")
@@ -229,6 +229,8 @@ if __name__ == "__main__":
                                     help="Define minimum length of gene to filter out the small genes (default:0)")
     parser_bedupstream.add_argument('-r', '--reverse', action="store_true", default=False,
                                     help="Reverse the strand.")
+    parser_bedupstream.add_argument('-ds', '--downstream', action="store_true", default=False,
+                                    help="Find downstream regions instead of upstream.")
 
     ############### BED to FASTA #############################################
     parser_bed2fasta = subparsers.add_parser('bed_to_fasta', 
@@ -315,6 +317,12 @@ if __name__ == "__main__":
                                             help="[BED] Standardize the chromosomes.")
     parser_bedschrom.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
+    ############### BED seperate strand ################################
+    parser_bedstrand = subparsers.add_parser('bed_strand',
+                                             help="[BED] Seperate the BED files by strandness")
+    parser_bedstrand.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedstrand.add_argument('-o', metavar='output', type=str, help="Input directory")
+
     ############### BED add overlapping region name ################################
     parser_adddata = subparsers.add_parser('bed_add_data',
                                              help="[BED] Add overlapping region name")
@@ -378,12 +386,13 @@ if __name__ == "__main__":
                        help="[THOR] Split and filter the differential peaks from rgt-THOR")
     parser_thorsf.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_thorsf.add_argument('-o', metavar='output', default=None, type=str, help="Output directory.")
-    parser_thorsf.add_argument('-p', metavar='p-value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
-    parser_thorsf.add_argument('-fc', metavar='fold-change', type=int,default=0,
+    parser_thorsf.add_argument('-p', metavar='p-value', type=float, help="Define the cut-off of p-value (-log10) for filtering.")
+    parser_thorsf.add_argument('-fc', metavar='fold-change', type=float,default=0,
                                help="Define the cut-off of foldchange for filtering.")
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
+    parser_thorsf.add_argument('-m', metavar='merge', type=int, default=0, help="Define the maximum distance for merging the nearby regions")
     parser_thorsf.add_argument('-b', metavar='bin', type=int, help="Define the bin size")
     parser_thorsf.add_argument('-s', metavar='step', type=int, help="Define the step size")
 
@@ -449,12 +458,19 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-p', metavar='position', type=int, help="The start position")
     parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
-    ############### TXP to BED #############################################
+    ############### FASTA convert #############################################
+    parser_FASTAconvert = subparsers.add_parser('fasta_convert',
+                                              help="[FASTA] Convert the sequence by critiria")
+    parser_FASTAconvert.add_argument('-i', metavar='input', type=str, help="Input FASTA file")
+    parser_FASTAconvert.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_FASTAconvert.add_argument('-c', '--complement', default=False, action="store_true", help="Get the complement of the sequence")
+    parser_FASTAconvert.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
+    ############### TPX to BED #############################################
     # python rgt-tools.py txp2bed -i -o
-    parser_txp2bed = subparsers.add_parser('txp2bed',
+    parser_tpx2bed = subparsers.add_parser('tpx2bed',
                                            help="[BED] Convert TXP file into BED format")
-    parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
-    parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_tpx2bed.add_argument('-i', metavar='input', type=str, help="Input TPX file")
+    parser_tpx2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ############### ENCODE Download #############################################
     # python rgt-tools.py encode -i -o
@@ -810,19 +826,32 @@ if __name__ == "__main__":
         target = GenomicRegionSet("target")
         # if args.min == 0: cut = float("inf")
         # elif args.min > 0: cut = args.min
+        if not args.downstream:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-        for s in gene:
-            if s.orientation == "+" and len(s) > args.min: 
-                s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "-"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
+        else:
+            for s in gene:
+                if s.orientation == "+" and len(s) > args.min:
+                    s.initial, s.final = s.final + args.d, s.final + args.d + args.l
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "-"
+                    target.add(s)
 
-            elif s.orientation == "-" and len(s) > args.min: 
-                s.initial, s.final = s.final+args.d, s.final+args.d+args.l
-                if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.reverse: s.orientation = "+"
-                target.add(s)
+                elif s.orientation == "-" and len(s) > args.min:
+                    s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                    if s.initial > s.final: s.initial, s.final = s.final, s.initial
+                    if args.reverse: s.orientation = "+"
+                    target.add(s)
         
         print(len(target))
         target.write(args.o)
@@ -852,7 +881,7 @@ if __name__ == "__main__":
                     else:
                         l = line.strip().split()
                         ranking.append([l[0],int(l[1]),int(l[2])])
-
+        # print(len(regions))
         for i, r in enumerate(regions):
             if args.order:
                 for j, reg in enumerate(ranking):
@@ -881,7 +910,7 @@ if __name__ == "__main__":
                                          ss=exon.initial, es=exon.final, 
                                          strand=exon.orientation, 
                                          reverse=True, complement=True)
-                    ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                    ss = [s[k:k+70] for k in range(0, len(s), 70)]
                     writelines += ss
 
                 with open(os.path.join(args.o, name + ".fa"), "w") as f:
@@ -891,9 +920,10 @@ if __name__ == "__main__":
 
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
-                ss = [s[i:i+70] for i in range(0, len(s), 70)]
+                ss = [s[k:k+70] for k in range(0, len(s), 70)]
 
                 if ".fa" not in args.o:
+                    # print(i)
                     with open(os.path.join(args.o, name + ".fa"), "w") as f:
                         if not r.orientation: r.orientation = "."
                         if not args.score:
@@ -1291,6 +1321,23 @@ if __name__ == "__main__":
         nbed.write(args.i)
 
 
+    ############### BED seperate strand ###########################
+    #
+    elif args.mode == "bed_strand":
+        print(tag + ": [BED] Seperate by strandness")
+        bed = GenomicRegionSet(args.i)
+        bed.read(args.i)
+        fwd = GenomicRegionSet("FWD")
+        rev = GenomicRegionSet("REV")
+        for r in bed:
+            if r.orientation == "+":
+                fwd.add(r)
+            elif r.orientation == "-":
+                rev.add(r)
+        name = os.path.basename(args.i).rpartition(".")[0]
+        fwd.write(os.path.join(args.o, name+"_FWD.bed"))
+        rev.write(os.path.join(args.o, name+"_REV.bed"))
+
     ############### BED add overlapping region name ###########################
     #
     elif args.mode == "bed_add_data":
@@ -1503,6 +1550,103 @@ if __name__ == "__main__":
 
     ############### THOR split #############################################
     elif args.mode == "thor_split":
+
+        def merging_peaks(regions, distance):
+            bed4 = GenomicRegionSet(name="bed4")
+            if distance > 0:
+                current_chrom = ""
+                current_start = 0
+                current_end = 0
+                current_strand = ""
+                list_data = []
+                for i, region in enumerate(regions):
+                    d = abs(current_end - region.initial)
+                    if current_chrom == region.chrom and current_strand == region.orientation and d < distance:
+                        list_data.append(region.data)
+                        current_end = region.final
+                    else:
+                        if len(list_data) > 1:
+                            count1 = 0
+                            count2 = 0
+                            list_p = []
+                            for d in list_data:
+                                l = d.split()
+                                if ";" in l[4]:
+                                    stat = l[4].split(";")
+                                else:
+                                    stat = l[5].split(";")
+                                list_p.append(float(stat[2]))
+                                c1 = [1 + float(x) for x in stat[0].split(":")]
+                                c1 = sum(c1) / len(c1)
+                                count1 = count1 + c1
+                                c2 = [1 + float(x) for x in stat[1].split(":")]
+                                c2 = sum(c2) / len(c2)
+                                count2 = count2 + c2
+                                # print(stat[1].split(":"))
+                            # print(list_data)
+                            # count1 = count1 / len(list_data)
+                            # count2 = count2 / len(list_data)
+                            # print([count1, count2])
+                            fc = count2 / count1
+                            p = max(list_p)
+
+                            new_d = "\t".join([str(fc), str(current_start), str(current_end),
+                                               "0,0,0", "0", ";".join([str(int(count1)), str(int(count2)), str(p)])])
+                            new_region = GenomicRegion(chrom=current_chrom,
+                                                       orientation=current_strand,
+                                                       initial=current_start,
+                                                       final=current_end,
+                                                       data=new_d)
+                            bed4.add(new_region)
+                        else:
+                            bed4.add(region)
+                            # sys.exit()
+
+                        current_chrom = region.chrom
+                        current_start = region.initial
+                        current_end = region.final
+                        current_strand = region.orientation
+                        list_data = [region.data]
+            else:
+                bed4 = regions
+
+            return bed4
+
+        def output_table(regions, args):
+            tabel_peaks = GenomicRegionSet("table")
+            for region in regions:
+                l = region.data.split()
+                if ";" in l[4]:
+                    s = l[4].split(";")
+                else:
+                    s = l[5].split(";")
+                # if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
+
+                s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
+                s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
+
+                # print([len(region), args.s])
+                if args.s:
+                    nbins = int(len(region) / args.s)
+                    if nbins == 0:
+                        nbins = 1
+                    ns1 = float(s1) / nbins
+                    ns2 = float(s2) / nbins
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
+                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                else:
+                    # print(region)
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
+
+                # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
+                # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
+
+                tabel_peaks.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                             orientation=region.orientation, data=data, name=region.name))
+
+            return(tabel_peaks)
+
+        # Naming
         print(tag + ": [THOR] Split the differential peaks")
         if not args.o:
             args.o = os.path.dirname(args.i)
@@ -1515,75 +1659,52 @@ if __name__ == "__main__":
         bed.read(args.i)
         print("Number of input peaks:\t"+str(len(bed)))
 
-        if args.rename and args.g:
-            bed2 = bed.gene_association(organism=args.g, strand_specific=False)
-        else:
-            bed2 = bed
-
-        for region in bed2:
+        # Filtering by FC and p value, then split the peaks
+        gain_peaks = GenomicRegionSet("gain_peaks")
+        lose_peaks = GenomicRegionSet("lost_peaks")
+        for region in bed:
             data = region.data.split()
-            # print(data)
-            # sys.exit(1)
-            if ";" in data[4]:
-                stat = data[4].split(";")
-            else:
-                stat = data[5].split(";")
+            if ";" in data[4]: stat = data[4].split(";")
+            else: stat = data[5].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
             region.data = "\t".join([str(fc)] + data[1:])
-
-        gain_peaks = GenomicRegionSet("gain_peaks")
-        lose_peaks = GenomicRegionSet("lost_peaks")
-        gain_table = GenomicRegionSet("gain_table")
-        lose_table = GenomicRegionSet("lost_table")
-
-        for region in bed2:
-            l = region.data.split()
-            # print(l)
-            # sys.exit(1)
-            if ";" in l[4]:
-                s = l[4].split(";")
-            else:
-                s = l[5].split(";")
-            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
-
-                s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
-                s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
-
-                # print([len(region), args.s])
-                if args.s:
-                    nbins = int(len(region)/args.s)
-                    ns1 = float(s1) / nbins
-                    ns2 = float(s2) / nbins
-                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
-                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
-                else:
-                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
-
-                # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
-                # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
-
-                if float(l[0]) > 0:
-                    gain_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data, name=region.name))
+            if abs(fc) > args.fc and float(stat[2]) > args.p:
+                if fc > 0:
                     gain_peaks.add(region)
-                elif float(l[0]) < 0:
-                    lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data, name=region.name))
+                elif fc < 0:
                     lose_peaks.add(region)
+        gain_peaks.sort()
+        lose_peaks.sort()
+        print("Number of gain peaks:\t" + str(len(gain_peaks)))
+        print("Number of lost peaks:\t" + str(len(lose_peaks)))
+        # Merging the close peaks
+        m_gain_peaks = merging_peaks(gain_peaks, args.m)
+        m_lost_peaks = merging_peaks(lose_peaks, args.m)
+        # m_gain_peaks = gain_peaks
+        # m_lost_peaks = lose_peaks
+        # Gene Association
+        if args.rename and args.g:
+            m_gain_peaks = m_gain_peaks.gene_association(organism=args.g, strand_specific=False)
+            m_lost_peaks = m_lost_peaks.gene_association(organism=args.g, strand_specific=False)
+
+        print("Number of gain peaks:\t" + str(len(m_gain_peaks)))
+        print("Number of lost peaks:\t" + str(len(m_lost_peaks)))
+        #
+        gain_table = output_table(m_gain_peaks, args)
+        lose_table = output_table(m_lost_peaks, args)
         # sort table
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
-        gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
-        lose_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
+        m_gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
+        m_lost_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))
         lose_table.write(os.path.join(args.o, name + tag + "_lost.table"))
-
-        print("Number of gain peaks:\t" + str(len(gain_peaks)))
-        print("Number of lost peaks:\t" + str(len(lose_peaks)))
+        #
+        #
         
         
     ############### getseq #############################################
@@ -1808,15 +1929,28 @@ if __name__ == "__main__":
         else:
             print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
 
+    ############### FASTA_convert #######################################
+    elif args.mode == "fasta_convert":
+        from rgt.SequenceSet import SequenceSet
 
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
 
-    ############### FASTA slicing #######################################
-    elif args.mode == "txp2bed":
+        for s in seq:
+            if args.reverse:
+                s.seq.sequences = s.seq[::-1]
+            if args.complement:
+                s.seq = s.complement()
+
+        seq.write_fasta(filename=args.o)
+
+    ############### TPX to BED  #######################################
+    elif args.mode == "tpx2bed":
         from rgt.tdf.RNADNABindingSet import RNADNABindingSet
         txp = RNADNABindingSet("txp")
-        txp.read_txp(filename=args.i, dna_fine_posi=True)
+        txp.read_tpx(filename=args.i, dna_fine_posi=True)
         tmp = os.path.join(os.path.dirname(args.o), "temp.bed")
-        txp.write(filename=tmp)
+        txp.write_bed(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
         os.remove(tmp)
 
@@ -1825,8 +1959,8 @@ if __name__ == "__main__":
     ############### ENCODE download #######################################
     elif args.mode == "encode":
         args.i = os.path.join(os.getcwd(), args.i)
-        cmd = "xargs -n 1 curl -O -L < " + args.i
-        os.system(cmd)
+        # cmd = "xargs -n 1 curl -O -L < " + args.i
+        # os.system(cmd)
         name_dict = {}
         with open(os.path.join(args.o, "metadata.tsv")) as f:
             for line in f:
@@ -1851,8 +1985,9 @@ if __name__ == "__main__":
             id = os.path.basename(file).split(".")[0]
             if id in name_dict.keys():
                 # print(file)
+                formatf = file.split(".")[1]
                 if file.endswith("gz"):
-                    formatf = file.split(".")[1]
+
                     with gzip.open(os.path.join(args.o, file), 'rb') as infile:
                         with open(os.path.join(args.o, name_dict[id]+"."+formatf), 'wb') as outfile:
                             for line in infile:

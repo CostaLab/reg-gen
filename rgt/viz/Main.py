@@ -82,6 +82,12 @@ def main():
                                    help='Define whether to perform strand-specific comparison for each reference corresponding to the labels (T or F)')
     parser_bedprofile.add_argument('-other', metavar='  ', default=None,
                                    help='Define whether to count "else" for each reference corresponding to the labels (T or F)')
+    parser_bedprofile.add_argument('-background', metavar='  ', default=None,
+                                   help='Add the background to the first row of the figures (T or F)')
+    parser_bedprofile.add_argument('-coverage', action="store_true", default=False,
+                                   help='Calculate the overlapping region by coverage in bp instead of simple counting')
+    parser_bedprofile.add_argument('-test', action="store_true", default=False,
+                                   help='test script')
 
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',
@@ -111,8 +117,10 @@ def main():
                                    help='Define the width of single panel. (default: %(default)s)')
     parser_projection.add_argument('-ph', metavar='  ', type=int, default=3,
                                    help='Define the height of single panel. (default: %(default)s)')
-    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01,
+    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0,
                                    help='Define the cutoff of the proportion. (default: %(default)s)')
+    parser_projection.add_argument('-load', action="store_false", default=True,
+                                   help='Load the BED files later during processing, which saves memory usage when dealing with large number of BED files.')
 
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',
@@ -266,7 +274,7 @@ def main():
     parser_lineplot.add_argument('-scol', action="store_true",
                                  help="Share y axis among columns. (default: %(default)s)")
     parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows. (default: %(default)s)")
-    parser_lineplot.add_argument('-organism', metavar='  ', default='hg19',
+    parser_lineplot.add_argument('-organism', metavar='  ',
                                  help='Define the organism. (default: %(default)s)')
     parser_lineplot.add_argument('-color', action="store_true", help=help_define_color)
     parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3,
@@ -293,6 +301,10 @@ def main():
                                  help='Show only the average of the replicates. (default: %(default)s)')
     parser_lineplot.add_argument('-flip_negative', action="store_true", default=False,
                                  help='Flip the negative strand (default: %(default)s)')
+    parser_lineplot.add_argument('-extend_outside', action="store_true", default=False,
+                                 help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
+    parser_lineplot.add_argument('-add_region_number', action="store_true", default=False,
+                                 help="Add the number of regions in the axis label. (default: %(default)s)")
 
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -456,14 +468,14 @@ def main():
             bed_profile.plot_distribution_length()
             bed_profile.plot_motif_composition()
             if args.biotype:
-                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True, strand=True)
+                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True, strand=True, background=True)
             if args.repeats:
-                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True)
+                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True, background=True)
             if args.genposi:
                 bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False, strand=False)
             if args.labels:
                 for i, label in enumerate(args.labels):
-                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=args.other[i], strand=args.strand[i])
+                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=args.other[i], strand=args.strand[i], background=True)
             bed_profile.write_tables(args.o, args.t)
             bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_" + args.t))
             bed_profile.gen_html(args.o, args.t)
@@ -482,7 +494,7 @@ def main():
             print2(parameter, "\tOutput directory: " + os.path.basename(args.o))
             print2(parameter, "\tExperiment title: " + args.t)
 
-            projection = Projection(args.r, args.q)
+            projection = Projection(args.r, args.q, load_bed=args.load)
             projection.group_refque(args.g)
             projection.colors(args.c, args.color)
 
@@ -735,7 +747,7 @@ def main():
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.col, args.c, args.row):
+            if "reads" not in (args.g, args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
             # if "regions" not in (args.col, args.c, args.row):
@@ -755,7 +767,8 @@ def main():
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs,
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft,
                                 fields=[args.g, args.col, args.row, args.c],
-                                test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative)
+                                test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative,
+                                outside=args.extend_outside, add_number=args.add_region_number)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()

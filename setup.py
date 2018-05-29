@@ -76,7 +76,7 @@ Tools Dictionary Standard:
 
 common_deps = ["cython",
                "numpy>=1.4.0",
-               "scipy>=0.7.0",
+               "scipy>=1.0.0",
                "pysam>=0.12.0",
                "pyBigWig",
                "PyVCF"]
@@ -89,9 +89,6 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
     triplexes_file = "lib/libtriplexator.so"
-    # ngslib doesn't support Python 3 (28/08/2017)
-    if not p3_supported:
-        common_deps.append("ngslib")
 
 if not p3_supported:
     # needed to be able to do "import configparser", which is the new Python 3 name for ConfigParser
@@ -305,7 +302,7 @@ data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.t
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
-data_config_file.write("repositories: hocomoco\n\n")
+data_config_file.write("repositories: jaspar_vertebrates\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
@@ -372,8 +369,9 @@ copy_files_dictionary = {
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
                 "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
                 "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
-    "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr",
-               "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
+    "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
+               "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr", "hocomoco.fpr",
+               "jaspar_vertebrates.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
             "tdf_logo.png", "viz_logo.png"],
 }

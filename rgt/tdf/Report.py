@@ -16,9 +16,12 @@ from ..GenomicRegionSet import GenomicRegionSet
 from ..Util import Html, SequenceType
 
 # Color code for all analysis
-target_color = "mediumblue"
+# target_color = "mediumblue"
+target_color = "royalblue"
+# nontarget_color = "darkgrey"
 nontarget_color = "darkgrey"
-sig_color = "powderblue"
+sig_color = "lightgrey"
+legend_fontsize=8
 
 def uniq(seq):
     seen = set()
@@ -243,21 +246,14 @@ class Report(object):
             min_y = 0
 
         if ac:
-            min_y = float(max_y * (-0.09))
+            # min_y = float(max_y * (-0.09))
+            max_y = float(max_y * (1.05))
 
         # Plotting
         for rbs in sig_region:
-            rect = patches.Rectangle(xy=(rbs.initial, 0), width=len(rbs), height=max_y, facecolor=sig_color,
-                                     edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
+            rect = patches.Rectangle(xy=(rbs.initial, 0), width=len(rbs), height=0.95*max_y, facecolor=sig_color,
+                                     edgecolor="none", alpha=1, lw=None, label="Significant DBD", zorder=2)
             ax.add_patch(rect)
-
-        lw = 1.5
-        if showpa:
-            ax.plot(x, all_y, color=target_color, alpha=1, lw=lw, label="Parallel + Anti-parallel")
-            ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
-            ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
-        else:
-            ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label=linelabel)
 
         # RNA accessbility
         if ac:
@@ -274,12 +270,31 @@ class Report(object):
                         last_i = i
                         drawing = True
                 elif drawing:
-                    ax.add_patch(patches.Rectangle((last_i, min_y), i - last_i, -min_y,
-                                                   fill=True, color="silver", snap=False, linewidth=0,
+                    # ax.add_patch(patches.Rectangle((last_i, min_y), i - last_i, -min_y,
+                    #                                fill=True, color="silver", snap=False, linewidth=0,
+                    #                                label="Autobinding"))
+
+                    ax.add_patch(patches.Rectangle(xy=(last_i, 0.95*max_y), width=i - last_i, height=0.05*max_y,
+                                                   fill=True, color="lightcoral", snap=False, linewidth=0,zorder=2,
                                                    label="Autobinding"))
                     drawing = False
                 else:
                     continue
+
+        lw = 1.5
+        if showpa:
+            ax.plot(x, all_y, color=target_color, alpha=1, lw=lw, label="Parallel + Anti-parallel")
+            ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
+            ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
+        else:
+            ax.plot(x, all_y, color=target_color, alpha=0, lw=lw, markeredgecolor="none", zorder=10)
+            ax.fill_between(x, 0, all_y, facecolor=target_color, alpha=1,  edgecolor="none", label=linelabel, zorder=10)
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            ax.yaxis.set_ticks_position('left')
+            ax.xaxis.set_ticks_position('bottom')
+
+
 
         # Legend
         handles, labels = ax.get_legend_handles_labels()
@@ -288,16 +303,16 @@ class Report(object):
         for uniqlabel in uniq(labels):
             legend_h.append(handles[labels.index(uniqlabel)])
             legend_l.append(uniqlabel)
-        ax.legend(legend_h, legend_l,
+        ax.legend(legend_h, legend_l, fontsize=legend_fontsize,
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
-                  prop={'size': 9}, ncol=3)
+                  ncol=3)
 
         # XY axis
         ax.set_xlim(left=0, right=rnalen)
         ax.set_ylim([min_y, max_y])
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
-        ax.set_xlabel(rnaname + " sequence (bp)", fontsize=9)
+        ax.set_xlabel(rnaname + " sequence (nt)", fontsize=9)
 
         ax.set_ylabel(ylabel, fontsize=9, rotation=90)
 
@@ -321,10 +336,10 @@ class Report(object):
                     w += l
                 ax.text(rnalen * 0.01, max_y - 2 * h, "exon boundaries", fontsize=5, color='black')
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=1.08)
 
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',
-                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+                  bbox_extra_artists=(plt.gci()),dpi=300)
         # PDF
         for tick in ax.xaxis.get_major_ticks():
             tick.label.set_fontsize(12)
@@ -332,12 +347,12 @@ class Report(object):
             tick.label.set_fontsize(12)
         ax.xaxis.label.set_size(14)
         ax.yaxis.label.set_size(14)
-        ax.legend(legend_h, legend_l,
+        ax.legend(legend_h, legend_l,fontsize=legend_fontsize,
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
                   prop={'size': 12}, ncol=3)
-        # pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-        # pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
-        # pp.close()
+        pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
+        pp.savefig(f) # bbox_extra_artists=(plt.gci()),,  bbox_inches='tight'
+        pp.close()
 
     def barplot(self, filename, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
@@ -367,7 +382,7 @@ class Report(object):
         for i, rbs in enumerate(self.stat.rbss):
             if rbs in self.stat.sig_DBD:
                 rect = patches.Rectangle(xy=(i + 0.05, 0), width=0.9, height=max_y, facecolor=sig_color,
-                                         edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
+                                         edgecolor="none", lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
         rects_de = ax.bar([i + 0.325 for i in ind], propor_de, width, color=target_color,
@@ -376,13 +391,13 @@ class Report(object):
                            edgecolor="none", label="Non-target promoters")
 
         # Legend
-        tr_legend, = plt.plot([1, 1], color=target_color, linewidth=6, alpha=1)
-        ntr_legend, = plt.plot([1, 1], color=nontarget_color, linewidth=6, alpha=1)
-        ax.legend([tr_legend, ntr_legend, rect], ["Target promoters", "Non-target promoters", "Significant DBD"],
-                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
-                  prop={'size': 9}, ncol=3)
-        tr_legend.set_visible(False)
-        ntr_legend.set_visible(False)
+        # tr_legend, = plt.plot([1, 1], color=target_color, linewidth=6, alpha=1)
+        # ntr_legend, = plt.plot([1, 1], color=nontarget_color, linewidth=6, alpha=1)
+        ax.legend([rects_de, rects_nde, rect], ["Target promoters", "Non-target promoters", "Significant DBD"],
+                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,fontsize=legend_fontsize,
+                  ncol=3)
+        # tr_legend.set_visible(False)
+        # ntr_legend.set_visible(False)
 
         tick_size = 8
         # Y axis
@@ -390,35 +405,36 @@ class Report(object):
         formatter = FuncFormatter(to_percent)
         # Set the formatter
         ax.yaxis.set_major_formatter(formatter)
-        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        ax.tick_params(axis='y', which='both', left=True, right=False, labelbottom=False)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_ylabel("Proportion of promoters (%)", fontsize=9, rotation=90)
 
         # X axis
         ax.set_xlim([0, len(self.stat.rbss)])
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
         ax.set_xticks([i + 0.5 for i in range(len(self.stat.rbss))])
-        ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], rotation=35,
-                           ha="right", fontsize=tick_size)
+        # ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], rotation=35,
+        #                    ha="right", fontsize=tick_size)
+        ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], ha="center", fontsize=tick_size)
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
 
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=9)
 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=1.08)
         f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w',
-                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+                  bbox_extra_artists=(plt.gci()), dpi=300)
         # PDF
-        # for tick in ax.xaxis.get_major_ticks():
-        #     tick.label.set_fontsize(12)
-        # for tick in ax.yaxis.get_major_ticks():
-        #     tick.label.set_fontsize(12)
-        # ax.xaxis.label.set_size(14)
-        # ax.yaxis.label.set_size(14)
-        # pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
-        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
-        # pp.close()
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        ax.xaxis.label.set_size(14)
+        ax.yaxis.label.set_size(14)
+        pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
+        pp.savefig(f, bbox_extra_artists=(plt.gci()))
+        pp.close()
 
     def boxplot(self, filename, matrix, sig_region, truecounts, sig_boolean, ylabel):
         """Generate the visualized plot"""
@@ -452,7 +468,7 @@ class Report(object):
 
         # Plot target regions
         plt.plot(range(1, len(self.stat.rbss) + 1), truecounts, markerfacecolor=target_color,
-                 marker='o', markersize=5, linestyle='None', markeredgecolor="white", zorder=z + 5)
+                 marker='o', markersize=8, linestyle='None', markeredgecolor="white", zorder=z + 5, label="Target Regions")
 
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=label_size)
         ax.set_ylabel(ylabel, fontsize=label_size, rotation=90)
@@ -460,29 +476,29 @@ class Report(object):
         ax.set_ylim([min_y, max_y])
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-        ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], rotation=35,
-                           ha="right", fontsize=tick_size)
+        # ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], rotation=35,
+        #                    ha="right", fontsize=tick_size)
+        ax.set_xticklabels([dbd.str_rna(pa=False) for dbd in self.stat.rbss], ha="center", fontsize=tick_size)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(tick_size)
 
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
-        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
+        ax.tick_params(axis='y', which='both', left=True, right=False, labelbottom=False)
 
         # Legend
         dot_legend, = plt.plot([1, 1], color=target_color, marker='o', markersize=5, markeredgecolor="white",
                                linestyle='None')
-        bp_legend, = plt.plot([1, 1], color=nontarget_color, linewidth=6, alpha=1)
+        # bp_legend, = plt.plot([1, 1], color=nontarget_color, linewidth=6, alpha=1)
 
-        ax.legend([dot_legend, bp_legend, rect], ["Target Regions", "Non-target regions", "Significant DBD"],
-                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
-                  prop={'size': 9}, ncol=3, numpoints=1)
-        bp_legend.set_visible(False)
-        dot_legend.set_visible(False)
+        ax.legend([dot_legend, bp["boxes"][0], rect], ["Target Regions", "Non-target regions", "Significant DBD"],
+                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,fontsize=legend_fontsize,
+                  ncol=3, numpoints=1)
+        # bp_legend.set_visible(False)
+        # dot_legend.set_visible(False)
 
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w',
-                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+        f.savefig(os.path.join(self.pars.o, filename), facecolor='w', edgecolor='w', bbox_extra_artists=(plt.gci()), dpi=300)
         # PDF
         for tick in ax.xaxis.get_major_ticks():
             tick.label.set_fontsize(12)
@@ -920,16 +936,9 @@ class Report(object):
             if self.stat.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
             else:
-                # try:
-                #     gn = self.ensembl2symbol[promoter.name]
-                # except:
                 gn = promoter.name
                 html.add_heading(split_gene_name(gene_name=gn, org=self.pars.organism), idtag=promoter.toString())
-                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.pars.organism +
-                #                        "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
-                #     promoter.final) +
-                #                        '" style="margin-left:50">' +
-                #                        promoter.toString(space=True) + '</a>'])
+
                 data_table = []
 
                 for j, rd in enumerate(self.stat.promoter["de"]["rd"][promoter.toString()]):
@@ -938,7 +947,6 @@ class Report(object):
                         # rbsm = rbsm.partition(":")[2].split("-")
                         if rd.rna.overlap(rbsm):
                             rbs = "<font color=\"red\">" + rbs + "</font>"
-                    # print(rd.match)
                     data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
                                        rd.dna.orientation, rd.score, rd.motif, rd.orient,
                                        '<pre><font size="2">' + "\n".join(rd.match) + "</font></pre>"])
@@ -1398,7 +1406,11 @@ class Report(object):
         ############################
         # Subpages for targeted region centered page
         # region_dbs.html
-        header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
+        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
+                         "Score of binding event", "Motif of binding by triple helix rule",
+                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel",
+                         "Binding Sequence between DNA and RNA"]
 
         html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(self.pars.o,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
@@ -1425,9 +1437,10 @@ class Report(object):
                                        "&position=" + rd.dna.chrom + "%3A" + str(rd.dna.initial) + "-" + str(
                                            rd.dna.final) +
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
-                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient,
+                                       '<pre><font size="2">' + "\n".join(rd.match) + "</font></pre>"])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     auto_width=True, clean=True)
+                                     header_titles=header_titles, auto_width=True, clean=True)
         html.write(os.path.join(self.pars.o, "region_dbs.html"))
 
         ################################################################

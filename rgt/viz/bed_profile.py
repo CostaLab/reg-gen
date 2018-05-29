@@ -23,7 +23,7 @@ from ..Util import Html
 
 class BedProfile:
     def __init__(self, input_path, organism, args):
-
+        self.testing = args.test
         if os.path.isdir(input_path):
             self.beds = []
             self.bednames = []
@@ -33,6 +33,8 @@ class BedProfile:
                         name = os.path.basename(f).replace(".bed", "")
                         bed = GenomicRegionSet(name)
                         bed.read(os.path.join(dirpath, f))
+                        if args.test:
+                            bed.sequences = bed.sequences[0:10]
                         bed.sort()
                         self.beds.append(bed)
                         self.bednames.append(name)
@@ -46,6 +48,8 @@ class BedProfile:
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
                 bed.read(input_path)
+                if args.test:
+                    bed.sequences = bed.sequences[0:10]
                 bed.sort()
                 self.beds = [bed]
                 self.bednames = [name]
@@ -93,6 +97,11 @@ class BedProfile:
             self.table_h[self.bednames[i]].append("strand")
             self.tables[self.bednames[i]].append([r.orientation if r.orientation else "." for r in bed])
             self.count_table[bed.name] = {}
+        if args.coverage:
+            self.coverage = True
+        else:
+            self.coverage = False
+        self.background = []
 
     def cal_statistics(self):
         for i, bed in enumerate(self.beds):
@@ -197,7 +206,7 @@ class BedProfile:
                 ax.set_xticks(range(len(self.bednames)))
                 ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
                 ax.set_ylabel("Percentage %")
-                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom=True)
                 ax.set_ylim([0, 100])
                 ax.set_xlim([-0.5, len(self.bednames) - 0.5])
                 # ax.legend(bars, ntlist, ax=ax)
@@ -253,7 +262,7 @@ class BedProfile:
     #         ax.set_xlabel("Length (bp)")
     #         ax.set_ylabel("Frequency")
 
-    def plot_ref(self, ref_dir, tag, other=False, strand=False):
+    def plot_ref(self, ref_dir, tag, other=False, strand=False, background=False):
         print("Processing " + tag + " ....")
         refs = []
         refs_names = []
@@ -263,6 +272,8 @@ class BedProfile:
                     name = os.path.basename(f).replace(".bed", "")
                     bed = GenomicRegionSet(name)
                     bed.read(os.path.join(ref_dir, f))
+                    if self.testing:
+                        bed.sequences = bed.sequences[0:10]
                     # bed.merge()
                     refs.append(bed)
                     refs_names.append(name)
@@ -270,6 +281,8 @@ class BedProfile:
             name = os.path.basename(ref_dir).replace(".bed", "")
             bed = GenomicRegionSet(name)
             bed.read(ref_dir)
+            if self.testing:
+                bed.sequences = bed.sequences[0:10]
             # bed.merge()
             refs.append(bed)
             refs_names.append(name)
@@ -277,18 +290,44 @@ class BedProfile:
             print("*** Error: Not a valid directory: " + ref_dir)
             sys.exit(1)
 
+
+        if background and len(refs) == 1:
+            background = False
+            self.background = self.background + [len(ref) for ref in refs]
         index = natsort.index_natsorted(refs_names)
         refs = natsort.order_by_index(refs, index)
         refs_names = natsort.order_by_index(refs_names, index)
         self.count_tableh = self.count_tableh + refs_names
         if other:
             refs_names.append("Else")
+            self.count_tableh = self.count_tableh + [tag+"_else"]
         if strand:
             ref_plus = []
             ref_minus = []
             for ref in refs:
                 ref_plus.append(ref.filter_strand(strand="+"))
                 ref_minus.append(ref.filter_strand(strand="-"))
+        if background:
+            # refs_names.append("Background")
+            if self.coverage:
+                # background_counts = [len(ref) for ref in refs]
+                background_cov = [ref.total_coverage() for ref in refs]
+                background_prop = [float(100) * b / sum(background_cov) for b in background_cov]
+                if other:
+                    b = background_cov + [0]
+                else:
+                    b = background_cov
+                self.background = self.background + b
+            else:
+                background_counts = [ len(ref) for ref in refs ]
+                background_prop = [ float(100) * b/sum(background_counts) for b in background_counts]
+                if other:
+                    b = background_counts + [0]
+                else:
+                    b = background_counts
+                self.background = self.background + b
+        else:
+            self.background = self.background + [0] * len(refs)
         # Counting through all references
         overlapping_counts = []
         for i, bed in enumerate(self.beds):
@@ -296,16 +335,51 @@ class BedProfile:
             if strand:
                 bed_plus = bed.filter_strand(strand="+")
                 bed_minus = bed.filter_strand(strand="-")
+                if other:
+                    sum_ref_plus = GenomicRegionSet("ref_plus")
+                    sum_ref_minus = GenomicRegionSet("ref_minus")
+            else:
+                if other:
+                    sum_ref = GenomicRegionSet("ref")
+
             for j, ref in enumerate(refs):
+                # print([bed.name, ref.name])
                 if strand:
-                    cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
+                    if self.coverage:
+                        cc = bed_plus.intersect(ref_plus[j]).total_coverage() + \
+                             bed_minus.intersect(ref_minus[j]).total_coverage()
+                    else:
+                        cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
+                    if other:
+                        sum_ref_plus.combine(ref_plus[j])
+                        sum_ref_minus.combine(ref_minus[j])
                 else:
-                    cc = bed.count_by_regionset(ref)
+                    if self.coverage:
+                        cc = bed.intersect(ref).total_coverage()
+                    else:
+                        cc = bed.count_by_regionset(ref)
+                    if other:
+                        sum_ref.combine(ref)
                 c.append(cc)
                 self.count_table[bed.name][ref.name] = cc
 
             if other:
-                c.append(max(0, len(bed) - sum(c)))
+                if self.coverage:
+                    c.append(bed.total_coverage() - sum(c))
+                else:
+                    if strand:
+                        sum_ref_plus.merge()
+                        sum_ref_minus.merge()
+
+                        remain_regions_p = bed_plus.subtract(sum_ref_plus, whole_region=True)
+                        remain_regions_m = bed_minus.subtract(sum_ref_minus, whole_region=True)
+                        remain_regions = remain_regions_p.combine(remain_regions_m, output=True)
+                    else:
+                        sum_ref.merge()
+                        remain_regions = bed.subtract(sum_ref, whole_region=True)
+                    c.append(len(remain_regions))
+                for j, ref in enumerate(refs):
+                    self.count_table[bed.name][tag+"_else"] = c[-1]
             overlapping_counts.append(c)
         # Tables
         for i, bed in enumerate(self.beds):
@@ -329,7 +403,7 @@ class BedProfile:
                 except:
                     ax = self.fig_axs
             if i == 0:
-                # print(overlapping_counts)
+
                 proportion = []
                 for counts in overlapping_counts:
                     ss = sum(counts)
@@ -337,25 +411,37 @@ class BedProfile:
                         proportion.append([x / ss * 100 for x in counts])
                     else:
                         proportion.append([0 for x in counts])
-                # print(proportion)
+                if background:
+                    if other:
+                        proportion.append(background_prop + [0])
+                        len_ref = len(refs) + 1
+                    else:
+                        proportion.append(background_prop)
+                        len_ref = len(refs)
+                    bottom = [0] * (len(self.bednames) + 1)
+                    xlabels = self.bednames + ["Background"]
+                else:
+                    len_ref = len(refs)
+                    bottom = [0] * len(self.bednames)
+                    xlabels = self.bednames
                 ptable = []
-                for j in range(len(refs_names)):
+                # print(proportion)
+                # print(len_ref)
+                for j in range(len_ref):
                     ptable.append([x[j] for x in proportion])
-                # print(ptable)
                 width = 0.6
-                bottom = [0] * len(self.bednames)
                 for j, y in enumerate(ptable):
-                    ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
+                    ax.bar(range(len(bottom)), y, width=width, bottom=bottom, color=color_list[j],
                            edgecolor="none", align='center')
                     bottom = [x + y for x, y in zip(bottom, y)]
                 ax.set_title(tag)
                 ax.yaxis.tick_left()
-                ax.set_xticks(range(len(self.bednames)))
-                ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
+                ax.set_xticks(range(len(xlabels)))
+                ax.set_xticklabels(xlabels, fontsize=7, rotation=20, ha="right")
                 ax.set_ylabel("Percentage %")
-                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom=True)
                 ax.set_ylim([0, 100])
-                ax.set_xlim([-0.5, len(self.bednames) - 0.5])
+                ax.set_xlim([-0.5, len(xlabels) - 0.5])
                 plt.tight_layout()
 
             elif i > 0:
@@ -425,5 +511,10 @@ class BedProfile:
                         print("\t".join(line), file=f)
         with open(os.path.join(target_dir, "count_table.txt"), "w") as f:
             print("\t".join(["Counts"] + self.count_tableh), file=f)
+            t = []
             for bed in self.bednames:
-                print("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh]), file=f)
+                t.append("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh]))
+            if self.background:
+                t.append("\t".join(["Background", "na"] + [str(v) for v in self.background]))
+            for tt in t:
+                print(tt, file=f)

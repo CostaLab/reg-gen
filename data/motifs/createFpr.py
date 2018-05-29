@@ -1,8 +1,8 @@
-
 # Import
 import sys
 from glob import glob
 from os.path import basename
+
 from MOODS import tools, parsers
 
 # Input
@@ -14,10 +14,10 @@ fprList = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 pseudocounts = 1.0
 
 outFile = open(outFileName, "w")
-outFile.write("\t".join(["MOTIF"]+[str(e) for e in fprList])+"\n")
+outFile.write("\t".join(["MOTIF"] + [str(e) for e in fprList]) + "\n")
 
 # Iterating on all PWMs
-for pwmFileName in sorted(glob(inFolder+"*.pwm")):
+for pwmFileName in sorted(glob(inFolder + "*.pwm")):
     # Creating PSSM
     name = ".".join(basename(pwmFileName).split(".")[:-1])
 
@@ -33,6 +33,6 @@ for pwmFileName in sorted(glob(inFolder+"*.pwm")):
         resVec.append(str(tools.threshold_from_p(pssm, bg, fpr)))
 
     # Writing results
-    outFile.write("\t".join(resVec)+"\n")
+    outFile.write("\t".join(resVec) + "\n")
 
 outFile.close()

@@ -133,11 +133,11 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
                                                            merge_bin=options.merge_bin, deadzones=options.deadzones)
-
+        # if not inst_output:
         output += inst_output
         pvalues += inst_pvalues
         ratios += inst_ratios
-    
+
     res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output,
                                                                            options.no_correction, options.name,
                                                                            options.singlestrand)

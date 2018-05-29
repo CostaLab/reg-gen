@@ -1,21 +1,19 @@
 from __future__ import print_function
-
-# Internal
-from rgt import __version__
-from Training import training_args, training_run
-from Plotting import plotting_args, plotting_run
-from DifferentialAnalysis import diff_analysis_args, diff_analysis_run
-from Footprinting import footprinting_args, footprinting_run
-from Estimation import estimation_args, estimation_run
-from Evaluation import evaluation_args, evaluation_run
-from Evidence import evidence_args, evidence_run
-from Tracks import tracks_args, tracks_run
-
-# External
 import sys
 import time
 from random import seed
 from argparse import ArgumentParser
+
+# Internal
+from rgt import __version__
+from rgt.HINT.Training import training_args, training_run
+from rgt.HINT.Plotting import plotting_args, plotting_run
+from rgt.HINT.DifferentialAnalysis import diff_analysis_args, diff_analysis_run
+from rgt.HINT.Footprinting import footprinting_args, footprinting_run
+from rgt.HINT.Estimation import estimation_args, estimation_run
+from rgt.HINT.Evaluation import evaluation_args, evaluation_run
+from rgt.HINT.Evidence import evidence_args, evidence_run
+from rgt.HINT.Tracks import tracks_args, tracks_run
 
 
 """

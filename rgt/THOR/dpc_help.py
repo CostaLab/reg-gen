@@ -336,6 +336,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
 
     pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr, merge_bin) #merge consecutive peaks and compute p-value
     regions = merge_delete(exts, merge, peaks, pvalues) #postprocessing, returns GenomicRegionSet with merged regions
+
     if deadzones:
         regions = filter_deadzones(deadzones, regions)
     output = []

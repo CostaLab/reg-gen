@@ -1940,8 +1940,8 @@ class GenomicRegionSet:
         """
         g = GenomicRegionSet("complement_" + self.name)
         g.get_genome_data(organism, chrom_X, chrom_Y, chrom_M)
-        g.subtract(self)
-        return g
+        h = g.subtract(self)
+        return h
 
     def count_by_region(self, region):
         """Return the number of intersection regions with the given GenomicRegion.
@@ -2610,14 +2610,20 @@ class GenomicRegionSet:
             last_j = len(target) - 1
             j = 0
             cont_loop = True
-            # pre_j = 0
-
-            if convert_nt and ")n" not in target[0].name:
+            # pre_j =
+            # print(target[0].name)
+            if target[0].name:
+                if convert_nt and ")n" not in target[0].name:
+                    convert_nt = False
+            elif target[0].name == None:
                 convert_nt = False
+                # for r in target:
+                #     r.name = ""
 
             while cont_loop:
-                # When the regions overlap
-
+                # When the regions
+                if not target[j].name:
+                    target[j].name = "."
                 if s.overlap(target[j]):
                     if strand:
                         if s.orientation == target[j].orientation:
@@ -2687,3 +2693,20 @@ class GenomicRegionSet:
             return True
         else:
             return False
+
+    def fragmentize(self, size):
+        """Fragmentize each region by the given size"""
+        z = GenomicRegionSet(self.name)
+        for r in self:
+            l = len(r)
+            if l < size:
+                z.add(r)
+            else:
+                for i in range(int(l/size)):
+                    ff = r.initial+(i+1)*size
+                    if ff > r.final:
+                        ff = r.final
+                    g = GenomicRegion(chrom=r.chrom, initial=r.initial+i*size,
+                                      final=ff, name=r.name, orientation=r.orientation)
+                    z.add(g)
+        return z
