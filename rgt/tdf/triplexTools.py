@@ -565,7 +565,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par + "_auto-binding-file")
     # Read txp
     txp = RNADNABindingSet("dna")
-    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
+    txp.read_tpx(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
     txp.remove_duplicates()
 
     if remove_temp:
