@@ -17,26 +17,26 @@ import os
 import sys
 import pysam
 import numpy as np
-from math import fabs, log, ceil
 from operator import add
-from os.path import splitext, basename, join, isfile, isdir, exists
-
-
-# Internal
-from ..THOR.postprocessing import merge_delete, filter_deadzones
-from .MultiCoverageSet import MultiCoverageSet
-from ..GenomicRegionSet import GenomicRegionSet
-from ..THOR.get_extension_size import get_extension_size
-from ..THOR.get_fast_gen_pvalue import get_log_pvalue_new
-from ..Util import which, npath
-
-# External
 from numpy import linspace
+from math import fabs, log, ceil
+from os.path import splitext, basename, isfile
 from scipy.optimize import curve_fit
 import matplotlib as mpl
 #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+
+# Internal
+from .MultiCoverageSet import MultiCoverageSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..THOR.postprocessing import merge_delete, filter_deadzones
+from ..THOR.get_extension_size import get_extension_size
+from ..THOR.get_fast_gen_pvalue import get_log_pvalue_new
+from ..Util import npath
+
+# External
+
 
 FOLDER_REPORT = None
 
@@ -75,7 +75,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
                 os.system(c)
 
 
-def _func_quad_2p(x, a, c):
+def func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
     x may be an array or a single float"""
     res = []
@@ -88,7 +88,7 @@ def _func_quad_2p(x, a, c):
         return max(x, fabs(a) * x**2 + x + fabs(c))
 
 
-def _write_emp_func_data(data, name, FOLDER_REPORT_DATA):
+def write_emp_func_data(data, name, FOLDER_REPORT_DATA):
     """Write mean and variance data"""
     assert len(data[0]) == len(data[1])
     f = open(FOLDER_REPORT_DATA + name + '.data', 'w')
@@ -97,7 +97,7 @@ def _write_emp_func_data(data, name, FOLDER_REPORT_DATA):
     f.close()
 
 
-def _plot_func(plot_data, options):
+def plot_func(plot_data, options):
     """Plot estimated and empirical function"""
 
     maxs = [] #max for x (mean), max for y (var)
@@ -107,7 +107,7 @@ def _plot_func(plot_data, options):
 
     for i in range(2):
         x = linspace(0, max(plot_data[i][0]), int(ceil(max(plot_data[i][0]))))
-        y = _func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
+        y = func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
         
         for j in range(2):
             #use matplotlib to plot function and datapoints
@@ -125,12 +125,12 @@ def _plot_func(plot_data, options):
             plt.ylabel('variance')
             plt.title('Estimated Mean-Variance Function')
             name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
-            _write_emp_func_data(plot_data[i], name, options.folder_report_data)
-            plt.savefig(options.folder_report_pic + name + '.png')
+            write_emp_func_data(plot_data[i], name, options.folder_report_data)
+            plt.savefig(options.folder_report_pics + name + '.png')
             plt.close()
 
 
-def _get_data_rep(overall_coverage, name, debug, sample_size):
+def get_data_rep(overall_coverage, name, debug, sample_size):
     """Return list of (mean, var) points for samples 0 and 1"""
     data_rep = []
     for i in range(2):
@@ -161,13 +161,13 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     return data_rep
 
 
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, options, sample_size=5000):
+def fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, options, sample_size=5000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
         
     while not done:
-        data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
+        data_rep = get_data_rep(overall_coverage, name, debug, sample_size)
         res = []
         for i in range(2):
             try:
@@ -176,7 +176,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
                 
                 if len(m) > 0 and len(v) > 0: 
                     try:
-                        p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                        p, _ = curve_fit(func_quad_2p, m, v) #fit quad. function to empirical data
                     except:
                         print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                         break #restart for loop
@@ -192,7 +192,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
                 break #restart for loop
     
     if report:
-        _plot_func(plot_data, options=options)
+        plot_func(plot_data, options=options)
     
     if poisson:
         print("Use Poisson distribution as emission", file=sys.stderr)
@@ -200,7 +200,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
         p[1] = 0
         res = [np.array([0, 0]), np.array([0, 0])]
     
-    return lambda x: _func_quad_2p(x, p[0], p[1]), res
+    return lambda x: func_quad_2p(x, p[0], p[1]), res
 
     
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
@@ -209,7 +209,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g = open(name + '-states-viterbi.bed', 'w')
     
     for i in range(len(DCS.indices_of_interest)):
-        cov1, cov2 = _get_covs(DCS, i)
+        cov1, cov2 = get_covs(DCS, i)
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
@@ -220,7 +220,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g.close()
 
 
-def _compute_pvalue((x, y, side, distr)):
+def compute_pvalue((x, y, side, distr)):
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
 
@@ -275,13 +275,13 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
         peaks.append((c, s, e, v1, v2, strand, ratio))
         i += 1
 
-    pvalues = map(_compute_pvalue, pvalues)
+    pvalues = map(compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
 
     return pvalues, peaks
     
 
-def _get_covs(DCS, i, as_list=False):
+def get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
     if not as_list:
         cov1 = int(np.mean(DCS.overall_coverage[0][:, DCS.indices_of_interest[i]]))
@@ -306,7 +306,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
             continue #ignore background states
 
         strand = '+' if states[i] == 1 else '-'
-        cov1, cov2 = _get_covs(DCS, i, as_list=True)
+        cov1, cov2 = get_covs(DCS, i, as_list=True)
         
         cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
@@ -321,7 +321,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
         print('no data', file=sys.stderr)
         return [], [], []
     
-    tmp_pvalues = map(_compute_pvalue, tmp_data)
+    tmp_pvalues = map(compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
     
     tmp = []
@@ -354,7 +354,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     return ratios, pvalues, output
 
 
-def _output_ext_data(ext_data_list, bamfiles, options):
+def output_ext_data(ext_data_list, bamfiles, options):
     """Output textfile and png file of read size estimation"""
     names = [splitext(basename(bamfile))[0] for bamfile in bamfiles]
 
@@ -394,7 +394,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report, option
             ext_data_list.append(ext_data)
 
     if report and ext_data_list:
-        _output_ext_data(ext_data_list, bamfiles, options)
+        output_ext_data(ext_data_list, bamfiles, options)
 
     if inputs and not exts_inputs:
         exts_inputs = [5] * len(inputs)

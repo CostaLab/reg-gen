@@ -31,30 +31,32 @@ from ..THOR.Input import InputParsers
 from ..THOR.Tracker import Tracker
 from ..THOR.RegionGiver import RegionGiver
 
-from .hmm_help import get_peaks, _fit_mean_var_distr, initialize, merge_output
-from .postprocessing import _output_BED, _output_narrowPeak
+from .hmm_help import get_peaks, fit_mean_var_distr, initialize, merge_output
+from .postprocessing import output_BED, output_narrowPeak
 from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from ..THOR.postprocessing import filter_by_pvalue_strand_lag
 from .. import __version__
 
 # External
 
+# enable to test THOR locally
+TEST = False
 
-TEST = False #enable to test THOR locally
 
-
-def _write_info(tracker, report, **data):
+def write_info(tracker, report, options, **data):
     """Write information to tracker"""
-    tracker.write(text=data['func_para'][0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (a)")
-    tracker.write(text=data['func_para'][1], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (c)")
-    #tracker.write(text=data['init_mu'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu)")
-    #tracker.write(text=data['init_alpha'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (alpha)")
-    #tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
-    #tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
-    #tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
-    
+    tracker.write(text=data['func_para'][0],
+                  header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (a)")
+    tracker.write(text=data['func_para'][1],
+                  header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (c)")
+    # tracker.write(text=data['init_mu'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu)")
+    # tracker.write(text=data['init_alpha'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (alpha)")
+    # tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
+    # tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
+    # tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
+
     if report:
-        tracker.make_html()
+        tracker.make_html(options=options)
 
 
 def train_HMM(region_giver, options, tracker):
@@ -75,26 +77,27 @@ def train_HMM(region_giver, options, tracker):
                               save_input=options.save_input, m_threshold=options.m_threshold,
                               a_threshold=options.a_threshold, rmdup=options.rmdup)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
-            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
+            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)),
+                          header="Extension size (rep1, rep2, input1, input2)")
             tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
             break
-    
-    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
-                                          verbose=options.verbose, outputdir=options.outputdir,
-                                          report=options.report, poisson=options.poisson, options=options)
+
+    func, func_para = fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
+                                         verbose=options.verbose, outputdir=options.outputdir,
+                                         report=options.report, poisson=options.poisson, options=options)
     exp_data.compute_putative_region_index()
-     
+
     print('Compute HMM\'s training set', file=sys.stderr)
     training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange,
                                                          options.threshold, options.size_ts, 3)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=options.dims[0], dim_cond_2=options.dims[1], func=func)
     training_set_obs = exp_data.get_observation(training_set)
-     
+
     print('Train HMM', file=sys.stderr)
     m.fit([training_set_obs], options.hmm_free_para)
     distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
-         
+
     return m, exp_data, func_para, init_mu, init_alpha, distr
 
 
@@ -102,7 +105,7 @@ def run_HMM(region_giver, options, tracker, exp_data, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
     output, pvalues, ratios, no_bw_files = [], [], [], []
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
-    
+
     for i, r in enumerate(region_giver):
         end = True if i == len(region_giver) - 1 else False
         print("- taking into account %s" % r.sequences[0].chrom, file=sys.stderr)
@@ -122,15 +125,15 @@ def run_HMM(region_giver, options, tracker, exp_data, m, distr):
                               rmdup=options.rmdup)
         if exp_data.no_data:
             continue
-        
+
         no_bw_files.append(i)
         exp_data.compute_putative_region_index()
 
         if exp_data.indices_of_interest is None:
             continue
-        
+
         states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-        
+
         inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data,
                                                            distr=distr, merge=options.merge, exts=exp_data.exts,
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
@@ -144,10 +147,10 @@ def run_HMM(region_giver, options, tracker, exp_data, m, distr):
     res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output,
                                                                            options.no_correction, options.name,
                                                                            options.singlestrand)
-    
-    _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
-    _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
-    
+
+    output_BED(options.name, res_output, res_pvalues, res_filter_pass)
+    output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
+
     merge_output(options.bamfiles, options.dims, options, no_bw_files, options.chrom_sizes)
 
 
@@ -157,7 +160,7 @@ def main():
     region_giver = RegionGiver(options)
 
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, tracker)
-    sys.exit()
-    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
-    
-    _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
+
+    run_HMM(region_giver, options, tracker, exp_data, m, distr)
+
+    write_info(tracker, options.report, options=options, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)

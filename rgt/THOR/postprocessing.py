@@ -121,8 +121,8 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
         pv_pass = [True] * len(pvalues)
         pvalues = map(lambda x: 10**-x, pvalues)
         
-        _output_BED(name + '-uncor', output, pvalues, pv_pass)
-        _output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
+        output_BED(name + '-uncor', output, pvalues, pv_pass)
+        output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
         
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
@@ -139,7 +139,7 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
     
     return output, pvalues, filter_pass
 
-def _output_BED(name, output, pvalues, filter):
+def output_BED(name, output, pvalues, filter):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
@@ -155,7 +155,7 @@ def _output_BED(name, output, pvalues, filter):
     
     f.close()
 
-def _output_narrowPeak(name, output, pvalues, filter):
+def output_narrowPeak(name, output, pvalues, filter):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
     f = open(name + '-diffpeaks.narrowPeak', 'w')
