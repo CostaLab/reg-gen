@@ -338,9 +338,13 @@ def main(args):
     for motif in motif_list:
         if unique_threshold:
             thresholds.append(0.0)
+            thresholds.append(0.0)
         else:
             thresholds.append(motif.threshold)
-            pssm_list.append(motif.pssm)
+            thresholds.append(motif.threshold_rc)
+
+        pssm_list.append(motif.pssm)
+        pssm_list.append(motif.pssm_rc)
 
     # Performing motif matching
     # TODO: we can expand this to use bg from sequence, for example,
@@ -425,14 +429,18 @@ def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=N
     chrom = genomic_region.chrom
 
     for i, search_result in enumerate(results):
-        motif = motifs[i]
+        # every second result will refer to the reverse complement of the previous
+        # motif. We need to handle this appropriately.
+        rc = i % 2 == 1
+
+        motif = motifs[i//2]
 
         if unique_threshold:
             motif_max = motif.max / motif.len
             threshold = unique_threshold
         else:
             motif_max = motif.max
-            threshold = motif.threshold
+            threshold = motif.threshold_rc if rc else motif.threshold
 
         for r in search_result:
             position = r.pos
@@ -444,16 +452,8 @@ def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=N
             if unique_threshold and score_len < unique_threshold:
                 continue
 
-            # If match forward strand
-            if position >= 0:
-                p1 = pos_start + position
-                strand = "+"
-            # If match reverse strand
-            elif not motif.is_palindrome:
-                p1 = pos_start - position
-                strand = "-"
-            else:
-                continue
+            p1 = pos_start + position
+            strand = "-" if rc else "+"
 
             # Evaluating p2
             p2 = p1 + motif.len
