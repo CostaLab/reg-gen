@@ -19,7 +19,8 @@ from pysam.libcfaidx import Fastafile
 
 class MatchTest(unittest.TestCase):
     def setUp(self):
-        # we can't do much here, it must be available
+        # the genome must be available
+        # TODO: we could make this test pure by manually using the sequence corresponding to the input region
         self.genome_data = GenomeData("hg19")
         self.genome_file = Fastafile(self.genome_data.get_genome())
 
