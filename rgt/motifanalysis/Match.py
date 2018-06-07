@@ -8,6 +8,7 @@ from __future__ import division
 
 # Python
 import os
+from collections import defaultdict
 from glob import glob
 import time
 import sys
@@ -55,6 +56,12 @@ def options(parser):
     parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
                         help="New 'motif DB' folders to use instead of the ones within "
                              "the RGTDATA folder. Each folder must contain PWM files.")
+    parser.add_argument("--remove-strand-duplicates", action="store_true", default=False,
+                        help="Certain motifs are 'palindromic', or more specifically they have a palindromic "
+                             "consensus sequence. When this happens, the output MPBS file will have duplicates: "
+                             "same chromosome and initial and final position, but opposing strand. Select this option "
+                             "to only retain the 'strand duplicate' with the highest score. Duplicates due to "
+                             "overlapping input regions are NOT affected by this.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -361,7 +368,7 @@ def main(args):
 
     print()
 
-    # Iterating on list of genomic regions
+    # Iterating on list of genomic region sets
     for grs in regions_to_match:
 
         start = time.time()
@@ -375,14 +382,51 @@ def main(args):
         if os.path.isfile(output_bed_file):
             os.remove(output_bed_file)
 
-        # Iterating on genomic regions
+        # Iterating on genomic region set
         for genomic_region in grs:
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            grs = match_multiple(scanner, motif_list, sequence, genomic_region)
-            grs.write(output_bed_file, mode="a")
+            grs_tmp = match_multiple(scanner, motif_list, sequence, genomic_region)
+
+            # post-processing: if required, remove duplicate regions on opposing strands (keep highest score)
+            if len(grs_tmp) > 1 and args.remove_strand_duplicates:
+                grs_tmp.sort()
+                seqs = grs_tmp.sequences
+                seqs_new = []
+                cur_pos = 0
+                end_pos = len(seqs) - 1
+                while cur_pos < end_pos:
+                    gr = seqs[cur_pos]
+
+                    new_pos = cur_pos + 1
+                    while new_pos < end_pos:
+                        gr2 = seqs[new_pos]
+
+                        # if this sequence is unrelated, we move on
+                        if gr.name != gr2.name or gr.chrom != gr2.chrom or gr.initial != gr2.initial or gr.final != gr2.final or gr.orientation == gr2.orientation:
+                            break
+
+                        if float(gr.data) < float(gr2.data):
+                            gr = gr2
+
+                        new_pos = new_pos + 1
+
+                    # adding the currently-selected genomic region
+                    seqs_new.append(gr)
+
+                    # at the next loop, we start from the next right-handed sequences
+                    cur_pos = new_pos
+
+                # edge case: the last element was not considered
+                # (when it is, cur_pos == end_pos+1)
+                if cur_pos == end_pos:
+                    seqs_new.append(seqs[cur_pos])
+
+                grs_tmp.sequences = seqs_new
+
+            grs_tmp.write(output_bed_file, mode="a")
 
         del grs.sequences[:]
 

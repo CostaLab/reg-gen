@@ -13,6 +13,7 @@ from rgt.MotifSet import MotifSet
 # TODO: must enforce it by only loading hocomoco mtf
 class MotifSetTest(unittest.TestCase):
     def test_create_default(self):
+
         ms = MotifSet()
         self.assertEqual(len(ms.motifs_map), 0, msg="motif dictionary must be empty")
 
@@ -25,13 +26,13 @@ class MotifSetTest(unittest.TestCase):
         self.assertGreater(len(ms.motifs_map), 0, msg="motif dictionary must be non empty")
 
     def test_filter_keys_not_list(self):
-        ms = MotifSet()
+        ms = MotifSet(preload_motifs=True)
 
         with self.assertRaises(ValueError):
             ms.filter("test")
 
     def test_filter_wrong_key_type(self):
-        ms = MotifSet()
+        ms = MotifSet(preload_motifs=True)
 
         with self.assertRaises(ValueError):
             ms.filter([], key_type="test")
