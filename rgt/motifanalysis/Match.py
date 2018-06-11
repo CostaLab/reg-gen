@@ -8,7 +8,6 @@ from __future__ import division
 
 # Python
 import os
-from collections import defaultdict
 from glob import glob
 import time
 import sys
