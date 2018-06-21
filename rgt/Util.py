@@ -11,6 +11,7 @@ import os
 import sys
 import shutil
 import re
+import codecs
 from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
@@ -62,11 +63,12 @@ class ConfigurationFile:
 
         # Parsing config file
         self.config = ConfigParser()
-        self.config.read(data_config_file_name)
+        # self.config.read(data_config_file_name)
+        self.config.read_file(codecs.open(data_config_file_name, "r", "utf8"))
 
         # Overwriting config using user options
-        self.config.read(data_config_file_name + ".user")
-
+        # self.config.read(data_config_file_name + ".user")
+        self.config.read_file(codecs.open(data_config_file_name + ".user", "r", "utf8"))
         # Reading data directory
         self.data_dir = os.path.split(data_config_file_name)[0]
 

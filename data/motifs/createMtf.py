@@ -18,6 +18,7 @@
 # Import
 import glob
 import csv
+import re
 
 # Parameters
 dataLocation = "./"
@@ -75,19 +76,19 @@ with open("jaspar_anno.csv", "rb") as f:
             continue
         jaspar_anno[l[0]] = l[1:]
 for inputFileName in glob.glob(inputLocation + "*.pwm"):
-    ll = inputFileName.split("/")[-1].split(".")
-    matrix_id = ll[0]
-    pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
-    version = "1"
-    if len(ll) > 4:
-        version = ll[4]
-    gene_names = jaspar_anno[pwm_name][0]
-    group = jaspar_anno[pwm_name][1]
+    raw_name = inputFileName.split("/")[-1]
+    full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
+    name_fields = pwm_name.split(".")
+    matrix_id = name_fields[0]
+    if not version:
+        version = "1"
+    gene_names = re.sub("\(var\.\d+\)", "", jaspar_anno[full_name][0])
+    group = jaspar_anno[full_name][1]
     if not group:
         group = "."
-    uniprot = jaspar_anno[pwm_name][2]
-    data_source = jaspar_anno[pwm_name][3]
-    resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source])
+    uniprot = jaspar_anno[full_name][2]
+    data_source = jaspar_anno[full_name][3]
+    resultMatrix.append([matrix_id, full_name, source, version, gene_names, group, uniprot, data_source])
 
 # Sorting results by ID
 resultMatrix = sorted(resultMatrix, key=lambda x: x[0])

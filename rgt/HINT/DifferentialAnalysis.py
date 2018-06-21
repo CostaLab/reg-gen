@@ -481,6 +481,13 @@ def line_plot(arguments):
     mean_signal_1 = (signal_1 / num_fp) / factor1
     mean_signal_2 = (signal_2 / num_fp) / factor2
 
+    # output signal
+    signal_fname = os.path.join(output_location, "{}.txt".format(mpbs_name))
+    with open(signal_fname, "w") as f:
+        f.write(condition1 + "\t" + condition2 + "\n")
+        for i in range(window_size):
+            f.write(str(mean_signal_1[i]) + "\t" + str(mean_signal_2[i]) + "\n")
+
     if standardize:
         mean_signal_1, mean_signal_2 = standard(mean_signal_1, mean_signal_2)
 

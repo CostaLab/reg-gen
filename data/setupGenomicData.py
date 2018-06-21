@@ -11,6 +11,7 @@ import gzip
 from optparse import OptionParser
 from os import system, path, remove, mkdir
 from sys import platform
+import re
 
 
 def download(url, prefix, output=None):
@@ -329,8 +330,9 @@ if options.zv9:
             gz_file_name = path.join(output_location, "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz")
             download(gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(gz_file.read())
+            output_genome_file.write(re.sub("^>.*", ">chr"+chr_name, gz_file.read(), flags=re.MULTILINE))
             gz_file.close()
+            to_remove.append(gz_file_name)
             print("OK")
         output_genome_file.close()
         for gz_file_name in to_remove:
@@ -343,7 +345,6 @@ if options.zv9:
         system("ln -s " + options.zv9_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
-        # ftp://ftp.ensembl.org/pub/release-79/gtf/danio_rerio/Danio_rerio.Zv9.79.gtf.gz
         gtf_url = "ftp://ftp.ensembl.org/pub/release-79/gtf/danio_rerio/Danio_rerio.Zv9.79.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.Zv9.79.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
@@ -351,11 +352,10 @@ if options.zv9:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read(), flags=re.MULTILINE))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
-        # TODO add chr in each entry
         print("OK")
 
 ###################################################################################################
@@ -384,8 +384,9 @@ if options.zv10:
             gz_file_name = path.join(output_location, "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz")
             download(gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(gz_file.read())
+            output_genome_file.write(re.sub("^>.*", ">chr"+chr_name, gz_file.read(), flags=re.MULTILINE))
             gz_file.close()
+            to_remove.append(gz_file_name)
             print("OK")
         output_genome_file.close()
         for gz_file_name in to_remove:
@@ -398,7 +399,6 @@ if options.zv10:
         system("ln -s " + options.zv10_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
-        # ftp://ftp.ensembl.org/pub/release-84/gtf/danio_rerio/Danio_rerio.GRCz10.84.gtf.gz
         gtf_url = "ftp://ftp.ensembl.org/pub/release-84/gtf/danio_rerio/Danio_rerio.GRCz10.84.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.GRCz10.84.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
@@ -406,12 +406,10 @@ if options.zv10:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read(), flags=re.MULTILINE))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
-        # system("sed -i -e 's/^/chr/' "+gtf_output_file_name)
-        # TODO add chr in each entry
         print("OK")
 
 

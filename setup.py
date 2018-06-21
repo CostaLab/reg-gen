@@ -89,9 +89,6 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
     triplexes_file = "lib/libtriplexator.so"
-    # ngslib doesn't support Python 3 (28/08/2017)
-    if not p3_supported:
-        common_deps.append("ngslib")
 
 if not p3_supported:
     # needed to be able to do "import configparser", which is the new Python 3 name for ConfigParser
