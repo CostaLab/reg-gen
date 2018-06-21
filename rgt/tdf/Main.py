@@ -354,11 +354,6 @@ def main():
         print("Step 3: Generate plot and output html files.")
         if len(stat.rbss) == 0:
             no_binding_response(args=args,  stat=stat.stat)
-        elif args.nofile:
-            print("Don't save any files.")
-            silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
-            silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
-            silentremove(os.path.join(args.o, "target_promoters.tpx"))
         else:
             reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
             reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
@@ -374,6 +369,11 @@ def main():
         silentremove(os.path.join(args.o, "nde.fa"))
         silentremove(os.path.join(args.o, "de.txp"))
         silentremove(os.path.join(args.o, "autobinding.tpx"))
+        if args.nofile:
+            print("Don't save any files.")
+            silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
+            silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
+            silentremove(os.path.join(args.o, "target_promoters.tpx"))
         print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 
@@ -438,15 +438,7 @@ def main():
             print("Step 3: Generate plot and output html files.")
             if len(stat.rbss) == 0:
                 no_binding_response(args=args, stat=stat.stat)
-            elif args.nofile:
-                print("Don't save any files.")
-                silentremove(os.path.join(args.o, "targets_target_regions.fa"))
-                silentremove(os.path.join(args.o, "targets_target_regions.tpx"))
-                silentremove(os.path.join(args.o, "targets_target_regions_fine.fa"))
-                silentremove(os.path.join(args.o, "targets_target_regions_fine.tpx"))
-                silentremove(os.path.join(args.o, "counts_dbs.txt"))
-                silentremove(os.path.join(args.o, "counts_random_matrix.txt"))
-                silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
+
 
             else:
                 reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
@@ -464,4 +456,12 @@ def main():
             silentremove(os.path.join(args.o, "de.fa"))
             # silentremove(os.path.join(args.o, "de.tpx"))
             silentremove(os.path.join(args.o, "autobinding.tpx"))
+            if args.nofile:
+                silentremove(os.path.join(args.o, "targets_target_regions.fa"))
+                silentremove(os.path.join(args.o, "targets_target_regions.tpx"))
+                silentremove(os.path.join(args.o, "targets_target_regions_fine.fa"))
+                silentremove(os.path.join(args.o, "targets_target_regions_fine.tpx"))
+                silentremove(os.path.join(args.o, "counts_dbs.txt"))
+                silentremove(os.path.join(args.o, "counts_random_matrix.txt"))
+                silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
             print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
