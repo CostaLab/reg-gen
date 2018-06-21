@@ -262,7 +262,7 @@ class BedProfile:
     #         ax.set_xlabel("Length (bp)")
     #         ax.set_ylabel("Frequency")
 
-    def plot_ref(self, ref_dir, tag, other=False, strand=False, background=False):
+    def plot_ref(self, ref_dir, tag, other=False, strand=False, background=False, bin=False):
         print("Processing " + tag + " ....")
         refs = []
         refs_names = []
