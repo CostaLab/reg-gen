@@ -1,7 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
-import sys
+import re
 import pysam
 import shutil
 import pickle
@@ -1252,3 +1252,9 @@ def shorten_dir(path):
     else:
         n = path.count("/") - 3 + 1
         return path.split("/",n)[-1]
+
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+        print([f, pattern])
+        if re.search(pattern, f):
+            silentremove(os.path.join(dir, f))
