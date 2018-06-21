@@ -825,11 +825,10 @@ class RNADNABindingSet:
             for i in range(rd.rna.initial, rd.rna.final):
                 self.rna_track[i] += 1
 
-    def combine_filter(self,name = "lncRNA",rm_overlap = False):
+    def combine_filter(self,name = "lncRNA",rm_shift = False,filename):
+
         num_CA, num_CP = 0,0
-        array_pos = []
-        array_pos = []
-        array_neg = []
+        Pos_Neg = []
         for num_of_rbs in range(len(tpx.sequences) - 2):
             next_of_rbs = num_of_rbs + 1
             cur_rbs = tpx.sequences[num_of_rbs]
@@ -848,26 +847,27 @@ class RNADNABindingSet:
                                     if cur_rbs.dna.orientation == "+":
                                         if cur_rbs.rna.orientation == "P":
                                             if cur_rbs.dna.final < next_rbs.dna.initial:
-                                                array_pos.append([cur_rbs,next_rbs])
+                                                Pos_Neg.append([cur_rbs,next_rbs])
 
                                         else:
                                             if next_rbs.dna.final < cur_rbs.dna.initial:
-                                                array_pos.append([cur_rbs,next_rbs])
+                                                Pos_Neg.append([next_rbs,cur_rbs])
 
                                     # on the negative strand
                                     else:
                                         if cur_rbs.rna.orientation == "A":
                                             if cur_rbs.dna.final < next_rbs.dna.initial:
-                                                array_neg.append([next_rbs,cur_rbs])
+                                                Pos_Neg.append([cur_rbs,next_rbs])
                                         else:
-                                            if cur_rbs.dna.
+                                            if next_rbs.dna.final < cur_rbs.dna.initial:
+                                                Pos_Neg.append([cur_rbs,next_rbs])
 
 
                 next_of_rbs += 1
                 next_rbs = tpx.sequences[next_of_rbs]
-        Pos_Neg = array_pos + array_neg
-        #print name + " before remove dulications "+str(len(Pos_Neg))
-        if rm_overlap == "True":
+
+
+        if rm_shift == "True":
 
             for i in range(len(Pos_Neg) - 1):
                 loop = True
@@ -881,3 +881,15 @@ class RNADNABindingSet:
                     except:
                         loop = False
                         continue
+
+        d = os.path.dirname(filename)
+        if d:
+            try: os.stat(d)
+            except: os.mkdir(d)
+        with open(filename, "w") as f:
+            for num in range(len(Pos_Neg)):
+            cur_rbs = Pos_Neg[num][0]
+            next_rbs = Pos_Neg[num][1]
+            #print cur_rbs.dna.chrom,cur_rbs.dna.initial,cur_rbs.dna.final,name+":"+str(num)+":"+cur_rbs.rna.orientation+cur_rbs.rna.motif+":RBS_"+str(cur_rbs.rna.initial)+"-"+str(cur_rbs.rna.final),0,cur_rbs.dna.orientation,cur_rbs.dna.initial,cur_rbs.dna.final,0,1,10,0
+            #print next_rbs.dna.chrom,next_rbs.dna.initial,next_rbs.dna.final,name+":"+str(num)+":"+next_rbs.rna.orientation+next_rbs.rna.motif+":RBS_"+str(next_rbs.rna.initial)+"-"+str(next_rbs.rna.final),0,next_rbs.dna.orientation,next_rbs.dna.initial,next_rbs.dna.final,0,1,10,0
+            print (cur_rbs.dna.chrom,cur_rbs.dna.initial,next_rbs.dna.final,cur_rbs.rna.orientation+cur_rbs.rna.motif+":"+name+":RBS["+str(cur_rbs.rna.initial)+"-"+str(cur_rbs.rna.final)+","+str(next_rbs.rna.initial)+"-"+str(next_rbs.rna.final)+"]",0,cur_rbs.dna.orientation,cur_rbs.dna.initial,next_rbs.dna.final,0,2,str(len(cur_rbs.dna))+","+str(len(next_rbs.dna))+",","0," + str(next_rbs.dna.initial-cur_rbs.dna.initial),file=f)
