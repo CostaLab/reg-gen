@@ -824,3 +824,60 @@ class RNADNABindingSet:
         for rd in self:
             for i in range(rd.rna.initial, rd.rna.final):
                 self.rna_track[i] += 1
+
+    def combine_filter(self,name = "lncRNA",rm_overlap = False):
+        num_CA, num_CP = 0,0
+        array_pos = []
+        array_pos = []
+        array_neg = []
+        for num_of_rbs in range(len(tpx.sequences) - 2):
+            next_of_rbs = num_of_rbs + 1
+            cur_rbs = tpx.sequences[num_of_rbs]
+            next_rbs = tpx.sequences[next_of_rbs]
+            while cur_rbs.rna.distance(next_rbs.rna) < 10 and next_of_rbs < len(tpx.sequences) - 1:
+                #different RNA binding motif and same parallel
+                if cur_rbs.rna.motif != next_rbs.rna.motif and cur_rbs.rna.orientation == next_rbs.rna.orientation:
+                    # no RNA overlap
+                    if cur_rbs.rna.distance(next_rbs.rna) > 0:
+                        # DNA gap smaller than 10bp and no overlap
+                        if ( 0 < cur_rbs.dna.distance(next_rbs.dna) <= 10):# and (cur_rbs.dna.chrom != next_rbs.dna.chrom):
+                            #same strand on the DNA
+                            if cur_rbs.dna.orientation == next_rbs.dna.orientation: 
+                                if cur_rbs.rna.distance(next_rbs.rna) >= cur_rbs.dna.distance(next_rbs.dna):
+                                    # on the positive strand
+                                    if cur_rbs.dna.orientation == "+":
+                                        if cur_rbs.rna.orientation == "P":
+                                            if cur_rbs.dna.final < next_rbs.dna.initial:
+                                                array_pos.append([cur_rbs,next_rbs])
+
+                                        else:
+                                            if next_rbs.dna.final < cur_rbs.dna.initial:
+                                                array_pos.append([cur_rbs,next_rbs])
+
+                                    # on the negative strand
+                                    else:
+                                        if cur_rbs.rna.orientation == "A":
+                                            if cur_rbs.dna.final < next_rbs.dna.initial:
+                                                array_neg.append([next_rbs,cur_rbs])
+                                        else:
+                                            if cur_rbs.dna.
+
+
+                next_of_rbs += 1
+                next_rbs = tpx.sequences[next_of_rbs]
+        Pos_Neg = array_pos + array_neg
+        #print name + " before remove dulications "+str(len(Pos_Neg))
+        if rm_overlap == "True":
+
+            for i in range(len(Pos_Neg) - 1):
+                loop = True
+                while loop:
+                    try:
+                        if Pos_Neg[i][0].dna.distance(Pos_Neg[i + 1][0].dna) == 0 and Pos_Neg[i][1].dna.distance(Pos_Neg[i + 1][1].dna) == 0 and Pos_Neg[i][1].dna.orientation == Pos_Neg[i+1][1].dna.orientation:
+                            del Pos_Neg[i+1]
+                            loop = True
+                        else:
+                            loop = False
+                    except:
+                        loop = False
+                        continue
