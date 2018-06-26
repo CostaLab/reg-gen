@@ -144,7 +144,10 @@ class RNADNABindingSet:
 
     def __iter__(self):
         return iter(self.sequences)
-    
+
+    def __getitem__(self, key):
+        return self.sequences[key]
+
     def add(self, rnadnabinding):
         """Add one pair of BindingSite on RNA and GenomicRegion on DNA"""
         self.sequences.append(rnadnabinding)
