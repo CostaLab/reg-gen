@@ -825,7 +825,8 @@ class RNADNABindingSet:
             for i in range(rd.rna.initial, rd.rna.final):
                 self.rna_track[i] += 1
 
-    def switch_strand(self,name = self.name):
+    def switch_strand(self):
+        name = self.name
         C_YM,C_MY,C_RM,C_MR = 0,0,0,0
         SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY = 0,0,0,0,0,0,0
         SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg = 0,0,0,0
@@ -833,7 +834,7 @@ class RNADNABindingSet:
             next_of_rbs = num_of_rbs + 1
             cur_rbs = self.sequences[num_of_rbs]
             next_rbs = self.sequences[next_of_rbs]
-            while cur_rbs.rna.distance(next_rbs.rna) < 20 and next_of_rbs < len(tpx.sequences) - 2:
+            while cur_rbs.rna.distance(next_rbs.rna) < 20 and next_of_rbs < len(self.sequences) - 2:
                 #different RNA binding motif and same parallel
                 if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
                     #print "yes1"
@@ -908,9 +909,7 @@ class RNADNABindingSet:
                                             SD_AP_neg += 1
                                                   
                 next_of_rbs += 1
-                next_rbs = tpx.sequences[next_of_rbs]
+                next_rbs = self.sequences[next_of_rbs]
 
-        
-        #print ("------  "+name + "\t\t[Done]  ---------------------------------")
         print ([name,C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg])
         return [C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg]
