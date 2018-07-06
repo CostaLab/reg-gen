@@ -23,10 +23,10 @@ fi
 
 # Run test script
 cd ${DIR}/TDF_examples/FENDRR_mm9/
-rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
-rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/ -l 8
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/ -l 8
 
 cd ${DIR}/TDF_examples/TERC_hg19/
-rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10 -mp 5
+rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 8 -o genomic_region_test/ -n 10 -mp 5
 
 echo "********* TDF test completed ****************"
