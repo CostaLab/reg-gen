@@ -913,3 +913,7 @@ class RNADNABindingSet:
 
         print ([name,C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg])
         return [C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg]
+
+    def print_CM_bed(rbs1,rbs2,filename):
+        if rbs1.dna
+        print()
