@@ -289,7 +289,7 @@ def diff_analysis_run(args):
     #
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
     scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf, motif_num_dict)
 
 
 def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -601,9 +601,9 @@ def output_results(args, ps_tc_results_by_tf):
             f.write(mpbs_name + "\t" + "\t".join(map(str, ps_tc_results_by_tf[mpbs_name])) + "\n")
 
 
-def output_stat_results(args, stat_results_by_tf):
+def output_stat_results(args, stat_results_by_tf, motif_num_dict):
     output_fname = os.path.join(args.output_location, "{}_{}_statistics.txt".format(args.condition1, args.condition2))
-    header = ["Motif",
+    header = ["Motif", "Num",
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
@@ -611,7 +611,8 @@ def output_stat_results(args, stat_results_by_tf):
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
         for mpbs_name in stat_results_by_tf.keys():
-            f.write(mpbs_name + "\t" + "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
+            f.write(mpbs_name + "\t" + str(motif_num_dict[mpbs_name])  + "\t" +
+                    "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
 
 
 def output_factor(args, factor1, factor2):
