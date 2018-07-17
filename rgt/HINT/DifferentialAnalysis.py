@@ -389,10 +389,10 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     for i in range((window / 2), len(af) - (window / 2)):
         nhatf = Nf[i - (window / 2)] * (af[i] / f_sum)
         nhatr = Nr[i - (window / 2)] * (ar[i] / r_sum)
-        #bc_signal.append(nhatf + nhatr)
-        zf = (nf[i] + 1.0) / (nhatf + 1.0)
-        zr = (nr[i] + 1.0) / (nhatr + 1.0)
-        bc_signal.append(zf + zr)
+        bc_signal.append(nhatf + nhatr)
+        #zf = (nf[i] + 1.0) / (nhatf + 1.0)
+        #zr = (nr[i] + 1.0) / (nhatr + 1.0)
+        #bc_signal.append(zf + zr)
         f_sum -= f_last
         f_sum += af[i + (window / 2)]
         f_last = af[i - (window / 2) + 1]
