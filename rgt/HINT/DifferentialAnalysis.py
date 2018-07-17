@@ -361,16 +361,15 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
         r_last = nr[i - (window / 2) + 1]
 
     # Fetching sequence
-    currStr = str(fastaFile.fetch(chrom, p1_wk - 1, p2_wk - 2)).upper()
-    currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrom, p1_wk + 2, p2_wk + 1)).upper())
+    currStr = str(fastaFile.fetch(chrom, p1_wk, p2_wk - 1)).upper()
+    currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrom, p1_wk + 1, p2_wk)).upper())
 
     # Iterating on sequence to create signal
     af = []
     ar = []
     for i in range(int(ceil(k_nb / 2.)), len(currStr) - int(floor(k_nb / 2)) + 1):
-        fseq = currStr[i - int(k_nb / 2.) + forward_shift + 1:i + int(k_nb / 2.) + forward_shift + 1]
-        rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i - reverse_shift + 1:
-                           len(currStr) + int(k_nb / 2.) - i - reverse_shift + 1]
+        fseq = currStr[i - int(floor(k_nb / 2.)):i + int(ceil(k_nb / 2.))]
+        rseq = currRevComp[len(currStr) - int(ceil(k_nb / 2.)) - i:len(currStr) + int(floor(k_nb / 2.)) - i]
         try:
             af.append(fBiasDict[fseq])
         except Exception:
@@ -390,9 +389,6 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
         nhatf = Nf[i - (window / 2)] * (af[i] / f_sum)
         nhatr = Nr[i - (window / 2)] * (ar[i] / r_sum)
         bc_signal.append(nhatf + nhatr)
-        #zf = (nf[i] + 1.0) / (nhatf + 1.0)
-        #zr = (nr[i] + 1.0) / (nhatr + 1.0)
-        #bc_signal.append(zf + zr)
         f_sum -= f_last
         f_sum += af[i + (window / 2)]
         f_last = af[i - (window / 2) + 1]
