@@ -4,6 +4,7 @@ from pysam import Samfile, Fastafile
 from math import ceil, floor
 from Bio import motifs
 import matplotlib
+import logging
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -243,7 +244,10 @@ def diff_analysis_run(args):
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift,
                               bias_table1, bias_table2))
-        res = pool.map(get_bc_signal, mpbs_list)
+        try:
+            res = pool.map(get_bc_signal, mpbs_list)
+        except Exception:
+            logging.exception("get bias corrected signal failed")
 
     # differential analysis using raw signal
     else:
@@ -251,7 +255,10 @@ def diff_analysis_run(args):
         for mpbs_name in mpbs_name_list:
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift))
-        res = pool.map(get_raw_signal, mpbs_list)
+        try:
+            res = pool.map(get_raw_signal, mpbs_list)
+        except Exception:
+            logging.exception("get raw signal failed")
 
     for idx, mpbs_name in enumerate(mpbs_name_list):
         signal_dict_by_tf_1[mpbs_name] = res[idx][0]
@@ -354,15 +361,16 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
         r_last = nr[i - (window / 2) + 1]
 
     # Fetching sequence
-    currStr = str(fastaFile.fetch(chrom, p1_wk, p2_wk - 1)).upper()
-    currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrom, p1_wk + 1, p2_wk)).upper())
+    currStr = str(fastaFile.fetch(chrom, p1_wk - 1, p2_wk - 2)).upper()
+    currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrom, p1_wk + 2, p2_wk + 1)).upper())
 
     # Iterating on sequence to create signal
     af = []
     ar = []
     for i in range(int(ceil(k_nb / 2.)), len(currStr) - int(floor(k_nb / 2)) + 1):
-        fseq = currStr[i - int(floor(k_nb / 2.)):i + int(ceil(k_nb / 2.))]
-        rseq = currRevComp[len(currStr) - int(ceil(k_nb / 2.)) - i:len(currStr) + int(floor(k_nb / 2.)) - i]
+        fseq = currStr[i - int(k_nb / 2.) + forward_shift + 1:i + int(k_nb / 2.) + forward_shift + 1]
+        rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i - reverse_shift + 1:
+                           len(currStr) + int(k_nb / 2.) - i - reverse_shift + 1]
         try:
             af.append(fBiasDict[fseq])
         except Exception:
@@ -381,7 +389,10 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     for i in range((window / 2), len(af) - (window / 2)):
         nhatf = Nf[i - (window / 2)] * (af[i] / f_sum)
         nhatr = Nr[i - (window / 2)] * (ar[i] / r_sum)
-        bc_signal.append(nhatf + nhatr)
+        #bc_signal.append(nhatf + nhatr)
+        zf = (nf[i] + 1.0) / (nhatf + 1.0)
+        zr = (nr[i] + 1.0) / (nhatr + 1.0)
+        bc_signal.append(zf + zr)
         f_sum -= f_last
         f_sum += af[i + (window / 2)]
         f_last = af[i - (window / 2) + 1]

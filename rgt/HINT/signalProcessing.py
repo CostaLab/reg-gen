@@ -1016,7 +1016,7 @@ class GenomicSignal:
         p1_wk = p1_w - int(k_nb / 2.)
         p2_wk = p2_w + int(k_nb / 2.)
 
-        if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+        if p1 <= 0 or p1_w <= 0 or p2_wk <= 0:
             # Return raw counts
             signal = [0.0] * (p2 - p1)
             for read in self.bam.fetch(ref, p1, p2):
@@ -1031,16 +1031,18 @@ class GenomicSignal:
 
             return signal
 
-        currStr = str(fasta.fetch(ref, p1_wk - 1, p2_wk - 2)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 2, p2_wk + 1)).upper())
+        currStr = str(fasta.fetch(ref, p1_wk + forward_shift - 1, p2_wk - 2 + forward_shift)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + forward_shift,
+                                                                 p2_wk - 1 + forward_shift)).upper())
 
         # Iterating on sequence to create the bias signal
         signal_bias_f = []
         signal_bias_r = []
         for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
-            fseq = currStr[i - int(k_nb / 2.) + forward_shift + 1:i + int(k_nb / 2.) + forward_shift + 1]
-            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i - reverse_shift + 1:
-                               len(currStr) + int(k_nb / 2.) - i - reverse_shift + 1]
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:
+                               len(currStr) + int(k_nb / 2.) - i]
+
             try:
                 signal_bias_f.append(fBiasDict[fseq])
             except Exception:
@@ -1059,7 +1061,7 @@ class GenomicSignal:
                 if p1_w <= cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
             else:
-                cut_site = read.aend + reverse_shift - 1
+                cut_site = read.aend + reverse_shift + 1
                 if p1_w <= cut_site < p2_w:
                     signal_raw_r[cut_site - p1_w] += 1.0
 
@@ -1094,8 +1096,8 @@ class GenomicSignal:
         bc_f = []
         bc_r = []
         for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            #nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+            #nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
             raw.append(signal_raw_f[i] + signal_raw_r[i])
