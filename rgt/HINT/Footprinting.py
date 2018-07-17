@@ -184,7 +184,7 @@ def atac_seq(args):
         forward_shift = args.forward_shift
 
     if args.reverse_shift is None:
-        reverse_shift = -4
+        reverse_shift = -5
     else:
         reverse_shift = args.reverse_shift
 
@@ -209,7 +209,7 @@ def atac_seq(args):
         fp_ext = args.fp_ext
 
     if args.tc_ext is None:
-        tc_ext = 100
+        tc_ext = 25
     else:
         tc_ext = args.tc_ext
 

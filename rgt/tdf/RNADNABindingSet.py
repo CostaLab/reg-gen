@@ -1,5 +1,6 @@
 # Python Libraries
 from __future__ import print_function
+import os
 import numpy
 # Local Libraries
 
@@ -143,7 +144,10 @@ class RNADNABindingSet:
 
     def __iter__(self):
         return iter(self.sequences)
-    
+
+    def __getitem__(self, key):
+        return self.sequences[key]
+
     def add(self, rnadnabinding):
         """Add one pair of BindingSite on RNA and GenomicRegion on DNA"""
         self.sequences.append(rnadnabinding)

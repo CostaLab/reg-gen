@@ -33,7 +33,7 @@ MA0050	MA0050.2.IRF1	jaspar_vertebrates	1	IRF1	Interferon-regulatory factors	P10
 MA0051	MA0051.1.IRF2	jaspar_vertebrates	1	IRF2	Interferon-regulatory factors	P14316	SELEX
 MA0052	MA0052.3.MEF2A	jaspar_vertebrates	1	MEF2A	Regulators of differentiation	Q02078	HT-SELEX
 MA0056	MA0056.1.MZF1	jaspar_vertebrates	1	MZF1	More than 3 adjacent zinc finger factors	P28698	SELEX
-MA0057	MA0057.1.MZF1(var.2)	jaspar_vertebrates	pwm	MZF1(var.2)	More than 3 adjacent zinc finger factors	P28698	SELEX
+MA0057	MA0057.1.MZF1(var.2)	jaspar_vertebrates	2	MZF1	More than 3 adjacent zinc finger factors	P28698	SELEX
 MA0058	MA0058.3.MAX	jaspar_vertebrates	1	MAX	bHLH-ZIP factors	P61244	HT-SELEX
 MA0059	MA0059.1.MAX::MYC	jaspar_vertebrates	1	MAX+MYC	bHLH-ZIP factors	P61244;P01106	SELEX
 MA0060	MA0060.3.NFYA	jaspar_vertebrates	1	NFYA	NFY	P23511	ChIP-seq
@@ -46,7 +46,7 @@ MA0068	MA0068.2.PAX4	jaspar_vertebrates	1	PAX4	Paired plus homeo domain	O43316	H
 MA0069	MA0069.1.Pax6	jaspar_vertebrates	1	Pax6	Paired plus homeo domain	P26367	SELEX
 MA0070	MA0070.1.PBX1	jaspar_vertebrates	1	PBX1	TALE-type homeo domain factors	P40424	SELEX
 MA0071	MA0071.1.RORA	jaspar_vertebrates	1	RORA	Thyroid hormone receptor-related factors (NR1)	P35398	SELEX
-MA0072	MA0072.1.RORA(var.2)	jaspar_vertebrates	pwm	RORA(var.2)	Thyroid hormone receptor-related factors (NR1)	P35398	SELEX
+MA0072	MA0072.1.RORA(var.2)	jaspar_vertebrates	2	RORA	Thyroid hormone receptor-related factors (NR1)	P35398	SELEX
 MA0073	MA0073.1.RREB1	jaspar_vertebrates	1	RREB1	Factors with multiple dispersed zinc fingers	Q92766	SELEX
 MA0074	MA0074.1.RXRA::VDR	jaspar_vertebrates	1	RXRA+VDR	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P19793;P11473	SELEX
 MA0075	MA0075.2.Prrx2	jaspar_vertebrates	1	Prrx2	Paired-related HD factors	Q06348	HT-SELEX
@@ -152,10 +152,10 @@ MA0484	MA0484.1.HNF4G	jaspar_vertebrates	1	HNF4G	RXR-related receptors (NR2)	Q14
 MA0485	MA0485.1.Hoxc9	jaspar_vertebrates	1	Hoxc9	HOX-related factors	P09633	ChIP-seq
 MA0486	MA0486.2.HSF1	jaspar_vertebrates	1	HSF1	HSF factors	Q00613	HT-SELEX
 MA0488	MA0488.1.JUN	jaspar_vertebrates	1	JUN	Jun-related factors	P05412	ChIP-seq
-MA0489	MA0489.1.JUN(var.2)	jaspar_vertebrates	pwm	JUN(var.2)	Jun-related factors	P05412	ChIP-seq
+MA0489	MA0489.1.JUN(var.2)	jaspar_vertebrates	2	JUN	Jun-related factors	P05412	ChIP-seq
 MA0490	MA0490.1.JUNB	jaspar_vertebrates	1	JUNB	Jun-related factors	P17275	ChIP-seq
 MA0491	MA0491.1.JUND	jaspar_vertebrates	1	JUND	Jun-related factors	P17535	ChIP-seq
-MA0492	MA0492.1.JUND(var.2)	jaspar_vertebrates	pwm	JUND(var.2)	Jun-related factors	P17535	ChIP-seq
+MA0492	MA0492.1.JUND(var.2)	jaspar_vertebrates	2	JUND	Jun-related factors	P17535	ChIP-seq
 MA0493	MA0493.1.Klf1	jaspar_vertebrates	1	Klf1	Three-zinc finger Krüppel-related factors	P46099	ChIP-seq
 MA0494	MA0494.1.Nr1h3::Rxra	jaspar_vertebrates	1	Nr1h3+Rxra	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q9Z0Y9;P28700	ChIP-seq
 MA0495	MA0495.2.MAFF	jaspar_vertebrates	1	MAFF	Maf-related factors	Q9ULX9	ChIP-seq
@@ -166,7 +166,7 @@ MA0499	MA0499.1.Myod1	jaspar_vertebrates	1	Myod1	MyoD / ASC-related factors	P100
 MA0500	MA0500.1.Myog	jaspar_vertebrates	1	Myog	MyoD / ASC-related factors	P12979	ChIP-seq
 MA0501	MA0501.1.MAF::NFE2	jaspar_vertebrates	1	MAF+NFE2	Jun-related factors;Maf-related factors	O75444;Q16621	ChIP-seq
 MA0502	MA0502.1.NFYB	jaspar_vertebrates	1	NFYB	NFY	P25208	ChIP-seq
-MA0503	MA0503.1.Nkx2-5(var.2)	jaspar_vertebrates	pwm	Nkx2-5(var.2)	NK-related factors	P42582	ChIP-seq
+MA0503	MA0503.1.Nkx2-5(var.2)	jaspar_vertebrates	2	Nkx2-5	NK-related factors	P42582	ChIP-seq
 MA0504	MA0504.1.NR2C2	jaspar_vertebrates	1	NR2C2	RXR-related receptors (NR2)	P49116	ChIP-seq
 MA0505	MA0505.1.Nr5a2	jaspar_vertebrates	1	Nr5a2	FTZ-F1-related receptors (NR5)	P45448	ChIP-seq
 MA0506	MA0506.1.NRF1	jaspar_vertebrates	1	NRF1	Jun-related factors	Q16656	ChIP-seq
@@ -257,7 +257,7 @@ MA0652	MA0652.1.IRF8	jaspar_vertebrates	1	IRF8	Interferon-regulatory factors	Q02
 MA0653	MA0653.1.IRF9	jaspar_vertebrates	1	IRF9	Interferon-regulatory factors	Q00978	HT-SELEX
 MA0654	MA0654.1.ISX	jaspar_vertebrates	1	ISX	Paired-related HD factors	Q2M1V0	HT-SELEX
 MA0655	MA0655.1.JDP2	jaspar_vertebrates	1	JDP2	Fos-related factors	Q8WYK2	HT-SELEX
-MA0656	MA0656.1.JDP2(var.2)	jaspar_vertebrates	pwm	JDP2(var.2)	Fos-related factors	Q8WYK2	HT-SELEX
+MA0656	MA0656.1.JDP2(var.2)	jaspar_vertebrates	2	JDP2	Fos-related factors	Q8WYK2	HT-SELEX
 MA0657	MA0657.1.KLF13	jaspar_vertebrates	1	KLF13	Three-zinc finger Krüppel-related factors	Q9Y2Y9	HT-SELEX
 MA0658	MA0658.1.LHX6	jaspar_vertebrates	1	LHX6	HD-LIM factors	Q9UPM6	HT-SELEX
 MA0659	MA0659.1.MAFG	jaspar_vertebrates	1	MAFG	Maf-related factors	O15525	HT-SELEX
@@ -329,9 +329,9 @@ MA0724	MA0724.1.VENTX	jaspar_vertebrates	1	VENTX	NK-related factors	O95231	HT-SE
 MA0725	MA0725.1.VSX1	jaspar_vertebrates	1	VSX1	Paired-related HD factors	Q9NZR4	HT-SELEX
 MA0726	MA0726.1.VSX2	jaspar_vertebrates	1	VSX2	Paired-related HD factors	P58304	HT-SELEX
 MA0727	MA0727.1.NR3C2	jaspar_vertebrates	1	NR3C2	Steroid hormone receptors (NR3)	P08235	HT-SELEX
-MA0728	MA0728.1.Nr2f6(var.2)	jaspar_vertebrates	pwm	Nr2f6(var.2)	RXR-related receptors (NR2)	P43136	HT-SELEX
+MA0728	MA0728.1.Nr2f6(var.2)	jaspar_vertebrates	2	Nr2f6	RXR-related receptors (NR2)	P43136	HT-SELEX
 MA0729	MA0729.1.RARA	jaspar_vertebrates	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	HT-SELEX
-MA0730	MA0730.1.RARA(var.2)	jaspar_vertebrates	pwm	RARA(var.2)	Thyroid hormone receptor-related factors (NR1)	P10276	HT-SELEX
+MA0730	MA0730.1.RARA(var.2)	jaspar_vertebrates	2	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	HT-SELEX
 MA0731	MA0731.1.BCL6B	jaspar_vertebrates	1	BCL6B	More than 3 adjacent zinc finger factors	A8KA13	HT-SELEX
 MA0732	MA0732.1.EGR3	jaspar_vertebrates	1	EGR3	Three-zinc finger Krüppel-related factors	Q06889	HT-SELEX
 MA0733	MA0733.1.EGR4	jaspar_vertebrates	1	EGR4	Three-zinc finger Krüppel-related factors	Q05215	HT-SELEX
@@ -411,12 +411,12 @@ MA0806	MA0806.1.TBX4	jaspar_vertebrates	1	TBX4	TBX2-related factors	P57082	HT-SE
 MA0807	MA0807.1.TBX5	jaspar_vertebrates	1	TBX5	TBX2-related factors	Q99593	HT-SELEX
 MA0808	MA0808.1.TEAD3	jaspar_vertebrates	1	TEAD3	TEF-1-related factors	Q99594	HT-SELEX
 MA0809	MA0809.1.TEAD4	jaspar_vertebrates	1	TEAD4	TEF-1-related factors	Q15561	HT-SELEX
-MA0810	MA0810.1.TFAP2A(var.2)	jaspar_vertebrates	pwm	TFAP2A(var.2)	AP-2	P05549	HT-SELEX
+MA0810	MA0810.1.TFAP2A(var.2)	jaspar_vertebrates	2	TFAP2A	AP-2	P05549	HT-SELEX
 MA0811	MA0811.1.TFAP2B	jaspar_vertebrates	1	TFAP2B	AP-2	Q92481	HT-SELEX
-MA0812	MA0812.1.TFAP2B(var.2)	jaspar_vertebrates	pwm	TFAP2B(var.2)	AP-2	Q92481	HT-SELEX
-MA0813	MA0813.1.TFAP2B(var.3)	jaspar_vertebrates	pwm	TFAP2B(var.3)	AP-2	Q92481	HT-SELEX
-MA0814	MA0814.1.TFAP2C(var.2)	jaspar_vertebrates	pwm	TFAP2C(var.2)	AP-2	Q92754	HT-SELEX
-MA0815	MA0815.1.TFAP2C(var.3)	jaspar_vertebrates	pwm	TFAP2C(var.3)	AP-2	Q92754	HT-SELEX
+MA0812	MA0812.1.TFAP2B(var.2)	jaspar_vertebrates	2	TFAP2B	AP-2	Q92481	HT-SELEX
+MA0813	MA0813.1.TFAP2B(var.3)	jaspar_vertebrates	3	TFAP2B	AP-2	Q92481	HT-SELEX
+MA0814	MA0814.1.TFAP2C(var.2)	jaspar_vertebrates	2	TFAP2C	AP-2	Q92754	HT-SELEX
+MA0815	MA0815.1.TFAP2C(var.3)	jaspar_vertebrates	3	TFAP2C	AP-2	Q92754	HT-SELEX
 MA0816	MA0816.1.Ascl2	jaspar_vertebrates	1	Ascl2	MyoD / ASC-related factors	O35885	HT-SELEX
 MA0817	MA0817.1.BHLHE23	jaspar_vertebrates	1	BHLHE23	Tal-related factors	Q8NDY6	HT-SELEX
 MA0818	MA0818.1.BHLHE22	jaspar_vertebrates	1	BHLHE22	Tal-related factors	Q8NFJ8	HT-SELEX
@@ -429,8 +429,8 @@ MA0824	MA0824.1.ID4	jaspar_vertebrates	1	ID4	HLH domain only	P47928	HT-SELEX
 MA0825	MA0825.1.MNT	jaspar_vertebrates	1	MNT	bHLH-ZIP factors	Q99583	HT-SELEX
 MA0826	MA0826.1.OLIG1	jaspar_vertebrates	1	OLIG1	Tal-related factors	Q8TAK6	HT-SELEX
 MA0827	MA0827.1.OLIG3	jaspar_vertebrates	1	OLIG3	Tal-related factors	Q7RTU3	HT-SELEX
-MA0828	MA0828.1.SREBF2(var.2)	jaspar_vertebrates	pwm	SREBF2(var.2)	bHLH-ZIP factors	Q12772	HT-SELEX
-MA0829	MA0829.1.Srebf1(var.2)	jaspar_vertebrates	pwm	Srebf1(var.2)	bHLH-ZIP factors	Q9WTN3	HT-SELEX
+MA0828	MA0828.1.SREBF2(var.2)	jaspar_vertebrates	2	SREBF2	bHLH-ZIP factors	Q12772	HT-SELEX
+MA0829	MA0829.1.Srebf1(var.2)	jaspar_vertebrates	2	Srebf1	bHLH-ZIP factors	Q9WTN3	HT-SELEX
 MA0830	MA0830.1.TCF4	jaspar_vertebrates	1	TCF4	E2A-related factors	P15884	HT-SELEX
 MA0831	MA0831.2.TFE3	jaspar_vertebrates	1	TFE3	bHLH-ZIP factors	P19532	SMiLE-seq
 MA0832	MA0832.1.Tcf21	jaspar_vertebrates	1	Tcf21	Tal-related factors	O35437	HT-SELEX
@@ -459,9 +459,9 @@ MA0854	MA0854.1.Alx1	jaspar_vertebrates	1	Alx1	Paired-related HD factors	Q8C8B0	
 MA0855	MA0855.1.RXRB	jaspar_vertebrates	1	RXRB	RXR-related receptors (NR2)	P28702	HT-SELEX
 MA0856	MA0856.1.RXRG	jaspar_vertebrates	1	RXRG	RXR-related receptors (NR2)	P48443	HT-SELEX
 MA0857	MA0857.1.Rarb	jaspar_vertebrates	1	Rarb	Thyroid hormone receptor-related factors (NR1)	P22605	HT-SELEX
-MA0858	MA0858.1.Rarb(var.2)	jaspar_vertebrates	pwm	Rarb(var.2)	Thyroid hormone receptor-related factors (NR1)	P22605	HT-SELEX
+MA0858	MA0858.1.Rarb(var.2)	jaspar_vertebrates	2	Rarb	Thyroid hormone receptor-related factors (NR1)	P22605	HT-SELEX
 MA0859	MA0859.1.Rarg	jaspar_vertebrates	1	Rarg	Thyroid hormone receptor-related factors (NR1)	P18911	HT-SELEX
-MA0860	MA0860.1.Rarg(var.2)	jaspar_vertebrates	pwm	Rarg(var.2)	Thyroid hormone receptor-related factors (NR1)	P18911	HT-SELEX
+MA0860	MA0860.1.Rarg(var.2)	jaspar_vertebrates	2	Rarg	Thyroid hormone receptor-related factors (NR1)	P18911	HT-SELEX
 MA0861	MA0861.1.TP73	jaspar_vertebrates	1	TP73	p53-related factors	O15350	HT-SELEX
 MA0862	MA0862.1.GMEB2	jaspar_vertebrates	1	GMEB2	GMEB	Q9UKD1	HT-SELEX
 MA0863	MA0863.1.MTF1	jaspar_vertebrates	1	MTF1	More than 3 adjacent zinc finger factors	Q14872	HT-SELEX
@@ -473,7 +473,7 @@ MA0868	MA0868.1.SOX8	jaspar_vertebrates	1	SOX8	SOX-related factors	P57073	HT-SEL
 MA0869	MA0869.1.Sox11	jaspar_vertebrates	1	Sox11	SOX-related factors	Q7M6Y2	HT-SELEX
 MA0870	MA0870.1.Sox1	jaspar_vertebrates	1	Sox1	SOX-related factors	P53783	HT-SELEX
 MA0871	MA0871.1.TFEC	jaspar_vertebrates	1	TFEC	bHLH-ZIP factors	O14948	HT-SELEX
-MA0872	MA0872.1.TFAP2A(var.3)	jaspar_vertebrates	pwm	TFAP2A(var.3)	AP-2	P05549	HT-SELEX
+MA0872	MA0872.1.TFAP2A(var.3)	jaspar_vertebrates	3	TFAP2A	AP-2	P05549	HT-SELEX
 MA0873	MA0873.1.HOXD12	jaspar_vertebrates	1	HOXD12	HOX-related factors	P35452	HT-SELEX
 MA0874	MA0874.1.Arx	jaspar_vertebrates	1	Arx	Paired-related HD factors	O35085	universal protein binding microarray (PBM)
 MA0875	MA0875.1.BARX1	jaspar_vertebrates	1	BARX1	NK-related factors	Q9HBU1	HT-SELEX
@@ -543,26 +543,26 @@ MA1122	MA1122.1.TFDP1	jaspar_vertebrates	1	TFDP1	E2F-related factors	Q14186	ChIP
 MA1123	MA1123.1.TWIST1	jaspar_vertebrates	1	TWIST1	Tal-related factors	Q15672	ChIP-seq
 MA1124	MA1124.1.ZNF24	jaspar_vertebrates	1	ZNF24	More than 3 adjacent zinc finger factors	P17028	ChIP-seq
 MA1125	MA1125.1.ZNF384	jaspar_vertebrates	1	ZNF384	More than 3 adjacent zinc finger factors	Q8TF68	ChIP-seq
-MA1126	MA1126.1.FOS::JUN(var.2)	jaspar_vertebrates	pwm	FOS+JUN(var.2)	Fos-related factors;Jun-related factors	P01100;P05412	SMiLE-seq
+MA1126	MA1126.1.FOS::JUN(var.2)	jaspar_vertebrates	2	FOS+JUN	Fos-related factors;Jun-related factors	P01100;P05412	SMiLE-seq
 MA1127	MA1127.1.FOSB::JUN	jaspar_vertebrates	1	FOSB+JUN	Fos-related factors;Jun-related factors	P53539;P05412	SMiLE-seq
 MA1128	MA1128.1.FOSL1::JUN	jaspar_vertebrates	1	FOSL1+JUN	Fos-related factors;Jun-related factors	P15407;P05412	SMiLE-seq
-MA1129	MA1129.1.FOSL1::JUN(var.2)	jaspar_vertebrates	pwm	FOSL1+JUN(var.2)	Fos-related factors;Jun-related factors	P15407;P05412	SMiLE-seq
+MA1129	MA1129.1.FOSL1::JUN(var.2)	jaspar_vertebrates	2	FOSL1+JUN	Fos-related factors;Jun-related factors	P15407;P05412	SMiLE-seq
 MA1130	MA1130.1.FOSL2::JUN	jaspar_vertebrates	1	FOSL2+JUN	Fos-related factors;Jun-related factors	P15408;P05412	SMiLE-seq
-MA1131	MA1131.1.FOSL2::JUN(var.2)	jaspar_vertebrates	pwm	FOSL2+JUN(var.2)	Fos-related factors;Jun-related factors	P15408;P05412	SMiLE-seq
+MA1131	MA1131.1.FOSL2::JUN(var.2)	jaspar_vertebrates	2	FOSL2+JUN	Fos-related factors;Jun-related factors	P15408;P05412	SMiLE-seq
 MA1132	MA1132.1.JUN::JUNB	jaspar_vertebrates	1	JUN+JUNB	Jun-related factors	P05412;P17275	SMiLE-seq
-MA1133	MA1133.1.JUN::JUNB(var.2)	jaspar_vertebrates	pwm	JUN+JUNB(var.2)	Jun-related factors	P05412;P17275	SMiLE-seq
+MA1133	MA1133.1.JUN::JUNB(var.2)	jaspar_vertebrates	2	JUN+JUNB	Jun-related factors	P05412;P17275	SMiLE-seq
 MA1134	MA1134.1.FOS::JUNB	jaspar_vertebrates	1	FOS+JUNB	Fos-related factors;Jun-related factors	P01100;P17275	SMiLE-seq
 MA1135	MA1135.1.FOSB::JUNB	jaspar_vertebrates	1	FOSB+JUNB	Fos-related factors;Jun-related factors	P53539;P17275	SMiLE-seq
-MA1136	MA1136.1.FOSB::JUNB(var.2)	jaspar_vertebrates	pwm	FOSB+JUNB(var.2)	Fos-related factors;Jun-related factors	P53539;P17275	SMiLE-seq
+MA1136	MA1136.1.FOSB::JUNB(var.2)	jaspar_vertebrates	2	FOSB+JUNB	Fos-related factors;Jun-related factors	P53539;P17275	SMiLE-seq
 MA1137	MA1137.1.FOSL1::JUNB	jaspar_vertebrates	1	FOSL1+JUNB	Fos-related factors;Jun-related factors	P15407;P17275	SMiLE-seq
 MA1138	MA1138.1.FOSL2::JUNB	jaspar_vertebrates	1	FOSL2+JUNB	Fos-related factors;Jun-related factors	P15408;P17275	SMiLE-seq
-MA1139	MA1139.1.FOSL2::JUNB(var.2)	jaspar_vertebrates	pwm	FOSL2+JUNB(var.2)	Fos-related factors;Jun-related factors	P15408;P17275	SMiLE-seq
-MA1140	MA1140.1.JUNB(var.2)	jaspar_vertebrates	pwm	JUNB(var.2)	Jun-related factors	P17275	SMiLE-seq
+MA1139	MA1139.1.FOSL2::JUNB(var.2)	jaspar_vertebrates	2	FOSL2+JUNB	Fos-related factors;Jun-related factors	P15408;P17275	SMiLE-seq
+MA1140	MA1140.1.JUNB(var.2)	jaspar_vertebrates	2	JUNB	Jun-related factors	P17275	SMiLE-seq
 MA1141	MA1141.1.FOS::JUND	jaspar_vertebrates	1	FOS+JUND	Fos-related factors;Jun-related factors	P01100;P17535	SMiLE-seq
 MA1142	MA1142.1.FOSL1::JUND	jaspar_vertebrates	1	FOSL1+JUND	Fos-related factors;Jun-related factors	P15407;P17535	SMiLE-seq
-MA1143	MA1143.1.FOSL1::JUND(var.2)	jaspar_vertebrates	pwm	FOSL1+JUND(var.2)	Fos-related factors;Jun-related factors	P15407;P17535	SMiLE-seq
+MA1143	MA1143.1.FOSL1::JUND(var.2)	jaspar_vertebrates	2	FOSL1+JUND	Fos-related factors;Jun-related factors	P15407;P17535	SMiLE-seq
 MA1144	MA1144.1.FOSL2::JUND	jaspar_vertebrates	1	FOSL2+JUND	Fos-related factors;Jun-related factors	P15408;P17535	SMiLE-seq
-MA1145	MA1145.1.FOSL2::JUND(var.2)	jaspar_vertebrates	pwm	FOSL2+JUND(var.2)	Fos-related factors;Jun-related factors	P15408;P17535	SMiLE-seq
+MA1145	MA1145.1.FOSL2::JUND(var.2)	jaspar_vertebrates	2	FOSL2+JUND	Fos-related factors;Jun-related factors	P15408;P17535	SMiLE-seq
 MA1146	MA1146.1.NR1A4::RXRA	jaspar_vertebrates	1	NR1A4+RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q96RI1;P19793	SMiLE-seq
 MA1147	MA1147.1.NR4A2::RXRA	jaspar_vertebrates	1	NR4A2+RXRA	NGFI-B-related receptors (NR4);RXR-related receptors (NR2)	P43354;P19793	SMiLE-seq
 MA1148	MA1148.1.PPARA::RXRA	jaspar_vertebrates	1	PPARA+RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q07869;P19793	SMiLE-seq

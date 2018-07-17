@@ -4,6 +4,7 @@ from pysam import Samfile, Fastafile
 from math import ceil, floor
 from Bio import motifs
 import matplotlib
+import logging
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -243,7 +244,10 @@ def diff_analysis_run(args):
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift,
                               bias_table1, bias_table2))
-        res = pool.map(get_bc_signal, mpbs_list)
+        try:
+            res = pool.map(get_bc_signal, mpbs_list)
+        except Exception:
+            logging.exception("get bias corrected signal failed")
 
     # differential analysis using raw signal
     else:
@@ -251,7 +255,10 @@ def diff_analysis_run(args):
         for mpbs_name in mpbs_name_list:
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift))
-        res = pool.map(get_raw_signal, mpbs_list)
+        try:
+            res = pool.map(get_raw_signal, mpbs_list)
+        except Exception:
+            logging.exception("get raw signal failed")
 
     for idx, mpbs_name in enumerate(mpbs_name_list):
         signal_dict_by_tf_1[mpbs_name] = res[idx][0]
@@ -289,7 +296,7 @@ def diff_analysis_run(args):
     #
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
     scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf, motif_num_dict)
 
 
 def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -481,6 +488,13 @@ def line_plot(arguments):
     mean_signal_1 = (signal_1 / num_fp) / factor1
     mean_signal_2 = (signal_2 / num_fp) / factor2
 
+    # output signal
+    signal_fname = os.path.join(output_location, "{}.txt".format(mpbs_name))
+    with open(signal_fname, "w") as f:
+        f.write(condition1 + "\t" + condition2 + "\n")
+        for i in range(window_size):
+            f.write(str(mean_signal_1[i]) + "\t" + str(mean_signal_2[i]) + "\n")
+
     if standardize:
         mean_signal_1, mean_signal_2 = standard(mean_signal_1, mean_signal_2)
 
@@ -594,9 +608,9 @@ def output_results(args, ps_tc_results_by_tf):
             f.write(mpbs_name + "\t" + "\t".join(map(str, ps_tc_results_by_tf[mpbs_name])) + "\n")
 
 
-def output_stat_results(args, stat_results_by_tf):
+def output_stat_results(args, stat_results_by_tf, motif_num_dict):
     output_fname = os.path.join(args.output_location, "{}_{}_statistics.txt".format(args.condition1, args.condition2))
-    header = ["Motif",
+    header = ["Motif", "Num",
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
@@ -604,7 +618,8 @@ def output_stat_results(args, stat_results_by_tf):
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
         for mpbs_name in stat_results_by_tf.keys():
-            f.write(mpbs_name + "\t" + "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
+            f.write(mpbs_name + "\t" + str(motif_num_dict[mpbs_name])  + "\t" +
+                    "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
 
 
 def output_factor(args, factor1, factor2):

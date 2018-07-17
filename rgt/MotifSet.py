@@ -215,10 +215,10 @@ class MotifSet:
                 name = line_list[1].strip()
                 database = line_list[2].strip()
                 version = int(line_list[3].strip())
-                gene_names = line_list[4].strip().split(";")
+                gene_names = line_list[4].strip().split("+")
                 tf_class = line_list[5].strip()
                 uniprot_ids = line_list[6].strip().split(";")
-                data_source = line_list[7].strip()
+                data_source = line_list[7].strip() if len(line_list) > 7 else ""
 
                 self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source))
 

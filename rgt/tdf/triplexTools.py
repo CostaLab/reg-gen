@@ -1,7 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
-import sys
+import re
 import pysam
 import shutil
 import pickle
@@ -565,7 +565,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par + "_auto-binding-file")
     # Read txp
     txp = RNADNABindingSet("dna")
-    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
+    txp.read_tpx(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
     txp.remove_duplicates()
 
     if remove_temp:
@@ -610,7 +610,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     # print(arg_strings)
     arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
 
-    arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
+    arg_ptr[0] = "triplexator -bp"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
         arg_ptr[i + 1] = s
     # print(arg_strings)
@@ -1252,3 +1252,9 @@ def shorten_dir(path):
     else:
         n = path.count("/") - 3 + 1
         return path.split("/",n)[-1]
+
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+        print([f, pattern])
+        if re.search(pattern, f):
+            silentremove(os.path.join(dir, f))

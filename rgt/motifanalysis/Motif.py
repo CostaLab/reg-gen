@@ -11,6 +11,7 @@ from os.path import basename
 
 # External
 from MOODS import tools, parsers
+from numpy import argmax
 
 
 # Internal
@@ -49,6 +50,7 @@ class Motif:
         self.pfm = parsers.pfm(str(input_file_name))
         self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
         self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts, 2)
+        self.pssm_rc = tools.reverse_complement(self.pssm)
 
         # how many bases this motif has
         self.len = len(self.pfm[0])
@@ -72,8 +74,13 @@ class Motif:
             self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
             print(">>> recomputing threshold for %s: %f" % (self.name, self.threshold))
 
+        self.threshold_rc = tools.threshold_from_p(self.pssm_rc, self.bg, fpr)
+
+        self.consensus = "".join([self.alphabet[i][0] for i in argmax(self.pssm, axis=0)])
+        self.consensus_rc = "".join([self.alphabet[i][0] for i in argmax(self.pssm_rc, axis=0)])
+
         # Evaluating if motif is palindromic
-        self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
+        self.is_palindrome = self.consensus == self.consensus_rc
 
 
 class ThresholdTable:
