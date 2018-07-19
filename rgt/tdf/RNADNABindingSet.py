@@ -823,3 +823,32 @@ class RNADNABindingSet:
         for rd in self:
             for i in range(rd.rna.initial, rd.rna.final):
                 self.rna_track[i] += 1
+
+    def get_RNA_DNA_counts(self, DNA_regions, filename):
+        """Return a list of the number of binding sites between RNA (row) and DNAs (column)."""
+
+        dbss = self.get_dbs()
+        cov = DNA_regions.counts_per_region(regionset=dbss)
+
+        with open(filename, "w") as f:
+            print("\t".join([x.toString(underline=True) for x in DNA_regions]), file=f)
+            print("\t".join([str(x) for x in cov]), file=f)
+
+    def distance_distribution(self):
+        dis_count = {"in_trans": 0, "in_cis": 0, "local": 0}
+        # chr_1_954955_955150__REV
+        for rd in self:
+            if rd.rna.chrom.starts("chr_"):
+                if rd.rna.split("_")[3] == "FWD":
+                    strand = "+"
+                else:
+                    strand = "-"
+                r = GenomicRegion(chrom="chr" + rd.rna.split("_")[1],
+                                  initial=int(rd.rna.split("_")[2])+rd.rna.initial,
+                                  final=int(rd.rna.split("_")[3])+rd.rna.final,
+                                  orientation=strand)
+                d = r.distance(rd.dna)
+                if not d: dis_count["in_trans"] += 1
+                elif d > 10000: dis_count["in_cis"] += 1
+                else: dis_count["local"] += 1
+        return dis_count
