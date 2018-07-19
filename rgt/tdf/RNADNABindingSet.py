@@ -838,7 +838,7 @@ class RNADNABindingSet:
         dis_count = {"in_trans": 0, "in_cis": 0, "local": 0}
         # chr_1_954955_955150__REV
         for rd in self:
-            if rd.rna.chrom.starts("chr_"):
+            if rd.rna.chrom.startswith("chr_"):
                 if rd.rna.split("_")[3] == "FWD":
                     strand = "+"
                 else:
