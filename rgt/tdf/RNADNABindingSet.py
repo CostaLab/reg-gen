@@ -839,7 +839,7 @@ class RNADNABindingSet:
         # chr_1_954955_955150__REV
         for rd in self:
             if rd.rna.chrom.startswith("chr_"):
-                if rd.rna.split("_")[3] == "FWD":
+                if rd.rna.chrom.split("_")[3] == "FWD":
                     strand = "+"
                 else:
                     strand = "-"
