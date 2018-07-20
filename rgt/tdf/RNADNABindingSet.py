@@ -843,9 +843,9 @@ class RNADNABindingSet:
                     strand = "+"
                 else:
                     strand = "-"
-                r = GenomicRegion(chrom="chr" + rd.rna.split("_")[1],
-                                  initial=int(rd.rna.split("_")[2])+rd.rna.initial,
-                                  final=int(rd.rna.split("_")[3])+rd.rna.final,
+                r = GenomicRegion(chrom="chr" + rd.rna.chrom.split("_")[1],
+                                  initial=int(rd.rna.chrom.split("_")[2])+rd.rna.initial,
+                                  final=int(rd.rna.chrom.split("_")[3])+rd.rna.final,
                                   orientation=strand)
                 d = r.distance(rd.dna)
                 if not d: dis_count["in_trans"] += 1
