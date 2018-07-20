@@ -45,7 +45,9 @@ order_stat = ["title", "name", "genome", "exons", "seq_length",
               "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
               "associated_gene", "expression", "loci", "autobinding",
               "MA_G","MA_T","MP_G","MP_T","RA_A","RA_G","YP_C","YP_T",
-              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T",
+              "target_in_trans", "traget_in_cis", "target_local",
+              "background_in_trans", "background_in_cis", "background_local"]
 
               # "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
               # "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
