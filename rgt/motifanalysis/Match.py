@@ -61,6 +61,8 @@ def options(parser):
                              "same chromosome and initial and final position, but opposing strand. Select this option "
                              "to only retain the 'strand duplicate' with the highest score. Duplicates due to "
                              "overlapping input regions are NOT affected by this.")
+    parser.add_argument("--rmdup", action="store_true", default=False,
+                        help="Remove any duplicate region from the input BED files.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
