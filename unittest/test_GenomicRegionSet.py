@@ -854,14 +854,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         A :   -----------------------              ------
                    -----     -----  -----------
         B :    ---    ---------         ----           ----
-        R :   -   ----         ------              ----
-                   ---         ---  ----    ---
+        R :   -   ----         ---------    ---    ----
         """
         self.region_sets([['chr1', 5, 100], ['chr1', 20, 40], ['chr1', 60, 80], ['chr1', 95, 150], ['chr1', 180, 220]],
                          [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB)
-        print(result.sequences)
-        self.assertEqual(len(result), 8)
+        self.assertEqual(len(result), 5)
         self.assertEqual(result[0].initial, 5)
         """
         A :   -----------------------------------------------------------
