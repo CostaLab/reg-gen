@@ -250,8 +250,12 @@ def main(args):
         # If the object is a GenomicRegionSet
         if isinstance(curr_genomic_region, GenomicRegionSet):
 
-            # Sorting input region
-            curr_genomic_region.sort()
+            if args.rmdup:
+                # remove duplicates and sort regions
+                curr_genomic_region.remove_duplicates(sort=True)
+            else:
+                # sort regions
+                curr_genomic_region.sort()
 
             # Append label and GenomicRegionSet
             regions_to_match.append(curr_genomic_region)
