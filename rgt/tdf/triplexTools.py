@@ -1024,8 +1024,8 @@ def integrate_stat(path):
         print("\t".join(order_stat), file=g)
 
         for item in data:
-            # print(item)
-            # print([data[item][o] for o in order_stat])
+            print(item)
+            print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
 def summerize_stat(target, link_d, score=True):

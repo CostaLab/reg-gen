@@ -42,7 +42,9 @@ class Statistics(object):
                       "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0,
                       "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
                       "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
-                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
+                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0,
+                      "target_in_trans": 0, "traget_in_cis": 0, "target_local": 0,
+                      "background_in_trans": 0, "background_in_cis": 0, "background_local": 0}
 
     def count_frequency_promoters(self, target_regions, background, file_tpx_de, file_tpx_nde):
         # count_frequency(self, temp, remove_temp, cutoff, l, obedp=False):
@@ -232,6 +234,7 @@ class Statistics(object):
                 rbss = self.tpx.get_rbs()
                 overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
                 self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+
 
 
         if input.rna.regions:
