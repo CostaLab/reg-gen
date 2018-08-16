@@ -1098,20 +1098,16 @@ class GenomicRegionSet:
             else:
                 return res_dict
 
-    def remove_duplicates(self):
-        """Remove the duplicate regions and remain the unique regions. (No return)"""
-        if not self.sorted: self.sort()
-        # for i in range(len(self.sequences) - 1):
-        i = 0
-        loop = True
-        while loop:
-            try:
-                if self.sequences[i].toString() == self.sequences[i + 1].toString():
-                    del self.sequences[i + 1]
-                else:
-                    i += 1
-            except:
-                loop = False
+    def remove_duplicates(self, sort=True):
+        """
+        Remove any duplicate regions, and also returns the sequence list (sorted, by default).
+        """
+        self.sequences = list(set(self.sequences))
+
+        if sort:
+            self.sort()
+
+        return self.sequences
 
     def window(self, y, adding_length=1000):
         """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs

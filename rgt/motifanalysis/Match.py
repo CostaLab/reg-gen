@@ -61,6 +61,8 @@ def options(parser):
                              "same chromosome and initial and final position, but opposing strand. Select this option "
                              "to only retain the 'strand duplicate' with the highest score. Duplicates due to "
                              "overlapping input regions are NOT affected by this.")
+    parser.add_argument("--rmdup", action="store_true", default=False,
+                        help="Remove any duplicate region from the input BED files.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -248,8 +250,12 @@ def main(args):
         # If the object is a GenomicRegionSet
         if isinstance(curr_genomic_region, GenomicRegionSet):
 
-            # Sorting input region
-            curr_genomic_region.sort()
+            if args.rmdup:
+                # remove duplicates and sort regions
+                curr_genomic_region.remove_duplicates(sort=True)
+            else:
+                # sort regions
+                curr_genomic_region.sort()
 
             # Append label and GenomicRegionSet
             regions_to_match.append(curr_genomic_region)
