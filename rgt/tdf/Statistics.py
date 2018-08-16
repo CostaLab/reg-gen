@@ -317,7 +317,7 @@ class Statistics(object):
             mp_input.append([str(i), os.path.join(self.pars.o, "rna_temp.fa"), target_regions,
                              self.pars.o, self.pars.organism, self.rbss, str(marks.count(i)),
                              str(self.pars.l), str(self.pars.e), str(self.pars.c), str(self.pars.fr),
-                             str(self.pars.fm), str(self.pars.of), str(self.pars.mf), str(self.pars.rm),
+                             str(self.pars.fm), str(self.pars.of), str(self.pars.mf), 0,
                              filter_bed, genome_fasta, self.pars.par])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")

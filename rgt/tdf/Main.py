@@ -137,7 +137,7 @@ def main():
     parser_randomtest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
     parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
-    parser_randomtest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
+    parser_randomtest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
     parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexator")
 
     ##########################################################################
