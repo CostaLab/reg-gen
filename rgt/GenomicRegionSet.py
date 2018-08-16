@@ -18,6 +18,7 @@ from ctypes import *
 from scipy import stats
 from copy import deepcopy
 from collections import OrderedDict
+import numpy
 
 # Internal
 from .SequenceSet import *
@@ -2413,6 +2414,11 @@ class GenomicRegionSet:
         """Return the average size of the regions"""
         size = [len(r) for r in self.sequences]
         return sum(size) / len(size)
+
+    def median_size(self):
+        """Return the average size of the regions"""
+        size = [len(r) for r in self.sequences]
+        return numpy.median(size)
 
     def max_size(self):
         """Return the maximum size of the regions"""

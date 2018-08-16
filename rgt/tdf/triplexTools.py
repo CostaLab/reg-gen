@@ -1133,6 +1133,7 @@ def merge_DNA_counts(path):
     # base = os.path.basename(path)
     # dir_name = os.path.basename(os.path.dirname(path))
     m = []
+    header = []
     for rna in os.listdir(path):
         if os.path.isdir(os.path.join(path, rna)):
             f = os.path.join(path, rna, "DNA_cov.txt")
