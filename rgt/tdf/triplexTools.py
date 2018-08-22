@@ -45,7 +45,9 @@ order_stat = ["title", "name", "genome", "exons", "seq_length",
               "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
               "associated_gene", "expression", "loci", "autobinding",
               "MA_G","MA_T","MP_G","MP_T","RA_A","RA_G","YP_C","YP_T",
-              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T",
+              "target_in_trans", "traget_in_cis", "target_local",
+              "background_in_trans", "background_in_cis", "background_local"]
 
               # "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
               # "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
@@ -1125,6 +1127,29 @@ def merge_DBSs(path):
                 dbss_pool.combine(dbss)
     # print(len(dbd_pool))
     dbss_pool.write(os.path.join(path, "DBSs_"+dir_name + "_" + base +".bed"))
+
+def merge_DNA_counts(path):
+    """Merge all available DBD regions in BED format. """
+    # base = os.path.basename(path)
+    # dir_name = os.path.basename(os.path.dirname(path))
+    m = []
+    header = []
+    for rna in os.listdir(path):
+        if os.path.isdir(os.path.join(path, rna)):
+            f = os.path.join(path, rna, "DNA_cov.txt")
+            if os.path.exists(f):
+                with open(f) as ff:
+                    for i, line in enumerate(ff):
+                        l = line.strip()
+                        if i == 0:
+                            header = ["RNA_name"] + l.split("\t")
+                        else:
+                            m.append([rna] + l.split("\t"))
+    # print(len(m))
+    with open(os.path.join(path, "RNA_DNA_matrix.txt"), "w") as fm:
+        print("\t".join([str(x) for x in header]), file=fm)
+        for l in m:
+            print("\t".join([str(x) for x in l]), file=fm)
 
 def save_profile(rna_regions, rna_name, organism, output, bed,\
                  stat, topDBD, sig_DBD, expression, geneset=None):

@@ -4,6 +4,7 @@ from pysam import Samfile, Fastafile
 from math import ceil, floor
 from Bio import motifs
 import matplotlib
+import logging
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -12,6 +13,7 @@ import pyx
 from scipy.stats.mvn import mvnun
 from argparse import SUPPRESS
 
+from scipy.signal import savgol_filter
 from multiprocessing import Pool, cpu_count
 
 # Internal
@@ -191,9 +193,11 @@ def get_bc_signal(arguments):
                                   bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
                                   forward_shift=forward_shift, reverse_shift=reverse_shift)
 
+
         if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
             continue
 
+        # smooth the signal
         signal_1 = np.add(signal_1, np.array(signal1))
         signal_2 = np.add(signal_2, np.array(signal2))
 
@@ -221,6 +225,7 @@ def diff_analysis_run(args):
 
     mpbs = mpbs1.combine(mpbs2, output=True)
     mpbs.sort()
+    mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signal_dict_by_tf_1 = dict()
@@ -243,7 +248,10 @@ def diff_analysis_run(args):
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift,
                               bias_table1, bias_table2))
-        res = pool.map(get_bc_signal, mpbs_list)
+        try:
+            res = pool.map(get_bc_signal, mpbs_list)
+        except Exception:
+            logging.exception("get bias corrected signal failed")
 
     # differential analysis using raw signal
     else:
@@ -251,7 +259,10 @@ def diff_analysis_run(args):
         for mpbs_name in mpbs_name_list:
             mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
                               args.organism, args.window_size, args.forward_shift, args.reverse_shift))
-        res = pool.map(get_raw_signal, mpbs_list)
+        try:
+            res = pool.map(get_raw_signal, mpbs_list)
+        except Exception:
+            logging.exception("get raw signal failed")
 
     for idx, mpbs_name in enumerate(mpbs_name_list):
         signal_dict_by_tf_1[mpbs_name] = res[idx][0]
@@ -289,7 +300,7 @@ def diff_analysis_run(args):
     #
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
     scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf, motif_num_dict)
 
 
 def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -601,9 +612,9 @@ def output_results(args, ps_tc_results_by_tf):
             f.write(mpbs_name + "\t" + "\t".join(map(str, ps_tc_results_by_tf[mpbs_name])) + "\n")
 
 
-def output_stat_results(args, stat_results_by_tf):
+def output_stat_results(args, stat_results_by_tf, motif_num_dict):
     output_fname = os.path.join(args.output_location, "{}_{}_statistics.txt".format(args.condition1, args.condition2))
-    header = ["Motif",
+    header = ["Motif", "Num",
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
@@ -611,7 +622,8 @@ def output_stat_results(args, stat_results_by_tf):
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
         for mpbs_name in stat_results_by_tf.keys():
-            f.write(mpbs_name + "\t" + "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
+            f.write(mpbs_name + "\t" + str(motif_num_dict[mpbs_name])  + "\t" +
+                    "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
 
 
 def output_factor(args, factor1, factor2):

@@ -27,7 +27,7 @@ def estimation_args(parser):
     parser.add_argument("--downstream-ext", type=int, metavar="INT", default=1)
     parser.add_argument("--upstream-ext", type=int, metavar="INT", default=0)
     parser.add_argument("--forward-shift", type=int, metavar="INT", default=5)
-    parser.add_argument("--reverse-shift", type=int, metavar="INT", default=-4)
+    parser.add_argument("--reverse-shift", type=int, metavar="INT", default=-5)
     parser.add_argument("--k-nb", type=int, metavar="INT", default=8,
                         help="Size of k-mer for bias estimation. DEFAULT: 8")
 

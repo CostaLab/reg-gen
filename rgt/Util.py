@@ -48,7 +48,9 @@ def get_rgtdata_path():
 
 
 class ConfigurationFile:
-    """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
+    """
+    Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain
+    default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
 
     *Variables:*
 
@@ -69,6 +71,7 @@ class ConfigurationFile:
         # Overwriting config using user options
         # self.config.read(data_config_file_name + ".user")
         self.config.read_file(codecs.open(data_config_file_name + ".user", "r", "utf8"))
+
         # Reading data directory
         self.data_dir = os.path.split(data_config_file_name)[0]
 
@@ -85,16 +88,15 @@ class GenomeData(ConfigurationFile):
         """
         ConfigurationFile.__init__(self)
         self.organism = organism
-        self.genome = self.config.get(organism, 'genome')
-        self.chromosome_sizes = self.config.get(organism, 'chromosome_sizes')
-        # self.gene_regions = self.config.get(organism,'gene_regions')
-        self.genes_gencode = self.config.get(organism, 'genes_Gencode')
-        self.genes_refseq = self.config.get(organism, 'genes_RefSeq')
-        self.annotation = self.config.get(organism, 'annotation')
-        self.annotation_dump_dir = os.path.dirname(self.annotation)
-        self.gene_alias = self.config.get(organism, 'gene_alias')
+        self.genome = os.path.join(self.data_dir, self.config.get(organism, 'genome'))
+        self.chromosome_sizes = os.path.join(self.data_dir, self.config.get(organism, 'chromosome_sizes'))
+        self.genes_gencode = os.path.join(self.data_dir, self.config.get(organism, 'genes_Gencode'))
+        self.genes_refseq = os.path.join(self.data_dir, self.config.get(organism, 'genes_RefSeq'))
+        self.annotation = os.path.join(self.data_dir, self.config.get(organism, 'annotation'))
+        self.annotation_dump_dir = os.path.dirname(os.path.join(self.data_dir, self.annotation))
+        self.gene_alias = os.path.join(self.data_dir, self.config.get(organism, 'gene_alias'))
         if organism in ["hg19", "hg38", "mm9"]:
-            self.repeat_maskers = self.config.get(organism, 'repeat_maskers')
+            self.repeat_maskers = os.path.join(self.data_dir, self.config.get(organism, 'repeat_maskers'))
         else:
             self.repeat_maskers = None
 
@@ -380,9 +382,9 @@ class LibraryPath(ConfigurationFile):
 
     def __init__(self):
         ConfigurationFile.__init__(self)
-        self.path_triplexator = self.config.get("Library", 'path_triplexator')
+        self.path_triplexator = os.path.join(self.data_dir, self.config.get("Library", 'path_triplexator'))
 
-        self.path_c_rgt = self.config.get("Library", 'path_c_rgt')
+        self.path_c_rgt = os.path.join(self.data_dir, self.config.get("Library", 'path_c_rgt'))
 
     def get_triplexator(self):
         return self.path_triplexator

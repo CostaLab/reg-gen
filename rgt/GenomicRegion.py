@@ -80,11 +80,11 @@ class GenomicRegion:
         return s
 
     def __hash__(self):
-        return hash(tuple([self.chrom, self.initial, self.final, self.orientation]))
+        return hash((self.chrom, self.initial, self.final, self.orientation))
 
     def __eq__(self, other):
-        return (self.chrom, self.initial, self.final, self.orientation) == (
-        other.chrom, other.initial, other.final, other.orientation)
+        return (self.chrom, self.initial, self.final, self.orientation) == \
+               (other.chrom, other.initial, other.final, other.orientation)
 
     def toString(self, space=False, underline=False, strand=False):
         """Return a string of GenomicRegion by its position.
