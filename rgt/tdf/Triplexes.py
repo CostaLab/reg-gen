@@ -54,11 +54,11 @@ def random_each(input):
     tpxf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
     print("".join(["="] * int(input[6])), end="")
-
+    distances = tpxf.distance_distribution()
     silentremove(os.path.join(input[3], "random_" + input[0] + ".fa"))
     silentremove(os.path.join(input[3], "random_" + input[0] + ".tpx"))
 
-    return [[len(tr) for tr in tpx.merged_dict.values()], [len(dbss) for dbss in tpxf.merged_dict.values()]]
+    return [[len(tr) for tr in tpx.merged_dict.values()], [len(dbss) for dbss in tpxf.merged_dict.values()], distances]
 
 
 class Triplexes(object):

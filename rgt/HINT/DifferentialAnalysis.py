@@ -13,6 +13,7 @@ import pyx
 from scipy.stats.mvn import mvnun
 from argparse import SUPPRESS
 
+from scipy.signal import savgol_filter
 from multiprocessing import Pool, cpu_count
 
 # Internal
@@ -192,9 +193,11 @@ def get_bc_signal(arguments):
                                   bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
                                   forward_shift=forward_shift, reverse_shift=reverse_shift)
 
+
         if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
             continue
 
+        # smooth the signal
         signal_1 = np.add(signal_1, np.array(signal1))
         signal_2 = np.add(signal_2, np.array(signal2))
 
@@ -222,6 +225,7 @@ def diff_analysis_run(args):
 
     mpbs = mpbs1.combine(mpbs2, output=True)
     mpbs.sort()
+    mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signal_dict_by_tf_1 = dict()

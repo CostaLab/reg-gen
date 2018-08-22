@@ -86,6 +86,7 @@ def chip_evaluate(args):
                 max_score = score
         max_score += 1
 
+    max_points = []
     for i in range(len(footprint_file)):
         footprints_regions = GenomicRegionSet("Footprints Prediction")
         footprints_regions.read(footprint_file[i])
@@ -110,12 +111,17 @@ def chip_evaluate(args):
                 roc_curve(increased_score_mpbs_regions)
             recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = \
                 precision_recall_curve(increased_score_mpbs_regions)
+
+            max_points.append(len(intersect_regions))
+
         elif footprint_type[i] == "SC":
             footprints_regions.sort_score()
             fpr[i], tpr[i], roc_auc_1[i], roc_auc_10[i], roc_auc_50[i], roc_auc_100[i] = \
                 roc_curve(footprints_regions)
             recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = \
                 precision_recall_curve(footprints_regions)
+
+            max_points.append(len(footprints_regions))
 
     # Output the statistics results into text
     stats_fname = os.path.join(args.output_location, "{}_stats.txt".format(args.output_prefix))
@@ -134,18 +140,19 @@ def chip_evaluate(args):
         label_y = "True Positive Rate"
         curve_name = "ROC"
         plot_curve(footprint_name, args.output_location, fpr, tpr, roc_auc_100, label_x, label_y, args.output_prefix,
-                   curve_name)
+                   curve_name, max_points=max_points)
     if args.print_pr_curve:
         label_x = "Recall"
         label_y = "Precision"
         curve_name = "PRC"
         plot_curve(footprint_name, args.output_location, recall, precision, prc_auc_100, label_x, label_y,
-                   args.output_prefix, curve_name)
+                   args.output_prefix, curve_name, max_points=max_points)
 
     output_points(footprint_name, args.output_location, args.output_prefix, fpr, tpr, recall, precision)
 
 
-def plot_curve(footprint_name, output_location, data_x, data_y, stats, label_x, label_y, tf_name, curve_name):
+def plot_curve(footprint_name, output_location, data_x, data_y, stats, label_x, label_y,
+               tf_name, curve_name, max_points=None):
     color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
                   "#FF6600", "#0000CC", "#336633", "#CC0000", "#6600CC", "#FF00FF", "#555555", "#CCCC00",
                   "#FF9900", "#0000FF", "#33CC33", "#FF0000", "#663399", "#FF33FF", "#888888", "#FFCC00",
@@ -156,9 +163,11 @@ def plot_curve(footprint_name, output_location, data_x, data_y, stats, label_x, 
     # Creating figure
     fig = plt.figure(figsize=(8, 5), facecolor='w', edgecolor='k')
     ax = fig.add_subplot(111)
-    for i in range(len(footprint_name)):
-        ax.plot(data_x[i], data_y[i], color=color_list[i],
-                label=footprint_name[i] + ": " + str(round(stats[i], 4)))
+    for idx, name in enumerate(footprint_name):
+        max_point = max_points[idx]
+        ax.plot(data_x[idx][:max_point], data_y[idx][:max_point], color=color_list[idx],
+                label=name + ": " + str(round(stats[idx], 4)))
+
 
     # Plot red diagonal line
     ax.plot([0, 1.0], [0, 1.0], color="#CCCCCC", linestyle="--", alpha=1.0)
@@ -380,7 +389,8 @@ def optimize_pr_points(footprint_name, recall, precision, max_points=1000):
 
 def output_points(footprint_name, output_location, output_prefix, fpr, tpr, recall, precision):
     roc_fname = os.path.join(output_location, "{}_roc.txt".format(output_prefix))
-    new_fpr, new_tpr = optimize_roc_points(footprint_name, fpr, tpr)
+    #new_fpr, new_tpr = optimize_roc_points(footprint_name, fpr, tpr)
+    new_fpr, new_tpr = fpr, tpr
     header = list()
     len_vec = list()
     for i in range(len(footprint_name)):
@@ -405,7 +415,8 @@ def output_points(footprint_name, output_location, output_prefix, fpr, tpr, reca
             roc_file.write("\t".join(to_write) + "\n")
 
     prc_fname = os.path.join(output_location, "{}_prc.txt".format(output_prefix))
-    new_recall, new_precision = optimize_pr_points(footprint_name, recall, precision)
+    #new_recall, new_precision = optimize_pr_points(footprint_name, recall, precision)
+    new_recall, new_precision = recall, precision
     header = list()
     len_vec = list()
     for i in range(len(footprint_name)):
