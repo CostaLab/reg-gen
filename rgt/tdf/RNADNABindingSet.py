@@ -825,97 +825,80 @@ class RNADNABindingSet:
             for i in range(rd.rna.initial, rd.rna.final):
                 self.rna_track[i] += 1
 
-    def switch_strand(self):
-        name = self.name
-        C_YM,C_MY,C_RM,C_MR = 0,0,0,0
-        SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY = 0,0,0,0,0,0,0
-        SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg = 0,0,0,0
-        for num_of_rbs in range(len(self.sequences) - 2):
+    def switch_strand(tpx, name="lncRNA"):
+        num_YM, num_MY, num_RM, num_MR = 0, 0, 0, 0
+        s_PA_pos, s_PA_neg, s_AP_pos, s_AP_neg = 0, 0, 0, 0
+        new_tpx = RNADNABindingSet("combine_motif")
+        for num_of_rbs in range(len(tpx.sequences) - 2):
             next_of_rbs = num_of_rbs + 1
-            cur_rbs = self.sequences[num_of_rbs]
-            next_rbs = self.sequences[next_of_rbs]
-            while cur_rbs.rna.distance(next_rbs.rna) < 20 and next_of_rbs < len(self.sequences) - 2:
-                #different RNA binding motif and same parallel
+            cur_rbs = tpx.sequences[num_of_rbs]
+            next_rbs = tpx.sequences[next_of_rbs]
+            while cur_rbs.rna.distance(next_rbs.rna) < 20 and next_of_rbs < len(tpx.sequences) - 2:
+                # different RNA binding motif and same parallel
                 if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
-                    #print "yes1"
                     # no RNA overlap
                     if cur_rbs.rna.distance(next_rbs.rna) > 0:
                         # DNA gap smaller than 10bp and no overlap
                         if (cur_rbs.dna.distance(next_rbs.dna) <= 20) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
-                            #same strand on the DNA
-                            if cur_rbs.dna.orientation == next_rbs.dna.orientation: 
-                            #print "yes2"
-                                #combine motif - Parallel
-                                if cur_rbs.rna.orientation==next_rbs.rna.orientation and next_rbs.rna.orientation=="P":
-                                    #pos strand
+                            # same strand on the DNA
+                            if cur_rbs.dna.orientation == next_rbs.dna.orientation:
+                                # combine motif - Parallel
+                                if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "P":
+                                    # pos strand
+                                    new_rbs = merge_rbs(cur_rbs, next_rbs)
+                                    new_tpx.add(new_rbs)
                                     if cur_rbs.dna.orientation == "+":
                                         if cur_rbs.dna.final < next_rbs.dna.initial:
-                                            if cur_rbs.rna.motif == "Y":C_YM += 1
-                                            else: C_MY += 1
-                                    #neg strand
+                                            if cur_rbs.rna.motif == "Y":
+                                                num_YM += 1
+                                            else:
+                                                num_MY += 1
+                                    # neg strand
                                     if cur_rbs.dna.orientation == "-":
                                         if next_rbs.dna.final < cur_rbs.dna.initial:
-                                            if cur_rbs.rna.motif == "Y":C_YM += 1
-                                            else: C_MY += 1
-                            
-                                #combine motif - Anti-parallel
-                                if cur_rbs.rna.orientation==next_rbs.rna.orientation and next_rbs.rna.orientation=="A":
-                                    #pos strand
+                                            if cur_rbs.rna.motif == "Y":
+                                                num_YM += 1
+                                            else:
+                                                num_MY += 1
+
+                                # combine motif - Anti-parallel
+                                if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "A":
+                                    # pos strand
                                     if cur_rbs.dna.orientation == "+":
                                         if next_rbs.dna.final < cur_rbs.dna.initial:
-                                            if cur_rbs.rna.motif == "M":C_MR += 1
-                                            else: C_RM += 1
-                                    #neg strand
+                                            if cur_rbs.rna.motif == "M":
+                                                num_MR += 1
+                                            else:
+                                                num_RM += 1
+                                    # neg strand
                                     if cur_rbs.dna.orientation == "-":
                                         if cur_rbs.dna.final < next_rbs.dna.initial:
-                                            if cur_rbs.rna.motif == "M":C_MR += 1
-                                            else: C_RM += 1
-                                            
-                                #combine motif - different orientation - same DNA strand
-                                elif cur_rbs.rna.orientation!=next_rbs.rna.orientation:
-                                    # RNA gap larger than 
-                                    if cur_rbs.rna.distance(next_rbs.rna) > cur_rbs.dna.distance(next_rbs.dna)+len(next_rbs.dna):
-                                        
-                                        if cur_rbs.rna.motif == "M" and next_rbs.rna.motif == "M":
-                                            SR_MM += 1
-                                        elif cur_rbs.rna.motif == "M" and next_rbs.rna.motif == "Y":
-                                            SR_MY += 1
-                                        elif cur_rbs.rna.motif == "M" and next_rbs.rna.motif == "R":
-                                            SR_MR += 1
-                                        elif cur_rbs.rna.motif == "Y" and next_rbs.rna.motif == "M":
-                                            SR_YM += 1
-                                        elif cur_rbs.rna.motif == "Y" and next_rbs.rna.motif == "R":
-                                            SR_YR += 1
-                                        elif cur_rbs.rna.motif == "R" and next_rbs.rna.motif == "M":
-                                            SR_RM += 1
-                                        elif cur_rbs.rna.motif == "R" and next_rbs.rna.motif == "Y":
-                                            SR_RY += 1
-                                            
+                                            if cur_rbs.rna.motif == "M":
+                                                num_MR += 1
+                                            else:
+                                                num_RM += 1
+
+
                             # strand switch - different RNA orientation -different DNA strand
-                            if cur_rbs.dna.orientation != next_rbs.dna.orientation:
-                                if cur_rbs.rna.orientation!=next_rbs.rna.orientation:
-                                    #first rna ori == "P"
+                            else:
+                                if cur_rbs.rna.orientation != next_rbs.rna.orientation:
+                                    # first rna ori == "P"
                                     if cur_rbs.rna.orientation == "P":
                                         if cur_rbs.dna.orientation == "+" and cur_rbs.dna.final < next_rbs.dna.initial:
-                                            SD_PA_pos += 1
+                                            s_PA_pos += 1
                                         elif cur_rbs.dna.orientation == "-" and next_rbs.dna.final < cur_rbs.dna.initial:
-                                            SD_PA_neg += 1
-                            
+                                            s_PA_neg += 1
+
                                     # first rna ori == "A"
-                                    if cur_rbs.rna.orientation == "A":
+                                    else:
                                         if cur_rbs.dna.orientation == "+" and next_rbs.dna.final < cur_rbs.dna.initial:
-                                            SD_AP_pos += 1
+                                            s_AP_pos += 1
                                         elif cur_rbs.dna.orientation == "-" and cur_rbs.dna.final < next_rbs.dna.initial:
-                                            SD_AP_neg += 1
-                                                  
+                                            s_AP_neg += 1
+
                 next_of_rbs += 1
-                next_rbs = self.sequences[next_of_rbs]
+                next_rbs = tpx.sequences[next_of_rbs]
 
-        print ([name,C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg])
-        return [C_YM,C_MY,C_RM,C_MR,SR_MM,SR_YM,SR_RM,SR_MY,SR_MR,SR_YR,SR_RY,SD_PA_pos,SD_PA_neg,SD_AP_pos,SD_AP_neg]
-
-    # def print_CM_bed(rbs1,rbs2,filename):
-    #     if rbs1.dna.initial
-    #     print()
-    # def print_SS_bed(rbs1,rbs2,filename):
-    #     
+        # print ("------  "+name + "\t\t[Done]  ---------------------------------")
+        print([name, num_YM, num_MY, num_RM, num_MR], [s_PA_pos, s_PA_neg, s_AP_pos, s_AP_neg])
+        return [num_YM, num_MY, num_RM, num_MR, s_PA_pos, s_PA_neg, s_AP_pos, s_AP_neg], new_tpx
