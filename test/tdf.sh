@@ -28,6 +28,7 @@ rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score
 
 cd ${DIR}/TDF_examples/TERC_hg19/
 
+
 rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10 -mp 5
 rgt-TDF integrate -path genomic_region_test
 

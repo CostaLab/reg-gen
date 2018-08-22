@@ -26,6 +26,7 @@ from ..tdf.Input import Input
 from ..tdf.Triplexes import Triplexes
 from ..tdf.Statistics import Statistics
 from ..tdf.Report import Report
+from ..tdf.RNADNABindingSet import RNADNABindingSet
 
 
 dir = os.getcwd()
