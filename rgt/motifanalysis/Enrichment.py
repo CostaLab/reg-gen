@@ -675,8 +675,6 @@ def main(args):
                     r.p_value = 1.0
                 result_list.append(r)
 
-            print("result_list", len(result_list))
-
             # Performing multiple test correction
             multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                              alpha=args.multiple_test_alpha,
