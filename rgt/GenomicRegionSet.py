@@ -1131,7 +1131,7 @@ class GenomicRegionSet:
         # Find their intersections
         return extended_self.intersect(y)
 
-    def subtract(self, y, whole_region=False):
+    def subtract(self, y, whole_region=False, merge=True):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
         *Keyword arguments:*
@@ -1156,8 +1156,13 @@ class GenomicRegionSet:
         # If there is overlap within self or y, they should be merged first. 
         if not self.sorted:
             self.sort()
-        a = self.merge(w_return=True)
-        b = y.merge(w_return=True)
+
+        if merge:
+            a = self.merge(w_return=True)
+            b = y.merge(w_return=True)
+        else:
+            a = self
+            b = y
 
         iter_a = iter(a)
         s = iter_a.next()

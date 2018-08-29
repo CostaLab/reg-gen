@@ -643,7 +643,6 @@ def main(args):
                 html.write(npath(output_file_name_html))
 
             else:
-
                 # Association still needs to be done with all genes in order to print gene list
                 grs = grs.gene_association(organism=args.organism, gene_set=None,
                                            promoter_length=args.promoter_length,
@@ -675,6 +674,8 @@ def main(args):
                 except Exception:
                     r.p_value = 1.0
                 result_list.append(r)
+
+            print("result_list", len(result_list))
 
             # Performing multiple test correction
             multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
