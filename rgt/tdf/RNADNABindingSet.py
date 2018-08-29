@@ -58,7 +58,7 @@ class RNADNABinding:
     
     def __str__(self):
         return "\t".join( [ self.rna.chrom, str(self.rna.initial), str(self.rna.final), self.dna.toString(), "0", 
-                            str(len(self.dna)), str(self.score), str(self.err_rate), str(self.err), str(self.motif),
+                            len(self.dna), str(self.score), str(self.err_rate), str(self.err), str(self.motif),
                             str(self.strand), str(self.orient), str(self.guan_rate) ] )
 
     def __eq__(self, other):
