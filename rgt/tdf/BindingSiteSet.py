@@ -53,7 +53,7 @@ class BindingSite(GenomicRegion):
 
     def __len__(self):
         """Return the length of the binding site."""
-        return self.final - self.initial
+        return abs(self.final - self.initial)
 
     def __eq__(self, other):
         return (self.initial, self.final) == (other.initial, other.final)
