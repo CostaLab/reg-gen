@@ -64,14 +64,29 @@ class RNADNABinding:
     def __eq__(self, other):
         return (self.dna, self.rna) == (other.dna, other.rna)
 
-    def motif_statistics(self):
-        if not self.match: return None
+    def motif_statistics(self, cm=False):
+        if not self.match:
+            return None
         else:
             res = {"Mix_Antiparallel": {"G": 0, "T": 0},
-                   "Mix_Parallel": {"G": 0, "T": 0},
-                   "Purine_Antiparallel": {"A": 0, "G": 0},
-                   "Pyrimidine_Parallel": {"C": 0, "T": 0}}
+                    "Mix_Parallel": {"G": 0, "T": 0},
+                    "Purine_Antiparallel": {"A": 0, "G": 0},
+                    "Pyrimidine_Parallel": {"C": 0, "T": 0}}
+            if cm:
+                res_c = {"Mix_Purine_AA": {"G": 0, "T": 0, "A":0},
+                         "Purine_Mix_AA": {"G": 0, "T": 0, "A": 0},
+                         "Pyrimidine_Mix_PP": {"G": 0, "T": 0, "C": 0},
+                         "Mix_Pyrimidine_PP": {"G": 0, "T": 0, "C": 0},
+                         "Mix_Pyrimidine_PA": {"G": 0, "T": 0, "C": 0},
+                         "Pyrimidine_Mix_PA": {"G": 0, "T": 0, "C": 0},
+                         "Purine_Mix_PA": {"A": 0, "G": 0, "T": 0},
+                         "Mix_Purine_PA": {"A": 0, "G": 0, "T": 0},
+                         "Purine_Pyrimidine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
+                         "Pyrimidine_Purine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
+                         "Mix_Mix_PA":{"G": 0, "T": 0}
+                         }
 
+                res.update(res_c)
             if self.strand == "+":
                 rna = self.match[0].split()[1]
                 linking = self.match[1].strip()
@@ -82,6 +97,18 @@ class RNADNABinding:
                 linking = self.match[2].strip()
                 # dnap = self.match[0].split()[1]
                 # dnan = self.match[1].split()[1]
+            elif self.strand == "+_-":
+                rna = self.match[0].split()[1] + self.match[3].split()[3]
+                linking = self.match[2].strip().split()[3] + self.match[1].strip().split()[0]
+            elif self.strand == "-_+":
+                rna = self.match[3].split()[1] + self.match[0].split()[3]
+                linking = self.match[1].strip().split()[3] + self.match[2].strip().split()[0]
+            elif self.strand == "+_+":
+                rna = self.match[0].split()[1] + self.match[0].split()[3]
+                linking = self.match[1].strip().split()[0] + self.match[1].strip().split()[1]
+            elif self.strand == "-_-":
+                rna = self.match[3].split()[1] + self.match[3].split()[3]
+                linking = self.match[2].strip().split()[0] + self.match[2].strip().split()[1]
 
             if self.motif == "M":
                 motif = "Mix"
@@ -94,9 +121,31 @@ class RNADNABinding:
                 orient = "Parallel"
             elif self.orient == "A":
                 orient = "Antiparallel"
+            if cm:
+                if self.motif == "M_R":
+                    motif = "Mix_Purine"
+                elif self.motif == "R_M":
+                    motif = "Purine_Mix"
+                elif self.motif == "M_Y":
+                    motif = "Mix_Pyrimidine"
+                elif self.motif == "Y_M":
+                    motif = "Pyrimidine_Mix"
+                elif self.motif == "M_M":
+                    motif = "Mix_Mix"
+                elif self.motif == "Y_R":
+                    motif = "Pyrimidine_Purine"
+                elif self.motif == "R_Y":
+                    motif = "Purine_Pyrimidine"
+
+            if cm:
+                if self.orient == "P_P":
+                    orient = "PP"
+                elif self.orient == "A_A":
+                    orient = "AA"
+                elif self.orient == "A_P" or self.orient == "P_A":
+                    orient = "PA"
             #########################################333
             # Overall counts
-
             for i, bp in enumerate(linking):
                 if bp == "|":
                     if rna[i].upper() == "A":
@@ -634,17 +683,20 @@ class RNADNABindingSet:
                 try: p = con_p.next()
                 except: break
 
-    def write_txp(self, filename):
+    def write_txp(self, filename, match=False):
         """Write RNADNABindingSet into the file"""
         d = os.path.dirname(filename)
         if d:
             try: os.stat(d)
             except: os.mkdir(d)
         with open(filename, "w") as f:
-            print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\
-                   \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
+            print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
                 print(str(rd), file=f)
+                if match:
+                    for i in range(4):
+                        print(rd.match[i], file=f)
+                print("", file=f)
 
     def write_bed(self, filename, dbd_tag=True, remove_duplicates=False, convert_dict=None, associated=False):
         """Write BED file for all the DNA Binding sites
@@ -785,20 +837,37 @@ class RNADNABindingSet:
                     z.add(rd)
         return z
 
-    def motif_statistics(self):
+    def motif_statistics(self, cm=False):
         self.motifs = {"Mix_Antiparallel": {"G": 0, "T": 0},
                        "Mix_Parallel": {"G": 0, "T": 0},
                        "Purine_Antiparallel": {"A": 0, "G": 0},
                        "Pyrimidine_Parallel": {"C": 0, "T": 0}}
+        if cm:
+            res_c = {"Mix_Purine_AA": {"G": 0, "T": 0, "A":0},
+                     "Purine_Mix_AA": {"G": 0, "T": 0, "A": 0},
+                     "Pyrimidine_Mix_PP": {"G": 0, "T": 0, "C": 0},
+                     "Mix_Pyrimidine_PP": {"G": 0, "T": 0, "C": 0},
+                     "Mix_Pyrimidine_PA": {"G": 0, "T": 0, "C": 0},
+                     "Pyrimidine_Mix_PA": {"G": 0, "T": 0, "C": 0},
+                     "Purine_Mix_PA": {"A": 0, "G": 0, "T": 0},
+                     "Mix_Purine_PA": {"A": 0, "G": 0, "T": 0},
+                     "Purine_Pyrimidine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
+                     "Pyrimidine_Purine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
+                     "Mix_Mix_PA":{"G": 0, "T": 0}
+                     }
+            self.motifs.update(res_c)
         if len(self) > 0:
             for s in self:
-                m = s.motif_statistics()
+                if cm:
+                    m = s.motif_statistics(cm=True)
+                else:
+                    m = s.motif_statistics()
                 for mode in m:
                     for com in m[mode]:
                         self.motifs[mode][com] += m[mode][com]
         # print(self.motifs)
 
-    def uniq_motif_statistics(self, rnalen):
+    def uniq_motif_statistics(self, rnalen, cm=False):
         self.uniq_motifs = {"MA_G": [0] * rnalen,
                             "MA_T": [0] * rnalen,
                             "MP_G": [0] * rnalen,
@@ -807,6 +876,51 @@ class RNADNABindingSet:
                             "RA_G": [0] * rnalen,
                             "YP_C": [0] * rnalen,
                             "YP_T": [0] * rnalen}
+        if cm:
+            res_c = {
+                "M_RA_A_T": [0] * rnalen,
+                "M_RA_A_A": [0] * rnalen,
+                "M_RA_A_G": [0] * rnalen,
+                "R_MA_A_T": [0] * rnalen,
+                "R_MA_A_A": [0] * rnalen,
+                "R_MA_A_G": [0] * rnalen,
+                "M_RP_A_T": [0] * rnalen,
+                "M_RP_A_A": [0] * rnalen,
+                "M_RP_A_G": [0] * rnalen,
+                "R_MA_P_T": [0] * rnalen,
+                "R_MA_P_A": [0] * rnalen,
+                "R_MA_P_G": [0] * rnalen,
+                "M_YP_P_T": [0] * rnalen,
+                "M_YP_P_C": [0] * rnalen,
+                "M_YP_P_G": [0] * rnalen,
+                "Y_MP_P_T": [0] * rnalen,
+                "Y_MP_P_C": [0] * rnalen,
+                "Y_MP_P_G": [0] * rnalen,
+                "M_YA_P_T": [0] * rnalen,
+                "M_YA_P_C": [0] * rnalen,
+                "M_YA_P_G": [0] * rnalen,
+                "Y_MP_A_T": [0] * rnalen,
+                "Y_MP_A_C": [0] * rnalen,
+                "Y_MP_A_G": [0] * rnalen,
+                "R_YA_P_T": [0] * rnalen,
+                "R_YA_P_C": [0] * rnalen,
+                "R_YA_P_G": [0] * rnalen,
+                "R_YA_P_A": [0] * rnalen,
+                "Y_RP_A_C": [0] * rnalen,
+                "Y_RP_A_G": [0] * rnalen,
+                "Y_RP_A_T": [0] * rnalen,
+                "Y_RP_A_A": [0] * rnalen,
+                "M_MP_P_T": [0] * rnalen,
+                "M_MP_P_G": [0] * rnalen,
+                "M_MP_A_G": [0] * rnalen,
+                "M_MP_A_T": [0] * rnalen,
+                "M_MA_P_G": [0] * rnalen,
+                "M_MA_P_T": [0] * rnalen,
+                "M_MA_A_G": [0] * rnalen,
+                "M_MA_A_T": [0] * rnalen,
+            }
+            self.uniq_motifs.update(res_c)
+
         if len(self) > 0:
             for rd in self:
                 if rd.strand == "+":
@@ -815,6 +929,19 @@ class RNADNABindingSet:
                 elif rd.strand == "-":
                     rna = rd.match[3].split()[1]
                     linking = rd.match[2].strip()
+                if cm:
+                    if rd.strand == "+_-":
+                        rna = rd.match[0].split()[1] + rd.match[3].split()[3]
+                        linking = rd.match[2].strip().split()[3] + rd.match[1].strip().split()[0]
+                    elif rd.strand == "-_+":
+                        rna = rd.match[3].split()[1] + rd.match[0].split()[3]
+                        linking = rd.match[1].strip().split()[3] + rd.match[2].strip().split()[0]
+                    elif rd.strand == "+_+":
+                        rna = rd.match[0].split()[1] + rd.match[0].split()[3]
+                        linking = rd.match[1].strip().split()[0] + rd.match[1].strip().split()[1]
+                    elif rd.strand == "-_-":
+                        rna = rd.match[3].split()[1] + rd.match[3].split()[3]
+                        linking = rd.match[2].strip().split()[0] + rd.match[2].strip().split()[1]
                 for i, l in enumerate(linking):
                     if l == "|":
                         self.uniq_motifs[rd.motif+rd.orient+"_"+rna[i].upper()][rd.rna.initial+i] += 1
@@ -854,3 +981,151 @@ class RNADNABindingSet:
                 else: dis_count["local"] += 1
         return dis_count
 
+    def combine_motif(self, name="rdb"):
+        num_YM, num_MY, num_RM, num_MR = 0, 0, 0, 0
+        s_PA_pos, s_PA_neg, s_AP_pos, s_AP_neg = 0, 0, 0, 0
+        merged_tpx = RNADNABindingSet("combine_motif")
+        for num_of_rbs in range(len(self.sequences) - 2):
+            next_of_rbs = num_of_rbs + 1
+            cur_rbs = self.sequences[num_of_rbs]
+            next_rbs = self.sequences[next_of_rbs]
+            while cur_rbs.rna.distance(next_rbs.rna) < 10 and next_of_rbs < len(self.sequences) - 2:
+                # different RNA binding motif and same parallel
+                if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
+                    # no RNA overlap
+                    if cur_rbs.rna.distance(next_rbs.rna) > 0:
+                        # DNA gap smaller than 10bp and no overlap
+                        if (cur_rbs.dna.distance(next_rbs.dna) <= 10) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
+                            # same strand on the DNA
+                            if cur_rbs.dna.orientation == next_rbs.dna.orientation:
+                                # combine motif - Parallel
+                                if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "P":
+                                    # pos strand
+                                    if cur_rbs.dna.orientation == "+":
+                                        if cur_rbs.dna.final < next_rbs.dna.initial:
+                                            merged_rbs = self.merge_combined_motif(cur_rbs, next_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                            if cur_rbs.rna.motif == "Y":
+                                                num_YM += 1
+                                            else:
+                                                num_MY += 1
+                                    # neg strand
+                                    if cur_rbs.dna.orientation == "-":
+                                        if next_rbs.dna.final < cur_rbs.dna.initial:
+                                            merged_rbs = self.merge_combined_motif(next_rbs, cur_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                            if cur_rbs.rna.motif == "Y":
+                                                num_YM += 1
+                                            else:
+                                                num_MY += 1
+
+                                # combine motif - Anti-parallel
+                                if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "A":
+                                    # pos strand
+                                    if cur_rbs.dna.orientation == "+":
+                                        if next_rbs.dna.final < cur_rbs.dna.initial:
+                                            merged_rbs = self.merge_combined_motif(next_rbs, cur_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                            if cur_rbs.rna.motif == "M":
+                                                num_MR += 1
+                                            else:
+                                                num_RM += 1
+                                    # neg strand
+                                    if cur_rbs.dna.orientation == "-":
+                                        if cur_rbs.dna.final < next_rbs.dna.initial:
+                                            merged_rbs = self.merge_combined_motif(cur_rbs, next_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                            if cur_rbs.rna.motif == "M":
+                                                num_MR += 1
+                                            else:
+                                                num_RM += 1
+
+
+                            # strand switch - different RNA orientation -different DNA strand
+                            else:
+                                if cur_rbs.rna.orientation != next_rbs.rna.orientation:
+                                    # first rna ori == "P"
+                                    if cur_rbs.rna.orientation == "P":
+                                        if cur_rbs.dna.orientation == "+" and cur_rbs.dna.final < next_rbs.dna.initial:
+                                            merged_rbs = self.merge_combined_motif(cur_rbs, next_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                            s_PA_pos += 1
+                                        elif cur_rbs.dna.orientation == "-" and next_rbs.dna.final < cur_rbs.dna.initial:
+                                            s_PA_neg += 1
+                                            merged_rbs = self.merge_combined_motif(next_rbs, cur_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+
+                                    # first rna ori == "A"
+                                    else:
+                                        if cur_rbs.dna.orientation == "+" and next_rbs.dna.final < cur_rbs.dna.initial:
+                                            s_AP_pos += 1
+                                            merged_rbs = self.merge_combined_motif(next_rbs, cur_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+                                        elif cur_rbs.dna.orientation == "-" and cur_rbs.dna.final < next_rbs.dna.initial:
+                                            s_AP_neg += 1
+                                            merged_rbs = self.merge_combined_motif(cur_rbs, next_rbs, rname=name)
+                                            merged_tpx.add(merged_rbs)
+
+                next_of_rbs += 1
+                next_rbs = self.sequences[next_of_rbs]
+
+        # print ("------  "+name + "\t\t[Done]  ---------------------------------")
+        print([name, num_YM, num_MY, num_RM, num_MR], [s_PA_pos, s_PA_neg, s_AP_pos, s_AP_neg])
+        # return [num_YM,num_MY,num_RM,num_MR,s_PA_pos,s_PA_neg,s_AP_pos,s_AP_neg],merged_tpx
+        return merged_tpx
+
+    def merge_match(self, rbs1, rbs2, dna_gap=0, rna_gap=0):
+        if rbs1.strand == rbs2.strand and rbs1.strand == "+":
+            match1 = rbs1.match
+            match2 = rbs2.match
+            match_a = ['', '', '', '']
+            match_a[0] = match1[0][:len(match1[0]) - 4] + ' ' + str(rna_gap) + ' ' + match2[0][4:]
+            match_a[1] = match1[1] + '   ' + match2[1][4:]
+            match_a[2] = match1[2][:len(match1[2]) - 4] + ' ' + str(dna_gap) + ' ' + match2[2][4:]
+            match_a[3] = match1[3][:len(match1[3]) - 4] + ' ' + str(dna_gap) + ' ' + match2[3][4:]
+        elif rbs1.strand == rbs2.strand and rbs1.strand == "-":
+            match1 = rbs1.match
+            match2 = rbs2.match
+            match_a = ['', '', '', '']
+            match_a[0] = match1[0][:len(match1[0]) - 4] + ' ' + str(dna_gap) + ' ' + match2[0][4:]
+            match_a[1] = match1[1][:len(match1[1]) - 4] + ' ' + str(dna_gap) + ' ' + match2[1][4:]
+            match_a[2] = match1[2] + '   ' + match2[2][4:]
+            match_a[3] = match1[3][:len(match1[3]) - 4] + ' ' + str(rna_gap) + ' ' + match2[3][4:]
+        else:
+            match1 = rbs1.match
+            match2 = rbs2.match
+            match_a = ['', '', '', '']
+            if rbs1.dna.orientation == "+":
+                match_a[0] = match1[0] + ' ' + match2[0] + "-r" + str(rna_gap)
+                match_a[1] = match1[1] + '     ' + match2[1]
+                match_a[2] = match1[2] + ' ' + match2[2]
+                match_a[3] = match1[3] + ' ' + match2[3] + "-d" + str(dna_gap)
+            else:
+                match_a[0] = match1[0] + ' ' + match2[0] + "-r" + str(rna_gap)
+                match_a[1] = match1[1] + ' ' + match2[1]
+                match_a[2] = match1[2] + '     ' + match2[2]
+                match_a[3] = match1[3] + ' ' + match2[3] + "-d" + str(dna_gap)
+
+        return match_a
+
+    def merge_combined_motif(self, rbs1, rbs2, rname="rdb"):
+        rna_score = str((int(rbs1.rna.score) + int(rbs2.rna.score)) / 2)
+        err_rate = str((float(rbs1.err_rate) + float(rbs2.err_rate)) / 2)
+        err = rbs1.err + "_" + rbs2.err
+        guan_rate = str((float(rbs1.guan_rate) + float(rbs2.guan_rate)) / 2)
+        rna_gap = rbs1.rna.distance(rbs2.rna)  # rbs2.rna.initial - rbs1.rna.final
+        dna_gap = rbs1.dna.distance(rbs2.dna)
+        match = self.merge_match(rbs1, rbs2, rna_gap, dna_gap)
+        # dna_data =
+        cmotif = rbs1.rna.motif + "_" + rbs2.rna.motif
+        cr_orientation = rbs1.rna.orientation + "_" + rbs2.rna.orientation
+        cd_orientation = rbs1.dna.orientation + "_" + rbs2.dna.orientation
+
+        rna_m = BindingSite(rname, rbs1.rna.initial, rbs2.rna.final, name=None, score=rna_score,
+                        errors_bp=None, motif=cmotif, orientation=cr_orientation,
+                        guanine_rate=None, seq=None)
+        dna_m = GenomicRegion(rbs1.dna.chrom, rbs1.dna.initial, rbs2.dna.final, name="Merge DNA region",
+                          orientation=cd_orientation, data=rbs1.dna.data, proximity=None)
+
+        rbs_m = RNADNABinding(rna_m, dna_m, rna_score, err_rate, err, guan_rate, match=match)
+        return rbs_m

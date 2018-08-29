@@ -295,14 +295,20 @@ class Statistics(object):
 
 
 
-    def dbs_motif(self, tpx):
-        tpx.motif_statistics()
+    def dbs_motif(self, tpx, cm=False):
+        if not cm:
+            tpx.motif_statistics()
+        if cm:
+            tpx.motif_statistics(cm=True)
         for i, mode in enumerate(tpx.motifs):
             for con in tpx.motifs[mode]:
                 self.stat[mode+"_"+con] = str(tpx.motifs[mode][con])
 
-    def uniq_motif(self, tpx, rnalen):
-        tpx.uniq_motif_statistics(rnalen=rnalen)
+    def uniq_motif(self, tpx, rnalen, cm=False):
+        if not cm:
+            tpx.uniq_motif_statistics(rnalen=rnalen)
+        else:
+            tpx.uniq_motif_statistics(rnalen=rnalen, cm=True)
         for k, v in tpx.uniq_motifs.iteritems():
             self.stat[k] = sum(v)
             self.stat["uniq_" + k] = sum([1 for x in v if x > 0])

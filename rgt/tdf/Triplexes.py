@@ -63,11 +63,17 @@ def random_each(input):
 
 class Triplexes(object):
 
-    def __init__(self, organism, pars):
+    def __init__(self, organism, pars, l=None, e=None):
         self.genome = GenomeData(organism=organism)
         self.organism = organism
-        self.l = pars.l
-        self.e = pars.e
+        if not l:
+            self.l = pars.l
+        else:
+            self.l = l
+        if not e:
+            self.e = pars.e
+        else:
+            self.e = e
         self.c = pars.c
         self.fr = pars.fr
         self.fm = pars.fm
@@ -132,3 +138,16 @@ class Triplexes(object):
             os.remove(os.path.join(self.outdir, "targets_" + prefix + ".tpx"))
         return tpx
 
+    def merging_combined_motifs(self, tpx1_file, tpx2_file, output_file, name= "rdb"):
+        """Load two tpx files and merge RBSs and DBSs according to the rules for combined motifs and save into a tpx file"""
+        tpx1 = RNADNABindingSet(name="tpx1")
+        tpx1.read_tpx(tpx1_file, dna_fine_posi=True, seq=True)
+        tpx2 = RNADNABindingSet(name="tpx2")
+        tpx2.read_tpx(tpx2_file, dna_fine_posi=True, seq=True)
+        tpx2_merged = tpx2.combine_motif(name=name)
+        tpx_12_merged = RNADNABindingSet("merged tpx")
+        for rdb in tpx1:
+            tpx_12_merged.add(rdb)
+        for rdb in tpx2_merged:
+            tpx_12_merged.add(rdb)
+        tpx_12_merged.write_txp(output_file, match=True)

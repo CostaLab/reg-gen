@@ -72,7 +72,12 @@ def main():
     parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
     parser_promotertest.add_argument('-tss', type=int, default=0, metavar='  ', help="Define the distance between the promoter regions and TSS along gene body (default: %(default)s)")
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (default: %(default)s)")
-    
+
+    parser_promotertest.add_argument('-cl', type=int, default=0, metavar='  ', help="Define the minimum length of combine motif (default: %(default)s)")
+    parser_promotertest.add_argument('-ce', type=int, default=15, metavar='  ', help="Define the error rate of combine motif (default: %(default)s)")
+    parser_promotertest.add_argument('-cg', type=int, default=10, metavar='  ', help="Define the gap of combine motif (default: %(default)s)")
+
+
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
@@ -331,6 +336,16 @@ def main():
                                           prefix="target_promoters", remove_temp=True)
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
+        if args.cl > 0:
+
+            triplexes_c = Triplexes(organism=args.organism, pars=args, l=args.cl, e=args.ce)
+            # tpx_de_C = triplexes_c.search_triplex(target_regions=tdf_input.dna.target_regions,
+            #                               prefix="target_promoters_combine", remove_temp=True)
+            tpx_nde_C = triplexes_c.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
+                                               prefix="nontarget_promoters_combine", remove_temp=True)
+            triplexes_c.merging_combined_motifs(tpx_de, tpx_nde_C, tpx_de,name=args.rn)
+            #sys.exit()
+
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
         #######################################
@@ -342,8 +357,13 @@ def main():
                                        file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
         triplexes.find_autobinding(rbss=stat.rbss)
         stat.fisher_exact_de()
-        stat.dbs_motif(tpx=stat.tpx_def)
-        stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
+        if args.cl > 0:
+            stat.dbs_motif(tpx=stat.tpx_def, cm=True)
+            stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length, cm=True)
+        else:
+            stat.dbs_motif(tpx=stat.tpx_def)
+            stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
+
         stat.dbd_regions(rna_exons=tdf_input.rna.regions)
         if not args.nofile:
             stat.output_bed(input=tdf_input, tpx=stat.tpx_def)
@@ -369,7 +389,7 @@ def main():
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "nde.fa"))
-        silentremove(os.path.join(args.o, "de.txp"))
+        silentremove(os.path.join(args.o, "de.tpx"))
         silentremove(os.path.join(args.o, "autobinding.tpx"))
         if args.nofile:
             print("Don't save any files.")
