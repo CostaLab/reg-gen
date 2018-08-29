@@ -1120,11 +1120,24 @@ class RNADNABindingSet:
         cmotif = rbs1.rna.motif + "_" + rbs2.rna.motif
         cr_orientation = rbs1.rna.orientation + "_" + rbs2.rna.orientation
         cd_orientation = rbs1.dna.orientation + "_" + rbs2.dna.orientation
+        if rbs1.dna.final < rbs2.dna.initial:
+            dna_ini = rbs1.dna.initial
+            dna_fin = rbs2.dna.final
+        else:
+            dna_ini = rbs2.dna.initial
+            dna_fin = rbs1.dna.final
 
-        rna_m = BindingSite(rname, rbs1.rna.initial, rbs2.rna.final, name=None, score=rna_score,
+        if rbs1.rna.final < rbs2.rna.initial:
+            rna_ini = rbs1.rna.initial
+            rna_fin = rbs2.rna.final
+        else:
+            rna_ini = rbs2.rna.initial
+            rna_fin = rbs1.rna.final
+
+        rna_m = BindingSite(rname, rna_ini, rna_fin, name=None, score=rna_score,
                         errors_bp=None, motif=cmotif, orientation=cr_orientation,
                         guanine_rate=None, seq=None)
-        dna_m = GenomicRegion(rbs1.dna.chrom, rbs1.dna.initial, rbs2.dna.final, name="Merge DNA region",
+        dna_m = GenomicRegion(rbs1.dna.chrom, dna_ini, dna_fin, name="Merge DNA region",
                           orientation=cd_orientation, data=rbs1.dna.data, proximity=None)
 
         rbs_m = RNADNABinding(rna_m, dna_m, rna_score, err_rate, err, guan_rate, match=match)
