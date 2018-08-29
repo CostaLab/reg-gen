@@ -83,7 +83,7 @@ class RNADNABinding:
                          "Mix_Purine_PA": {"A": 0, "G": 0, "T": 0},
                          "Purine_Pyrimidine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
                          "Pyrimidine_Purine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
-                         "Mix_Mix_PA":{"G": 0, "T": 0}
+                         "Mix_Mix_PA": {"G": 0, "T": 0}
                          }
 
                 res.update(res_c)
@@ -853,7 +853,7 @@ class RNADNABindingSet:
                      "Mix_Purine_PA": {"A": 0, "G": 0, "T": 0},
                      "Purine_Pyrimidine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
                      "Pyrimidine_Purine_PA": {"A": 0, "G": 0, "C": 0, "T": 0},
-                     "Mix_Mix_PA":{"G": 0, "T": 0}
+                     "Mix_Mix_PA": {"G": 0, "T": 0}
                      }
             self.motifs.update(res_c)
         if len(self) > 0:
