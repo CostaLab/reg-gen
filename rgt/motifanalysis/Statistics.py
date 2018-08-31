@@ -113,8 +113,8 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
     if len(mpbs_motif) > 0:
         # regions which are overlapping with mpbs_motif
         intersect_original = regions.intersect(mpbs_motif, mode=OverlapType.ORIGINAL, rm_duplicates=True)
-        # regions which are not overlapping with regions from mpbs_motif
-        subtract_overlap = regions.subtract(mpbs_motif, whole_region=True)
+
+        l_intersect = len(intersect_original)
 
         # Fetching genes
         if gene_set:
@@ -134,7 +134,7 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
         else:
             mpbs_set_res = None
 
-        return len(intersect_original), len(subtract_overlap), gene_set_res, mpbs_set_res
+        return l_intersect, len(regions) - l_intersect, gene_set_res, mpbs_set_res
 
     else:
         gene_set_res = GeneSet(motif_name) if gene_set else None

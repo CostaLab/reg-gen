@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+install:
+  - pip install cython
+  - pip install numpy scipy
+  - pip install .
+# command to run tests
+script:
+  - python -m unittest discover unittest/ -p "*" -v

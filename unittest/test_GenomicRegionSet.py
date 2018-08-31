@@ -851,16 +851,38 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 5)
 
         """
+        By default, subtract merges any overlapping region. We represent the modified region set as A' below:
+        
         A :   -----------------------              ------
                    -----     -----  -----------
+        A':   ---------------------------------    ------
         B :    ---    ---------         ----           ----
         R :   -   ----         ---------    ---    ----
         """
         self.region_sets([['chr1', 5, 100], ['chr1', 20, 40], ['chr1', 60, 80], ['chr1', 95, 150], ['chr1', 180, 220]],
                          [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB)
-        self.assertEqual(len(result), 5)
-        self.assertEqual(result[0].initial, 5)
+        res_list = [(r.initial, r.final) for r in result]
+
+        self.assertListEqual(res_list, [(5, 10), (15, 30), (70, 120), (140, 150), (180, 200)])
+
+        """
+        When we disable merging, the result is usually bigger and the output regions will have different bounds:
+        
+        A :   -----------------------              ------
+                   -----     -----  -----------
+        B :    ---    ---------         ----           ----
+        R :   -   ----         ------              ----
+                   ---         ---  ----    ---
+        """
+        self.region_sets([['chr1', 5, 100], ['chr1', 20, 40], ['chr1', 60, 80], ['chr1', 95, 150], ['chr1', 180, 220]],
+                         [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
+        result = self.setA.subtract(self.setB, merge=False)
+        res_list = [(r.initial, r.final) for r in result]
+
+        self.assertListEqual(res_list, [(5, 10), (15, 30), (70, 100), (20, 30),
+                                        (70, 80), (95, 120), (140, 150), (180, 200)])
+
         """
         A :   -----------------------------------------------------------
         B :    ---    ---------         ----           ----
