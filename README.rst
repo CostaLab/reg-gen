@@ -3,7 +3,7 @@ RGT - Regulatory Genomics Toolbox
 
 .. class:: no-web no-pdf
 
-|pypi| |dev_build|
+|pypi| |dev_build| |coverage|
 
 RGT is an open source python library for analysis of regulatory
 genomics. RGT is programmed in an oriented object fashion and its core
@@ -58,8 +58,6 @@ found `on our website <http://www.regulatory-genomics.org/rgt/download-installat
 
 For any issues, please write to our `support mailing list <https://groups.google.com/forum/#!forum/rgtusers>`__.
 
-[![Develop Build](https://travis-ci.org/CostaLab/reg-gen.svg?branch=develop)]()
-
 .. |pypi| image:: https://img.shields.io/pypi/v/rgt.svg?label=latest%20release
     :target: https://pypi.python.org/pypi/rgt
     :alt: Latest version released on PyPi
@@ -71,3 +69,7 @@ For any issues, please write to our `support mailing list <https://groups.google
 .. |dev_build| image:: https://img.shields.io/travis/CostaLab/reg-gen.svg?branch=develop&label=develop
     :target: https://travis-ci.org/CostaLab/reg-gen
     :alt: Build status of the develop branch
+
+.. |coverage| image:: https://img.shields.io/coveralls/CostaLab/reg-gen/develop.svg?label=coverage
+    :target: https://coveralls.io/r/CostaLab/reg-gen?branch=develop
+    :alt: Test coverage
