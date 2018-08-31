@@ -109,8 +109,3 @@ class TestGenomicRegion(unittest.TestCase):
 
         r2 = GenomicRegion(chrom=1, initial=10, final=18)
         self.assertTrue(r >= r2)
-
-
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestGenomicRegion)
-    unittest.TextTestRunner(verbosity=2).run(suite)

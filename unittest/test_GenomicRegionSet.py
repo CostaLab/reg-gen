@@ -1179,7 +1179,3 @@ class TestGenomicRegionSet(unittest.TestCase):
         #print(result)
         #self.assertEqual(result, 11/31)
 """
-
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestGenomicRegionSet)
-    unittest.TextTestRunner(verbosity=3).run(suite)
