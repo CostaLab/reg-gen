@@ -982,6 +982,7 @@ class RNADNABindingSet:
         return dis_count
 
     def region_distance(self, rbs1, rbs2):
+        distance = 0
         if rbs1.chrom == rbs2.chrom:
             if rbs2.initial > rbs1.final:
                 distance = rbs2.initial - rbs1.final
@@ -989,7 +990,7 @@ class RNADNABindingSet:
                 distance = rbs1.initial - rbs2.final
             return distance
         else:
-            return False
+            return None
 
     def combine_motif(self, name="rdb"):
         num_YM, num_MY, num_RM, num_MR = 0, 0, 0, 0
