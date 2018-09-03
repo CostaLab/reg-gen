@@ -1003,7 +1003,7 @@ class RNADNABindingSet:
                 # different RNA binding motif and same parallel
                 if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
                     # no RNA overlap
-                    if cur_rbs.rna.distance(next_rbs.rna) > 0 and self.distance(cur_rbs.rna, next_rbs.rna) > self.distance(cur_rbs.dna, next_rbs.dna):
+                    if cur_rbs.rna.distance(next_rbs.rna) > 0 and self.region_distance(cur_rbs.rna, next_rbs.rna) > self.region_distance(cur_rbs.dna, next_rbs.dna):
                         # DNA gap smaller than 10bp and no overlap
                         if (cur_rbs.dna.distance(next_rbs.dna) <= 5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom) :
                             # same strand on the DNA
