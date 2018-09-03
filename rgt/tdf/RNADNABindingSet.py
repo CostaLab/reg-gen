@@ -1000,13 +1000,13 @@ class RNADNABindingSet:
             next_of_rbs = num_of_rbs + 1
             cur_rbs = self.sequences[num_of_rbs]
             next_rbs = self.sequences[next_of_rbs]
-            while cur_rbs.rna.distance(next_rbs.rna) < 5 and next_of_rbs < len(self.sequences) - 2:
+            while 0 < cur_rbs.rna.distance(next_rbs.rna) < 5 and next_of_rbs < len(self.sequences) - 2:
                 # different RNA binding motif and same parallel
                 if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
                     # no RNA overlap
                     if cur_rbs.rna.distance(next_rbs.rna) > 0 and self.region_distance(cur_rbs.rna, next_rbs.rna) > self.region_distance(cur_rbs.dna, next_rbs.dna):
                         # DNA gap smaller than 10bp and no overlap
-                        if (cur_rbs.dna.distance(next_rbs.dna) <= 5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom) :
+                        if 0 < cur_rbs.dna.distance(next_rbs.dna) <= cur_rbs.rna.distance(next_rbs.rna): #5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
                             # same strand on the DNA
                             if cur_rbs.dna.orientation == next_rbs.dna.orientation:
                                 # combine motif - Parallel
