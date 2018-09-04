@@ -41,10 +41,23 @@ class Statistics(object):
                       "autobinding": 0,
                       "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0,
                       "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+                      "MMAA_G": 0, "MMAA_T": 0, "MMAP_G": 0, "MMAP_T": 0, "MMPA_G": 0, "MMPA_T": 0,
+                      "RMAA_A": 0, "RMAA_G": 0, "RMAA_T": 0, "RMAP_A": 0, "RMAP_G": 0, "RMAP_T": 0,
+                      "MRAA_A": 0, "MRAA_G": 0, "MRAA_T": 0, "MRPA_A": 0, "MRPA_G": 0, "MRPA_T": 0,
+                      "YMPA_C": 0, "YMPA_G": 0, "YMPA_T": 0, "YMPP_C": 0, "YMPP_G": 0, "YMPP_T": 0,
+                      "MYAP_C": 0, "MYAP_G": 0, "MYAP_T": 0, "MYPP_C": 0, "MYPP_G": 0, "MYPP_T": 0,
+                      "RYAP_C": 0, "RYAP_G": 0, "RYAP_T": 0, "RYAP_A": 0,
+                      "YRPA_C": 0, "YRPA_G": 0, "YRPA_T": 0, "YRPA_A": 0,
                       "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
                       "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0,
-                      "target_in_trans": 0, "traget_in_cis": 0, "target_local": 0,
-                      "background_in_trans": 0, "background_in_cis": 0, "background_local": 0}
+                      "Uniq_MMAA_G": 0, "Uniq_MMAA_T": 0, "Uniq_MMAP_G": 0, "Uniq_MMAP_T": 0, "Uniq_MMPA_G": 0, "Uniq_MMPA_T": 0,
+                      "Uniq_RMAA_A": 0, "Uniq_RMAA_G": 0, "Uniq_RMAA_T": 0, "Uniq_RMAP_A": 0, "Uniq_RMAP_G": 0, "Uniq_RMAP_T": 0,
+                      "Uniq_MRAA_A": 0, "Uniq_MRAA_G": 0, "Uniq_MRAA_T": 0, "Uniq_MRPA_A": 0, "Uniq_MRPA_G": 0, "Uniq_MRPA_T": 0,
+                      "Uniq_YMPA_C": 0, "Uniq_YMPA_G": 0, "Uniq_YMPA_T": 0, "Uniq_YMPP_C": 0, "Uniq_YMPP_G": 0, "Uniq_YMPP_T": 0,
+                      "Uniq_MYAP_C": 0, "Uniq_MYAP_G": 0, "Uniq_MYAP_T": 0, "Uniq_MYPP_C": 0, "Uniq_MYPP_G": 0, "Uniq_MYPP_T": 0,
+                      "Uniq_RYAP_C": 0, "Uniq_RYAP_G": 0, "Uniq_RYAP_T": 0, "Uniq_RYAP_A": 0,
+                      "Uniq_YRPA_C": 0, "Uniq_YRPA_G": 0, "Uniq_YRPA_T": 0, "Uniq_YRPA_A": 0
+                      }
 
     def count_frequency_promoters(self, target_regions, background, file_tpx_de, file_tpx_nde):
         # count_frequency(self, temp, remove_temp, cutoff, l, obedp=False):
