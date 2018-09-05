@@ -333,20 +333,21 @@ def main():
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
         tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                          prefix="target_promoters", remove_temp=True)
+                                          prefix="target_promoters", remove_temp=False)
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         if args.cl > 0:
 
             triplexes_c = Triplexes(organism=args.organism, pars=args, l=args.cl, e=args.ce)
             tpx_de_C = triplexes_c.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                          prefix="target_promoters_combine", remove_temp=True)
+                                          prefix="target_promoters_combine", remove_temp=False)
             # tpx_nde_C = triplexes_c.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
             #                                    prefix="nontarget_promoters_combine", remove_temp=True)
             triplexes_c.merging_combined_motifs(tpx_de, tpx_de_C, tpx_de,name=args.rn)
 
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
+
         #######################################
         # Statistics
         print("Step 2: Calculate the frequency of DNA binding sites within the promoters.")
@@ -370,6 +371,7 @@ def main():
         stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
         t2 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+
         #######################################
         # Reports
         print("Step 3: Generate plot and output html files.")
@@ -388,13 +390,16 @@ def main():
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "nde.fa"))
-        silentremove(os.path.join(args.o, "de.tpx"))
-        silentremove(os.path.join(args.o, "autobinding.tpx"))
+
         if args.nofile:
             print("Don't save any files.")
+            args.rt = True
             silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
             silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
+        if args.rt:
             silentremove(os.path.join(args.o, "target_promoters.tpx"))
+            silentremove(os.path.join(args.o, "autobinding.tpx"))
+
         print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 

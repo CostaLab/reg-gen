@@ -560,26 +560,19 @@ class RNADNABindingSet:
 
     def read_tpx(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
-
         with open(filename) as f:
             for line in f:
                 # print(line)
                 line = line.strip()
                 # skip the comment line
-                if line == "" or line.startswith("#"): continue
-
+                if line.startswith("#"):
+                    continue
                 l = line.split()
                 # Load binding site
                 if len(l) == 12:
                     l.insert(8, "_")
                 if len(l) == 13:
                     if "\tchrM:" in line: continue # skip chromosome Mitocondria
-                    #
-                    # if len(line) < 10:
-                    #     #print(line)
-                    #     continue # skip the unimportant lines in txp
-                    #
-
                     # Format of each line in txp
                     #     [0] Sequence-ID
                     #     [1] TFO start
@@ -608,7 +601,6 @@ class RNADNABindingSet:
                     rna = BindingSite(chrom=l[0], initial=rna_start, final=rna_end, score=l[6],
                                       errors_bp=l[8], motif=l[9], orientation=l[11],
                                       guanine_rate=l[12])
-                    # print(l)
                     # DNA binding site
                     if ":" in l[3]:
                         rg = l[3].split(":")[1].split("-")
@@ -618,37 +610,20 @@ class RNADNABindingSet:
                             dna = GenomicRegion(chrom=l[3].split(":")[0], initial=dna_start, final=dna_end,
                                                 name=l[3], orientation=l[10],
                                                 data=[l[6], l[9], l[11]])  # score, motif, orientation
-
                         else:
-                            # try:
                             dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
                                                 name=l[3], orientation=l[10],
                                                 data=[l[6], l[9], l[11]])
-
                     else:
-                        # rg = l[3].split("-")
-                        # print(rg)
                         dna = GenomicRegion(chrom=l[3], initial=int(l[4]), final=int(l[5]),
                                             name=l[3], orientation=l[10],
                                             data=[l[6], l[9], l[11]])
-                        # try: rg.remove("")
-                    # except: pass
-
-
-                        # except:
-                        #     print(l)
                     if seq:
-                        cont_seq = 4
                         binding = []
                         rd = [l[6],l[7],l[8],l[12]]
-
                     else:
-                        self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8],
-                                               guan_rate=l[12]))
-
-                elif len(l) < 10 and seq:
-                    # print(l)
-                    # print(cont_seq)
+                        self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8], guan_rate=l[12]))
+                elif 0 < len(l) < 10 and seq:
                     if "TFO: " in line:
                         b = line.replace("TFO: ", "")
                     elif "TTS: " in line:
@@ -657,16 +632,11 @@ class RNADNABindingSet:
                         b = "    " + line
                     else:
                         b = line
-
                     binding.append(b)
-                    if cont_seq > 1:
-                        # print(line)
-                        cont_seq -= 1
-                    else:
-                        # self.sequences[-1].match = binding
-                        # print(binding)
-                        self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
-                                               guan_rate=rd[3], match=binding))
+                elif len(l) == 0 and seq:
+
+                    self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
+                                           guan_rate=rd[3], match=binding))
 
 
     def map_promoter_name(self, promoters):

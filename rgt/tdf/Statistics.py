@@ -154,8 +154,6 @@ class Statistics(object):
                 l2 = len(self.tpx_ndef.merged_dict[rbs])
                 self.frequency["hits"]["nde"][rbs] = [l2, numdbs_ndef - l2]
 
-        if self.pars.rm:
-            os.remove(file_tpx_de)
         os.remove(file_tpx_nde)
 
         # target_regions.write(filename=os.path.join(self.pars.o, self.pars.rn + "_target_promoters.bed"))
