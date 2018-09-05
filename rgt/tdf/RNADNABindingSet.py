@@ -1008,6 +1008,7 @@ class RNADNABindingSet:
                         # DNA gap smaller than 10bp and no overlap
                         if 0 < self.region_distance(cur_rbs.dna, next_rbs.dna) <= self.region_distance(cur_rbs.rna, next_rbs.rna): #5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
                             # same strand on the DNA
+                            print(self.region_distance(cur_rbs.dna, next_rbs.dna),self.region_distance(cur_rbs.rna, next_rbs.rna))
                             if cur_rbs.dna.orientation == next_rbs.dna.orientation:
                                 # combine motif - Parallel
                                 if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "P":
