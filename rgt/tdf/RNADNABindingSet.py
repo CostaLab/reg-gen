@@ -696,7 +696,7 @@ class RNADNABindingSet:
             for rd in self:
                 print(str(rd), file=f)
                 if match:
-                    for i in range(4):
+                    for i in range(len(rd.match)):
                         print(rd.match[i], file=f)
                 print("", file=f)
 

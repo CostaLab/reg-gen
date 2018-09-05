@@ -343,7 +343,7 @@ def main():
                                           prefix="target_promoters_combine", remove_temp=True)
             # tpx_nde_C = triplexes_c.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
             #                                    prefix="nontarget_promoters_combine", remove_temp=True)
-            triplexes_c.merging_combined_motifs(tpx_de, tpx_de_C, tpx_de,name=args.rn)
+            triplexes_c.merging_combined_motifs(tpx_de, tpx_de_C, tpx_de, name=args.rn)
 
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
