@@ -17,7 +17,7 @@ outFile = open(outFileName, "w")
 outFile.write("\t".join(["MOTIF"] + [str(e) for e in fprList]) + "\n")
 
 # Iterating on all PWMs
-for pwmFileName in sorted(glob(inFolder + "*.pwm")):
+for pwmFileName in sorted(glob(inFolder + "/*.pwm")):
     # Creating PSSM
     name = ".".join(basename(pwmFileName).split(".")[:-1])
 

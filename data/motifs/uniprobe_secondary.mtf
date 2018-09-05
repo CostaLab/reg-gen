@@ -7,8 +7,8 @@ UP00005	UP00005_2_Tcfap2a_secondary	uniprobe_secondary	2	Tcfap2a	.	.	.	.
 UP00006	UP00006_2_Zic3_secondary	uniprobe_secondary	2	Zic3	.	.	.	.
 UP00007	UP00007_2_Egr1_secondary	uniprobe_secondary	2	Egr1	.	.	.	.
 UP00008	UP00008_3_Six6_2267.4	uniprobe_secondary	3	Six6	.	.	.	.
-UP00008	UP00008_2_Six6_secondary	uniprobe_secondary	2	Six6	.	.	.	.
 UP00008	UP00008_4_Six6	uniprobe_secondary	4	Six6	.	.	.	.
+UP00008	UP00008_2_Six6_secondary	uniprobe_secondary	2	Six6	.	.	.	.
 UP00009	UP00009_2_Nr2f2_secondary	uniprobe_secondary	2	Nr2f2	.	.	.	.
 UP00010	UP00010_2_Tcfap2b_secondary	uniprobe_secondary	2	Tcfap2b	.	.	.	.
 UP00011	UP00011_2_Irf6_secondary	uniprobe_secondary	2	Irf6	.	.	.	.
@@ -16,8 +16,8 @@ UP00012	UP00012_2_Bbx_secondary	uniprobe_secondary	2	Bbx	.	.	.	.
 UP00014	UP00014_2_Sox17_secondary	uniprobe_secondary	2	Sox17	.	.	.	.
 UP00015	UP00015_2_Ehf_secondary	uniprobe_secondary	2	Ehf	.	.	.	.
 UP00016	UP00016_2_Sry_secondary	uniprobe_secondary	2	Sry	.	.	.	.
-UP00017	UP00017_3_Nkx3-1_2923.2	uniprobe_secondary	3	Nkx3-1	.	.	.	.
 UP00017	UP00017_2_Nkx3-1_secondary	uniprobe_secondary	2	Nkx3-1	.	.	.	.
+UP00017	UP00017_3_Nkx3-1_2923.2	uniprobe_secondary	3	Nkx3-1	.	.	.	.
 UP00018	UP00018_2_Irf4_secondary	uniprobe_secondary	2	Irf4	.	.	.	.
 UP00019	UP00019_2_Zbtb12_secondary	uniprobe_secondary	2	Zbtb12	.	.	.	.
 UP00020	UP00020_2_Atf1_secondary	uniprobe_secondary	2	Atf1	.	.	.	.
@@ -87,8 +87,8 @@ UP00085	UP00085_2_Sfpi1_secondary	uniprobe_secondary	2	Sfpi1	.	.	.	.
 UP00086	UP00086_2_Irf3_secondary	uniprobe_secondary	2	Irf3	.	.	.	.
 UP00087	UP00087_2_Tcfap2c_secondary	uniprobe_secondary	2	Tcfap2c	.	.	.	.
 UP00088	UP00088_2_Plagl1_secondary	uniprobe_secondary	2	Plagl1	.	.	.	.
-UP00089	UP00089_3_Tcf1_2666.2	uniprobe_secondary	3	Tcf1	.	.	.	.
 UP00089	UP00089_2_Tcf1_secondary	uniprobe_secondary	2	Tcf1	.	.	.	.
+UP00089	UP00089_3_Tcf1_2666.2	uniprobe_secondary	3	Tcf1	.	.	.	.
 UP00091	UP00091_2_Sox5_secondary	uniprobe_secondary	2	Sox5	.	.	.	.
 UP00092	UP00092_2_Myb_secondary	uniprobe_secondary	2	Myb	.	.	.	.
 UP00093	UP00093_2_Klf7_secondary	uniprobe_secondary	2	Klf7	.	.	.	.
@@ -111,8 +111,8 @@ UP00209	UP00209_2_Cart1_1275.1	uniprobe_secondary	2	Cart1	.	.	.	.
 UP00219	UP00219_2_Cutl1_3494.2	uniprobe_secondary	2	Cutl1	.	.	.	.
 UP00223	UP00223_2_Irx3_2226.1	uniprobe_secondary	2	Irx3	.	.	.	.
 UP00256	UP00256_2_Lhx6_3432.1	uniprobe_secondary	2	Lhx6	.	.	.	.
-UP00391	UP00391_3_Hoxa3_2783.2	uniprobe_secondary	3	Hoxa3	.	.	.	.
 UP00391	UP00391_2_Hoxa3_secondary	uniprobe_secondary	2	Hoxa3	.	.	.	.
+UP00391	UP00391_3_Hoxa3_2783.2	uniprobe_secondary	3	Hoxa3	.	.	.	.
 UP00406	UP00406_2_Spdef_secondary	uniprobe_secondary	2	Spdef	.	.	.	.
 UP00407	UP00407_2_Elf3_secondary	uniprobe_secondary	2	Elf3	.	.	.	.
 UP00408	UP00408_2_Gabpa_secondary	uniprobe_secondary	2	Gabpa	.	.	.	.

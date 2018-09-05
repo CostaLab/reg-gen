@@ -3,9 +3,9 @@ AIRE	AIRE_HUMAN.H11MO.0.C	hocomoco	1	AIRE	AIRE	O43918	Integrative
 ALX1	ALX1_HUMAN.H11MO.0.B	hocomoco	1	ALX1	Paired-related HD factors	Q15699	Integrative
 ALX3	ALX3_HUMAN.H11MO.0.D	hocomoco	1	ALX3	Paired-related HD factors	O95076	HT-SELEX
 ALX4	ALX4_HUMAN.H11MO.0.D	hocomoco	1	ALX4	Paired-related HD factors	Q9H161	HT-SELEX
+ANDR	ANDR_HUMAN.H11MO.2.A	hocomoco	1	AR	Steroid hormone receptors (NR3)	P10275	ChIP-Seq
 ANDR	ANDR_HUMAN.H11MO.1.A	hocomoco	1	AR	Steroid hormone receptors (NR3)	P10275	ChIP-Seq
 ANDR	ANDR_HUMAN.H11MO.0.A	hocomoco	1	AR	Steroid hormone receptors (NR3)	P10275	ChIP-Seq
-ANDR	ANDR_HUMAN.H11MO.2.A	hocomoco	1	AR	Steroid hormone receptors (NR3)	P10275	ChIP-Seq
 AP2A	AP2A_HUMAN.H11MO.0.A	hocomoco	1	TFAP2A	AP-2	P05549	ChIP-Seq
 AP2B	AP2B_HUMAN.H11MO.0.B	hocomoco	1	TFAP2B	AP-2	Q92481	Integrative
 AP2C	AP2C_HUMAN.H11MO.0.A	hocomoco	1	TFAP2C	AP-2	Q92754	ChIP-Seq
@@ -19,8 +19,8 @@ ASCL1	ASCL1_HUMAN.H11MO.0.A	hocomoco	1	ASCL1	MyoD / ASC-related factors	P50553	C
 ASCL2	ASCL2_HUMAN.H11MO.0.D	hocomoco	1	ASCL2	MyoD / ASC-related factors	Q99929	ChIP-Seq
 ATF1	ATF1_HUMAN.H11MO.0.B	hocomoco	1	ATF1	CREB-related factors	P18846	ChIP-Seq
 ATF2	ATF2_HUMAN.H11MO.2.C	hocomoco	1	ATF2	Jun-related factors	P15336	ChIP-Seq
-ATF2	ATF2_HUMAN.H11MO.0.B	hocomoco	1	ATF2	Jun-related factors	P15336	ChIP-Seq
 ATF2	ATF2_HUMAN.H11MO.1.B	hocomoco	1	ATF2	Jun-related factors	P15336	ChIP-Seq
+ATF2	ATF2_HUMAN.H11MO.0.B	hocomoco	1	ATF2	Jun-related factors	P15336	ChIP-Seq
 ATF3	ATF3_HUMAN.H11MO.0.A	hocomoco	1	ATF3	Fos-related factors	P18847	ChIP-Seq
 ATF4	ATF4_HUMAN.H11MO.0.A	hocomoco	1	ATF4	ATF-4-related factors	P18848	ChIP-Seq
 ATF6A	ATF6A_HUMAN.H11MO.0.B	hocomoco	1	ATF6	CREB-related factors	P18850	Integrative
@@ -45,8 +45,8 @@ BHE40	BHE40_HUMAN.H11MO.0.A	hocomoco	1	BHLHE40	Hairy-related factors	O14503	ChIP
 BHE41	BHE41_HUMAN.H11MO.0.D	hocomoco	1	BHLHE41	Hairy-related factors	Q9C0J9	Integrative
 BMAL1	BMAL1_HUMAN.H11MO.0.A	hocomoco	1	ARNTL	PAS domain factors	O00327	ChIP-Seq
 BPTF	BPTF_HUMAN.H11MO.0.D	hocomoco	1	BPTF	.	Q12830	Integrative
-BRAC	BRAC_HUMAN.H11MO.0.A	hocomoco	1	T	Brachyury-related factors	O15178	ChIP-Seq
 BRAC	BRAC_HUMAN.H11MO.1.B	hocomoco	1	T	Brachyury-related factors	O15178	ChIP-Seq
+BRAC	BRAC_HUMAN.H11MO.0.A	hocomoco	1	T	Brachyury-related factors	O15178	ChIP-Seq
 BRCA1	BRCA1_HUMAN.H11MO.0.D	hocomoco	1	BRCA1	.	P38398	Integrative
 BSH	BSH_HUMAN.H11MO.0.D	hocomoco	1	BSX	NK-related factors	Q3C1V8	HT-SELEX
 CDC5L	CDC5L_HUMAN.H11MO.0.D	hocomoco	1	CDC5L	Myb/SANT domain factors	Q99459	Integrative
@@ -138,8 +138,6 @@ ETV5	ETV5_HUMAN.H11MO.0.C	hocomoco	1	ETV5	Ets-related factors	P41161	ChIP-Seq
 ETV6	ETV6_HUMAN.H11MO.0.D	hocomoco	1	ETV6	Ets-related factors	P41212	ChIP-Seq
 ETV7	ETV7_HUMAN.H11MO.0.D	hocomoco	1	ETV7	Ets-related factors	Q9Y603	ChIP-Seq
 EVI1	EVI1_HUMAN.H11MO.0.B	hocomoco	1	MECOM	Factors with multiple dispersed zinc fingers	Q03112	Integrative
-EVX1	EVX1_HUMAN.H11MO.0.D	hocomoco	1	EVX1	HOX-related factors	P49640	ChIP-Seq
-EVX2	EVX2_HUMAN.H11MO.0.A	hocomoco	1	EVX2	HOX-related factors	Q03828	ChIP-Seq
 FEV	FEV_HUMAN.H11MO.0.B	hocomoco	1	FEV	Ets-related factors	Q99581	ChIP-Seq
 FEZF1	FEZF1_HUMAN.H11MO.0.C	hocomoco	1	FEZF1	More than 3 adjacent zinc finger factors	A0PJY2	ChIP-Seq
 FIGLA	FIGLA_HUMAN.H11MO.0.D	hocomoco	1	FIGLA	Tal-related factors	Q6QHK4	HT-SELEX
@@ -208,8 +206,8 @@ GSC	GSC_HUMAN.H11MO.0.D	hocomoco	1	GSC	Paired-related HD factors	P56915	HT-SELEX
 GSC2	GSC2_HUMAN.H11MO.0.D	hocomoco	1	GSC2	Paired-related HD factors	O15499	HT-SELEX
 GSX1	GSX1_HUMAN.H11MO.0.D	hocomoco	1	GSX1	HOX-related factors	Q9H4S2	HT-SELEX
 GSX2	GSX2_HUMAN.H11MO.0.D	hocomoco	1	GSX2	HOX-related factors	Q9BZM3	HT-SELEX
-HAND1	HAND1_HUMAN.H11MO.0.D	hocomoco	1	HAND1	Tal-related factors	O96004	ChIP-Seq
 HAND1	HAND1_HUMAN.H11MO.1.D	hocomoco	1	HAND1	Tal-related factors	O96004	ChIP-Seq
+HAND1	HAND1_HUMAN.H11MO.0.D	hocomoco	1	HAND1	Tal-related factors	O96004	ChIP-Seq
 HBP1	HBP1_HUMAN.H11MO.0.D	hocomoco	1	HBP1	SOX-related factors	O60381	Integrative
 HEN1	HEN1_HUMAN.H11MO.0.C	hocomoco	1	NHLH1	Tal-related factors	Q02575	Integrative
 HES1	HES1_HUMAN.H11MO.0.D	hocomoco	1	HES1	Hairy-related factors	Q14469	Integrative
@@ -239,8 +237,8 @@ HNF4A	HNF4A_HUMAN.H11MO.0.A	hocomoco	1	HNF4A	RXR-related receptors (NR2)	P41235	
 HNF4G	HNF4G_HUMAN.H11MO.0.B	hocomoco	1	HNF4G	RXR-related receptors (NR2)	Q14541	ChIP-Seq
 HNF6	HNF6_HUMAN.H11MO.0.B	hocomoco	1	ONECUT1	HD-CUT factors	Q9UBC0	ChIP-Seq
 HOMEZ	HOMEZ_HUMAN.H11MO.0.D	hocomoco	1	HOMEZ	HD-ZF factors	Q8IX15	HT-SELEX
-HSF1	HSF1_HUMAN.H11MO.0.A	hocomoco	1	HSF1	HSF factors	Q00613	ChIP-Seq
 HSF1	HSF1_HUMAN.H11MO.1.A	hocomoco	1	HSF1	HSF factors	Q00613	ChIP-Seq
+HSF1	HSF1_HUMAN.H11MO.0.A	hocomoco	1	HSF1	HSF factors	Q00613	ChIP-Seq
 HSF2	HSF2_HUMAN.H11MO.0.A	hocomoco	1	HSF2	HSF factors	Q03933	Integrative
 HSF4	HSF4_HUMAN.H11MO.0.D	hocomoco	1	HSF4	HSF factors	Q9ULV5	HT-SELEX
 HSFY1	HSFY1_HUMAN.H11MO.0.D	hocomoco	1	HSFY1; HSFY2	HSF factors	Q96LI6	HT-SELEX
@@ -297,9 +295,9 @@ JDP2	JDP2_HUMAN.H11MO.0.D	hocomoco	1	JDP2	Fos-related factors	Q8WYK2	HT-SELEX
 JUN	JUN_HUMAN.H11MO.0.A	hocomoco	1	JUN	Jun-related factors	P05412	ChIP-Seq
 JUNB	JUNB_HUMAN.H11MO.0.A	hocomoco	1	JUNB	Jun-related factors	P17275	ChIP-Seq
 JUND	JUND_HUMAN.H11MO.0.A	hocomoco	1	JUND	Jun-related factors	P17535	ChIP-Seq
-KAISO	KAISO_HUMAN.H11MO.1.A	hocomoco	1	ZBTB33	Other factors with up to three adjacent zinc fingers	Q86T24	ChIP-Seq
 KAISO	KAISO_HUMAN.H11MO.2.A	hocomoco	1	ZBTB33	Other factors with up to three adjacent zinc fingers	Q86T24	Integrative
 KAISO	KAISO_HUMAN.H11MO.0.A	hocomoco	1	ZBTB33	Other factors with up to three adjacent zinc fingers	Q86T24	ChIP-Seq
+KAISO	KAISO_HUMAN.H11MO.1.A	hocomoco	1	ZBTB33	Other factors with up to three adjacent zinc fingers	Q86T24	ChIP-Seq
 KLF1	KLF1_HUMAN.H11MO.0.A	hocomoco	1	KLF1	Three-zinc finger Krüppel-related factors	Q13351	ChIP-Seq
 KLF12	KLF12_HUMAN.H11MO.0.C	hocomoco	1	KLF12	Three-zinc finger Krüppel-related factors	Q9Y4X4	ChIP-Seq
 KLF13	KLF13_HUMAN.H11MO.0.D	hocomoco	1	KLF13	Three-zinc finger Krüppel-related factors	Q9Y2Y9	HT-SELEX
@@ -327,15 +325,15 @@ MAF	MAF_HUMAN.H11MO.0.A	hocomoco	1	MAF	Maf-related factors	O75444	ChIP-Seq
 MAF	MAF_HUMAN.H11MO.1.B	hocomoco	1	MAF	Maf-related factors	O75444	ChIP-Seq
 MAFA	MAFA_HUMAN.H11MO.0.D	hocomoco	1	MAFA	Maf-related factors	Q8NHW3	Integrative
 MAFB	MAFB_HUMAN.H11MO.0.B	hocomoco	1	MAFB	Maf-related factors	Q9Y5Q3	ChIP-Seq
-MAFF	MAFF_HUMAN.H11MO.0.B	hocomoco	1	MAFF	Maf-related factors	Q9ULX9	ChIP-Seq
 MAFF	MAFF_HUMAN.H11MO.1.B	hocomoco	1	MAFF	Maf-related factors	Q9ULX9	ChIP-Seq
+MAFF	MAFF_HUMAN.H11MO.0.B	hocomoco	1	MAFF	Maf-related factors	Q9ULX9	ChIP-Seq
 MAFG	MAFG_HUMAN.H11MO.1.A	hocomoco	1	MAFG	Maf-related factors	O15525	ChIP-Seq
 MAFG	MAFG_HUMAN.H11MO.0.A	hocomoco	1	MAFG	Maf-related factors	O15525	ChIP-Seq
 MAFK	MAFK_HUMAN.H11MO.0.A	hocomoco	1	MAFK	Maf-related factors	O60675	ChIP-Seq
 MAFK	MAFK_HUMAN.H11MO.1.A	hocomoco	1	MAFK	Maf-related factors	O60675	ChIP-Seq
 MAX	MAX_HUMAN.H11MO.0.A	hocomoco	1	MAX	bHLH-ZIP factors	P61244	ChIP-Seq
-MAZ	MAZ_HUMAN.H11MO.1.A	hocomoco	1	MAZ	Factors with multiple dispersed zinc fingers	P56270	ChIP-Seq
 MAZ	MAZ_HUMAN.H11MO.0.A	hocomoco	1	MAZ	Factors with multiple dispersed zinc fingers	P56270	ChIP-Seq
+MAZ	MAZ_HUMAN.H11MO.1.A	hocomoco	1	MAZ	Factors with multiple dispersed zinc fingers	P56270	ChIP-Seq
 MBD2	MBD2_HUMAN.H11MO.0.B	hocomoco	1	MBD2	.	Q9UBB5	Integrative
 MCR	MCR_HUMAN.H11MO.0.D	hocomoco	1	NR3C2	Steroid hormone receptors (NR3)	P08235	Integrative
 MECP2	MECP2_HUMAN.H11MO.0.C	hocomoco	1	MECP2	.	P51608	Integrative
@@ -343,8 +341,8 @@ MEF2A	MEF2A_HUMAN.H11MO.0.A	hocomoco	1	MEF2A	Regulators of differentiation	Q0207
 MEF2B	MEF2B_HUMAN.H11MO.0.A	hocomoco	1	MEF2B	Regulators of differentiation	Q02080	ChIP-Seq
 MEF2C	MEF2C_HUMAN.H11MO.0.A	hocomoco	1	MEF2C	Regulators of differentiation	Q06413	ChIP-Seq
 MEF2D	MEF2D_HUMAN.H11MO.0.A	hocomoco	1	MEF2D	Regulators of differentiation	Q14814	ChIP-Seq
-MEIS1	MEIS1_HUMAN.H11MO.1.B	hocomoco	1	MEIS1	TALE-type homeo domain factors	O00470	ChIP-Seq
 MEIS1	MEIS1_HUMAN.H11MO.0.A	hocomoco	1	MEIS1	TALE-type homeo domain factors	O00470	ChIP-Seq
+MEIS1	MEIS1_HUMAN.H11MO.1.B	hocomoco	1	MEIS1	TALE-type homeo domain factors	O00470	ChIP-Seq
 MEIS2	MEIS2_HUMAN.H11MO.0.B	hocomoco	1	MEIS2	TALE-type homeo domain factors	O14770	Integrative
 MEIS3	MEIS3_HUMAN.H11MO.0.D	hocomoco	1	MEIS3	TALE-type homeo domain factors	Q99687	HT-SELEX
 MEOX1	MEOX1_HUMAN.H11MO.0.D	hocomoco	1	MEOX1	HOX-related factors	P50221	HT-SELEX
@@ -372,26 +370,26 @@ MYOD1	MYOD1_HUMAN.H11MO.0.A	hocomoco	1	MYOD1	MyoD / ASC-related factors	P15172	C
 MYOD1	MYOD1_HUMAN.H11MO.1.A	hocomoco	1	MYOD1	MyoD / ASC-related factors	P15172	ChIP-Seq
 MYOG	MYOG_HUMAN.H11MO.0.B	hocomoco	1	MYOG	MyoD / ASC-related factors	P15173	ChIP-Seq
 MZF1	MZF1_HUMAN.H11MO.0.B	hocomoco	1	MZF1	More than 3 adjacent zinc finger factors	P28698	ChIP-Seq
-NANOG	NANOG_HUMAN.H11MO.0.A	hocomoco	1	NANOG	NK-related factors	Q9H9S0	ChIP-Seq
 NANOG	NANOG_HUMAN.H11MO.1.B	hocomoco	1	NANOG	NK-related factors	Q9H9S0	ChIP-Seq
+NANOG	NANOG_HUMAN.H11MO.0.A	hocomoco	1	NANOG	NK-related factors	Q9H9S0	ChIP-Seq
 NDF1	NDF1_HUMAN.H11MO.0.A	hocomoco	1	NEUROD1	Tal-related factors	Q13562	ChIP-Seq
 NDF2	NDF2_HUMAN.H11MO.0.B	hocomoco	1	NEUROD2	Tal-related factors	Q15784	ChIP-Seq
 NF2L1	NF2L1_HUMAN.H11MO.0.C	hocomoco	1	NFE2L1	Jun-related factors	Q14494	Integrative
 NF2L2	NF2L2_HUMAN.H11MO.0.A	hocomoco	1	NFE2L2	Jun-related factors	Q16236	ChIP-Seq
-NFAC1	NFAC1_HUMAN.H11MO.1.B	hocomoco	1	NFATC1	NFAT-related factors	O95644	ChIP-Seq
 NFAC1	NFAC1_HUMAN.H11MO.0.B	hocomoco	1	NFATC1	NFAT-related factors	O95644	ChIP-Seq
+NFAC1	NFAC1_HUMAN.H11MO.1.B	hocomoco	1	NFATC1	NFAT-related factors	O95644	ChIP-Seq
 NFAC2	NFAC2_HUMAN.H11MO.0.B	hocomoco	1	NFATC2	NFAT-related factors	Q13469	Integrative
 NFAC3	NFAC3_HUMAN.H11MO.0.B	hocomoco	1	NFATC3	NFAT-related factors	Q12968	Integrative
 NFAC4	NFAC4_HUMAN.H11MO.0.C	hocomoco	1	NFATC4	NFAT-related factors	Q14934	Integrative
 NFAT5	NFAT5_HUMAN.H11MO.0.D	hocomoco	1	NFAT5	NFAT-related factors	O94916	ChIP-Seq
 NFE2	NFE2_HUMAN.H11MO.0.A	hocomoco	1	NFE2	Jun-related factors	Q16621	ChIP-Seq
-NFIA	NFIA_HUMAN.H11MO.1.D	hocomoco	1	NFIA	Nuclear factor 1	Q12857	Integrative
 NFIA	NFIA_HUMAN.H11MO.0.C	hocomoco	1	NFIA	Nuclear factor 1	Q12857	Integrative
+NFIA	NFIA_HUMAN.H11MO.1.D	hocomoco	1	NFIA	Nuclear factor 1	Q12857	Integrative
 NFIB	NFIB_HUMAN.H11MO.0.D	hocomoco	1	NFIB	Nuclear factor 1	O00712	ChIP-Seq
 NFIC	NFIC_HUMAN.H11MO.1.A	hocomoco	1	NFIC	Nuclear factor 1	P08651	ChIP-Seq
 NFIC	NFIC_HUMAN.H11MO.0.A	hocomoco	1	NFIC	Nuclear factor 1	P08651	ChIP-Seq
 NFIL3	NFIL3_HUMAN.H11MO.0.D	hocomoco	1	NFIL3	C/EBP-related	Q16649	ChIP-Seq
-NFKB1	NFKB1_HUMAN.H11MO.0.A	hocomoco	1	NFKB1	NF-kappaB-related factors	P19838	ChIP-Seq
+NFKB1	NFKB1_HUMAN.H11MO.1.B	hocomoco	1	NFKB1	NF-kappaB-related factors	P19838	ChIP-Seq
 NFKB2	NFKB2_HUMAN.H11MO.0.B	hocomoco	1	NFKB2	NF-kappaB-related factors	Q00653	ChIP-Seq
 NFYA	NFYA_HUMAN.H11MO.0.A	hocomoco	1	NFYA	Heteromeric CCAAT-binding factors	P23511	ChIP-Seq
 NFYB	NFYB_HUMAN.H11MO.0.A	hocomoco	1	NFYB	Heteromeric CCAAT-binding factors	P25208	Integrative
@@ -404,8 +402,8 @@ NKX25	NKX25_HUMAN.H11MO.0.B	hocomoco	1	NKX2-5	NK-related factors	P52952	ChIP-Seq
 NKX28	NKX28_HUMAN.H11MO.0.C	hocomoco	1	NKX2-8	NK-related factors	O15522	Integrative
 NKX31	NKX31_HUMAN.H11MO.0.C	hocomoco	1	NKX3-1	NK-related factors	Q99801	ChIP-Seq
 NKX32	NKX32_HUMAN.H11MO.0.C	hocomoco	1	NKX3-2	NK-related factors	P78367	ChIP-Seq
-NKX61	NKX61_HUMAN.H11MO.1.B	hocomoco	1	NKX6-1	NK-related factors	P78426	ChIP-Seq
 NKX61	NKX61_HUMAN.H11MO.0.B	hocomoco	1	NKX6-1	NK-related factors	P78426	ChIP-Seq
+NKX61	NKX61_HUMAN.H11MO.1.B	hocomoco	1	NKX6-1	NK-related factors	P78426	ChIP-Seq
 NKX62	NKX62_HUMAN.H11MO.0.D	hocomoco	1	NKX6-2	NK-related factors	Q9C056	HT-SELEX
 NOBOX	NOBOX_HUMAN.H11MO.0.C	hocomoco	1	NOBOX	Paired-related HD factors	O60393	Integrative
 NOTO	NOTO_HUMAN.H11MO.0.D	hocomoco	1	NOTO	NK-related factors	A8MTQ0	HT-SELEX
@@ -413,14 +411,14 @@ NR0B1	NR0B1_HUMAN.H11MO.0.D	hocomoco	1	NR0B1	DAX-related receptors (NR0)	P51843	
 NR1D1	NR1D1_HUMAN.H11MO.0.B	hocomoco	1	NR1D1	Thyroid hormone receptor-related factors (NR1)	P20393	ChIP-Seq
 NR1D1	NR1D1_HUMAN.H11MO.1.D	hocomoco	1	NR1D1	Thyroid hormone receptor-related factors (NR1)	P20393	Integrative
 NR1H2	NR1H2_HUMAN.H11MO.0.D	hocomoco	1	NR1H2	Thyroid hormone receptor-related factors (NR1)	P55055	Integrative
-NR1H3	NR1H3_HUMAN.H11MO.1.B	hocomoco	1	NR1H3	Thyroid hormone receptor-related factors (NR1)	Q13133	ChIP-Seq
 NR1H3	NR1H3_HUMAN.H11MO.0.B	hocomoco	1	NR1H3	Thyroid hormone receptor-related factors (NR1)	Q13133	ChIP-Seq
+NR1H3	NR1H3_HUMAN.H11MO.1.B	hocomoco	1	NR1H3	Thyroid hormone receptor-related factors (NR1)	Q13133	ChIP-Seq
 NR1H4	NR1H4_HUMAN.H11MO.1.B	hocomoco	1	NR1H4	Thyroid hormone receptor-related factors (NR1)	Q96RI1	ChIP-Seq
 NR1H4	NR1H4_HUMAN.H11MO.0.B	hocomoco	1	NR1H4	Thyroid hormone receptor-related factors (NR1)	Q96RI1	ChIP-Seq
 NR1I2	NR1I2_HUMAN.H11MO.1.D	hocomoco	1	NR1I2	Thyroid hormone receptor-related factors (NR1)	O75469	Integrative
 NR1I2	NR1I2_HUMAN.H11MO.0.C	hocomoco	1	NR1I2	Thyroid hormone receptor-related factors (NR1)	O75469	Integrative
-NR1I3	NR1I3_HUMAN.H11MO.0.C	hocomoco	1	NR1I3	Thyroid hormone receptor-related factors (NR1)	Q14994	Integrative
 NR1I3	NR1I3_HUMAN.H11MO.1.D	hocomoco	1	NR1I3	Thyroid hormone receptor-related factors (NR1)	Q14994	Integrative
+NR1I3	NR1I3_HUMAN.H11MO.0.C	hocomoco	1	NR1I3	Thyroid hormone receptor-related factors (NR1)	Q14994	Integrative
 NR2C1	NR2C1_HUMAN.H11MO.0.C	hocomoco	1	NR2C1	RXR-related receptors (NR2)	P13056	Integrative
 NR2C2	NR2C2_HUMAN.H11MO.0.B	hocomoco	1	NR2C2	RXR-related receptors (NR2)	P49116	ChIP-Seq
 NR2E1	NR2E1_HUMAN.H11MO.0.D	hocomoco	1	NR2E1	RXR-related receptors (NR2)	Q9Y466	HT-SELEX
@@ -445,15 +443,15 @@ OTX2	OTX2_HUMAN.H11MO.0.A	hocomoco	1	OTX2	Paired-related HD factors	P32243	ChIP-
 OVOL1	OVOL1_HUMAN.H11MO.0.C	hocomoco	1	OVOL1	More than 3 adjacent zinc finger factors	O14753	Integrative
 OVOL2	OVOL2_HUMAN.H11MO.0.D	hocomoco	1	OVOL2	More than 3 adjacent zinc finger factors	Q9BRP0	ChIP-Seq
 OZF	OZF_HUMAN.H11MO.0.C	hocomoco	1	ZNF146	More than 3 adjacent zinc finger factors	Q15072	ChIP-Seq
-P53	P53_HUMAN.H11MO.1.A	hocomoco	1	TP53	p53-related factors	P04637	ChIP-Seq
 P53	P53_HUMAN.H11MO.0.A	hocomoco	1	TP53	p53-related factors	P04637	ChIP-Seq
+P53	P53_HUMAN.H11MO.1.A	hocomoco	1	TP53	p53-related factors	P04637	ChIP-Seq
 P5F1B	P5F1B_HUMAN.H11MO.0.D	hocomoco	1	POU5F1B	POU domain factors	Q06416	HT-SELEX
-P63	P63_HUMAN.H11MO.0.A	hocomoco	1	TP63	p53-related factors	Q9H3D4	ChIP-Seq
 P63	P63_HUMAN.H11MO.1.A	hocomoco	1	TP63	p53-related factors	Q9H3D4	ChIP-Seq
+P63	P63_HUMAN.H11MO.0.A	hocomoco	1	TP63	p53-related factors	Q9H3D4	ChIP-Seq
 P73	P73_HUMAN.H11MO.0.A	hocomoco	1	TP73	p53-related factors	O15350	ChIP-Seq
 P73	P73_HUMAN.H11MO.1.A	hocomoco	1	TP73	p53-related factors	O15350	ChIP-Seq
-PATZ1	PATZ1_HUMAN.H11MO.0.C	hocomoco	1	PATZ1	Factors with multiple dispersed zinc fingers	Q9HBE1	ChIP-Seq
 PATZ1	PATZ1_HUMAN.H11MO.1.C	hocomoco	1	PATZ1	Factors with multiple dispersed zinc fingers	Q9HBE1	ChIP-Seq
+PATZ1	PATZ1_HUMAN.H11MO.0.C	hocomoco	1	PATZ1	Factors with multiple dispersed zinc fingers	Q9HBE1	ChIP-Seq
 PAX1	PAX1_HUMAN.H11MO.0.D	hocomoco	1	PAX1	Paired domain only	P15863	HT-SELEX
 PAX2	PAX2_HUMAN.H11MO.0.D	hocomoco	1	PAX2	Paired domain only	Q02962	Integrative
 PAX3	PAX3_HUMAN.H11MO.0.D	hocomoco	1	PAX3	Paired plus homeo domain	P23760	HT-SELEX
@@ -462,11 +460,11 @@ PAX5	PAX5_HUMAN.H11MO.0.A	hocomoco	1	PAX5	Paired domain only	Q02548	ChIP-Seq
 PAX6	PAX6_HUMAN.H11MO.0.C	hocomoco	1	PAX6	Paired plus homeo domain	P26367	ChIP-Seq
 PAX7	PAX7_HUMAN.H11MO.0.D	hocomoco	1	PAX7	Paired plus homeo domain	P23759	HT-SELEX
 PAX8	PAX8_HUMAN.H11MO.0.D	hocomoco	1	PAX8	Paired domain only	Q06710	Integrative
-PBX1	PBX1_HUMAN.H11MO.1.C	hocomoco	1	PBX1	TALE-type homeo domain factors	P40424	Integrative
 PBX1	PBX1_HUMAN.H11MO.0.A	hocomoco	1	PBX1	TALE-type homeo domain factors	P40424	ChIP-Seq
+PBX1	PBX1_HUMAN.H11MO.1.C	hocomoco	1	PBX1	TALE-type homeo domain factors	P40424	Integrative
 PBX2	PBX2_HUMAN.H11MO.0.C	hocomoco	1	PBX2	TALE-type homeo domain factors	P40425	Integrative
-PBX3	PBX3_HUMAN.H11MO.1.A	hocomoco	1	PBX3	TALE-type homeo domain factors	P40426	ChIP-Seq
 PBX3	PBX3_HUMAN.H11MO.0.A	hocomoco	1	PBX3	TALE-type homeo domain factors	P40426	ChIP-Seq
+PBX3	PBX3_HUMAN.H11MO.1.A	hocomoco	1	PBX3	TALE-type homeo domain factors	P40426	ChIP-Seq
 PDX1	PDX1_HUMAN.H11MO.1.A	hocomoco	1	PDX1	HOX-related factors	P52945	ChIP-Seq
 PDX1	PDX1_HUMAN.H11MO.0.A	hocomoco	1	PDX1	HOX-related factors	P52945	ChIP-Seq
 PEBB	PEBB_HUMAN.H11MO.0.C	hocomoco	1	CBFB	.	Q13951	Integrative
@@ -508,16 +506,16 @@ PROP1	PROP1_HUMAN.H11MO.0.D	hocomoco	1	PROP1	Paired-related HD factors	O75360	Ch
 PROX1	PROX1_HUMAN.H11MO.0.D	hocomoco	1	PROX1	HD-PROS factors	Q92786	HT-SELEX
 PRRX1	PRRX1_HUMAN.H11MO.0.D	hocomoco	1	PRRX1	Paired-related HD factors	P54821	Integrative
 PRRX2	PRRX2_HUMAN.H11MO.0.C	hocomoco	1	PRRX2	Paired-related HD factors	Q99811	Integrative
-PTF1A	PTF1A_HUMAN.H11MO.0.B	hocomoco	1	PTF1A	Tal-related factors	Q7RTS3	ChIP-Seq
 PTF1A	PTF1A_HUMAN.H11MO.1.B	hocomoco	1	PTF1A	Tal-related factors	Q7RTS3	ChIP-Seq
+PTF1A	PTF1A_HUMAN.H11MO.0.B	hocomoco	1	PTF1A	Tal-related factors	Q7RTS3	ChIP-Seq
 PURA	PURA_HUMAN.H11MO.0.D	hocomoco	1	PURA	PUR	Q00577	Integrative
-RARA	RARA_HUMAN.H11MO.1.A	hocomoco	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	ChIP-Seq
 RARA	RARA_HUMAN.H11MO.2.A	hocomoco	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	Integrative
 RARA	RARA_HUMAN.H11MO.0.A	hocomoco	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	ChIP-Seq
+RARA	RARA_HUMAN.H11MO.1.A	hocomoco	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	ChIP-Seq
 RARB	RARB_HUMAN.H11MO.0.D	hocomoco	1	RARB	Thyroid hormone receptor-related factors (NR1)	P10826	Integrative
-RARG	RARG_HUMAN.H11MO.2.D	hocomoco	1	RARG	Thyroid hormone receptor-related factors (NR1)	P13631	Integrative
 RARG	RARG_HUMAN.H11MO.0.B	hocomoco	1	RARG	Thyroid hormone receptor-related factors (NR1)	P13631	ChIP-Seq
 RARG	RARG_HUMAN.H11MO.1.B	hocomoco	1	RARG	Thyroid hormone receptor-related factors (NR1)	P13631	ChIP-Seq
+RARG	RARG_HUMAN.H11MO.2.D	hocomoco	1	RARG	Thyroid hormone receptor-related factors (NR1)	P13631	Integrative
 RAX2	RAX2_HUMAN.H11MO.0.D	hocomoco	1	RAX2	Paired-related HD factors	Q96IS3	HT-SELEX
 REL	REL_HUMAN.H11MO.0.B	hocomoco	1	REL	NF-kappaB-related factors	Q04864	ChIP-Seq
 RELB	RELB_HUMAN.H11MO.0.C	hocomoco	1	RELB	NF-kappaB-related factors	Q01201	Integrative
@@ -528,8 +526,8 @@ RFX2	RFX2_HUMAN.H11MO.0.A	hocomoco	1	RFX2	RFX-related factors	P48378	ChIP-Seq
 RFX2	RFX2_HUMAN.H11MO.1.A	hocomoco	1	RFX2	RFX-related factors	P48378	ChIP-Seq
 RFX3	RFX3_HUMAN.H11MO.0.B	hocomoco	1	RFX3	RFX-related factors	P48380	Integrative
 RFX4	RFX4_HUMAN.H11MO.0.D	hocomoco	1	RFX4	RFX-related factors	Q33E94	HT-SELEX
-RFX5	RFX5_HUMAN.H11MO.0.A	hocomoco	1	RFX5	RFX-related factors	P48382	ChIP-Seq
 RFX5	RFX5_HUMAN.H11MO.1.A	hocomoco	1	RFX5	RFX-related factors	P48382	ChIP-Seq
+RFX5	RFX5_HUMAN.H11MO.0.A	hocomoco	1	RFX5	RFX-related factors	P48382	ChIP-Seq
 RHXF1	RHXF1_HUMAN.H11MO.0.D	hocomoco	1	RHOXF1	Paired-related HD factors	Q8NHV9	HT-SELEX
 RORA	RORA_HUMAN.H11MO.0.C	hocomoco	1	RORA	Thyroid hormone receptor-related factors (NR1)	P35398	ChIP-Seq
 RORG	RORG_HUMAN.H11MO.0.C	hocomoco	1	RORC	Thyroid hormone receptor-related factors (NR1)	P51449	ChIP-Seq
@@ -538,8 +536,8 @@ RUNX1	RUNX1_HUMAN.H11MO.0.A	hocomoco	1	RUNX1	Runt-related factors	Q01196	ChIP-Se
 RUNX2	RUNX2_HUMAN.H11MO.0.A	hocomoco	1	RUNX2	Runt-related factors	Q13950	ChIP-Seq
 RUNX3	RUNX3_HUMAN.H11MO.0.A	hocomoco	1	RUNX3	Runt-related factors	Q13761	ChIP-Seq
 RX	RX_HUMAN.H11MO.0.D	hocomoco	1	RAX	Paired-related HD factors	Q9Y2V3	HT-SELEX
-RXRA	RXRA_HUMAN.H11MO.1.A	hocomoco	1	RXRA	RXR-related receptors (NR2)	P19793	ChIP-Seq
 RXRA	RXRA_HUMAN.H11MO.0.A	hocomoco	1	RXRA	RXR-related receptors (NR2)	P19793	ChIP-Seq
+RXRA	RXRA_HUMAN.H11MO.1.A	hocomoco	1	RXRA	RXR-related receptors (NR2)	P19793	ChIP-Seq
 RXRB	RXRB_HUMAN.H11MO.0.C	hocomoco	1	RXRB	RXR-related receptors (NR2)	P28702	Integrative
 RXRG	RXRG_HUMAN.H11MO.0.B	hocomoco	1	RXRG	RXR-related receptors (NR2)	P48443	Integrative
 SALL4	SALL4_HUMAN.H11MO.0.B	hocomoco	1	SALL4	Factors with multiple dispersed zinc fingers	Q9UJQ4	ChIP-Seq
@@ -565,16 +563,16 @@ SOX13	SOX13_HUMAN.H11MO.0.D	hocomoco	1	SOX13	SOX-related factors	Q9UN79	Integrat
 SOX15	SOX15_HUMAN.H11MO.0.D	hocomoco	1	SOX15	SOX-related factors	O60248	Integrative
 SOX17	SOX17_HUMAN.H11MO.0.C	hocomoco	1	SOX17	SOX-related factors	Q9H6I2	ChIP-Seq
 SOX18	SOX18_HUMAN.H11MO.0.D	hocomoco	1	SOX18	SOX-related factors	P35713	Integrative
-SOX2	SOX2_HUMAN.H11MO.1.A	hocomoco	1	SOX2	SOX-related factors	P48431	ChIP-Seq
 SOX2	SOX2_HUMAN.H11MO.0.A	hocomoco	1	SOX2	SOX-related factors	P48431	ChIP-Seq
+SOX2	SOX2_HUMAN.H11MO.1.A	hocomoco	1	SOX2	SOX-related factors	P48431	ChIP-Seq
 SOX21	SOX21_HUMAN.H11MO.0.D	hocomoco	1	SOX21	SOX-related factors	Q9Y651	HT-SELEX
 SOX3	SOX3_HUMAN.H11MO.0.B	hocomoco	1	SOX3	SOX-related factors	P41225	ChIP-Seq
 SOX4	SOX4_HUMAN.H11MO.0.B	hocomoco	1	SOX4	SOX-related factors	Q06945	ChIP-Seq
 SOX5	SOX5_HUMAN.H11MO.0.C	hocomoco	1	SOX5	SOX-related factors	P35711	Integrative
 SOX7	SOX7_HUMAN.H11MO.0.D	hocomoco	1	SOX7	SOX-related factors	Q9BT81	HT-SELEX
 SOX8	SOX8_HUMAN.H11MO.0.D	hocomoco	1	SOX8	SOX-related factors	P57073	HT-SELEX
-SOX9	SOX9_HUMAN.H11MO.1.B	hocomoco	1	SOX9	SOX-related factors	P48436	ChIP-Seq
 SOX9	SOX9_HUMAN.H11MO.0.B	hocomoco	1	SOX9	SOX-related factors	P48436	ChIP-Seq
+SOX9	SOX9_HUMAN.H11MO.1.B	hocomoco	1	SOX9	SOX-related factors	P48436	ChIP-Seq
 SP1	SP1_HUMAN.H11MO.1.A	hocomoco	1	SP1	Three-zinc finger Krüppel-related factors	P08047	ChIP-Seq
 SP1	SP1_HUMAN.H11MO.0.A	hocomoco	1	SP1	Three-zinc finger Krüppel-related factors	P08047	ChIP-Seq
 SP2	SP2_HUMAN.H11MO.0.A	hocomoco	1	SP2	Three-zinc finger Krüppel-related factors	Q02086	ChIP-Seq
@@ -593,8 +591,8 @@ SRF	SRF_HUMAN.H11MO.0.A	hocomoco	1	SRF	Responders to external signals (SRF/RLM1)
 SRY	SRY_HUMAN.H11MO.0.B	hocomoco	1	SRY	SOX-related factors	Q05066	Integrative
 STA5A	STA5A_HUMAN.H11MO.0.A	hocomoco	1	STAT5A	STAT factors	P42229	ChIP-Seq
 STA5B	STA5B_HUMAN.H11MO.0.A	hocomoco	1	STAT5B	STAT factors	P51692	ChIP-Seq
-STAT1	STAT1_HUMAN.H11MO.0.A	hocomoco	1	STAT1	STAT factors	P42224	ChIP-Seq
 STAT1	STAT1_HUMAN.H11MO.1.A	hocomoco	1	STAT1	STAT factors	P42224	ChIP-Seq
+STAT1	STAT1_HUMAN.H11MO.0.A	hocomoco	1	STAT1	STAT factors	P42224	ChIP-Seq
 STAT2	STAT2_HUMAN.H11MO.0.A	hocomoco	1	STAT2	STAT factors	P52630	ChIP-Seq
 STAT3	STAT3_HUMAN.H11MO.0.A	hocomoco	1	STAT3	STAT factors	P40763	ChIP-Seq
 STAT4	STAT4_HUMAN.H11MO.0.A	hocomoco	1	STAT4	STAT factors	Q14765	ChIP-Seq
@@ -602,8 +600,8 @@ STAT6	STAT6_HUMAN.H11MO.0.B	hocomoco	1	STAT6	STAT factors	P42226	ChIP-Seq
 STF1	STF1_HUMAN.H11MO.0.B	hocomoco	1	NR5A1	FTZ-F1-related receptors (NR5)	Q13285	ChIP-Seq
 SUH	SUH_HUMAN.H11MO.0.A	hocomoco	1	RBPJ	CSL-related factors	Q06330	ChIP-Seq
 TAF1	TAF1_HUMAN.H11MO.0.A	hocomoco	1	TAF1	TCF-7-related factors	P21675	ChIP-Seq
-TAL1	TAL1_HUMAN.H11MO.0.A	hocomoco	1	TAL1	Tal-related factors	P17542	ChIP-Seq
 TAL1	TAL1_HUMAN.H11MO.1.A	hocomoco	1	TAL1	Tal-related factors	P17542	ChIP-Seq
+TAL1	TAL1_HUMAN.H11MO.0.A	hocomoco	1	TAL1	Tal-related factors	P17542	ChIP-Seq
 TBP	TBP_HUMAN.H11MO.0.A	hocomoco	1	TBP	TBP-related factors	P20226	ChIP-Seq
 TBR1	TBR1_HUMAN.H11MO.0.D	hocomoco	1	TBR1	TBrain-related factors	Q16650	HT-SELEX
 TBX1	TBX1_HUMAN.H11MO.0.D	hocomoco	1	TBX1	TBX1-related factors	O43435	HT-SELEX
@@ -633,15 +631,15 @@ TFE3	TFE3_HUMAN.H11MO.0.B	hocomoco	1	TFE3	bHLH-ZIP factors	P19532	ChIP-Seq
 TFEB	TFEB_HUMAN.H11MO.0.C	hocomoco	1	TFEB	bHLH-ZIP factors	P19484	Integrative
 TGIF1	TGIF1_HUMAN.H11MO.0.A	hocomoco	1	TGIF1	TALE-type homeo domain factors	Q15583	ChIP-Seq
 TGIF2	TGIF2_HUMAN.H11MO.0.D	hocomoco	1	TGIF2	TALE-type homeo domain factors	Q9GZN2	HT-SELEX
-THA	THA_HUMAN.H11MO.0.C	hocomoco	1	THRA	Thyroid hormone receptor-related factors (NR1)	P10827	Integrative
 THA	THA_HUMAN.H11MO.1.D	hocomoco	1	THRA	Thyroid hormone receptor-related factors (NR1)	P10827	Integrative
+THA	THA_HUMAN.H11MO.0.C	hocomoco	1	THRA	Thyroid hormone receptor-related factors (NR1)	P10827	Integrative
 THA11	THA11_HUMAN.H11MO.0.B	hocomoco	1	THAP11	THAP-related factors	Q96EK4	ChIP-Seq
 THAP1	THAP1_HUMAN.H11MO.0.C	hocomoco	1	THAP1	THAP-related factors	Q9NVV9	ChIP-Seq
 THB	THB_HUMAN.H11MO.1.D	hocomoco	1	THRB	Thyroid hormone receptor-related factors (NR1)	P10828	Integrative
 THB	THB_HUMAN.H11MO.0.C	hocomoco	1	THRB	Thyroid hormone receptor-related factors (NR1)	P10828	Integrative
 TLX1	TLX1_HUMAN.H11MO.0.D	hocomoco	1	TLX1	NK-related factors	P31314	Integrative
-TWST1	TWST1_HUMAN.H11MO.0.A	hocomoco	1	TWIST1	Tal-related factors	Q15672	ChIP-Seq
 TWST1	TWST1_HUMAN.H11MO.1.A	hocomoco	1	TWIST1	Tal-related factors	Q15672	ChIP-Seq
+TWST1	TWST1_HUMAN.H11MO.0.A	hocomoco	1	TWIST1	Tal-related factors	Q15672	ChIP-Seq
 TYY1	TYY1_HUMAN.H11MO.0.A	hocomoco	1	YY1	More than 3 adjacent zinc finger factors	P25490	ChIP-Seq
 TYY2	TYY2_HUMAN.H11MO.0.D	hocomoco	1	YY2	More than 3 adjacent zinc finger factors	O15391	HT-SELEX
 UBIP1	UBIP1_HUMAN.H11MO.0.D	hocomoco	1	UBP1	CP2-related factors	Q9NZI7	Integrative
@@ -650,15 +648,15 @@ USF1	USF1_HUMAN.H11MO.0.A	hocomoco	1	USF1	bHLH-ZIP factors	P22415	ChIP-Seq
 USF2	USF2_HUMAN.H11MO.0.A	hocomoco	1	USF2	bHLH-ZIP factors	Q15853	ChIP-Seq
 VAX1	VAX1_HUMAN.H11MO.0.D	hocomoco	1	VAX1	NK-related factors	Q5SQQ9	HT-SELEX
 VAX2	VAX2_HUMAN.H11MO.0.D	hocomoco	1	VAX2	NK-related factors	Q9UIW0	HT-SELEX
-VDR	VDR_HUMAN.H11MO.0.A	hocomoco	1	VDR	Thyroid hormone receptor-related factors (NR1)	P11473	ChIP-Seq
 VDR	VDR_HUMAN.H11MO.1.A	hocomoco	1	VDR	Thyroid hormone receptor-related factors (NR1)	P11473	ChIP-Seq
+VDR	VDR_HUMAN.H11MO.0.A	hocomoco	1	VDR	Thyroid hormone receptor-related factors (NR1)	P11473	ChIP-Seq
 VENTX	VENTX_HUMAN.H11MO.0.D	hocomoco	1	VENTX	NK-related factors	O95231	HT-SELEX
-VEZF1	VEZF1_HUMAN.H11MO.0.C	hocomoco	1	VEZF1	Factors with multiple dispersed zinc fingers	Q14119	ChIP-Seq
 VEZF1	VEZF1_HUMAN.H11MO.1.C	hocomoco	1	VEZF1	Factors with multiple dispersed zinc fingers	Q14119	ChIP-Seq
+VEZF1	VEZF1_HUMAN.H11MO.0.C	hocomoco	1	VEZF1	Factors with multiple dispersed zinc fingers	Q14119	ChIP-Seq
 VSX1	VSX1_HUMAN.H11MO.0.D	hocomoco	1	VSX1	Paired-related HD factors	Q9NZR4	HT-SELEX
 VSX2	VSX2_HUMAN.H11MO.0.D	hocomoco	1	VSX2	Paired-related HD factors	P58304	ChIP-Seq
-WT1	WT1_HUMAN.H11MO.0.C	hocomoco	1	WT1	More than 3 adjacent zinc finger factors	P19544	ChIP-Seq
 WT1	WT1_HUMAN.H11MO.1.B	hocomoco	1	WT1	More than 3 adjacent zinc finger factors	P19544	ChIP-Seq
+WT1	WT1_HUMAN.H11MO.0.C	hocomoco	1	WT1	More than 3 adjacent zinc finger factors	P19544	ChIP-Seq
 XBP1	XBP1_HUMAN.H11MO.0.D	hocomoco	1	XBP1	XBP-1-related factors	P17861	ChIP-Seq
 Z324A	Z324A_HUMAN.H11MO.0.C	hocomoco	1	ZNF324	More than 3 adjacent zinc finger factors	O75467	ChIP-Seq
 Z354A	Z354A_HUMAN.H11MO.0.C	hocomoco	1	ZNF354A	More than 3 adjacent zinc finger factors	O60765	ChIP-Seq
@@ -719,12 +717,12 @@ ZN335	ZN335_HUMAN.H11MO.0.A	hocomoco	1	ZNF335	Factors with multiple dispersed zi
 ZN335	ZN335_HUMAN.H11MO.1.A	hocomoco	1	ZNF335	Factors with multiple dispersed zinc fingers	Q9H4Z2	ChIP-Seq
 ZN341	ZN341_HUMAN.H11MO.0.C	hocomoco	1	ZNF341	Factors with multiple dispersed zinc fingers	Q9BYN7	ChIP-Seq
 ZN341	ZN341_HUMAN.H11MO.1.C	hocomoco	1	ZNF341	Factors with multiple dispersed zinc fingers	Q9BYN7	ChIP-Seq
-ZN350	ZN350_HUMAN.H11MO.0.C	hocomoco	1	ZNF350	More than 3 adjacent zinc finger factors	Q9GZX5	ChIP-Seq
 ZN350	ZN350_HUMAN.H11MO.1.D	hocomoco	1	ZNF350	More than 3 adjacent zinc finger factors	Q9GZX5	Integrative
+ZN350	ZN350_HUMAN.H11MO.0.C	hocomoco	1	ZNF350	More than 3 adjacent zinc finger factors	Q9GZX5	ChIP-Seq
 ZN382	ZN382_HUMAN.H11MO.0.C	hocomoco	1	ZNF382	Factors with multiple dispersed zinc fingers	Q96SR6	ChIP-Seq
 ZN384	ZN384_HUMAN.H11MO.0.C	hocomoco	1	ZNF384	More than 3 adjacent zinc finger factors	Q8TF68	Integrative
-ZN394	ZN394_HUMAN.H11MO.1.D	hocomoco	1	ZNF394	More than 3 adjacent zinc finger factors	Q53GI3	ChIP-Seq
 ZN394	ZN394_HUMAN.H11MO.0.C	hocomoco	1	ZNF394	More than 3 adjacent zinc finger factors	Q53GI3	ChIP-Seq
+ZN394	ZN394_HUMAN.H11MO.1.D	hocomoco	1	ZNF394	More than 3 adjacent zinc finger factors	Q53GI3	ChIP-Seq
 ZN410	ZN410_HUMAN.H11MO.0.D	hocomoco	1	ZNF410	More than 3 adjacent zinc finger factors	Q86VK4	HT-SELEX
 ZN418	ZN418_HUMAN.H11MO.0.C	hocomoco	1	ZNF418	Factors with multiple dispersed zinc fingers	Q8TF45	ChIP-Seq
 ZN418	ZN418_HUMAN.H11MO.1.D	hocomoco	1	ZNF418	Factors with multiple dispersed zinc fingers	Q8TF45	ChIP-Seq
@@ -740,32 +738,31 @@ ZN547	ZN547_HUMAN.H11MO.0.C	hocomoco	1	ZNF547	More than 3 adjacent zinc finger f
 ZN549	ZN549_HUMAN.H11MO.0.C	hocomoco	1	ZNF549	More than 3 adjacent zinc finger factors	Q6P9A3	ChIP-Seq
 ZN554	ZN554_HUMAN.H11MO.1.D	hocomoco	1	ZNF554	More than 3 adjacent zinc finger factors	Q86TJ5	ChIP-Seq
 ZN554	ZN554_HUMAN.H11MO.0.C	hocomoco	1	ZNF554	More than 3 adjacent zinc finger factors	Q86TJ5	ChIP-Seq
-ZN563	ZN563_HUMAN.H11MO.0.C	hocomoco	1	ZNF563	More than 3 adjacent zinc finger factors	Q8TA94	ChIP-Seq
 ZN563	ZN563_HUMAN.H11MO.1.C	hocomoco	1	ZNF563	More than 3 adjacent zinc finger factors	Q8TA94	ChIP-Seq
+ZN563	ZN563_HUMAN.H11MO.0.C	hocomoco	1	ZNF563	More than 3 adjacent zinc finger factors	Q8TA94	ChIP-Seq
 ZN582	ZN582_HUMAN.H11MO.0.C	hocomoco	1	ZNF582	More than 3 adjacent zinc finger factors	Q96NG8	ChIP-Seq
 ZN586	ZN586_HUMAN.H11MO.0.C	hocomoco	1	ZNF586	More than 3 adjacent zinc finger factors	Q9NXT0	ChIP-Seq
 ZN589	ZN589_HUMAN.H11MO.0.D	hocomoco	1	ZNF589	More than 3 adjacent zinc finger factors	Q86UQ0	Integrative
 ZN652	ZN652_HUMAN.H11MO.0.D	hocomoco	1	ZNF652	More than 3 adjacent zinc finger factors	Q9Y2D9	HT-SELEX
 ZN667	ZN667_HUMAN.H11MO.0.C	hocomoco	1	ZNF667	More than 3 adjacent zinc finger factors	Q5HYK9	ChIP-Seq
 ZN680	ZN680_HUMAN.H11MO.0.C	hocomoco	1	ZNF680	More than 3 adjacent zinc finger factors	Q8NEM1	ChIP-Seq
-ZN708	ZN708_HUMAN.H11MO.0.C	hocomoco	1	ZNF708	More than 3 adjacent zinc finger factors	P17019	ChIP-Seq
 ZN708	ZN708_HUMAN.H11MO.1.D	hocomoco	1	ZNF708	More than 3 adjacent zinc finger factors	P17019	ChIP-Seq
+ZN708	ZN708_HUMAN.H11MO.0.C	hocomoco	1	ZNF708	More than 3 adjacent zinc finger factors	P17019	ChIP-Seq
 ZN713	ZN713_HUMAN.H11MO.0.D	hocomoco	1	ZNF713	More than 3 adjacent zinc finger factors	Q8N859	HT-SELEX
 ZN740	ZN740_HUMAN.H11MO.0.D	hocomoco	1	ZNF740	Other factors with up to three adjacent zinc fingers	Q8NDX6	HT-SELEX
 ZN768	ZN768_HUMAN.H11MO.0.C	hocomoco	1	ZNF768	More than 3 adjacent zinc finger factors	Q9H5H4	ChIP-Seq
 ZN770	ZN770_HUMAN.H11MO.1.C	hocomoco	1	ZNF770	Factors with multiple dispersed zinc fingers	Q6IQ21	ChIP-Seq
 ZN770	ZN770_HUMAN.H11MO.0.C	hocomoco	1	ZNF770	Factors with multiple dispersed zinc fingers	Q6IQ21	ChIP-Seq
 ZN784	ZN784_HUMAN.H11MO.0.D	hocomoco	1	ZNF784	Factors with multiple dispersed zinc fingers	Q8NCA9	HT-SELEX
-ZN816	ZN816_HUMAN.H11MO.1.C	hocomoco	1	ZNF816	More than 3 adjacent zinc finger factors	Q0VGE8	ChIP-Seq
 ZN816	ZN816_HUMAN.H11MO.0.C	hocomoco	1	ZNF816	More than 3 adjacent zinc finger factors	Q0VGE8	ChIP-Seq
+ZN816	ZN816_HUMAN.H11MO.1.C	hocomoco	1	ZNF816	More than 3 adjacent zinc finger factors	Q0VGE8	ChIP-Seq
 ZNF18	ZNF18_HUMAN.H11MO.0.C	hocomoco	1	ZNF18	More than 3 adjacent zinc finger factors	P17022	ChIP-Seq
 ZNF41	ZNF41_HUMAN.H11MO.0.C	hocomoco	1	ZNF41	More than 3 adjacent zinc finger factors	P51814	ChIP-Seq
 ZNF41	ZNF41_HUMAN.H11MO.1.C	hocomoco	1	ZNF41	More than 3 adjacent zinc finger factors	P51814	ChIP-Seq
 ZNF76	ZNF76_HUMAN.H11MO.0.C	hocomoco	1	ZNF76	More than 3 adjacent zinc finger factors	P36508	ChIP-Seq
 ZNF8	ZNF8_HUMAN.H11MO.0.C	hocomoco	1	ZNF8	Factors with multiple dispersed zinc fingers	P17098	ChIP-Seq
-ZNF85	ZNF85_HUMAN.H11MO.1.C	hocomoco	1	ZNF85	More than 3 adjacent zinc finger factors	Q03923	ChIP-Seq
 ZNF85	ZNF85_HUMAN.H11MO.0.C	hocomoco	1	ZNF85	More than 3 adjacent zinc finger factors	Q03923	ChIP-Seq
+ZNF85	ZNF85_HUMAN.H11MO.1.C	hocomoco	1	ZNF85	More than 3 adjacent zinc finger factors	Q03923	ChIP-Seq
 ZSC16	ZSC16_HUMAN.H11MO.0.D	hocomoco	1	ZSCAN16	More than 3 adjacent zinc finger factors	Q9H4T2	HT-SELEX
 ZSC22	ZSC22_HUMAN.H11MO.0.C	hocomoco	1	ZSCAN22	More than 3 adjacent zinc finger factors	P10073	ChIP-Seq
 ZSC31	ZSC31_HUMAN.H11MO.0.C	hocomoco	1	ZSCAN31	More than 3 adjacent zinc finger factors	Q96LW9	ChIP-Seq
-ZSCA4	ZSCA4_HUMAN.H11MO.0.D	hocomoco	1	ZSCAN4	More than 3 adjacent zinc finger factors	Q8NAM6	HT-SELEX
