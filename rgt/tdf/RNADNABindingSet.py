@@ -43,7 +43,7 @@ class RNADNABinding:
     __slots__ = ['rna', 'dna', 'motif', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 
                  'match' ]
 
-    def __init__(self, rna, dna, score, err_rate, err, guan_rate, match=None):
+    def __init__(self, rna, dna, score, err_rate, err, guan_rate, match=None, rna_gap=None, dna_gap=None):
         """Initiation"""
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
@@ -55,11 +55,13 @@ class RNADNABinding:
         self.err = err
         self.guan_rate = guan_rate
         self.match = match
+        self.rna_gap = rna_gap
+        self.dna_gap = dna_gap
     
     def __str__(self):
-        return "\t".join( [ self.rna.chrom, str(self.rna.initial), str(self.rna.final), self.dna.toString(), "0", 
+        return "\t".join([self.rna.chrom, str(self.rna.initial), str(self.rna.final), self.dna.toString(), "0",
                             str(abs(self.dna.final - self.dna.initial)), str(self.score), str(self.err_rate), str(self.err), str(self.motif),
-                            str(self.strand), str(self.orient), str(self.guan_rate) ] )
+                            str(self.strand), str(self.orient), str(self.guan_rate), str(self.rna_gap), str(self.dna_gap)])
 
     def __eq__(self, other):
         return (self.dna, self.rna) == (other.dna, other.rna)
@@ -1151,5 +1153,5 @@ class RNADNABindingSet:
         dna_m = GenomicRegion(rbs1.dna.chrom, dna_ini, dna_fin, name="Merge DNA region",
                           orientation=cd_orientation, data=rbs1.dna.data, proximity=None)
 
-        rbs_m = RNADNABinding(rna_m, dna_m, rna_score, err_rate, err, guan_rate, match=match)
+        rbs_m = RNADNABinding(rna_m, dna_m, rna_score, err_rate, err, guan_rate, match=match, rna_gap = rna_gap, dna_gap = dna_gap)
         return rbs_m
