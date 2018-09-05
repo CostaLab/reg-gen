@@ -1008,7 +1008,6 @@ class RNADNABindingSet:
                         # DNA gap smaller than 10bp and no overlap
                         if 0 < self.region_distance(cur_rbs.dna, next_rbs.dna) <= self.region_distance(cur_rbs.rna, next_rbs.rna): #5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
                             # same strand on the DNA
-                            print(self.region_distance(cur_rbs.dna, next_rbs.dna),self.region_distance(cur_rbs.rna, next_rbs.rna))
                             if cur_rbs.dna.orientation == next_rbs.dna.orientation:
                                 # combine motif - Parallel
                                 if cur_rbs.rna.orientation == next_rbs.rna.orientation and next_rbs.rna.orientation == "P":
@@ -1127,7 +1126,7 @@ class RNADNABindingSet:
         guan_rate = str((float(rbs1.guan_rate) + float(rbs2.guan_rate)) / 2)
         rna_gap = self.region_distance(rbs1.rna, rbs2.rna)  # rbs2.rna.initial - rbs1.rna.final
         dna_gap = self.region_distance(rbs1.dna, rbs2.dna)
-        match = self.merge_match(rbs1, rbs2, rna_gap, dna_gap)
+        match = self.merge_match(rbs1, rbs2, dna_gap, rna_gap)
         # dna_data =
         cmotif = rbs1.rna.motif + "_" + rbs2.rna.motif
         cr_orientation = rbs1.rna.orientation + "_" + rbs2.rna.orientation
