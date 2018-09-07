@@ -662,7 +662,7 @@ class RNADNABindingSet:
             try: os.stat(d)
             except: os.mkdir(d)
         with open(filename, "w") as f:
-            print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
+            print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\tMotif\tStrand\tOrientation\tGuanine-rate\tRNA_gap\tDNA_gap", file=f)
             for rd in self:
                 print(str(rd), file=f)
                 if match:
@@ -1074,33 +1074,32 @@ class RNADNABindingSet:
             match_a[1] = match1[1][:len(match1[1]) - 4] + ' ' + str(dna_gap) + ' ' + match2[1][4:]
             match_a[2] = match1[2] + '   ' + match2[2][4:]
             match_a[3] = match1[3][:len(match1[3]) - 4] + ' ' + str(rna_gap) + ' ' + match2[3][4:]
-        else:
+        if rbs1.strand != rbs2.strand:
             match1 = rbs1.match
             match2 = rbs2.match
             match_a = ['', '', '', '', '', '']
-            if rbs1.rna.orientation == "+" and rbs2.rna.orientation == "-":
+            if rbs1.dna.orientation == "+":  # and rbs2.strand == "-":
                 match_a[0] = match1[0][:len(match1[0]) - 4]
                 match_a[1] = match1[1]
                 match_a[2] = match1[2][:len(match1[2]) - 4] + ' ' + str(dna_gap) + ' ' + match2[0][4:]
                 match_a[3] = match1[3][:len(match1[3]) - 4] + ' ' + str(dna_gap) + ' ' + match2[1][4:]
-                match_a[4] = ' '*len(match1[3]) + ' ' + match2[2][4:]
-                match_a[5] = ' '*len(match1[3]) + ' ' + match2[3][4:] + 'r' + str(rna_gap)
+                match_a[4] = ' '*(len(match1[3])-2) + ' ' + match2[2][4:]
+                match_a[5] = ' '*(len(match1[3])-2) + ' ' + match2[3][4:] + 'r' + str(rna_gap)
                 # match_a[0] = match1[0] + ' ' + match2[0] + "-r" + str(rna_gap)
                 # match_a[1] = match1[1] + '     ' + match2[1]
                 # match_a[2] = match1[2] + ' ' + match2[2]
                 # match_a[3] = match1[3] + ' ' + match2[3] + "-d" + str(dna_gap)
-            elif rbs1.rna.orientation == "-" and rbs2.rna.orientation == "+":
-                match_a[0] = ' '*(len(match1[0]) - 4) + ' ' + match2[0][4:] + 'r'+str(rna_gap)
-                match_a[1] = ' '*(len(match1[0]) - 4) + ' ' + match2[1][4:]
+            elif rbs1.dna.orientation == "-":  # and rbs2.strand == "+":
+                match_a[0] = ' '*(len(match1[0]) - 2) + ' ' + match2[0][4:] + 'r'+str(rna_gap)
+                match_a[1] = ' '*(len(match1[0]) - 2) + ' ' + match2[1][4:]
                 match_a[2] = match1[0][:len(match1[0]) - 4] + ' ' + str(dna_gap) + ' ' + match2[2][4:]
                 match_a[3] = match1[1][:len(match1[1]) - 4] + ' ' + str(dna_gap) + ' ' + match2[3][4:]
-                match_a[4] = match2[2]
-                match_a[5] = match2[3][:len(match1[3]) - 4]
+                match_a[4] = match1[2]
+                match_a[5] = match1[3][:len(match1[3]) - 4]
                 # match_a[0] = match1[0] + ' ' + match2[0] + "-r" + str(rna_gap)
                 # match_a[1] = match1[1] + ' ' + match2[1]
                 # match_a[2] = match1[2] + '     ' + match2[2]
                 # match_a[3] = match1[3] + ' ' + match2[3] + "-d" + str(dna_gap)
-
         return match_a
 
     def merge_combined_motif(self, rbs1, rbs2, rname="rdb"):
