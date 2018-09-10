@@ -56,7 +56,9 @@ class Statistics(object):
                       "Uniq_YMPA_C": 0, "Uniq_YMPA_G": 0, "Uniq_YMPA_T": 0, "Uniq_YMPP_C": 0, "Uniq_YMPP_G": 0, "Uniq_YMPP_T": 0,
                       "Uniq_MYAP_C": 0, "Uniq_MYAP_G": 0, "Uniq_MYAP_T": 0, "Uniq_MYPP_C": 0, "Uniq_MYPP_G": 0, "Uniq_MYPP_T": 0,
                       "Uniq_RYAP_C": 0, "Uniq_RYAP_G": 0, "Uniq_RYAP_T": 0, "Uniq_RYAP_A": 0,
-                      "Uniq_YRPA_C": 0, "Uniq_YRPA_G": 0, "Uniq_YRPA_T": 0, "Uniq_YRPA_A": 0
+                      "Uniq_YRPA_C": 0, "Uniq_YRPA_G": 0, "Uniq_YRPA_T": 0, "Uniq_YRPA_A": 0,
+                      "target_in_trans": 0, "traget_in_cis": 0, "target_local": 0,
+                      "background_in_trans": 0, "background_in_cis": 0, "background_local": 0
                       }
 
     def count_frequency_promoters(self, target_regions, background, file_tpx_de, file_tpx_nde):

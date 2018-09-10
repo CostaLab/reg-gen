@@ -1084,13 +1084,13 @@ class RNADNABindingSet:
                 match_a[2] = match1[2][:len(match1[2]) - 4] + ' ' + str(dna_gap) + ' ' + match2[0][4:]
                 match_a[3] = match1[3][:len(match1[3]) - 4] + ' ' + str(dna_gap) + ' ' + match2[1][4:]
                 match_a[4] = ' '*(len(match1[3])-2) + ' ' + match2[2][4:]
-                match_a[5] = ' '*(len(match1[3])-2) + ' ' + match2[3][4:] + 'r' + str(rna_gap)
+                match_a[5] = ' '*(len(match1[3])-2) + ' ' + match2[3][4:]
                 # match_a[0] = match1[0] + ' ' + match2[0] + "-r" + str(rna_gap)
                 # match_a[1] = match1[1] + '     ' + match2[1]
                 # match_a[2] = match1[2] + ' ' + match2[2]
                 # match_a[3] = match1[3] + ' ' + match2[3] + "-d" + str(dna_gap)
             elif rbs1.dna.orientation == "-":  # and rbs2.strand == "+":
-                match_a[0] = ' '*(len(match1[0]) - 2) + ' ' + match2[0][4:] + 'r'+str(rna_gap)
+                match_a[0] = ' '*(len(match1[0]) - 2) + ' ' + match2[0][4:]
                 match_a[1] = ' '*(len(match1[0]) - 2) + ' ' + match2[1][4:]
                 match_a[2] = match1[0][:len(match1[0]) - 4] + ' ' + str(dna_gap) + ' ' + match2[2][4:]
                 match_a[3] = match1[1][:len(match1[1]) - 4] + ' ' + str(dna_gap) + ' ' + match2[3][4:]
