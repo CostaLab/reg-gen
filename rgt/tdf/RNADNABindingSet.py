@@ -972,7 +972,7 @@ class RNADNABindingSet:
             next_of_rbs = num_of_rbs + 1
             cur_rbs = self.sequences[num_of_rbs]
             next_rbs = self.sequences[next_of_rbs]
-            while cur_rbs.rna.distance(next_rbs.rna) < 5 and next_of_rbs < len(self.sequences) - 2:
+            while cur_rbs.rna.distance(next_rbs.rna) < 3 and next_of_rbs < len(self.sequences) - 2:
                 # different RNA binding motif and same parallel
                 if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
                     # no RNA overlap
