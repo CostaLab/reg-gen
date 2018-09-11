@@ -1095,7 +1095,7 @@ class RNADNABindingSet:
         return match_a
 
     def merge_combined_motif(self, rbs1, rbs2, rname="rdb"):
-        rna_score = str((int(rbs1.rna.score) + int(rbs2.rna.score)) / 2)
+        rna_score = str(int(rbs1.rna.score) + int(rbs2.rna.score))
         err_rate = str((float(rbs1.err_rate) + float(rbs2.err_rate)) / 2)
         err = rbs1.err + "_" + rbs2.err
         guan_rate = str((float(rbs1.guan_rate) + float(rbs2.guan_rate)) / 2)
@@ -1128,3 +1128,7 @@ class RNADNABindingSet:
 
         rbs_m = RNADNABinding(rna_m, dna_m, rna_score, err_rate, err, guan_rate, match=match, rna_gap = rna_gap, dna_gap = dna_gap)
         return rbs_m
+
+    def sort_by_score(self):
+        """Sort the dictionary by RNA-DNA binding score"""
+        self.sequences = sorted(self.sequences, key=lambda x: int(x.score), reverse=True)
