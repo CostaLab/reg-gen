@@ -1099,8 +1099,8 @@ class RNADNABindingSet:
         err_rate = str((float(rbs1.err_rate) + float(rbs2.err_rate)) / 2)
         err = rbs1.err + "_" + rbs2.err
         guan_rate = str((float(rbs1.guan_rate) + float(rbs2.guan_rate)) / 2)
-        rna_gap = self.region_distance(rbs1.rna, rbs2.rna)  # rbs2.rna.initial - rbs1.rna.final
-        dna_gap = self.region_distance(rbs1.dna, rbs2.dna)
+        rna_gap = self.region_distance(rbs1.rna, rbs2.rna) - 1  # rbs2.rna.initial - rbs1.rna.final
+        dna_gap = self.region_distance(rbs1.dna, rbs2.dna) - 1
         match = self.merge_match(rbs1, rbs2, dna_gap, rna_gap)
         # dna_data =
         cmotif = rbs1.rna.motif + "_" + rbs2.rna.motif
