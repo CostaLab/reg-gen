@@ -978,7 +978,7 @@ class RNADNABindingSet:
                     # no RNA overlap
                     if self.region_distance(cur_rbs.dna, next_rbs.dna) > 0 and self.region_distance(cur_rbs.rna, next_rbs.rna) > 0:
                         # DNA gap smaller than 10bp and no overlap
-                        if 0 < self.region_distance(cur_rbs.dna, next_rbs.dna) <= self.region_distance(cur_rbs.rna, next_rbs.rna): #5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
+                        if 0 <= self.region_distance(cur_rbs.dna, next_rbs.dna) <= self.region_distance(cur_rbs.rna, next_rbs.rna): #5) and (cur_rbs.dna.chrom == next_rbs.dna.chrom):
                             # same strand on the DNA
                             if cur_rbs.dna.orientation == next_rbs.dna.orientation:
                                 # combine motif - Parallel
@@ -1132,3 +1132,10 @@ class RNADNABindingSet:
     def sort_by_score(self):
         """Sort the dictionary by RNA-DNA binding score"""
         self.sequences = sorted(self.sequences, key=lambda x: int(x.score), reverse=True)
+
+    def extract_seq_by_region(self, rdb):
+        chrom = rdb.chrom
+        dna_ini = rdb.dna.initial
+        dna_final = rdb.dna.final
+        rna_ini = rdb.rna.initial
+        rna_final = rdb.rna.final
