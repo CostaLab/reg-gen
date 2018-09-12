@@ -214,7 +214,7 @@ class MotifSet:
                 tf_id = line_list[0].strip()
                 name = line_list[1].strip()
                 database = line_list[2].strip()
-                version = int(line_list[3].strip())
+                version = line_list[3].strip()
                 gene_names = line_list[4].strip().split("+")
                 tf_class = line_list[5].strip()
                 uniprot_ids = line_list[6].strip().split(";")

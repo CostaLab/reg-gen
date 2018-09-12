@@ -1,717 +1,1536 @@
-TfName,GeneName,Family,UniProt,Source
-MA0002.1.RUNX1,RUNX1,Runt-related factors,Q01196,SELEX
-MA0003.1.TFAP2A,TFAP2A,AP-2,P05549,SELEX
-MA0004.1.Arnt,Arnt,PAS domain factors,P53762,SELEX
-MA0006.1.Ahr::Arnt,Ahr+Arnt,PAS domain factors,P30561;P53762,SELEX
-MA0007.1.Ar,Ar,Steroid hormone receptors (NR3),P15207,SELEX
-MA0009.1.T,T,Brachyury-related factors,P20293,SELEX
-MA0014.1.Pax5,Pax5,Paired domain only,Q02650,COMPILED
-MA0017.1.NR2F1,NR2F1,RXR-related receptors (NR2),P10589,COMPILED
-MA0018.1.CREB1,CREB1,CREB-related factors,P16220,SELEX
-MA0019.1.Ddit3::Cebpa,Ddit3+Cebpa,C/EBP-related,Q62857;P05554,SELEX
-MA0024.1.E2F1,E2F1,E2F-related factors,NP_005216,COMPILED
-MA0025.1.NFIL3,NFIL3,C/EBP-related,Q16649,SELEX
-MA0027.1.En1,En1,NK-related factors,P09065,SELEX
-MA0028.1.ELK1,ELK1,Ets-related factors,P19419,SELEX
-MA0029.1.Mecom,Mecom,Factors with multiple dispersed zinc fingers,A4QPC8,SELEX
-MA0030.1.FOXF2,FOXF2,Forkhead box (FOX) factors,Q12947,SELEX
-MA0031.1.FOXD1,FOXD1,Forkhead box (FOX) factors,Q16676,SELEX
-MA0032.1.FOXC1,FOXC1,Forkhead box (FOX) factors,Q12948,SELEX
-MA0033.1.FOXL1,FOXL1,Forkhead box (FOX) factors,Q12952,SELEX
-MA0035.1.Gata1,Gata1,GATA-type zinc fingers,P17679,SELEX
-MA0036.1.GATA2,GATA2,GATA-type zinc fingers,P23769,SELEX
-MA0037.1.GATA3,GATA3,GATA-type zinc fingers,P23771,SELEX
-MA0038.1.Gfi1,Gfi1,More than 3 adjacent zinc finger factors,Q07120,SELEX
-MA0039.1.Klf4,Klf4,Three-zinc finger Kruppel-related factors,Q60793,SELEX
-MA0040.1.Foxq1,Foxq1,Forkhead box (FOX) factors,Q63244,SELEX
-MA0041.1.Foxd3,Foxd3,Forkhead box (FOX) factors,Q63245,SELEX
-MA0042.1.FOXI1,FOXI1,Forkhead box (FOX) factors,Q12951,SELEX
-MA0043.1.HLF,HLF,C/EBP-related,Q16534,SELEX
-MA0046.1.HNF1A,HNF1A,POU domain factors,ABR09270,COMPILED
-MA0047.1.Foxa2,Foxa2,Forkhead box (FOX) factors,P32182,COMPILED
-MA0048.1.NHLH1,NHLH1,Tal-related factors,Q02575,SELEX
-MA0050.1.IRF1,IRF1,Interferon-regulatory factors,P10914,SELEX
-MA0051.1.IRF2,IRF2,Interferon-regulatory factors,P14316,SELEX
-MA0052.1.MEF2A,MEF2A,Regulators of differentiation,EAX02249,SELEX
-MA0056.1.MZF1,MZF1,More than 3 adjacent zinc finger factors,P28698,SELEX
-MA0057.1.MZF1(var.2),MZF1(var.2),More than 3 adjacent zinc finger factors,P28698,SELEX
-MA0058.1.MAX,MAX,bHLH-ZIP factors,AAH36092,SELEX
-MA0059.1.MAX::MYC,MAX+MYC,bHLH-ZIP factors,P61244;P01106,SELEX
-MA0060.1.NFYA,NFYA,NFY,P23511,COMPILED
-MA0062.1.GABPA,GABPA,Ets-related factors,Q06546,COMPILED
-MA0063.1.Nkx2-5,Nkx2-5,NK-related factors,P42582,SELEX
-MA0065.1.PPARG::RXRA,PPARG+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P19793;P37231,SELEX
-MA0066.1.PPARG,PPARG,Thyroid hormone receptor-related factors (NR1),P37231,SELEX
-MA0067.1.Pax2,Pax2,Paired domain only,P32114,SELEX
-MA0068.1.Pax4,Pax4,Paired plus homeo domain,P32115,SELEX
-MA0069.1.Pax6,Pax6,Paired plus homeo domain,P26367,SELEX
-MA0070.1.PBX1,PBX1,TALE-type homeo domain factors,P40424,SELEX
-MA0071.1.RORA,RORA,Thyroid hormone receptor-related factors (NR1),P35398,SELEX
-MA0072.1.RORA(var.2),RORA(var.2),Thyroid hormone receptor-related factors (NR1),P35398,SELEX
-MA0073.1.RREB1,RREB1,Factors with multiple dispersed zinc fingers,Q92766,SELEX
-MA0074.1.RXRA::VDR,RXRA+VDR,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P19793;P11473,SELEX
-MA0075.1.Prrx2,Prrx2,Paired-related HD factors,Q06348,SELEX
-MA0076.1.ELK4,ELK4,Ets-related factors,P28324,SELEX
-MA0077.1.SOX9,SOX9,SOX-related factors,P48436,SELEX
-MA0078.1.Sox17,Sox17,SOX-related factors,Q61473,SELEX
-MA0079.1.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,SELEX
-MA0080.1.SPI1,SPI1,Ets-related factors,P17947,SELEX
-MA0081.1.SPIB,SPIB,Ets-related factors,Q01892,SELEX
-MA0083.1.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,SELEX
-MA0084.1.SRY,SRY,SOX-related factors,Q05066,SELEX
-MA0087.1.Sox5,Sox5,SOX-related factors,P35710,SELEX
-MA0088.1.znf143,znf143,More than 3 adjacent zinc finger factors,Q91853,COMPILED
-MA0089.1.MAFG::NFE2L1,MAFG+NFE2L1,Jun-related factors;Maf-related factors,Q90889;Q5ZL67,SELEX
-MA0090.1.TEAD1,TEAD1,TEF-1-related factors,P28347,COMPILED
-MA0091.1.TAL1::TCF3,TAL1+TCF3,E2A-related factors;Tal-related factors,P17542;P15923,SELEX
-MA0092.1.Hand1::Tcf3,Hand1+Tcf3,E2A-related factors;Tal-related factors,Q64279;P15806,SELEX
-MA0093.1.USF1,USF1,bHLH-ZIP factors,P22415,SELEX
-MA0095.1.YY1,YY1,More than 3 adjacent zinc finger factors,P25490,COMPILED
-MA0098.1.ETS1,ETS1,Ets-related factors,CAG47050,SELEX
-MA0099.1.JUN::FOS,JUN+FOS,Fos-related factors;Jun-related factors,P01101,SELEX
-MA0100.1.Myb,Myb,Myb/SANT domain factors,P06876,SELEX
-MA0101.1.REL,REL,NF-kappaB-related factors,Q04864,SELEX
-MA0103.1.ZEB1,ZEB1,HD-ZF factors,P36197,SELEX
-MA0104.1.Mycn,Mycn,bHLH-ZIP factors,P03966,SELEX
-MA0105.2.NFKB1,NFKB1,NF-kappaB-related factors,P19838,SELEX
-MA0106.1.TP53,TP53,p53-related factors,P04637,SELEX
-MA0107.1.RELA,RELA,NF-kappaB-related factors,Q04206,SELEX
-MA0108.2.TBP,TBP,TBP-related factors,P20226,
-MA0109.1.HLTF,HLTF,Myb/SANT domain factors,Q95216,SELEX
-MA0111.1.Spz1,Spz1,,Q99MY0,SELEX
-MA0112.1.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,COMPILED
-MA0113.1.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,COMPILED
-MA0114.1.HNF4A,HNF4A,RXR-related receptors (NR2),P41235,COMPILED
-MA0115.1.NR1H2::RXRA,NR1H2+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P55055;P19793,SELEX
-MA0116.1.Znf423,Znf423,Factors with multiple dispersed zinc fingers,O08961,SELEX
-MA0117.1.Mafb,Mafb,Maf-related factors,P54842,SELEX
-MA0119.1.NFIC::TLX1,NFIC+TLX1,NK-related factors;Nuclear factor 1,P08651;P31314,SELEX
-MA0122.1.Nkx3-2,Nkx3-2,NK-related factors,P97503,SELEX
-MA0124.1.NKX3-1,NKX3-1,NK-related factors,Q99801,SELEX
-MA0125.1.Nobox,Nobox,Paired-related HD factors,Q8VIH1,SELEX
-MA0130.1.ZNF354C,ZNF354C,More than 3 adjacent zinc finger factors,Q86Y25,SELEX
-MA0131.1.HINFP,HINFP,Factors with multiple dispersed zinc fingers,Q9BQA5,SELEX
-MA0132.1.Pdx1,Pdx1,HOX-related factors,NP_032840,SELEX
-MA0135.1.Lhx3,Lhx3,HD-LIM factors,P50481,SELEX
-MA0137.1.STAT1,STAT1,STAT factors,Q53XW4,COMPILED
-MA0138.1.REST,REST,Factors with multiple dispersed zinc fingers,NP_005603,COMPILED
-MA0139.1.CTCF,CTCF,More than 3 adjacent zinc finger factors,P49711,ChIP-seq
-MA0140.1.Tal1::Gata1,Tal1+Gata1,GATA-type zinc fingers;Tal-related factors,P17679;P22091,ChIP-seq
-MA0141.1.Esrrb,Esrrb,Steroid hormone receptors (NR3),Q61539,ChIP-seq
-MA0142.1.Pou5f1::Sox2,Pou5f1+Sox2,POU domain factors;SOX-related factors,P20263;P48432,ChIP-seq
-MA0143.1.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq
-MA0144.1.Stat3,Stat3,STAT factors,P42227,ChIP-seq
-MA0145.1.Tcfcp2l1,Tcfcp2l1,CP2-related factors,Q3UNW5,ChIP-seq
-MA0146.1.Zfx,Zfx,More than 3 adjacent zinc finger factors,P17012,ChIP-seq
-MA0147.1.Myc,Myc,bHLH-ZIP factors,P01108,ChIP-seq
-MA0148.1.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq
-MA0149.1.EWSR1-FLI1,EWSR1-FLI1,Ets-related factors,F1JVV7;F1JVV8,ChIP-seq
-MA0062.2.Gabpa,Gabpa,Ets-related factors,Q91YY8,ChIP-seq
-MA0035.2.Gata1,Gata1,GATA-type zinc fingers,P17679,ChIP-seq
-MA0039.2.Klf4,Klf4,Three-zinc finger Kruppel-related factors,Q60793,ChIP-seq
-MA0138.2.REST,REST,Factors with multiple dispersed zinc fingers,Q13127,ChIP-seq
-MA0002.2.RUNX1,RUNX1,Runt-related factors,Q01196,ChIP-seq
-MA0137.2.STAT1,STAT1,STAT factors,Q53XW4,ChIP-seq
-MA0104.2.Mycn,Mycn,bHLH-ZIP factors,P03966,ChIP-seq
-MA0047.2.Foxa2,Foxa2,Forkhead box (FOX) factors,P35583,ChIP-seq
-MA0112.2.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,ChIP-seq
-MA0065.2.Pparg::Rxra,Pparg+Rxra,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P37238;P28700,ChIP-seq
-MA0150.1.NFE2L2,NFE2L2,Jun-related factors,Q16236,COMPILED
-MA0151.1.Arid3a,Arid3a,ARID-related factors,Q62431,SELEX
-MA0152.1.NFATC2,NFATC2,NFAT-related factors,Q13469,COMPILED
-MA0153.1.HNF1B,HNF1B,POU domain factors,P35680,COMPILED
-MA0154.1.EBF1,EBF1,Early B-Cell Factor-related factors,Q07802,COMPILED
-MA0155.1.INSM1,INSM1,Factors with multiple dispersed zinc fingers,Q01101,COMPILED
-MA0156.1.FEV,FEV,Ets-related factors,Q99581,COMPILED
-MA0157.1.FOXO3,FOXO3,Forkhead box (FOX) factors,O43524,COMPILED
-MA0158.1.HOXA5,HOXA5,HOX-related factors,P20719,COMPILED
-MA0159.1.RARA::RXRA,RARA+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P10276;P19793,COMPILED
-MA0160.1.NR4A2,NR4A2,NGFI-B-related receptors (NR4),P43354,COMPILED
-MA0161.1.NFIC,NFIC,Nuclear factor 1,P08651,High-throughput SELEX SAGE
-MA0162.1.Egr1,Egr1,Three-zinc finger Kruppel-related factors,P08046,bacterial 1-hybrid
-MA0163.1.PLAG1,PLAG1,More than 3 adjacent zinc finger factors,Q6DJT9,bacterial 1-hybrid
-MA0164.1.Nr2e3,Nr2e3,RXR-related receptors (NR2),Q9QXZ7,SELEX
-MA0080.2.SPI1,SPI1,Ets-related factors,P17947,COMPILED
-MA0018.2.CREB1,CREB1,CREB-related factors,P16220,COMPILED
-MA0099.2.FOS::JUN,FOS+JUN,Fos-related factors;Jun-related factors,P01100;P05412,COMPILED
-MA0079.2.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,COMPILED
-MA0102.2.CEBPA,CEBPA,C/EBP-related,-,COMPILED
-MA0258.1.ESR2,ESR2,Steroid hormone receptors (NR3),Q92731,ChIP-chip
-MA0259.1.ARNT::HIF1A,ARNT+HIF1A,PAS domain factors,P27540;Q16665,COMPILED
-MA0442.1.SOX10,SOX10,SOX-related factors,P56693,COMPILED
-MA0141.2.Esrrb,Esrrb,Steroid hormone receptors (NR3),Q61539,ChIP-seq
-MA0143.2.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq
-MA0145.2.Tcfcp2l1,Tcfcp2l1,CP2-related factors,Q3UNW5,ChIP-seq
-MA0146.2.Zfx,Zfx,More than 3 adjacent zinc finger factors,P17012,ChIP-seq
-MA0148.2.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq
-MA0461.1.Atoh1,Atoh1,Tal-related factors,P48985,ChIP-seq
-MA0462.1.BATF::JUN,BATF+JUN,B-ATF-related factors;Jun-related factors,Q16520;P05412,ChIP-seq
-MA0463.1.Bcl6,Bcl6,More than 3 adjacent zinc finger factors,P41183,ChIP-seq
-MA0464.1.Bhlhe40,Bhlhe40,Hairy-related factors,O35185,ChIP-seq
-MA0465.1.CDX2,CDX2,HOX-related factors,Q99626,ChIP-seq
-MA0466.1.CEBPB,CEBPB,C/EBP-related,P17676,ChIP-seq
-MA0467.1.Crx,Crx,Paired-related HD factors,O54751,ChIP-seq
-MA0468.1.DUX4,DUX4,Paired-related HD factors,Q9UBX2,ChIP-seq
-MA0469.1.E2F3,E2F3,E2F-related factors,O35261,ChIP-seq
-MA0470.1.E2F4,E2F4,E2F-related factors,Q16254,ChIP-seq
-MA0471.1.E2F6,E2F6,E2F-related factors,O75461,ChIP-seq
-MA0472.1.EGR2,EGR2,Three-zinc finger Krüppel-related factors,P08152,ChIP-seq
-MA0473.1.ELF1,ELF1,Ets-related factors,P32519,ChIP-seq
-MA0474.1.Erg,Erg,Ets-related factors,P81270,ChIP-seq
-MA0475.1.FLI1,FLI1,Ets-related factors,Q01543,ChIP-seq
-MA0476.1.FOS,FOS,Fos-related factors,P01100,ChIP-seq
-MA0477.1.FOSL1,FOSL1,Fos-related factors,P15407,ChIP-seq
-MA0478.1.FOSL2,FOSL2,Fos-related factors,P15408,ChIP-seq
-MA0479.1.FOXH1,FOXH1,Forkhead box (FOX) factors,O75593,ChIP-seq
-MA0480.1.Foxo1,Foxo1,Forkhead box (FOX) factors,Q9R1E0,ChIP-seq
-MA0481.1.FOXP1,FOXP1,Forkhead box (FOX) factors,Q9H334,ChIP-seq
-MA0482.1.Gata4,Gata4,GATA-type zinc fingers,Q08369,ChIP-seq
-MA0483.1.Gfi1b,Gfi1b,More than 3 adjacent zinc finger factors,O70237,ChIP-seq
-MA0484.1.HNF4G,HNF4G,RXR-related receptors (NR2),Q14541,ChIP-seq
-MA0485.1.Hoxc9,Hoxc9,HOX-related factors,P09633,ChIP-seq
-MA0486.1.HSF1,HSF1,HSF factors,Q00613,ChIP-seq
-MA0488.1.JUN,JUN,Jun-related factors,P05412,ChIP-seq
-MA0489.1.JUN(var.2),JUN(var.2),Jun-related factors,P05412,ChIP-seq
-MA0490.1.JUNB,JUNB,Jun-related factors,P17275,ChIP-seq
-MA0491.1.JUND,JUND,Jun-related factors,P17535,ChIP-seq
-MA0492.1.JUND(var.2),JUND(var.2),Jun-related factors,P17535,ChIP-seq
-MA0493.1.Klf1,Klf1,Three-zinc finger Krüppel-related factors,P46099,ChIP-seq
-MA0494.1.Nr1h3::Rxra,Nr1h3+Rxra,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q9Z0Y9;P28700,ChIP-seq
-MA0495.1.MAFF,MAFF,Maf-related factors,Q9ULX9,ChIP-seq
-MA0496.1.MAFK,MAFK,Maf-related factors,O60675,ChIP-seq
-MA0497.1.MEF2C,MEF2C,Regulators of differentiation,Q06413,ChIP-seq
-MA0498.1.Meis1,Meis1,TALE-type homeo domain factors,Q60954,ChIP-seq
-MA0499.1.Myod1,Myod1,MyoD / ASC-related factors,P10085,ChIP-seq
-MA0500.1.Myog,Myog,MyoD / ASC-related factors,P12979,ChIP-seq
-MA0501.1.MAF::NFE2,MAF+NFE2,Jun-related factors;Maf-related factors,O75444;Q16621,ChIP-seq
-MA0502.1.NFYB,NFYB,NFY,P25208,ChIP-seq
-MA0503.1.Nkx2-5(var.2),Nkx2-5(var.2),NK-related factors,P42582,ChIP-seq
-MA0504.1.NR2C2,NR2C2,RXR-related receptors (NR2),P49116,ChIP-seq
-MA0505.1.Nr5a2,Nr5a2,FTZ-F1-related receptors (NR5),P45448,ChIP-seq
-MA0506.1.NRF1,NRF1,Jun-related factors,Q16656,ChIP-seq
-MA0507.1.POU2F2,POU2F2,POU domain factors,P09086,ChIP-seq
-MA0508.1.PRDM1,PRDM1,More than 3 adjacent zinc finger factors,O75626,ChIP-seq
-MA0509.1.Rfx1,Rfx1,RFX-related factors,P48377,ChIP-seq
-MA0510.1.RFX5,RFX5,RFX-related factors,P48382,ChIP-seq
-MA0511.1.RUNX2,RUNX2,Runt-related factors,Q13950,ChIP-seq
-MA0512.1.Rxra,Rxra,RXR-related receptors (NR2),P28700,ChIP-seq
-MA0513.1.SMAD2::SMAD3::SMAD4,SMAD2+SMAD3+SMAD4,SMAD factors,Q15796;P84022;Q13485,ChIP-seq
-MA0514.1.Sox3,Sox3,SOX-related factors,P53784,ChIP-seq
-MA0515.1.Sox6,Sox6,SOX-related factors,P40645,ChIP-seq
-MA0516.1.SP2,SP2,Three-zinc finger Krüppel-related factors,Q02086,ChIP-seq
-MA0517.1.STAT1::STAT2,STAT1+STAT2,STAT factors,P42224;P52630,ChIP-seq
-MA0518.1.Stat4,Stat4,STAT factors,P42228,ChIP-seq
-MA0519.1.Stat5a::Stat5b,Stat5a+Stat5b,STAT factors,P42230;P42232,ChIP-seq
-MA0520.1.Stat6,Stat6,STAT factors,P52633,ChIP-seq
-MA0521.1.Tcf12,Tcf12,E2A-related factors,Q61286,ChIP-seq
-MA0522.1.Tcf3,Tcf3,E2A-related factors,Q9Z1J1,ChIP-seq
-MA0523.1.TCF7L2,TCF7L2,TCF-7-related factors,Q9NQB0,ChIP-seq
-MA0524.1.TFAP2C,TFAP2C,AP-2,Q92754,ChIP-seq
-MA0525.1.TP63,TP63,p53-related factors,Q9H3D4,ChIP-seq
-MA0526.1.USF2,USF2,bHLH-ZIP factors,Q15853,ChIP-seq
-MA0527.1.ZBTB33,ZBTB33,Other factors with up to three adjacent zinc fingers,Q86T24,ChIP-seq
-MA0528.1.ZNF263,ZNF263,More than 3 adjacent zinc finger factors,O14978,ChIP-seq
-MA0007.2.AR,AR,Steroid hormone receptors (NR3),P10275,ChIP-seq
-MA0102.3.CEBPA,CEBPA,C/EBP-related,P49715,ChIP-seq
-MA0024.2.E2F1,E2F1,E2F-related factors,Q01094,ChIP-seq
-MA0154.2.EBF1,EBF1,Early B-Cell Factor-related factors,Q9UH73,ChIP-seq
-MA0162.2.EGR1,EGR1,Three-zinc finger Kruppel-related factors,P18146,ChIP-seq
-MA0076.2.ELK4,ELK4,Ets-related factors,P28324,ChIP-seq
-MA0258.2.ESR2,ESR2,Steroid hormone receptors (NR3),Q92731,ChIP-seq
-MA0098.2.Ets1,Ets1,Ets-related factors,P27577,ChIP-seq
-MA0148.3.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq
-MA0035.3.Gata1,Gata1,GATA-type zinc fingers,P17679,ChIP-seq
-MA0036.2.GATA2,GATA2,GATA-type zinc fingers,P23769,ChIP-seq
-MA0037.2.GATA3,GATA3,GATA-type zinc fingers,P23771,ChIP-seq
-MA0114.2.HNF4A,HNF4A,RXR-related receptors (NR2),P41235,ChIP-seq
-MA0050.2.IRF1,IRF1,Interferon-regulatory factors,P10914,ChIP-seq
-MA0058.2.MAX,MAX,bHLH-ZIP factors,P61244,ChIP-seq
-MA0052.2.MEF2A,MEF2A,Regulators of differentiation,Q02078,ChIP-seq
-MA0100.2.Myb,Myb,Myb/SANT domain factors,P06876,ChIP-seq
-MA0147.2.Myc,Myc,bHLH-ZIP factors,P01108,ChIP-seq
-MA0104.3.Mycn,Mycn,bHLH-ZIP factors,P03966,ChIP-seq
-MA0150.2.Nfe2l2,Nfe2l2,Jun-related factors,Q60795,ChIP-seq
-MA0105.3.NFKB1,NFKB1,NF-kappaB-related factors,P19838,ChIP-seq
-MA0060.2.NFYA,NFYA,NFY,P23511,ChIP-seq
-MA0014.2.PAX5,PAX5,Paired domain only,Q02548,ChIP-seq
-MA0080.3.Spi1,Spi1,Ets-related factors,P17433,ChIP-seq
-MA0143.3.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq
-MA0079.3.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,ChIP-seq
-MA0083.2.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,ChIP-seq
-MA0137.3.STAT1,STAT1,STAT factors,P42224,ChIP-seq
-MA0144.2.STAT3,STAT3,STAT factors,P40763,ChIP-seq
-MA0140.2.GATA1::TAL1,GATA1+TAL1,GATA-type zinc fingers;Tal-related factors,P15976;P17542,ChIP-seq
-MA0003.2.TFAP2A,TFAP2A,AP-2,P05549,ChIP-seq
-MA0106.2.TP53,TP53,p53-related factors,P04637,ChIP-seq
-MA0093.2.USF1,USF1,bHLH-ZIP factors,P22415,ChIP-seq
-MA0095.2.YY1,YY1,More than 3 adjacent zinc finger factors,P25490,ChIP-seq
-MA0103.2.ZEB1,ZEB1,HD-ZF factors,P37275,ChIP-seq
-MA0591.1.Bach1::Mafk,Bach1+Mafk,Jun-related factors;Maf-related factors,P97302;Q61827,ChIP-seq
-MA0592.1.ESRRA,ESRRA,Steroid hormone receptors (NR3),P11474,ChIP-seq
-MA0593.1.FOXP2,FOXP2,Forkhead box (FOX) factors,O15409,ChIP-seq
-MA0594.1.Hoxa9,Hoxa9,HOX-related factors,P09631,ChIP-seq
-MA0595.1.SREBF1,SREBF1,bHLH-ZIP factors,P36956,ChIP-seq
-MA0596.1.SREBF2,SREBF2,bHLH-ZIP factors,Q12772,ChIP-seq
-MA0597.1.THAP1,THAP1,THAP-related factors,Q9NVV9,ChIP-seq
-MA0598.1.EHF,EHF,Ets-related factors,Q9NZC4,ChIP-seq
-MA0599.1.KLF5,KLF5,Three-zinc finger Krüppel-related factors,Q13887,ChIP-seq
-MA0600.1.RFX2,RFX2,RFX-related factors,P48378,ChIP-seq
-MA0113.2.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,ChIP-seq
-MA0601.1.Arid3b,Arid3b,ARID-related factors,Q9Z1N7,PBM
-MA0602.1.Arid5a,Arid5a,ARID-related factors,Q3U108,universal protein binding microarray (PBM)
-MA0603.1.Arntl,Arntl,PAS domain factors,Q9WTL8,PBM
-MA0604.1.Atf1,Atf1,CREB-related factors,P81269,PBM
-MA0605.1.Atf3,Atf3,Fos-related factors,Q60765,PBM
-MA0606.1.NFAT5,NFAT5,NFAT-related factors,F1NSH4,PBM
-MA0607.1.Bhlha15,Bhlha15,Tal-related factors,Q9QYC3,PBM
-MA0608.1.Creb3l2,Creb3l2,CREB-related factors,Q8BH52,PBM
-MA0609.1.Crem,Crem,CREB-related factors,P27699,PBM
-MA0610.1.DMRT3,DMRT3,DMRT,Q9NQL9,PBM
-MA0611.1.Dux,Dux,Paired-related HD factors,A1JVI8,PBM
-MA0612.1.EMX1,EMX1,NK-related factors,Q04741,PBM
-MA0613.1.FOXG1,FOXG1,Forkhead box (FOX) factors,P55316,PBM
-MA0614.1.Foxj2,Foxj2,Forkhead box (FOX) factors,Q9ES18,PBM
-MA0615.1.Gmeb1,Gmeb1,GMEB,Q9JL60,universal protein binding microarray (PBM)
-MA1099.1.Hes1,Hes1,Hairy-related factors,P35428,PBM
-MA0616.1.Hes2,Hes2,Hairy-related factors,O54792,PBM
-MA0617.1.Id2,Id2,HLH domain only,P41136,PBM
-MA0618.1.LBX1,LBX1,NK-related factors,P52954,PBM
-MA0619.1.LIN54,LIN54,,F1NCE0,PBM
-MA0620.1.Mitf,Mitf,bHLH-ZIP factors,Q08874,PBM
-MA0621.1.mix-a,mix-a,Paired-related HD factors,P21711,PBM
-MA0622.1.Mlxip,Mlxip,bHLH-ZIP factors,Q2VPU4,PBM
-MA0623.1.Neurog1,Neurog1,Tal-related factors,P70660,PBM
-MA0624.1.NFATC1,NFATC1,NFAT-related factors,G1MTN6,PBM
-MA0625.1.NFATC3,NFATC3,NFAT-related factors,Q12968,PBM
-MA0626.1.Npas2,Npas2,PAS domain factors,P97460,PBM
-MA0627.1.Pou2f3,Pou2f3,POU domain factors,P31362,universal protein binding microarray (PBM)
-MA0628.1.POU6F1,POU6F1,POU domain factors,Q14863,PBM
-MA0629.1.Rhox11,Rhox11,Paired-related HD factors,Q810N8,universal protein binding microarray (PBM)
-MA0630.1.SHOX,SHOX,Paired-related HD factors,O15266,PBM
-MA0631.1.Six3,Six3,HD-SINE factors,Q62233,universal protein binding microarray (PBM)
-MA0632.1.Tcfl5,Tcfl5,PAS domain factors,Q32NY8,PBM
-MA0633.1.Twist2,Twist2,Tal-related factors,Q9D030,PBM
-MA0634.1.ALX3,ALX3,Paired-related HD factors,O95076,HT-SELEX
-MA0007.3.Ar,Ar,Steroid hormone receptors (NR3),P19091,HT-SELEX
-MA0635.1.BARHL2,BARHL2,NK-related factors,Q9NY43,HT-SELEX
-MA0636.1.BHLHE41,BHLHE41,Hairy-related factors,Q9C0J9,HT-SELEX
-MA0637.1.CENPB,CENPB,,P07199,HT-SELEX
-MA0638.1.CREB3,CREB3,CREB-related factors,O43889,HT-SELEX
-MA0639.1.DBP,DBP,C/EBP-related,Q10586,HT-SELEX
-MA0154.3.EBF1,EBF1,Early B-Cell Factor-related factors,Q9UH73,HT-SELEX
-MA0598.2.EHF,EHF,Ets-related factors,Q9NZC4,HT-SELEX
-MA0640.1.ELF3,ELF3,Ets-related factors,P78545,HT-SELEX
-MA0641.1.ELF4,ELF4,Ets-related factors,Q99607,HT-SELEX
-MA0136.2.ELF5,ELF5,Ets-related factors,Q9UKW6,HT-SELEX
-MA0027.2.EN1,EN1,NK-related factors,Q05925,HT-SELEX
-MA0642.1.EN2,EN2,NK-related factors,P19622,HT-SELEX
-MA0643.1.Esrrg,Esrrg,Steroid hormone receptors (NR3),P62509,HT-SELEX
-MA0644.1.ESX1,ESX1,Paired-related HD factors,Q8N693,HT-SELEX
-MA0645.1.ETV6,ETV6,Ets-related factors,P41212,HT-SELEX
-MA0475.2.FLI1,FLI1,Ets-related factors,Q01543,HT-SELEX
-MA0042.2.FOXI1,FOXI1,Forkhead box (FOX) factors,Q12951,HT-SELEX
-MA0033.2.FOXL1,FOXL1,Forkhead box (FOX) factors,Q12952,HT-SELEX
-MA0157.2.FOXO3,FOXO3,Forkhead box (FOX) factors,O43524,HT-SELEX
-MA0646.1.GCM1,GCM1,GCM factors,Q9NP62,HT-SELEX
-MA0647.1.GRHL1,GRHL1,Grainyhead-related factors,Q9NZI5,HT-SELEX
-MA0648.1.GSC,GSC,Paired-related HD factors,P56915,HT-SELEX
-MA0649.1.HEY2,HEY2,Hairy-related factors,Q9UBP5,HT-SELEX
-MA0131.2.HINFP,HINFP,Factors with multiple dispersed zinc fingers,Q9BQA5,HT-SELEX
-MA0043.2.HLF,HLF,C/EBP-related,Q16534,HT-SELEX
-MA0046.2.HNF1A,HNF1A,POU domain factors,P20823,HT-SELEX
-MA0153.2.HNF1B,HNF1B,POU domain factors,P35680,HT-SELEX
-MA0650.1.HOXA13,HOXA13,HOX-related factors,P31271,HT-SELEX
-MA0651.1.HOXC11,HOXC11,HOX-related factors,O43248,HT-SELEX
-MA0486.2.HSF1,HSF1,HSF factors,Q00613,HT-SELEX
-MA0652.1.IRF8,IRF8,Interferon-regulatory factors,Q02556,HT-SELEX
-MA0653.1.IRF9,IRF9,Interferon-regulatory factors,Q00978,HT-SELEX
-MA0654.1.ISX,ISX,Paired-related HD factors,Q2M1V0,HT-SELEX
-MA0655.1.JDP2,JDP2,Fos-related factors,Q8WYK2,HT-SELEX
-MA0656.1.JDP2(var.2),JDP2(var.2),Fos-related factors,Q8WYK2,HT-SELEX
-MA0657.1.KLF13,KLF13,Three-zinc finger Krüppel-related factors,Q9Y2Y9,HT-SELEX
-MA0658.1.LHX6,LHX6,HD-LIM factors,Q9UPM6,HT-SELEX
-MA0659.1.MAFG,MAFG,Maf-related factors,O15525,HT-SELEX
-MA0660.1.MEF2B,MEF2B,Regulators of differentiation,Q02080,HT-SELEX
-MA0661.1.MEOX1,MEOX1,HOX-related factors,P50221,HT-SELEX
-MA0662.1.MIXL1,MIXL1,Paired-related HD factors,Q9H2W2,HT-SELEX
-MA0663.1.MLX,MLX,bHLH-ZIP factors,Q9UH92,HT-SELEX
-MA0664.1.MLXIPL,MLXIPL,bHLH-ZIP factors,Q9NP71,HT-SELEX
-MA0665.1.MSC,MSC,Tal-related factors,O60682,HT-SELEX
-MA0666.1.MSX1,MSX1,NK-related factors,P28360,HT-SELEX
-MA0667.1.MYF6,MYF6,MyoD / ASC-related factors,P23409,HT-SELEX
-MA0668.1.NEUROD2,NEUROD2,Tal-related factors,Q15784,HT-SELEX
-MA0669.1.NEUROG2,NEUROG2,Tal-related factors,Q9H2A3,HT-SELEX
-MA0670.1.NFIA,NFIA,Nuclear factor 1,Q12857,HT-SELEX
-MA0671.1.NFIX,NFIX,Nuclear factor 1,Q14938,HT-SELEX
-MA0048.2.NHLH1,NHLH1,Tal-related factors,Q02575,HT-SELEX
-MA0672.1.NKX2-3,NKX2-3,NK-related factors,Q8TAU0,HT-SELEX
-MA0673.1.NKX2-8,NKX2-8,NK-related factors,O15522,HT-SELEX
-MA0674.1.NKX6-1,NKX6-1,NK-related factors,P78426,HT-SELEX
-MA0675.1.NKX6-2,NKX6-2,NK-related factors,Q9C056,HT-SELEX
-MA0676.1.Nr2e1,Nr2e1,RXR-related receptors (NR2),Q9Y466,HT-SELEX
-MA0677.1.Nr2f6,Nr2f6,RXR-related receptors (NR2),P43136,HT-SELEX
-MA0678.1.OLIG2,OLIG2,Tal-related factors,Q13516,HT-SELEX
-MA0679.1.ONECUT1,ONECUT1,HD-CUT factors,Q9UBC0,HT-SELEX
-MA0068.2.PAX4,PAX4,Paired plus homeo domain,O43316,HT-SELEX
-MA0680.1.PAX7,PAX7,Paired plus homeo domain,P23759,HT-SELEX
-MA0681.1.Phox2b,Phox2b,Paired-related HD factors,Q99453,HT-SELEX
-MA0682.1.Pitx1,Pitx1,Paired-related HD factors,P70314,HT-SELEX
-MA0683.1.POU4F2,POU4F2,POU domain factors,Q12837,HT-SELEX
-MA0075.2.Prrx2,Prrx2,Paired-related HD factors,Q06348,HT-SELEX
-MA0684.1.RUNX3,RUNX3,Runt-related factors,Q13761,HT-SELEX
-MA0512.2.Rxra,Rxra,RXR-related receptors (NR2),P28700,HT-SELEX
-MA0685.1.SP4,SP4,Three-zinc finger Krüppel-related factors,Q02446,HT-SELEX
-MA0686.1.SPDEF,SPDEF,Ets-related factors,O95238,HT-SELEX
-MA0080.4.SPI1,SPI1,Ets-related factors,P17947,HT-SELEX
-MA0687.1.SPIC,SPIC,Ets-related factors,Q8N5J4,HT-SELEX
-MA0083.3.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,HT-SELEX
-MA0009.2.T,T,Brachyury-related factors,O15178,HT-SELEX
-MA0688.1.TBX2,TBX2,TBX2-related factors,Q13207,HT-SELEX
-MA0689.1.TBX20,TBX20,TBX1-related factors,Q9UMR3,HT-SELEX
-MA0690.1.TBX21,TBX21,TBrain-related factors,Q9UL17,HT-SELEX
-MA0090.2.TEAD1,TEAD1,TEF-1-related factors,P28347,HT-SELEX
-MA0691.1.TFAP4,TFAP4,bHLH-ZIP factors,Q01664,HT-SELEX
-MA0145.3.TFCP2,TFCP2,CP2-related factors,Q12800,HT-SELEX
-MA0692.1.TFEB,TFEB,bHLH-ZIP factors,P19484,HT-SELEX
-MA0693.1.Vdr,Vdr,Thyroid hormone receptor-related factors (NR1),P48281,HT-SELEX
-MA0694.1.ZBTB7B,ZBTB7B,More than 3 adjacent zinc finger factors,O15156,HT-SELEX
-MA0695.1.ZBTB7C,ZBTB7C,More than 3 adjacent zinc finger factors,A1YPR0,HT-SELEX
-MA0696.1.ZIC1,ZIC1,More than 3 adjacent zinc finger factors,Q15915,HT-SELEX
-MA0697.1.ZIC3,ZIC3,More than 3 adjacent zinc finger factors,O60481,HT-SELEX
-MA0698.1.ZBTB18,ZBTB18,More than 3 adjacent zinc finger factors,Q99592,HT-SELEX
-MA0699.1.LBX2,LBX2,NK-related factors,Q6XYB7,HT-SELEX
-MA0700.1.LHX2,LHX2,HD-LIM factors,P50458,HT-SELEX
-MA0701.1.LHX9,LHX9,HD-LIM factors,Q9NQ69,HT-SELEX
-MA0702.1.LMX1A,LMX1A,HD-LIM factors,Q8TE12,HT-SELEX
-MA0703.1.LMX1B,LMX1B,HD-LIM factors,O60663,HT-SELEX
-MA0704.1.Lhx4,Lhx4,HD-LIM factors,P53776,HT-SELEX
-MA0705.1.Lhx8,Lhx8,HD-LIM factors,O35652,HT-SELEX
-MA0706.1.MEOX2,MEOX2,HOX-related factors,Q6FHY5,HT-SELEX
-MA0707.1.MNX1,MNX1,HOX-related factors,P50219,HT-SELEX
-MA0708.1.MSX2,MSX2,NK-related factors,P35548,HT-SELEX
-MA0709.1.Msx3,Msx3,NK-related factors,P70354,HT-SELEX
-MA0122.2.NKX3-2,NKX3-2,NK-related factors,P78367,HT-SELEX
-MA0710.1.NOTO,NOTO,NK-related factors,A8MTQ0,HT-SELEX
-MA0124.2.Nkx3-1,Nkx3-1,NK-related factors,P97436,HT-SELEX
-MA0711.1.OTX1,OTX1,Paired-related HD factors,P32242,HT-SELEX
-MA0712.1.OTX2,OTX2,Paired-related HD factors,P32243,HT-SELEX
-MA0132.2.PDX1,PDX1,HOX-related factors,P52945,HT-SELEX
-MA0713.1.PHOX2A,PHOX2A,Paired-related HD factors,O14813,HT-SELEX
-MA0714.1.PITX3,PITX3,Paired-related HD factors,O75364,HT-SELEX
-MA0715.1.PROP1,PROP1,Paired-related HD factors,O75360,HT-SELEX
-MA0716.1.PRRX1,PRRX1,Paired-related HD factors,P54821,HT-SELEX
-MA0717.1.RAX2,RAX2,Paired-related HD factors,Q96IS3,HT-SELEX
-MA0718.1.RAX,RAX,Paired-related HD factors,Q9Y2V3,HT-SELEX
-MA0719.1.RHOXF1,RHOXF1,Paired-related HD factors,Q8NHV9,HT-SELEX
-MA0720.1.Shox2,Shox2,Paired-related HD factors,P70390,HT-SELEX
-MA0721.1.UNCX,UNCX,Paired-related HD factors,A6NJT0,HT-SELEX
-MA0722.1.VAX1,VAX1,NK-related factors,Q5SQQ9,HT-SELEX
-MA0723.1.VAX2,VAX2,NK-related factors,Q9UIW0,HT-SELEX
-MA0724.1.VENTX,VENTX,NK-related factors,O95231,HT-SELEX
-MA0725.1.VSX1,VSX1,Paired-related HD factors,Q9NZR4,HT-SELEX
-MA0726.1.VSX2,VSX2,Paired-related HD factors,P58304,HT-SELEX
-MA0112.3.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,HT-SELEX
-MA0141.3.ESRRB,ESRRB,Steroid hormone receptors (NR3),O95718,HT-SELEX
-MA0592.2.Esrra,Esrra,Steroid hormone receptors (NR3),O08580,HT-SELEX
-MA0114.3.Hnf4a,Hnf4a,RXR-related receptors (NR2),P49698,HT-SELEX
-MA0017.2.NR2F1,NR2F1,RXR-related receptors (NR2),P10589,HT-SELEX
-MA0113.3.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,HT-SELEX
-MA0727.1.NR3C2,NR3C2,Steroid hormone receptors (NR3),P08235,HT-SELEX
-MA0728.1.Nr2f6(var.2),Nr2f6(var.2),RXR-related receptors (NR2),P43136,HT-SELEX
-MA0729.1.RARA,RARA,Thyroid hormone receptor-related factors (NR1),P10276,HT-SELEX
-MA0730.1.RARA(var.2),RARA(var.2),Thyroid hormone receptor-related factors (NR1),P10276,HT-SELEX
-MA0731.1.BCL6B,BCL6B,More than 3 adjacent zinc finger factors,A8KA13,HT-SELEX
-MA0472.2.EGR2,EGR2,Three-zinc finger Krüppel-related factors,P11161,HT-SELEX
-MA0732.1.EGR3,EGR3,Three-zinc finger Krüppel-related factors,Q06889,HT-SELEX
-MA0733.1.EGR4,EGR4,Three-zinc finger Krüppel-related factors,Q05215,HT-SELEX
-MA0734.1.GLI2,GLI2,More than 3 adjacent zinc finger factors,P10070,HT-SELEX
-MA0735.1.GLIS1,GLIS1,More than 3 adjacent zinc finger factors,Q8NBF1,HT-SELEX
-MA0736.1.GLIS2,GLIS2,More than 3 adjacent zinc finger factors,Q9BZE0,HT-SELEX
-MA0737.1.GLIS3,GLIS3,More than 3 adjacent zinc finger factors,Q8NEA6,HT-SELEX
-MA0738.1.HIC2,HIC2,Factors with multiple dispersed zinc fingers,Q96JB3,HT-SELEX
-MA0739.1.Hic1,Hic1,Factors with multiple dispersed zinc fingers,Q9R1Y5,HT-SELEX
-MA0740.1.KLF14,KLF14,Three-zinc finger Krüppel-related factors,Q8TD94,HT-SELEX
-MA0741.1.KLF16,KLF16,Three-zinc finger Krüppel-related factors,Q9BXK1,HT-SELEX
-MA0742.1.Klf12,Klf12,Three-zinc finger Krüppel-related factors,O35738,HT-SELEX
-MA0743.1.SCRT1,SCRT1,More than 3 adjacent zinc finger factors,Q9BWW7,HT-SELEX
-MA0744.1.SCRT2,SCRT2,More than 3 adjacent zinc finger factors,Q9NQ03,HT-SELEX
-MA0745.1.SNAI2,SNAI2,More than 3 adjacent zinc finger factors,O43623,HT-SELEX
-MA0746.1.SP3,SP3,Three-zinc finger Krüppel-related factors,Q02447,HT-SELEX
-MA0747.1.SP8,SP8,Three-zinc finger Krüppel-related factors,Q8IXZ3,HT-SELEX
-MA0748.1.YY2,YY2,More than 3 adjacent zinc finger factors,O15391,HT-SELEX
-MA0749.1.ZBED1,ZBED1,BED zinc finger factors,O96006,HT-SELEX
-MA0750.1.ZBTB7A,ZBTB7A,More than 3 adjacent zinc finger factors,O95365,HT-SELEX
-MA0751.1.ZIC4,ZIC4,More than 3 adjacent zinc finger factors,Q8N9L1,HT-SELEX
-MA0088.2.ZNF143,ZNF143,More than 3 adjacent zinc finger factors,P52747,HT-SELEX
-MA0752.1.ZNF410,ZNF410,More than 3 adjacent zinc finger factors,Q86VK4,HT-SELEX
-MA0753.1.ZNF740,ZNF740,Other factors with up to three adjacent zinc fingers,Q8NDX6,HT-SELEX
-MA0754.1.CUX1,CUX1,HD-CUT factors,P39880,HT-SELEX
-MA0755.1.CUX2,CUX2,HD-CUT factors,O14529,HT-SELEX
-MA0756.1.ONECUT2,ONECUT2,HD-CUT factors,O95948,HT-SELEX
-MA0757.1.ONECUT3,ONECUT3,HD-CUT factors,O60422,HT-SELEX
-MA0469.2.E2F3,E2F3,E2F-related factors,O00716,HT-SELEX
-MA0758.1.E2F7,E2F7,E2F-related factors,Q96AV8,HT-SELEX
-MA0473.2.ELF1,ELF1,Ets-related factors,P32519,HT-SELEX
-MA0759.1.ELK3,ELK3,Ets-related factors,P41970,HT-SELEX
-MA0760.1.ERF,ERF,Ets-related factors,P50548,HT-SELEX
-MA0474.2.ERG,ERG,Ets-related factors,P11308,HT-SELEX
-MA0098.3.ETS1,ETS1,Ets-related factors,P14921,HT-SELEX
-MA0761.1.ETV1,ETV1,Ets-related factors,P50549,HT-SELEX
-MA0762.1.ETV2,ETV2,Ets-related factors,Q3KNT2,HT-SELEX
-MA0763.1.ETV3,ETV3,Ets-related factors,P41162,HT-SELEX
-MA0764.1.ETV4,ETV4,Ets-related factors,P43268,HT-SELEX
-MA0765.1.ETV5,ETV5,Ets-related factors,P41161,HT-SELEX
-MA0156.2.FEV,FEV,Ets-related factors,Q99581,HT-SELEX
-MA0766.1.GATA5,GATA5,GATA-type zinc fingers,Q9BWX5,HT-SELEX
-MA0767.1.GCM2,GCM2,GCM factors,O75603,HT-SELEX
-MA0768.1.LEF1,LEF1,TCF-7-related factors,Q9UJU2,HT-SELEX
-MA0769.1.Tcf7,Tcf7,TCF-7-related factors,Q00417,HT-SELEX
-MA0770.1.HSF2,HSF2,HSF factors,Q03933,HT-SELEX
-MA0771.1.HSF4,HSF4,HSF factors,Q9ULV5,HT-SELEX
-MA0772.1.IRF7,IRF7,Interferon-regulatory factors,Q92985,HT-SELEX
-MA0052.3.MEF2A,MEF2A,Regulators of differentiation,Q02078,HT-SELEX
-MA0773.1.MEF2D,MEF2D,Regulators of differentiation,Q05BX2,HT-SELEX
-MA0498.2.MEIS1,MEIS1,TALE-type homeo domain factors,O00470,HT-SELEX
-MA0774.1.MEIS2,MEIS2,TALE-type homeo domain factors,O14770,HT-SELEX
-MA0775.1.MEIS3,MEIS3,TALE-type homeo domain factors,Q99687,HT-SELEX
-MA0776.1.MYBL1,MYBL1,Myb/SANT domain factors,P10243,HT-SELEX
-MA0777.1.MYBL2,MYBL2,Myb/SANT domain factors,P10244,HT-SELEX
-MA0105.4.NFKB1,NFKB1,NF-kappaB-related factors,P19838,HT-SELEX
-MA0778.1.NFKB2,NFKB2,NF-kappaB-related factors,Q00653,HT-SELEX
-MA0779.1.PAX1,PAX1,Paired domain only,P15863,HT-SELEX
-MA0780.1.PAX3,PAX3,Paired plus homeo domain,P23760,HT-SELEX
-MA0781.1.PAX9,PAX9,Paired domain only,P55771,HT-SELEX
-MA0782.1.PKNOX1,PKNOX1,TALE-type homeo domain factors,P55347,HT-SELEX
-MA0783.1.PKNOX2,PKNOX2,TALE-type homeo domain factors,Q96KN3,HT-SELEX
-MA0784.1.POU1F1,POU1F1,POU domain factors,P28069,HT-SELEX
-MA0785.1.POU2F1,POU2F1,POU domain factors,P14859,HT-SELEX
-MA0786.1.POU3F1,POU3F1,POU domain factors,Q03052,HT-SELEX
-MA0787.1.POU3F2,POU3F2,POU domain factors,P20265,HT-SELEX
-MA0788.1.POU3F3,POU3F3,POU domain factors,P20264,HT-SELEX
-MA0789.1.POU3F4,POU3F4,POU domain factors,P49335,HT-SELEX
-MA0790.1.POU4F1,POU4F1,POU domain factors,Q01851,HT-SELEX
-MA0791.1.POU4F3,POU4F3,POU domain factors,Q15319,HT-SELEX
-MA0792.1.POU5F1B,POU5F1B,POU domain factors,Q06416,HT-SELEX
-MA0793.1.POU6F2,POU6F2,POU domain factors,P78424,HT-SELEX
-MA0794.1.PROX1,PROX1,HD-PROS factors,Q92786,HT-SELEX
-MA0600.2.RFX2,RFX2,RFX-related factors,P48378,HT-SELEX
-MA0795.1.SMAD3,SMAD3,SMAD factors,P84022,HT-SELEX
-MA0796.1.TGIF1,TGIF1,TALE-type homeo domain factors,Q15583,HT-SELEX
-MA0797.1.TGIF2,TGIF2,TALE-type homeo domain factors,Q9GZN2,HT-SELEX
-MA0798.1.RFX3,RFX3,RFX-related factors,P48380,HT-SELEX
-MA0799.1.RFX4,RFX4,RFX-related factors,Q33E94,HT-SELEX
-MA0510.2.RFX5,RFX5,RFX-related factors,P48382,HT-SELEX
-MA0511.2.RUNX2,RUNX2,Runt-related factors,Q13950,HT-SELEX
-MA0800.1.EOMES,EOMES,TBrain-related factors,O95936,HT-SELEX
-MA0801.1.MGA,MGA,TBX6-related factors,Q8IWI9,HT-SELEX
-MA0802.1.TBR1,TBR1,TBrain-related factors,Q16650,HT-SELEX
-MA0803.1.TBX15,TBX15,TBX1-related factors,Q96SF7,HT-SELEX
-MA0804.1.TBX19,TBX19,Brachyury-related factors,O60806,HT-SELEX
-MA0805.1.TBX1,TBX1,TBX1-related factors,O43435,HT-SELEX
-MA0806.1.TBX4,TBX4,TBX2-related factors,P57082,HT-SELEX
-MA0807.1.TBX5,TBX5,TBX2-related factors,Q99593,HT-SELEX
-MA0808.1.TEAD3,TEAD3,TEF-1-related factors,Q99594,HT-SELEX
-MA0809.1.TEAD4,TEAD4,TEF-1-related factors,Q15561,HT-SELEX
-MA0810.1.TFAP2A(var.2),TFAP2A(var.2),AP-2,P05549,HT-SELEX
-MA0003.3.TFAP2A,TFAP2A,AP-2,P05549,HT-SELEX
-MA0811.1.TFAP2B,TFAP2B,AP-2,Q92481,HT-SELEX
-MA0812.1.TFAP2B(var.2),TFAP2B(var.2),AP-2,Q92481,HT-SELEX
-MA0813.1.TFAP2B(var.3),TFAP2B(var.3),AP-2,Q92481,HT-SELEX
-MA0524.2.TFAP2C,TFAP2C,AP-2,Q92754,HT-SELEX
-MA0814.1.TFAP2C(var.2),TFAP2C(var.2),AP-2,Q92754,HT-SELEX
-MA0815.1.TFAP2C(var.3),TFAP2C(var.3),AP-2,Q92754,HT-SELEX
-MA0816.1.Ascl2,Ascl2,MyoD / ASC-related factors,O35885,HT-SELEX
-MA0461.2.Atoh1,Atoh1,Tal-related factors,P48985,HT-SELEX
-MA0464.2.BHLHE40,BHLHE40,Hairy-related factors,O14503,HT-SELEX
-MA0817.1.BHLHE23,BHLHE23,Tal-related factors,Q8NDY6,HT-SELEX
-MA0818.1.BHLHE22,BHLHE22,Tal-related factors,Q8NFJ8,HT-SELEX
-MA0819.1.CLOCK,CLOCK,PAS domain factors,O15516,HT-SELEX
-MA0820.1.FIGLA,FIGLA,Tal-related factors,Q6QHK4,HT-SELEX
-MA0821.1.HES5,HES5,Hairy-related factors,Q5TA89,HT-SELEX
-MA0822.1.HES7,HES7,Hairy-related factors,Q9BYE0,HT-SELEX
-MA0823.1.HEY1,HEY1,Hairy-related factors,Q9Y5J3,HT-SELEX
-MA0824.1.ID4,ID4,HLH domain only,P47928,HT-SELEX
-MA0058.3.MAX,MAX,bHLH-ZIP factors,P61244,HT-SELEX
-MA0825.1.MNT,MNT,bHLH-ZIP factors,Q99583,HT-SELEX
-MA0826.1.OLIG1,OLIG1,Tal-related factors,Q8TAK6,HT-SELEX
-MA0827.1.OLIG3,OLIG3,Tal-related factors,Q7RTU3,HT-SELEX
-MA0828.1.SREBF2(var.2),SREBF2(var.2),bHLH-ZIP factors,Q12772,HT-SELEX
-MA0829.1.Srebf1(var.2),Srebf1(var.2),bHLH-ZIP factors,Q9WTN3,HT-SELEX
-MA0522.2.TCF3,TCF3,E2A-related factors,P15923,HT-SELEX
-MA0830.1.TCF4,TCF4,E2A-related factors,P15884,HT-SELEX
-MA0831.1.TFE3,TFE3,bHLH-ZIP factors,P19532,HT-SELEX
-MA0832.1.Tcf21,Tcf21,Tal-related factors,O35437,HT-SELEX
-MA0833.1.ATF4,ATF4,ATF-4-related factors,P18848,HT-SELEX
-MA0834.1.ATF7,ATF7,Jun-related factors,P17544,HT-SELEX
-MA0835.1.BATF3,BATF3,B-ATF-related factors,Q9NR55,HT-SELEX
-MA0466.2.CEBPB,CEBPB,C/EBP-related,P17676,HT-SELEX
-MA0836.1.CEBPD,CEBPD,C/EBP-related,P49716,HT-SELEX
-MA0837.1.CEBPE,CEBPE,C/EBP-related,Q15744,HT-SELEX
-MA0838.1.CEBPG,CEBPG,C/EBP-related,P53567,HT-SELEX
-MA0839.1.CREB3L1,CREB3L1,CREB-related factors,Q96BA8,HT-SELEX
-MA0840.1.Creb5,Creb5,CREB-related factors,Q8K1L0,HT-SELEX
-MA0117.2.Mafb,Mafb,Maf-related factors,P54841,HT-SELEX
-MA0841.1.NFE2,NFE2,Jun-related factors,Q16621,HT-SELEX
-MA0842.1.NRL,NRL,Maf-related factors,P54845,HT-SELEX
-MA0843.1.TEF,TEF,TEF-1-related factors,Q10587,HT-SELEX
-MA0844.1.XBP1,XBP1,XBP-1-related factors,P17861,HT-SELEX
-MA0845.1.FOXB1,FOXB1,Forkhead box (FOX) factors,Q99853,HT-SELEX
-MA0032.2.FOXC1,FOXC1,Forkhead box (FOX) factors,Q12948,HT-SELEX
-MA0846.1.FOXC2,FOXC2,Forkhead box (FOX) factors,Q99958,HT-SELEX
-MA0847.1.FOXD2,FOXD2,Forkhead box (FOX) factors,O60548,HT-SELEX
-MA0848.1.FOXO4,FOXO4,Forkhead box (FOX) factors,P98177,HT-SELEX
-MA0849.1.FOXO6,FOXO6,Forkhead box (FOX) factors,A8MYZ6,HT-SELEX
-MA0850.1.FOXP3,FOXP3,Forkhead box (FOX) factors,B7ZLG1,HT-SELEX
-MA0851.1.Foxj3,Foxj3,Forkhead box (FOX) factors,Q8BUR3,universal protein binding microarray (PBM)
-MA0852.1.Foxk1,Foxk1,Forkhead box (FOX) factors,P42128,universal protein binding microarray (PBM)
-MA0853.1.Alx4,Alx4,Paired-related HD factors,O35137,universal protein binding microarray (PBM)
-MA0854.1.Alx1,Alx1,Paired-related HD factors,Q8C8B0,universal protein binding microarray (PBM)
-MA0855.1.RXRB,RXRB,RXR-related receptors (NR2),P28702,HT-SELEX
-MA0856.1.RXRG,RXRG,RXR-related receptors (NR2),P48443,HT-SELEX
-MA0857.1.Rarb,Rarb,Thyroid hormone receptor-related factors (NR1),P22605,HT-SELEX
-MA0858.1.Rarb(var.2),Rarb(var.2),Thyroid hormone receptor-related factors (NR1),P22605,HT-SELEX
-MA0859.1.Rarg,Rarg,Thyroid hormone receptor-related factors (NR1),P18911,HT-SELEX
-MA0860.1.Rarg(var.2),Rarg(var.2),Thyroid hormone receptor-related factors (NR1),P18911,HT-SELEX
-MA0525.2.TP63,TP63,p53-related factors,Q9H3D4,HT-SELEX
-MA0106.3.TP53,TP53,p53-related factors,P04637,HT-SELEX
-MA0861.1.TP73,TP73,p53-related factors,O15350,HT-SELEX
-MA0862.1.GMEB2,GMEB2,GMEB,Q9UKD1,HT-SELEX
-MA0863.1.MTF1,MTF1,More than 3 adjacent zinc finger factors,Q14872,HT-SELEX
-MA0024.3.E2F1,E2F1,E2F-related factors,Q01094,HT-SELEX
-MA0864.1.E2F2,E2F2,E2F-related factors,Q14209,HT-SELEX
-MA0865.1.E2F8,E2F8,E2F-related factors,A0AVK6,HT-SELEX
-MA0866.1.SOX21,SOX21,SOX-related factors,Q9Y651,HT-SELEX
-MA0867.1.SOX4,SOX4,SOX-related factors,Q06945,HT-SELEX
-MA0868.1.SOX8,SOX8,SOX-related factors,P57073,HT-SELEX
-MA0869.1.Sox11,Sox11,SOX-related factors,Q7M6Y2,HT-SELEX
-MA0870.1.Sox1,Sox1,SOX-related factors,P53783,HT-SELEX
-MA0871.1.TFEC,TFEC,bHLH-ZIP factors,O14948,HT-SELEX
-MA0872.1.TFAP2A(var.3),TFAP2A(var.3),AP-2,P05549,HT-SELEX
-MA0028.2.ELK1,ELK1,Ets-related factors,P19419,HT-SELEX
-MA0873.1.HOXD12,HOXD12,HOX-related factors,P35452,HT-SELEX
-MA0874.1.Arx,Arx,Paired-related HD factors,O35085,universal protein binding microarray (PBM)
-MA0875.1.BARX1,BARX1,NK-related factors,Q9HBU1,HT-SELEX
-MA0876.1.BSX,BSX,NK-related factors,Q3C1V8,HT-SELEX
-MA0877.1.Barhl1,Barhl1,NK-related factors,P63157,HT-SELEX
-MA0878.1.CDX1,CDX1,HOX-related factors,P47902,HT-SELEX
-MA0879.1.Dlx1,Dlx1,NK-related factors,Q64317,PBM
-MA0880.1.Dlx3,Dlx3,NK-related factors,Q64205,PBM
-MA0881.1.Dlx4,Dlx4,NK-related factors,P70436,PBM
-MA0882.1.DLX6,DLX6,NK-related factors,P56179,HT-SELEX
-MA0883.1.Dmbx1,Dmbx1,Paired-related HD factors,Q91ZK4,universal protein binding microarray (PBM)
-MA0884.1.DUXA,DUXA,Paired-related HD factors,A6NLW8,HT-SELEX
-MA0885.1.Dlx2,Dlx2,NK-related factors,P40764,HT-SELEX
-MA0886.1.EMX2,EMX2,NK-related factors,Q04743,HT-SELEX
-MA0887.1.EVX1,EVX1,HOX-related factors,P49640,HT-SELEX
-MA0888.1.EVX2,EVX2,HOX-related factors,Q03828,HT-SELEX
-MA0889.1.GBX1,GBX1,HOX-related factors,Q14549,HT-SELEX
-MA0890.1.GBX2,GBX2,HOX-related factors,P52951,HT-SELEX
-MA0891.1.GSC2,GSC2,Paired-related HD factors,O15499,HT-SELEX
-MA0892.1.GSX1,GSX1,HOX-related factors,A4IFQ3,HT-SELEX
-MA0893.1.GSX2,GSX2,HOX-related factors,Q9BZM3,HT-SELEX
-MA0894.1.HESX1,HESX1,Paired-related HD factors,Q9UBX0,HT-SELEX
-MA0895.1.HMBOX1,HMBOX1,POU domain factors,Q6NT76,HT-SELEX
-MA0896.1.Hmx1,Hmx1,NK-related factors,O70218,universal protein binding microarray (PBM)
-MA0897.1.Hmx2,Hmx2,NK-related factors,P43687,universal protein binding microarray (PBM)
-MA0898.1.Hmx3,Hmx3,NK-related factors,P42581,universal protein binding microarray (PBM)
-MA0899.1.HOXA10,HOXA10,HOX-related factors,P31260,HT-SELEX
-MA0900.1.HOXA2,HOXA2,HOX-related factors,O43364,HT-SELEX
-MA0901.1.HOXB13,HOXB13,HOX-related factors,Q92826,HT-SELEX
-MA0902.1.HOXB2,HOXB2,HOX-related factors,P14652,HT-SELEX
-MA0903.1.HOXB3,HOXB3,HOX-related factors,P14651,HT-SELEX
-MA0904.1.Hoxb5,Hoxb5,HOX-related factors,P09079,universal protein binding microarray (PBM)
-MA0905.1.HOXC10,HOXC10,HOX-related factors,Q9NYD6,HT-SELEX
-MA0906.1.HOXC12,HOXC12,HOX-related factors,P31275,HT-SELEX
-MA0907.1.HOXC13,HOXC13,HOX-related factors,P31276,HT-SELEX
-MA0908.1.HOXD11,HOXD11,HOX-related factors,P31277,HT-SELEX
-MA0909.1.HOXD13,HOXD13,HOX-related factors,P35453,HT-SELEX
-MA0910.1.Hoxd8,Hoxd8,HOX-related factors,P23463,universal protein binding microarray (PBM)
-MA0911.1.Hoxa11,Hoxa11,HOX-related factors,P31270,HT-SELEX
-MA0912.1.Hoxd3,Hoxd3,HOX-related factors,P09027,universal protein binding microarray (PBM)
-MA0913.1.Hoxd9,Hoxd9,HOX-related factors,P28357,HT-SELEX
-MA0914.1.ISL2,ISL2,HD-LIM factors,Q96A47,HT-SELEX
-MA1100.1.ASCL1,ASCL1,MyoD / ASC-related factors,P50553,ChIP-seq
-MA1101.1.BACH2,BACH2,Jun-related factors,Q9BYV9,ChIP-seq
-MA0018.3.CREB1,CREB1,CREB-related factors,P16220,ChIP-seq
-MA1102.1.CTCFL,CTCFL,More than 3 adjacent zinc finger factors,Q8NI51,ChIP-seq
-MA0852.2.FOXK1,FOXK1,Forkhead box (FOX) factors,P85037,ChIP-seq
-MA1103.1.FOXK2,FOXK2,Forkhead box (FOX) factors,Q01167,ChIP-seq
-MA0481.2.FOXP1,FOXP1,Forkhead box (FOX) factors,Q9H334,ChIP-seq
-MA0036.3.GATA2,GATA2,GATA-type zinc fingers,P23769,ChIP-seq
-MA1104.1.GATA6,GATA6,GATA-type zinc fingers,Q92908,ChIP-seq
-MA1105.1.GRHL2,GRHL2,Grainyhead-related factors,Q6ISB3,ChIP-seq
-MA1106.1.HIF1A,HIF1A,PAS domain factors,Q16665,ChIP-seq
-MA0039.3.KLF4,KLF4,Three-zinc finger Kruppel-related factors,O43474,ChIP-seq
-MA1107.1.KLF9,KLF9,Three-zinc finger Kruppel-related factors,Q13886,ChIP-seq
-MA0495.2.MAFF,MAFF,Maf-related factors,Q9ULX9,ChIP-seq
-MA0496.2.MAFK,MAFK,Maf-related factors,O60675,ChIP-seq
-MA0620.2.MITF,MITF,bHLH-ZIP factors,O75030,ChIP-seq
-MA1108.1.MXI1,MXI1,bHLH-ZIP factors,P50539,ChIP-seq
-MA0147.3.MYC,MYC,bHLH-ZIP factors,P01106,ChIP-seq
-MA0100.3.MYB,MYB,Myb/SANT domain factors,P10242,ChIP-seq
-MA0104.4.MYCN,MYCN,bHLH-ZIP factors,P04198,ChIP-seq
-MA1109.1.NEUROD1,NEUROD1,Tal-related factors,Q13562,ChIP-seq
-MA0161.2.NFIC,NFIC,Nuclear factor 1,P08651,ChIP-seq
-MA0060.3.NFYA,NFYA,NFY,P23511,ChIP-seq
-MA1110.1.NR1H4,NR1H4,Thyroid hormone receptor-related factors (NR1),Q96RI1,ChIP-seq
-MA1111.1.NR2F2,NR2F2,RXR-related receptors (NR2),P24468,ChIP-seq
-MA1112.1.NR4A1,NR4A1,NGFI-B-related receptors (NR4),P22736,ChIP-seq
-MA0014.3.PAX5,PAX5,Paired domain only,Q02548,ChIP-seq
-MA1113.1.PBX2,PBX2,TALE-type homeo domain factors,P40425,ChIP-seq
-MA1114.1.PBX3,PBX3,TALE-type homeo domain factors,P40426,ChIP-seq
-MA1115.1.POU5F1,POU5F1,POU domain factors,Q01860,ChIP-seq
-MA0508.2.PRDM1,PRDM1,More than 3 adjacent zinc finger factors,O75626,ChIP-seq
-MA1116.1.RBPJ,RBPJ,CSL-related factors,Q06330,ChIP-seq
-MA1117.1.RELB,RELB,NF-kappaB-related factors,Q01201,ChIP-seq
-MA1118.1.SIX1,SIX1,HD-SINE factors,Q15475,ChIP-seq
-MA1119.1.SIX2,SIX2,HD-SINE factors,Q9NPC8,ChIP-seq
-MA0442.2.SOX10,SOX10,SOX-related factors,P56693,ChIP-seq
-MA1120.1.SOX13,SOX13,SOX-related factors,Q9UN79,ChIP-seq
-MA1121.1.TEAD2,TEAD2,TEF-1-related factors,Q15562,ChIP-seq
-MA1122.1.TFDP1,TFDP1,E2F-related factors,Q14186,ChIP-seq
-MA1123.1.TWIST1,TWIST1,Tal-related factors,Q15672,ChIP-seq
-MA0526.2.USF2,USF2,bHLH-ZIP factors,Q15853,ChIP-seq
-MA0750.2.ZBTB7A,ZBTB7A,More than 3 adjacent zinc finger factors,O95365,ChIP-seq
-MA0103.3.ZEB1,ZEB1,HD-ZF factors,P37275,ChIP-seq
-MA1124.1.ZNF24,ZNF24,More than 3 adjacent zinc finger factors,P17028,ChIP-seq
-MA1125.1.ZNF384,ZNF384,More than 3 adjacent zinc finger factors,Q8TF68,ChIP-seq
-MA1154.1.ZNF282,ZNF282,More than 3 adjacent zinc finger factors,Q9UDV7,HT-SELEX
-MA1155.1.ZSCAN4,ZSCAN4,More than 3 adjacent zinc finger factors,Q8NAM6,HT-SELEX
-MA0037.3.GATA3,GATA3,GATA-type zinc fingers,P23771,SMiLE-seq
-MA0099.3.FOS::JUN,FOS+JUN,Fos-related factors;Jun-related factors,P01100;P05412,SMiLE-seq
-MA1126.1.FOS::JUN(var.2),FOS+JUN(var.2),Fos-related factors;Jun-related factors,P01100;P05412,SMiLE-seq
-MA1127.1.FOSB::JUN,FOSB+JUN,Fos-related factors;Jun-related factors,P53539;P05412,SMiLE-seq
-MA1128.1.FOSL1::JUN,FOSL1+JUN,Fos-related factors;Jun-related factors,P15407;P05412,SMiLE-seq
-MA1129.1.FOSL1::JUN(var.2),FOSL1+JUN(var.2),Fos-related factors;Jun-related factors,P15407;P05412,SMiLE-seq
-MA1130.1.FOSL2::JUN,FOSL2+JUN,Fos-related factors;Jun-related factors,P15408;P05412,SMiLE-seq
-MA1131.1.FOSL2::JUN(var.2),FOSL2+JUN(var.2),Fos-related factors;Jun-related factors,P15408;P05412,SMiLE-seq
-MA1132.1.JUN::JUNB,JUN+JUNB,Jun-related factors,P05412;P17275,SMiLE-seq
-MA1133.1.JUN::JUNB(var.2),JUN+JUNB(var.2),Jun-related factors,P05412;P17275,SMiLE-seq
-MA1134.1.FOS::JUNB,FOS+JUNB,Fos-related factors;Jun-related factors,P01100;P17275,SMiLE-seq
-MA1135.1.FOSB::JUNB,FOSB+JUNB,Fos-related factors;Jun-related factors,P53539;P17275,SMiLE-seq
-MA1136.1.FOSB::JUNB(var.2),FOSB+JUNB(var.2),Fos-related factors;Jun-related factors,P53539;P17275,SMiLE-seq
-MA1137.1.FOSL1::JUNB,FOSL1+JUNB,Fos-related factors;Jun-related factors,P15407;P17275,SMiLE-seq
-MA1138.1.FOSL2::JUNB,FOSL2+JUNB,Fos-related factors;Jun-related factors,P15408;P17275,SMiLE-seq
-MA1139.1.FOSL2::JUNB(var.2),FOSL2+JUNB(var.2),Fos-related factors;Jun-related factors,P15408;P17275,SMiLE-seq
-MA1140.1.JUNB(var.2),JUNB(var.2),Jun-related factors,P17275,SMiLE-seq
-MA1141.1.FOS::JUND,FOS+JUND,Fos-related factors;Jun-related factors,P01100;P17535,SMiLE-seq
-MA1142.1.FOSL1::JUND,FOSL1+JUND,Fos-related factors;Jun-related factors,P15407;P17535,SMiLE-seq
-MA1143.1.FOSL1::JUND(var.2),FOSL1+JUND(var.2),Fos-related factors;Jun-related factors,P15407;P17535,SMiLE-seq
-MA1144.1.FOSL2::JUND,FOSL2+JUND,Fos-related factors;Jun-related factors,P15408;P17535,SMiLE-seq
-MA1145.1.FOSL2::JUND(var.2),FOSL2+JUND(var.2),Fos-related factors;Jun-related factors,P15408;P17535,SMiLE-seq
-MA1146.1.NR1A4::RXRA,NR1A4+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q96RI1;P19793,SMiLE-seq
-MA1147.1.NR4A2::RXRA,NR4A2+RXRA,NGFI-B-related receptors (NR4);RXR-related receptors (NR2),P43354;P19793,SMiLE-seq
-MA1148.1.PPARA::RXRA,PPARA+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q07869;P19793,SMiLE-seq
-MA1149.1.RARA::RXRG,RARA+RXRG,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P10276;P48443,SMiLE-seq
-MA1150.1.RORB,RORB,Thyroid hormone receptor-related factors (NR1),Q92753,SMiLE-seq
-MA1151.1.RORC,RORC,Thyroid hormone receptor-related factors (NR1),P51449,SMiLE-seq
-MA1152.1.SOX15,SOX15,SOX-related factors,O60248,SMiLE-seq
-MA0831.2.TFE3,TFE3,bHLH-ZIP factors,P19532,SMiLE-seq
-MA0693.2.VDR,VDR,Thyroid hormone receptor-related factors (NR1),P11473,SMiLE-seq
-MA1153.1.Smad4,Smad4,SMAD factors,P97471,SMiLE-seq
-MA0162.3.EGR1,EGR1,Three-zinc finger Kruppel-related factors,P18146,HT-SELEX
-MA1418.1.IRF3,IRF3,Interferon-regulatory factors,Q14653,HT-SELEX
-MA1419.1.IRF4,IRF4,Interferon-regulatory factors,Q15306,HT-SELEX
-MA1420.1.IRF5,IRF5,Interferon-regulatory factors,Q13568,HT-SELEX
-MA1421.1.TCF7L1,TCF7L1,TCF-7-related factors,Q9HCS4,HT-SELEX
+TfName,GeneName,Family,UniProt,Source,TaxGroup,Species
+MA0001.1.AGL3,AGL3,MADS,P29383,SELEX,plants,Arabidopsis thaliana
+MA0002.1.RUNX1,RUNX1,Runt-related factors,Q01196,SELEX,vertebrates,Homo sapiens
+MA0003.1.TFAP2A,TFAP2A,AP-2,P05549,SELEX,vertebrates,Homo sapiens
+MA0004.1.Arnt,Arnt,PAS domain factors,P53762,SELEX,vertebrates,Mus musculus
+MA0005.1.AG,AG,MADS,P17839,SELEX,plants,Arabidopsis thaliana
+MA0006.1.Ahr::Arnt,Ahr+Arnt,PAS domain factors,P30561;P53762,SELEX,vertebrates,Mus musculus
+MA0007.1.Ar,Ar,Steroid hormone receptors (NR3),P15207,SELEX,vertebrates,Rattus rattus
+MA0008.1.HAT5,HAT5,Homeo,Q02283,SELEX,plants,Arabidopsis thaliana
+MA0009.1.T,T,Brachyury-related factors,P20293,SELEX,vertebrates,Mus musculus
+MA0010.1.br,br,Other factors with up to three adjacent zinc fingers,Q01295,COMPILED,insects,Drosophila melanogaster
+MA0011.1.br(var.2),br(var.2),Other factors with up to three adjacent zinc fingers,Q01295,COMPILED,insects,Drosophila melanogaster
+MA0012.1.br(var.3),br(var.3),Other factors with up to three adjacent zinc fingers,Q01295,COMPILED,insects,Drosophila melanogaster
+MA0013.1.br(var.4),br(var.4),Other factors with up to three adjacent zinc fingers,Q24206,COMPILED,insects,Drosophila melanogaster
+MA0014.1.Pax5,Pax5,Paired domain only,Q02650,COMPILED,vertebrates,Mus musculus
+MA0015.1.Cf2,Cf2,Factors with multiple dispersed zinc fingers,P20385,SELEX,insects,Drosophila melanogaster
+MA0016.1.usp,usp,,P20153,SELEX,insects,Drosophila melanogaster
+MA0017.1.NR2F1,NR2F1,RXR-related receptors (NR2),P10589,COMPILED,vertebrates,Homo sapiens
+MA0018.1.CREB1,CREB1,CREB-related factors,P16220,SELEX,vertebrates,Homo sapiens
+MA0019.1.Ddit3::Cebpa,Ddit3+Cebpa,C/EBP-related,Q62857;P05554,SELEX,vertebrates,Rattus norvegicus
+MA0020.1.Dof2,Dof2,Dof-type,Q41800,SELEX,plants,Zea mays
+MA0021.1.Dof3,Dof3,Dof-type,Q41801,SELEX,plants,Zea mays
+MA0022.1.dl,dl,,P15330,SELEX,insects,Drosophila melanogaster
+MA0023.1.dl(var.2),dl(var.2),,P15330,SELEX,insects,Drosophila melanogaster
+MA0024.1.E2F1,E2F1,E2F-related factors,NP_005216,COMPILED,vertebrates,Homo sapiens
+MA0025.1.NFIL3,NFIL3,C/EBP-related,Q16649,SELEX,vertebrates,Homo sapiens
+MA0026.1.Eip74EF,Eip74EF,Ets-related factors,P20105,SELEX,insects,Drosophila melanogaster
+MA0027.1.En1,En1,NK-related factors,P09065,SELEX,vertebrates,Mus musculus
+MA0028.1.ELK1,ELK1,Ets-related factors,P19419,SELEX,vertebrates,Homo sapiens
+MA0029.1.Mecom,Mecom,Factors with multiple dispersed zinc fingers,A4QPC8,SELEX,vertebrates,Mus musculus
+MA0030.1.FOXF2,FOXF2,Forkhead box (FOX) factors,Q12947,SELEX,vertebrates,Homo sapiens
+MA0031.1.FOXD1,FOXD1,Forkhead box (FOX) factors,Q16676,SELEX,vertebrates,Homo sapiens
+MA0032.1.FOXC1,FOXC1,Forkhead box (FOX) factors,Q12948,SELEX,vertebrates,Homo sapiens
+MA0033.1.FOXL1,FOXL1,Forkhead box (FOX) factors,Q12952,SELEX,vertebrates,Homo sapiens
+MA0034.1.Gam1,Gam1,Myb/SANT domain factors,Q96464,SELEX,plants,Hordeum vulgare
+MA0035.1.Gata1,Gata1,GATA-type zinc fingers,P17679,SELEX,vertebrates,Mus musculus
+MA0036.1.GATA2,GATA2,GATA-type zinc fingers,P23769,SELEX,vertebrates,Homo sapiens
+MA0037.1.GATA3,GATA3,GATA-type zinc fingers,P23771,SELEX,vertebrates,Homo sapiens
+MA0038.1.Gfi1,Gfi1,More than 3 adjacent zinc finger factors,Q07120,SELEX,vertebrates,Rattus norvegicus
+MA0039.1.Klf4,Klf4,Three-zinc finger Kruppel-related factors,Q60793,SELEX,vertebrates,Mus musculus
+MA0040.1.Foxq1,Foxq1,Forkhead box (FOX) factors,Q63244,SELEX,vertebrates,Rattus norvegicus
+MA0041.1.Foxd3,Foxd3,Forkhead box (FOX) factors,Q63245,SELEX,vertebrates,Rattus norvegicus
+MA0042.1.FOXI1,FOXI1,Forkhead box (FOX) factors,Q12951,SELEX,vertebrates,Homo sapiens
+MA0043.1.HLF,HLF,C/EBP-related,Q16534,SELEX,vertebrates,Homo sapiens
+MA0044.1.HMG-1,HMG-1,,Q41026,SELEX,plants,Pisum sativum
+MA0045.1.HMG-I/Y,HMG-I/Y,,Q43877,SELEX,plants,Pisum sativum
+MA0046.1.HNF1A,HNF1A,POU domain factors,ABR09270,COMPILED,vertebrates,Vertebrata
+MA0047.1.Foxa2,Foxa2,Forkhead box (FOX) factors,P32182,COMPILED,vertebrates,Rattus norvegicus
+MA0048.1.NHLH1,NHLH1,Tal-related factors,Q02575,SELEX,vertebrates,Homo sapiens
+MA0049.1.hb,hb,Factors with multiple dispersed zinc fingers,P05084,COMPILED,insects,Drosophila melanogaster
+MA0050.1.IRF1,IRF1,Interferon-regulatory factors,P10914,SELEX,vertebrates,Homo sapiens
+MA0051.1.IRF2,IRF2,Interferon-regulatory factors,P14316,SELEX,vertebrates,Homo sapiens
+MA0052.1.MEF2A,MEF2A,Regulators of differentiation,EAX02249,SELEX,vertebrates,Homo sapiens
+MA0053.1.MNB1A,MNB1A,Dof-type,P38564,SELEX,plants,Zea mays
+MA0054.1.myb.Ph3,myb.Ph3,Myb/SANT domain factors,Q02994,SELEX,plants,Petunia x hybrida
+MA0056.1.MZF1,MZF1,More than 3 adjacent zinc finger factors,P28698,SELEX,vertebrates,Homo sapiens
+MA0057.1.MZF1(var.2),MZF1(var.2),More than 3 adjacent zinc finger factors,P28698,SELEX,vertebrates,Homo sapiens
+MA0058.1.MAX,MAX,bHLH-ZIP factors,AAH36092,SELEX,vertebrates,Homo sapiens
+MA0059.1.MAX::MYC,MAX+MYC,bHLH-ZIP factors,P61244;P01106,SELEX,vertebrates,Homo sapiens
+MA0060.1.NFYA,NFYA,NFY,P23511,COMPILED,vertebrates,Xenopus laevis
+MA0105.1.NFKB1,NFKB1,NF-kappaB-related factors,P19838,COMPILED,vertebrates,Rattus norvegicus
+MA0062.1.GABPA,GABPA,Ets-related factors,Q06546,COMPILED,vertebrates,Homo sapiens
+MA0063.1.Nkx2-5,Nkx2-5,NK-related factors,P42582,SELEX,vertebrates,Mus musculus
+MA0064.1.PBF,PBF,Dof-type,O24463,SELEX,plants,Zea mays
+MA0065.1.PPARG::RXRA,PPARG+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P19793;P37231,SELEX,vertebrates,Homo sapiens
+MA0066.1.PPARG,PPARG,Thyroid hormone receptor-related factors (NR1),P37231,SELEX,vertebrates,Homo sapiens
+MA0067.1.Pax2,Pax2,Paired domain only,P32114,SELEX,vertebrates,Mus musculus
+MA0068.1.Pax4,Pax4,Paired plus homeo domain,P32115,SELEX,vertebrates,Mus musculus
+MA0069.1.Pax6,Pax6,Paired plus homeo domain,P26367,SELEX,vertebrates,Homo sapiens
+MA0070.1.PBX1,PBX1,TALE-type homeo domain factors,P40424,SELEX,vertebrates,Homo sapiens
+MA0071.1.RORA,RORA,Thyroid hormone receptor-related factors (NR1),P35398,SELEX,vertebrates,Homo sapiens
+MA0072.1.RORA(var.2),RORA(var.2),Thyroid hormone receptor-related factors (NR1),P35398,SELEX,vertebrates,Homo sapiens
+MA0073.1.RREB1,RREB1,Factors with multiple dispersed zinc fingers,Q92766,SELEX,vertebrates,Homo sapiens
+MA0074.1.RXRA::VDR,RXRA+VDR,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P19793;P11473,SELEX,vertebrates,Homo sapiens
+MA0075.1.Prrx2,Prrx2,Paired-related HD factors,Q06348,SELEX,vertebrates,Mus musculus
+MA0076.1.ELK4,ELK4,Ets-related factors,P28324,SELEX,vertebrates,Homo sapiens
+MA0077.1.SOX9,SOX9,SOX-related factors,P48436,SELEX,vertebrates,Homo sapiens
+MA0078.1.Sox17,Sox17,SOX-related factors,Q61473,SELEX,vertebrates,Mus musculus
+MA0079.1.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,SELEX,vertebrates,Homo sapiens
+MA0080.1.SPI1,SPI1,Ets-related factors,P17947,SELEX,vertebrates,Homo sapiens
+MA0081.1.SPIB,SPIB,Ets-related factors,Q01892,SELEX,vertebrates,Homo sapiens
+MA0082.1.squamosa,squamosa,,Q38742,SELEX,plants,Antirrhinum majus
+MA0083.1.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,SELEX,vertebrates,Homo sapiens
+MA0084.1.SRY,SRY,SOX-related factors,Q05066,SELEX,vertebrates,Homo sapiens
+MA0085.1.Su(H),Su(H),,P28159,COMPILED,insects,Drosophila melanogaster
+MA0086.1.sna,sna,More than 3 adjacent zinc finger factors,P08044,SELEX,insects,Drosophila melanogaster
+MA0087.1.Sox5,Sox5,SOX-related factors,P35710,SELEX,vertebrates,Mus musculus
+MA0088.1.znf143,znf143,More than 3 adjacent zinc finger factors,Q91853,COMPILED,vertebrates,Xenopus laevis
+MA0089.1.MAFG::NFE2L1,MAFG+NFE2L1,Jun-related factors;Maf-related factors,Q90889;Q5ZL67,SELEX,vertebrates,Gallus gallus
+MA0090.1.TEAD1,TEAD1,TEF-1-related factors,P28347,COMPILED,vertebrates,Homo sapiens
+MA0091.1.TAL1::TCF3,TAL1+TCF3,E2A-related factors;Tal-related factors,P17542;P15923,SELEX,vertebrates,Homo sapiens
+MA0092.1.Hand1::Tcf3,Hand1+Tcf3,E2A-related factors;Tal-related factors,Q64279;P15806,SELEX,vertebrates,Mus musculus
+MA0093.1.USF1,USF1,bHLH-ZIP factors,P22415,SELEX,vertebrates,Homo sapiens
+MA0094.1.Ubx,Ubx,HOX-related factors,P83949,SELEX,insects,Drosophila melanogaster
+MA0095.1.YY1,YY1,More than 3 adjacent zinc finger factors,P25490,COMPILED,vertebrates,Homo sapiens
+MA0096.1.bZIP910,bZIP910,,O22676,SELEX,plants,Antirrhinum majus
+MA0097.1.bZIP911,bZIP911,,O22677,SELEX,plants,Antirrhinum majus
+MA0098.1.ETS1,ETS1,Ets-related factors,CAG47050,SELEX,vertebrates,Homo sapiens
+MA0099.1.JUN::FOS,JUN+FOS,Fos-related factors;Jun-related factors,P01101,SELEX,vertebrates,Mus musculus
+MA0100.1.Myb,Myb,Myb/SANT domain factors,P06876,SELEX,vertebrates,Mus musculus
+MA0101.1.REL,REL,NF-kappaB-related factors,Q04864,SELEX,vertebrates,Homo sapiens
+MA0102.1.Cebpa,Cebpa,C/EBP-related,P53566,COMPILED,vertebrates,Rattus norvegicus
+MA0103.1.ZEB1,ZEB1,HD-ZF factors,P36197,SELEX,vertebrates,Gallus gallus
+MA0104.1.Mycn,Mycn,bHLH-ZIP factors,P03966,SELEX,vertebrates,Mus musculus
+MA0105.2.NFKB1,NFKB1,NF-kappaB-related factors,P19838,SELEX,vertebrates,Homo sapiens
+MA0106.1.TP53,TP53,p53-related factors,P04637,SELEX,vertebrates,Homo sapiens
+MA0107.1.RELA,RELA,NF-kappaB-related factors,Q04206,SELEX,vertebrates,Homo sapiens
+MA0108.2.TBP,TBP,TBP-related factors,P20226,,vertebrates,
+MA0109.1.HLTF,HLTF,Myb/SANT domain factors,Q95216,SELEX,vertebrates,Oryctolagus cuniculus
+MA0110.1.ATHB-5,ATHB-5,Homeo,11762265,SELEX,plants,Arabidopsis thaliana
+MA0111.1.Spz1,Spz1,,Q99MY0,SELEX,vertebrates,Mus musculus
+MA0112.1.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,COMPILED,vertebrates,Xenopus laevis
+MA0113.1.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,COMPILED,vertebrates,Rattus norvegicus
+MA0114.1.HNF4A,HNF4A,RXR-related receptors (NR2),P41235,COMPILED,vertebrates,
+MA0115.1.NR1H2::RXRA,NR1H2+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P55055;P19793,SELEX,vertebrates,Homo sapiens
+MA0116.1.Znf423,Znf423,Factors with multiple dispersed zinc fingers,O08961,SELEX,vertebrates,Rattus norvegicus
+MA0117.1.Mafb,Mafb,Maf-related factors,P54842,SELEX,vertebrates,Rattus norvegicus
+MA0118.1.Macho-1,Macho-1,,Q9GRA5,SELEX,urochordates,Halocynthia roretzi
+MA0119.1.NFIC::TLX1,NFIC+TLX1,NK-related factors;Nuclear factor 1,P08651;P31314,SELEX,vertebrates,Homo sapiens
+MA0120.1.id1,id1,,O65215,SELEX,plants,Zea mays
+MA0121.1.ARR10,ARR10,Myb/SANT domain factors,O49397,SELEX,plants,Arabidopsis thaliana
+MA0122.1.Nkx3-2,Nkx3-2,NK-related factors,P97503,SELEX,vertebrates,Mus musculus
+MA0123.1.abi4,abi4,,Q8L7W9,SELEX,plants,Zea mays
+MA0124.1.NKX3-1,NKX3-1,NK-related factors,Q99801,SELEX,vertebrates,Homo sapiens
+MA0125.1.Nobox,Nobox,Paired-related HD factors,Q8VIH1,SELEX,vertebrates,Mus musculus
+MA0126.1.ovo,ovo,More than 3 adjacent zinc finger factors,P51521,SELEX,insects,Drosophila melanogaster
+MA0127.1.PEND,PEND,,Q5DW98,SELEX,plants,Pisum sativum
+MA0128.1.EmBP-1,EmBP-1,,P25032,SELEX,plants,Triticum aestivum
+MA0129.1.TGA1A,TGA1A,,P14232,SELEX,plants,Nicotiana sp.
+MA0130.1.ZNF354C,ZNF354C,More than 3 adjacent zinc finger factors,Q86Y25,SELEX,vertebrates,Homo sapiens
+MA0131.1.HINFP,HINFP,Factors with multiple dispersed zinc fingers,Q9BQA5,SELEX,vertebrates,Homo sapiens
+MA0132.1.Pdx1,Pdx1,HOX-related factors,P52946,SELEX,vertebrates,Mus musculus
+MA0135.1.Lhx3,Lhx3,HD-LIM factors,P50481,SELEX,vertebrates,Mus musculus
+MA0136.1.ELF5,ELF5,Ets-related factors,Q9UKW6,SELEX,vertebrates,Mus musculus
+MA0137.1.STAT1,STAT1,STAT factors,Q53XW4,COMPILED,vertebrates,Homo sapiens
+MA0138.1.REST,REST,Factors with multiple dispersed zinc fingers,NP_005603,COMPILED,vertebrates,Homo sapiens
+MA0139.1.CTCF,CTCF,More than 3 adjacent zinc finger factors,P49711,ChIP-seq,vertebrates,Homo sapiens
+MA0140.1.Tal1::Gata1,Tal1+Gata1,GATA-type zinc fingers;Tal-related factors,P17679;P22091,ChIP-seq,vertebrates,Mus musculus
+MA0141.1.Esrrb,Esrrb,Steroid hormone receptors (NR3),Q61539,ChIP-seq,vertebrates,Mus musculus
+MA0142.1.Pou5f1::Sox2,Pou5f1+Sox2,POU domain factors;SOX-related factors,P20263;P48432,ChIP-seq,vertebrates,Mus musculus
+MA0143.1.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq,vertebrates,Mus musculus
+MA0144.1.Stat3,Stat3,STAT factors,P42227,ChIP-seq,vertebrates,Mus musculus
+MA0145.1.Tcfcp2l1,Tcfcp2l1,CP2-related factors,Q3UNW5,ChIP-seq,vertebrates,Mus musculus
+MA0146.1.Zfx,Zfx,More than 3 adjacent zinc finger factors,P17012,ChIP-seq,vertebrates,Mus musculus
+MA0147.1.Myc,Myc,bHLH-ZIP factors,P01108,ChIP-seq,vertebrates,Mus musculus
+MA0148.1.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq,vertebrates,Homo sapiens
+MA0149.1.EWSR1-FLI1,EWSR1-FLI1,Ets-related factors,F1JVV7;F1JVV8,ChIP-seq,vertebrates,Homo sapiens
+MA0062.2.Gabpa,Gabpa,Ets-related factors,Q91YY8,ChIP-seq,vertebrates,Mus musculus
+MA0035.2.Gata1,Gata1,GATA-type zinc fingers,P17679,ChIP-seq,vertebrates,Mus musculus
+MA0039.2.Klf4,Klf4,Three-zinc finger Kruppel-related factors,Q60793,ChIP-seq,vertebrates,Mus musculus
+MA0138.2.REST,REST,Factors with multiple dispersed zinc fingers,Q13127,ChIP-seq,vertebrates,Homo sapiens
+MA0002.2.RUNX1,RUNX1,Runt-related factors,Q01196,ChIP-seq,vertebrates,Mus musculus
+MA0137.2.STAT1,STAT1,STAT factors,Q53XW4,ChIP-seq,vertebrates,Homo sapiens
+MA0104.2.Mycn,Mycn,bHLH-ZIP factors,P03966,ChIP-seq,vertebrates,Mus musculus
+MA0047.2.Foxa2,Foxa2,Forkhead box (FOX) factors,P35583,ChIP-seq,vertebrates,Mus musculus
+MA0112.2.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,ChIP-seq,vertebrates,Homo sapiens
+MA0065.2.Pparg::Rxra,Pparg+Rxra,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P37238;P28700,ChIP-seq,vertebrates,Mus musculus
+MA0150.1.NFE2L2,NFE2L2,Jun-related factors,Q16236,COMPILED,vertebrates,Homo sapiens
+MA0151.1.Arid3a,Arid3a,ARID-related factors,Q62431,SELEX,vertebrates,Mus musculus
+MA0152.1.NFATC2,NFATC2,NFAT-related factors,Q13469,COMPILED,vertebrates,Rattus norvegicus
+MA0153.1.HNF1B,HNF1B,POU domain factors,P35680,COMPILED,vertebrates,Mus musculus
+MA0154.1.EBF1,EBF1,Early B-Cell Factor-related factors,Q07802,COMPILED,vertebrates,Mus musculus
+MA0155.1.INSM1,INSM1,Factors with multiple dispersed zinc fingers,Q01101,COMPILED,vertebrates,Homo sapiens
+MA0156.1.FEV,FEV,Ets-related factors,Q99581,COMPILED,vertebrates,Rattus norvegicus
+MA0157.1.FOXO3,FOXO3,Forkhead box (FOX) factors,O43524,COMPILED,vertebrates,Mus musculus
+MA0158.1.HOXA5,HOXA5,HOX-related factors,P20719,COMPILED,vertebrates,Mus musculus
+MA0159.1.RARA::RXRA,RARA+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P10276;P19793,COMPILED,vertebrates,Homo sapiens
+MA0160.1.NR4A2,NR4A2,NGFI-B-related receptors (NR4),P43354,COMPILED,vertebrates,Rattus norvegicus
+MA0161.1.NFIC,NFIC,Nuclear factor 1,P08651,High-throughput SELEX SAGE,vertebrates,Homo sapiens
+MA0162.1.Egr1,Egr1,Three-zinc finger Kruppel-related factors,P08046,bacterial 1-hybrid,vertebrates,Mus musculus
+MA0163.1.PLAG1,PLAG1,More than 3 adjacent zinc finger factors,Q6DJT9,bacterial 1-hybrid,vertebrates,Homo sapiens
+MA0164.1.Nr2e3,Nr2e3,RXR-related receptors (NR2),Q9QXZ7,SELEX,vertebrates,Mus musculus
+MA0080.2.SPI1,SPI1,Ets-related factors,P17947,COMPILED,vertebrates,Homo sapiens
+MA0018.2.CREB1,CREB1,CREB-related factors,P16220,COMPILED,vertebrates,Rattus norvegicus
+MA0099.2.FOS::JUN,FOS+JUN,Fos-related factors;Jun-related factors,P01100;P05412,COMPILED,vertebrates,Rattus norvegicus
+MA0079.2.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,COMPILED,vertebrates,Rattus norvegicus
+MA0102.2.CEBPA,CEBPA,C/EBP-related,P53566,COMPILED,vertebrates,Rattus norvegicus
+MA0165.1.Abd-B,Abd-B,HOX-related factors,P09087,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0166.1.Antp,Antp,HOX-related factors,P02833,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0167.1.Awh,Awh,,Q8IRC7,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0168.1.B-H1,B-H1,HOX-related factors,Q24255,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0169.1.B-H2,B-H2,HOX-related factors,Q24256,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0170.1.C15,C15,,Q7KS72,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0171.1.CG11085,CG11085,,Q9VYL0,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0172.1.CG11294,CG11294,,Q9W3C6,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0173.1.CG11617,CG11617,,Q9VPL4,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0174.1.Dbx,Dbx,,Q9W064,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0175.1.lms,lms,,Q8MZ02,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0176.1.CG15696-RA,CG15696-RA,,Q9VDH9,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0177.1.CG18599,CG18599,,Q9VEA3,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0178.1.CG32105,CG32105,,Q9VTW5,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0179.1.CG32532,CG32532,,Q9VWH1,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0180.1.Vsx2,Vsx2,Paired-related HD factors,Q9W4B3,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0181.1.Vsx1,Vsx1,Paired-related HD factors,Q5U1D9,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0182.1.CG4328-RA,CG4328-RA,,Q9VTW3,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0183.1.HHEX,HHEX,,Q9VDF0,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0184.1.CG9876,CG9876,,Q7YU61,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0185.1.Deaf1,Deaf1,DEAF,Q24180,DNaseI footprinting,insects,Drosophila melanogaster
+MA0186.1.Dfd,Dfd,HOX-related factors,P07548,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0187.1.Dll,Dll,,P20009,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0188.1.Dr,Dr,NK-related factors,Q03372,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0189.1.E5,E5,,Q9VFQ3,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0190.1.Gsc,Gsc,Paired-related HD factors,P54366,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0191.1.HGTX,HGTX,NK-related factors,Q9NHP8,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0192.1.Hmx,Hmx,NK-related factors,Q9VEI9,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0193.1.schlank,schlank,,Q9W423,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0194.1.Lim1,Lim1,HD-LIM factors,Q9V472,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0195.1.Lim3,Lim3,HD-LIM factors,Q9VJ02,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0196.1.NK7.1,NK7.1,NK-related factors,O61640,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0197.1.nub,nub,POU domain factors,P31368,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0198.1.OdsH,OdsH,Paired-related HD factors,O96616,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0199.1.Optix,Optix,HD-SINE factors,Q95RW8,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0200.1.Pph13,Pph13,,Q8T0V5,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0201.1.Ptx1,Ptx1,Paired-related HD factors,O18400,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0202.1.Rx,Rx,Paired-related HD factors,Q9W2Q1,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0203.1.Scr,Scr,HOX-related factors,P09077,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0204.1.Six4,Six4,HD-SINE factors,Q9Y1P6,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0205.1.Trl,Trl,,Q08605,DNaseI footprinting,insects,Drosophila melanogaster
+MA0206.1.abd-A,abd-A,HOX-related factors,P29555,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0207.1.achi,achi,,A1Z916,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0208.1.al,al,Paired-related HD factors,Q06453,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0209.1.ap,ap,,P29673,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0210.1.ara,ara,TALE-type homeo domain factors,Q24248,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0211.1.bap,bap,NK-related factors,P22809,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0212.1.bcd,bcd,Paired-related HD factors,P09081,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0213.1.brk,brk,,Q9XTN4,DNaseI footprinting,insects,Drosophila melanogaster
+MA0214.1.bsh,bsh,NK-related factors,Q04787,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0215.1.btn,btn,,Q9U984,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0216.1.cad,cad,HOX-related factors,P09085,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0217.1.caup,caup,TALE-type homeo domain factors,P54269,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0218.1.ct,ct,HD-CUT factors,P10180,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0219.1.ems,ems,NK-related factors,P18488,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0220.1.en,en,NK-related factors,P02836,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0221.1.eve,eve,HOX-related factors,P06602,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0222.1.exd,exd,TALE-type homeo domain factors,P40427,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0224.1.exex,exex,,Q9VSC2,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0225.1.ftz,ftz,HOX-related factors,P02835,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0226.1.hbn,hbn,,Q9W2P8,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0227.1.hth,hth,TALE-type homeo domain factors,O46339,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0228.1.ind,ind,,O96620,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0229.1.inv,inv,NK-related factors,P05527,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0230.1.lab,lab,HOX-related factors,P10105,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0231.1.lbe,lbe,,Q9VDA1,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0232.1.lbl,lbl,,P91626,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0233.1.mirr,mirr,,O01667,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0234.1.oc,oc,Paired-related HD factors,P22810,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0235.1.onecut,onecut,HD-CUT factors,Q9NJB5,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0236.1.otp,otp,Paired-related HD factors,P56672,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0237.1.pan,pan,High Mobility Group box (HMG),P91943,DNaseI footprinting,insects,Drosophila melanogaster
+MA0238.1.pb,pb,HOX-related factors,P31264,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0239.1.prd,prd,,P23758,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0240.1.repo,repo,,Q24477,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0241.1.ro,ro,,P10181,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0242.1.Bgb::run,Bgb+run,Runt-related factors,Q24040,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0243.1.sd,sd,,P30052,DNaseI footprinting,insects,Drosophila melanogaster
+MA0244.1.slbo,slbo,C/EBP-related,Q02637,DNaseI footprinting,insects,Drosophila melanogaster
+MA0245.1.slou,slou,NK-related factors,P22807,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0246.1.so,so,HD-SINE factors,Q27350,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0247.1.tin,tin,Homeo,P22711,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0248.1.tup,tup,HD-LIM factors,Q9VJ37,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0249.1.twi,twi,,P10627,DNaseI footprinting,insects,Drosophila melanogaster
+MA0250.1.unc-4,unc-4,Paired-related HD factors,O77215,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0251.1.unpg,unpg,,Q4V5A3,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0252.1.vis,vis,,A1Z913,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0253.1.vnd,vnd,NK-related factors,P22808,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0254.1.vvl,vvl,POU domain factors,P16241,DNaseI footprinting,insects,Drosophila melanogaster
+MA0255.1.z,z,,P09956,DNaseI footprinting,insects,Drosophila melanogaster
+MA0256.1.zen,zen,,P09089,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0257.1.zen2,zen2,,P09090,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0094.2.Ubx,Ubx,HOX-related factors,P83949,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0258.1.ESR2,ESR2,Steroid hormone receptors (NR3),Q92731,ChIP-chip,vertebrates,Homo sapiens
+MA0259.1.ARNT::HIF1A,ARNT+HIF1A,PAS domain factors,P27540;Q16665,COMPILED,vertebrates,Rattus rattus
+MA0260.1.che-1,che-1,More than 3 adjacent zinc finger factors,Q966L8,COMPILED,nematodes,Caenorhabditis elegans
+MA0261.1.lin-14,lin-14,,Q21446,SELEX,nematodes,Caenorhabditis elegans
+MA0262.1.mab-3,mab-3,,O18214,EMSA,nematodes,Caenorhabditis elegans
+MA0263.1.ceh-10::ttx-3,ceh-10+ttx-3,HD-LIM factors;Paired-related HD factors,P41935;G5EE86,EMSA,nematodes,Caenorhabditis elegans
+MA0264.1.ceh-22,ceh-22,NK-related factors,P41936,PBM,nematodes,Caenorhabditis elegans
+MA0265.1.ABF1,ABF1,,P14164,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0266.1.ABF2,ABF2,,Q02486,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0267.1.ACE2,ACE2,Other factors with up to three adjacent zinc fingers,P21192,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0268.1.ADR1,ADR1,Other factors with up to three adjacent zinc fingers,P07248,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0269.1.AFT1,AFT1,,P22149,PBM,fungi,Saccharomyces cerevisiae
+MA0270.1.AFT2,AFT2,,Q08957,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0271.1.ARG80,ARG80,,P07249,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0272.1.ARG81,ARG81,,P05085,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0273.1.ARO80,ARO80,,Q04052,PBM,fungi,Saccharomyces cerevisiae
+MA0274.1.ARR1,ARR1,,Q06596,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0275.1.ASG1,ASG1,,P40467,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0276.1.ASH1,ASH1,GATA-type zinc fingers,P34233,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0277.1.AZF1,AZF1,,P41696,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0278.1.BAS1,BAS1,Myb/SANT domain factors,P22035,PBM,fungi,Saccharomyces cerevisiae
+MA0279.1.CAD1,CAD1,,P24813,COMPILED,fungi,Saccharomyces cerevisiae
+MA0280.1.CAT8,CAT8,,P39113,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0281.1.CBF1,CBF1,,P17106,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0282.1.CEP3,CEP3,,P40969,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0283.1.CHA4,CHA4,,P43634,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0284.1.CIN5,CIN5,,P40917,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0285.1.CRZ1,CRZ1,Other factors with up to three adjacent zinc fingers,P53968,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0286.1.CST6,CST6,,P40535,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0287.1.CUP2,CUP2,,P15315,COMPILED,fungi,Saccharomyces cerevisiae
+MA0288.1.CUP9,CUP9,TALE-type homeo domain factors,P41817,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0289.1.DAL80,DAL80,GATA-type zinc fingers,P26343,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0290.1.DAL81,DAL81,,P21657,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0291.1.DAL82,DAL82,,P21705,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0292.1.ECM22,ECM22,,Q05958,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0293.1.ECM23,ECM23,GATA-type zinc fingers,Q02710,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0294.1.EDS1,EDS1,,P38073,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0295.1.FHL1,FHL1,Forkhead box (FOX) factors,P39521,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0296.1.FKH1,FKH1,Forkhead box (FOX) factors,P40466,PBM,fungi,Saccharomyces cerevisiae
+MA0297.1.FKH2,FKH2,Forkhead box (FOX) factors,P41813,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0298.1.FZF1,FZF1,Factors with multiple dispersed zinc fingers,P32805,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0299.1.GAL4,GAL4,,P04386,PBM,fungi,Saccharomyces cerevisiae
+MA0300.1.GAT1,GAT1,GATA-type zinc fingers,P43574,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0301.1.GAT3,GAT3,GATA-type zinc fingers,Q07928,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0302.1.GAT4,GAT4,GATA-type zinc fingers,P40569,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0303.1.GCN4,GCN4,,P03069,PBM,fungi,Saccharomyces cerevisiae
+MA0304.1.GCR1,GCR1,,P07261,COMPILED,fungi,Saccharomyces cerevisiae
+MA0305.1.GCR2,GCR2,,Q01722,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0306.1.GIS1,GIS1,Other factors with up to three adjacent zinc fingers,Q03833,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0307.1.GLN3,GLN3,GATA-type zinc fingers,P18494,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0308.1.GSM1,GSM1,,P42950,PBM,fungi,Saccharomyces cerevisiae
+MA0309.1.GZF3,GZF3,GATA-type zinc fingers,P42944,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0310.1.HAC1,HAC1,,P41546,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0311.1.HAL9,HAL9,,Q12180,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0312.1.HAP1,HAP1,,P0CE41,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0313.1.HAP2,HAP2,Heteromeric CCAAT-binding factors,P06774,COMPILED,fungi,Saccharomyces cerevisiae
+MA0314.1.HAP3,HAP3,Heteromeric CCAAT-binding factors,P13434,COMPILED,fungi,Saccharomyces cerevisiae
+MA0316.1.HAP5,HAP5,Heteromeric CCAAT-binding factors,Q02516,COMPILED,fungi,Saccharomyces cerevisiae
+MA0317.1.HCM1,HCM1,Forkhead box (FOX) factors,P25364,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0318.1.HMRA2,HMRA2,TALE-type homeo domain factors,P0CY13,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0319.1.HSF1,HSF1,HSF factors,P10961,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0320.1.IME1,IME1,,P21190,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0321.1.INO2,INO2,,P26798,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0322.1.INO4,INO4,,P13902,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0323.1.IXR1,IXR1,,P33417,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0324.1.LEU3,LEU3,,P08638,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0325.1.LYS14,LYS14,,P40971,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0326.1.MAC1,MAC1,,P35192,COMPILED,fungi,Saccharomyces cerevisiae
+MA0327.1.HMRA1,HMRA1,,P0CY11,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0328.1.MATALPHA2,MATALPHA2,TALE-type homeo domain factors,YCL067C,COMPILED,fungi,Saccharomyces cerevisiae
+MA0329.1.MBP1,MBP1,,P39678,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0330.1.MBP1::SWI6,MBP1+SWI6,,P39678;P09959,COMPILED,fungi,Saccharomyces cerevisiae
+MA0331.1.MCM1,MCM1,,P11746,COMPILED,fungi,Saccharomyces cerevisiae
+MA0332.1.MET28,MET28,,P40573,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0333.1.MET31,MET31,,Q03081,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0334.1.MET32,MET32,Other factors with up to three adjacent zinc fingers,Q12041,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0335.1.MET4,MET4,,P32389,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0336.1.MGA1,MGA1,HSF factors,P53050,PBM,fungi,Saccharomyces cerevisiae
+MA0337.1.MIG1,MIG1,Other factors with up to three adjacent zinc fingers,P27705,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0338.1.MIG2,MIG2,Other factors with up to three adjacent zinc fingers,P53035,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0339.1.MIG3,MIG3,Other factors with up to three adjacent zinc fingers,P39943,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0340.1.MOT3,MOT3,Other factors with up to three adjacent zinc fingers,P54785,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0341.1.MSN2,MSN2,Other factors with up to three adjacent zinc fingers,P33748,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0342.1.MSN4,MSN4,Other factors with up to three adjacent zinc fingers,P33749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0343.1.NDT80,NDT80,,P38830,PBM,fungi,Saccharomyces cerevisiae
+MA0344.1.NHP10,NHP10,,Q03435,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0345.1.NHP6A,NHP6A,,P11632,PBM,fungi,Saccharomyces cerevisiae
+MA0346.1.NHP6B,NHP6B,,P11633,PBM,fungi,Saccharomyces cerevisiae
+MA0347.1.NRG1,NRG1,Other factors with up to three adjacent zinc fingers,Q03125,PBM,fungi,Saccharomyces cerevisiae
+MA0348.1.OAF1,OAF1,,P39720,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0349.1.OPI1,OPI1,,P21957,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0350.1.TOD6,TOD6,Myb/SANT domain factors,P34219,PBM,fungi,Saccharomyces cerevisiae
+MA0351.1.DOT6,DOT6,Myb/SANT domain factors,P40059,PBM,fungi,Saccharomyces cerevisiae
+MA0352.1.PDR1,PDR1,,P12383,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0353.1.PDR3,PDR3,,P33200,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0354.1.PDR8,PDR8,,Q06149,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0355.1.PHD1,PHD1,,P36093,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0356.1.PHO2,PHO2,,P07269,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0357.1.PHO4,PHO4,,P07270,PBM,fungi,Saccharomyces cerevisiae
+MA0358.1.PUT3,PUT3,,P25502,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0359.1.RAP1,RAP1,Myb/SANT domain factors,P11938,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0360.1.RDR1,RDR1,,Q08904,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0361.1.RDS1,RDS1,,P25611,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0362.1.RDS2,RDS2,,P19541,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0363.1.REB1,REB1,Myb/SANT domain factors,P21538,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0364.1.REI1,REI1,Factors with multiple dispersed zinc fingers,P38344,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0365.1.RFX1,RFX1,RFX-related factors,P48743,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0366.1.RGM1,RGM1,,Q00453,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0367.1.RGT1,RGT1,,P32862,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0368.1.RIM101,RIM101,Factors with multiple dispersed zinc fingers,P33400,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0369.1.RLM1,RLM1,Regulators of differentiation,Q12224,COMPILED,fungi,Saccharomyces cerevisiae
+MA0370.1.RME1,RME1,Factors with multiple dispersed zinc fingers,P32338,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0371.1.ROX1,ROX1,,P25042,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0372.1.RPH1,RPH1,Other factors with up to three adjacent zinc fingers,P39956,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0373.1.RPN4,RPN4,,Q03465,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0374.1.RSC3,RSC3,,Q06639,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0375.1.RSC30,RSC30,,P38781,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0376.1.RTG3,RTG3,,P38165,PBM,fungi,Saccharomyces cerevisiae
+MA0377.1.SFL1,SFL1,HSF factors,P20134,PBM,fungi,Saccharomyces cerevisiae
+MA0378.1.SFP1,SFP1,Factors with multiple dispersed zinc fingers,P32432,PBM,fungi,Saccharomyces cerevisiae
+MA0379.1.MOT2,MOT2,,P34909,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0380.1.SIP4,SIP4,,P46954,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0381.1.SKN7,SKN7,HSF factors,P38889,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0382.1.SKO1,SKO1,,Q02100,COMPILED,fungi,Saccharomyces cerevisiae
+MA0383.1.SMP1,SMP1,Regulators of differentiation,P38128,PBM,fungi,Saccharomyces cerevisiae
+MA0384.1.SNT2,SNT2,Myb/SANT domain factors,P53127,COMPILED,fungi,Saccharomyces cerevisiae
+MA0385.1.SOK2,SOK2,,P53438,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0386.1.SPT15,SPT15,TBP-related factors,P13393,PBM,fungi,Saccharomyces cerevisiae
+MA0387.1.SPT2,SPT2,,P06843,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0388.1.SPT23,SPT23,,P35210,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0389.1.SRD1,SRD1,GATA-type zinc fingers,P09007,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0390.1.STB3,STB3,,Q12427,PBM,fungi,Saccharomyces cerevisiae
+MA0391.1.STB4,STB4,,P50104,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0392.1.STB5,STB5,,P38699,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0393.1.STE12,STE12,,P13574,COMPILED,fungi,Saccharomyces cerevisiae
+MA0394.1.STP1,STP1,Factors with multiple dispersed zinc fingers,Q00947,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0395.1.STP2,STP2,Factors with multiple dispersed zinc fingers,P38704,PBM,fungi,Saccharomyces cerevisiae
+MA0396.1.STP3,STP3,,Q05937,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0397.1.STP4,STP4,,Q07351,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0398.1.SUM1,SUM1,,P46676,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0399.1.SUT1,SUT1,,P53032,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0400.1.SUT2,SUT2,,Q12286,PBM,fungi,Saccharomyces cerevisiae
+MA0401.1.SWI4,SWI4,,P25302,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0402.1.SWI5,SWI5,,P08153,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0403.1.TBF1,TBF1,Myb/SANT domain factors,Q02457,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0404.1.TBS1,TBS1,,P38114,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0405.1.TEA1,TEA1,,P47988,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0406.1.TEC1,TEC1,,P18412,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0407.1.THI2,THI2,,P38141,COMPILED,fungi,Saccharomyces cerevisiae
+MA0408.1.TOS8,TOS8,TALE-type homeo domain factors,P53147,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0409.1.TYE7,TYE7,,P33122,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0410.1.UGA3,UGA3,,P26370,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0411.1.UPC2,UPC2,,Q12151,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0412.1.UME6,UME6,,P39001,COMPILED,fungi,Saccharomyces cerevisiae
+MA0413.1.USV1,USV1,,Q12132,PBM,fungi,Saccharomyces cerevisiae
+MA0414.1.XBP1,XBP1,,P40489,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0415.1.YAP1,YAP1,,P19880,PBM,fungi,Saccharomyces cerevisiae
+MA0416.1.YAP3,YAP3,,P38749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0417.1.YAP5,YAP5,,P40574,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0418.1.YAP6,YAP6,,Q03935,PBM,fungi,Saccharomyces cerevisiae
+MA0419.1.YAP7,YAP7,,Q08182,COMPILED,fungi,Saccharomyces cerevisiae
+MA0420.1.ERT1,ERT1,,P38140,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0421.1.NSI1,NSI1,Myb/SANT domain factors,Q12457,COMPILED,fungi,Saccharomyces cerevisiae
+MA0422.1.URC2,URC2,,Q04411,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0423.1.YER130C,YER130C,Other factors with up to three adjacent zinc fingers,P39959,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0424.1.YER184C,YER184C,,P39961,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0425.1.YGR067C,YGR067C,Other factors with up to three adjacent zinc fingers,P53243,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0426.1.YHP1,YHP1,,Q04116,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0428.1.YKL222C,YKL222C,,P35995,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0429.1.YLL054C,YLL054C,,Q12244,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0430.1.YLR278C,YLR278C,,Q05854,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0431.1.TDA9,TDA9,Other factors with up to three adjacent zinc fingers,Q04545,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0432.1.YNR063W,YNR063W,,P53749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0433.1.YOX1,YOX1,,P34161,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0434.1.YPR013C,YPR013C,Other factors with up to three adjacent zinc fingers,Q12145,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0435.1.YPR015C,YPR015C,Other factors with up to three adjacent zinc fingers,Q12531,PBM,fungi,Saccharomyces cerevisiae
+MA0436.1.YPR022C,YPR022C,Other factors with up to three adjacent zinc fingers,Q12139,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0437.1.YPR196W,YPR196W,,Q06595,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0438.1.YRM1,YRM1,,Q12340,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0439.1.YRR1,YRR1,,Q12172,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0440.1.ZAP1,ZAP1,Factors with multiple dispersed zinc fingers,P47043,ChIP-chip,fungi,Saccharomyces cerevisiae
+MA0441.1.ZMS1,ZMS1,Other factors with up to three adjacent zinc fingers,P46974,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0442.1.SOX10,SOX10,SOX-related factors,P56693,COMPILED,vertebrates,Rattus norvegicus
+MA0443.1.btd,btd,Other factors with up to three adjacent zinc fingers,Q24266,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0444.1.CG34031,CG34031,,M9NDG6,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0445.1.D,D,,Q24533,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0446.1.fkh,fkh,Forkhead box (FOX) factors,P14734,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0447.1.gt,gt,,P39572,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0448.1.H2.0,H2.0,NK-related factors,P10035,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0449.1.h,h,Helix-Loop-Helix,P14003,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0450.1.hkb,hkb,,Q9VN10,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0451.1.kni,kni,,P10734,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0452.1.Kr,Kr,More than 3 adjacent zinc finger factors,Q9V447,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0197.2.nub,nub,POU domain factors,P31368,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0454.1.odd,odd,More than 3 adjacent zinc finger factors,P23803,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0456.1.opa,opa,More than 3 adjacent zinc finger factors,P39768,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0457.1.PHDP,PHDP,,Q9W1H7,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0458.1.slp1,slp1,Forkhead box (FOX) factors,P32030,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0459.1.tll,tll,,P18102,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0460.1.ttk,ttk,Other factors with up to three adjacent zinc fingers,P17789,bacterial 1-hybrid,insects,Drosophila melanogaster
+MA0141.2.Esrrb,Esrrb,Steroid hormone receptors (NR3),Q61539,ChIP-seq,vertebrates,Mus musculus
+MA0143.2.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq,vertebrates,Mus musculus
+MA0145.2.Tcfcp2l1,Tcfcp2l1,CP2-related factors,Q3UNW5,ChIP-seq,vertebrates,Mus musculus
+MA0146.2.Zfx,Zfx,More than 3 adjacent zinc finger factors,P17012,ChIP-seq,vertebrates,Mus musculus
+MA0148.2.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq,vertebrates,Homo sapiens
+MA0461.1.Atoh1,Atoh1,Tal-related factors,P48985,ChIP-seq,vertebrates,Mus musculus
+MA0462.1.BATF::JUN,BATF+JUN,B-ATF-related factors;Jun-related factors,Q16520;P05412,ChIP-seq,vertebrates,Homo sapiens
+MA0463.1.Bcl6,Bcl6,More than 3 adjacent zinc finger factors,P41183,ChIP-seq,vertebrates,Mus musculus
+MA0464.1.Bhlhe40,Bhlhe40,Hairy-related factors,O35185,ChIP-seq,vertebrates,Mus musculus
+MA0465.1.CDX2,CDX2,HOX-related factors,Q99626,ChIP-seq,vertebrates,Homo sapiens
+MA0466.1.CEBPB,CEBPB,C/EBP-related,P17676,ChIP-seq,vertebrates,Homo sapiens
+MA0467.1.Crx,Crx,Paired-related HD factors,O54751,ChIP-seq,vertebrates,Mus musculus
+MA0468.1.DUX4,DUX4,Paired-related HD factors,Q9UBX2,ChIP-seq,vertebrates,Homo sapiens
+MA0469.1.E2F3,E2F3,E2F-related factors,O35261,ChIP-seq,vertebrates,Mus musculus
+MA0470.1.E2F4,E2F4,E2F-related factors,Q16254,ChIP-seq,vertebrates,Homo sapiens
+MA0471.1.E2F6,E2F6,E2F-related factors,O75461,ChIP-seq,vertebrates,Homo sapiens
+MA0472.1.EGR2,EGR2,Three-zinc finger Krüppel-related factors,P08152,ChIP-seq,vertebrates,Mus musculus
+MA0473.1.ELF1,ELF1,Ets-related factors,P32519,ChIP-seq,vertebrates,Homo sapiens
+MA0474.1.Erg,Erg,Ets-related factors,P81270,ChIP-seq,vertebrates,Mus musculus
+MA0475.1.FLI1,FLI1,Ets-related factors,Q01543,ChIP-seq,vertebrates,Homo sapiens
+MA0476.1.FOS,FOS,Fos-related factors,P01100,ChIP-seq,vertebrates,Homo sapiens
+MA0477.1.FOSL1,FOSL1,Fos-related factors,P15407,ChIP-seq,vertebrates,Homo sapiens
+MA0478.1.FOSL2,FOSL2,Fos-related factors,P15408,ChIP-seq,vertebrates,Homo sapiens
+MA0479.1.FOXH1,FOXH1,Forkhead box (FOX) factors,O75593,ChIP-seq,vertebrates,Homo sapiens
+MA0480.1.Foxo1,Foxo1,Forkhead box (FOX) factors,Q9R1E0,ChIP-seq,vertebrates,Mus musculus
+MA0481.1.FOXP1,FOXP1,Forkhead box (FOX) factors,Q9H334,ChIP-seq,vertebrates,Homo sapiens
+MA0482.1.Gata4,Gata4,GATA-type zinc fingers,Q08369,ChIP-seq,vertebrates,Mus musculus
+MA0483.1.Gfi1b,Gfi1b,More than 3 adjacent zinc finger factors,O70237,ChIP-seq,vertebrates,Mus musculus
+MA0484.1.HNF4G,HNF4G,RXR-related receptors (NR2),Q14541,ChIP-seq,vertebrates,Homo sapiens
+MA0485.1.Hoxc9,Hoxc9,HOX-related factors,P09633,ChIP-seq,vertebrates,Mus musculus
+MA0486.1.HSF1,HSF1,HSF factors,Q00613,ChIP-seq,vertebrates,Homo sapiens
+MA0488.1.JUN,JUN,Jun-related factors,P05412,ChIP-seq,vertebrates,Homo sapiens
+MA0489.1.JUN(var.2),JUN(var.2),Jun-related factors,P05412,ChIP-seq,vertebrates,Homo sapiens
+MA0490.1.JUNB,JUNB,Jun-related factors,P17275,ChIP-seq,vertebrates,Homo sapiens
+MA0491.1.JUND,JUND,Jun-related factors,P17535,ChIP-seq,vertebrates,Homo sapiens
+MA0492.1.JUND(var.2),JUND(var.2),Jun-related factors,P17535,ChIP-seq,vertebrates,Homo sapiens
+MA0493.1.Klf1,Klf1,Three-zinc finger Krüppel-related factors,P46099,ChIP-seq,vertebrates,Mus musculus
+MA0494.1.Nr1h3::Rxra,Nr1h3+Rxra,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q9Z0Y9;P28700,ChIP-seq,vertebrates,Mus musculus
+MA0495.1.MAFF,MAFF,Maf-related factors,Q9ULX9,ChIP-seq,vertebrates,Homo sapiens
+MA0496.1.MAFK,MAFK,Maf-related factors,O60675,ChIP-seq,vertebrates,Homo sapiens
+MA0497.1.MEF2C,MEF2C,Regulators of differentiation,Q06413,ChIP-seq,vertebrates,Homo sapiens
+MA0498.1.Meis1,Meis1,TALE-type homeo domain factors,Q60954,ChIP-seq,vertebrates,Mus musculus
+MA0499.1.Myod1,Myod1,MyoD / ASC-related factors,P10085,ChIP-seq,vertebrates,Mus musculus
+MA0500.1.Myog,Myog,MyoD / ASC-related factors,P12979,ChIP-seq,vertebrates,Mus musculus
+MA0501.1.MAF::NFE2,MAF+NFE2,Jun-related factors;Maf-related factors,O75444;Q16621,ChIP-seq,vertebrates,Homo sapiens
+MA0502.1.NFYB,NFYB,NFY,P25208,ChIP-seq,vertebrates,Homo sapiens
+MA0503.1.Nkx2-5(var.2),Nkx2-5(var.2),NK-related factors,P42582,ChIP-seq,vertebrates,Mus musculus
+MA0504.1.NR2C2,NR2C2,RXR-related receptors (NR2),P49116,ChIP-seq,vertebrates,Homo sapiens
+MA0505.1.Nr5a2,Nr5a2,FTZ-F1-related receptors (NR5),P45448,ChIP-seq,vertebrates,Mus musculus
+MA0506.1.NRF1,NRF1,Jun-related factors,Q16656,ChIP-seq,vertebrates,Homo sapiens
+MA0507.1.POU2F2,POU2F2,POU domain factors,P09086,ChIP-seq,vertebrates,Homo sapiens
+MA0508.1.PRDM1,PRDM1,More than 3 adjacent zinc finger factors,O75626,ChIP-seq,vertebrates,Homo sapiens
+MA0509.1.Rfx1,Rfx1,RFX-related factors,P48377,ChIP-seq,vertebrates,Mus musculus
+MA0510.1.RFX5,RFX5,RFX-related factors,P48382,ChIP-seq,vertebrates,Homo sapiens
+MA0511.1.RUNX2,RUNX2,Runt-related factors,Q13950,ChIP-seq,vertebrates,Homo sapiens
+MA0512.1.Rxra,Rxra,RXR-related receptors (NR2),P28700,ChIP-seq,vertebrates,Mus musculus
+MA0513.1.SMAD2::SMAD3::SMAD4,SMAD2+SMAD3+SMAD4,SMAD factors,Q15796;P84022;Q13485,ChIP-seq,vertebrates,Homo sapiens
+MA0514.1.Sox3,Sox3,SOX-related factors,P53784,ChIP-seq,vertebrates,Mus musculus
+MA0515.1.Sox6,Sox6,SOX-related factors,P40645,ChIP-seq,vertebrates,Mus musculus
+MA0516.1.SP2,SP2,Three-zinc finger Krüppel-related factors,Q02086,ChIP-seq,vertebrates,Homo sapiens
+MA0517.1.STAT1::STAT2,STAT1+STAT2,STAT factors,P42224;P52630,ChIP-seq,vertebrates,Homo sapiens
+MA0518.1.Stat4,Stat4,STAT factors,P42228,ChIP-seq,vertebrates,Mus musculus
+MA0519.1.Stat5a::Stat5b,Stat5a+Stat5b,STAT factors,P42230;P42232,ChIP-seq,vertebrates,Mus musculus
+MA0520.1.Stat6,Stat6,STAT factors,P52633,ChIP-seq,vertebrates,Mus musculus
+MA0521.1.Tcf12,Tcf12,E2A-related factors,Q61286,ChIP-seq,vertebrates,Mus musculus
+MA0522.1.Tcf3,Tcf3,E2A-related factors,Q9Z1J1,ChIP-seq,vertebrates,Mus musculus
+MA0523.1.TCF7L2,TCF7L2,TCF-7-related factors,Q9NQB0,ChIP-seq,vertebrates,Homo sapiens
+MA0524.1.TFAP2C,TFAP2C,AP-2,Q92754,ChIP-seq,vertebrates,Homo sapiens
+MA0525.1.TP63,TP63,p53-related factors,Q9H3D4,ChIP-seq,vertebrates,Homo sapiens
+MA0526.1.USF2,USF2,bHLH-ZIP factors,Q15853,ChIP-seq,vertebrates,Homo sapiens
+MA0527.1.ZBTB33,ZBTB33,Other factors with up to three adjacent zinc fingers,Q86T24,ChIP-seq,vertebrates,Homo sapiens
+MA0528.1.ZNF263,ZNF263,More than 3 adjacent zinc finger factors,O14978,ChIP-seq,vertebrates,Homo sapiens
+MA0007.2.AR,AR,Steroid hormone receptors (NR3),P10275,ChIP-seq,vertebrates,Homo sapiens
+MA0102.3.CEBPA,CEBPA,C/EBP-related,P49715,ChIP-seq,vertebrates,Homo sapiens
+MA0024.2.E2F1,E2F1,E2F-related factors,Q01094,ChIP-seq,vertebrates,Homo sapiens
+MA0154.2.EBF1,EBF1,Early B-Cell Factor-related factors,Q9UH73,ChIP-seq,vertebrates,Homo sapiens
+MA0162.2.EGR1,EGR1,Three-zinc finger Kruppel-related factors,P18146,ChIP-seq,vertebrates,Homo sapiens
+MA0076.2.ELK4,ELK4,Ets-related factors,P28324,ChIP-seq,vertebrates,Homo sapiens
+MA0258.2.ESR2,ESR2,Steroid hormone receptors (NR3),Q92731,ChIP-seq,vertebrates,Homo sapiens
+MA0098.2.Ets1,Ets1,Ets-related factors,P27577,ChIP-seq,vertebrates,Mus musculus
+MA0148.3.FOXA1,FOXA1,Forkhead box (FOX) factors,P55317,ChIP-seq,vertebrates,Homo sapiens
+MA0035.3.Gata1,Gata1,GATA-type zinc fingers,P17679,ChIP-seq,vertebrates,Mus musculus
+MA0036.2.GATA2,GATA2,GATA-type zinc fingers,P23769,ChIP-seq,vertebrates,Homo sapiens
+MA0037.2.GATA3,GATA3,GATA-type zinc fingers,P23771,ChIP-seq,vertebrates,Homo sapiens
+MA0114.2.HNF4A,HNF4A,RXR-related receptors (NR2),P41235,ChIP-seq,vertebrates,Homo sapiens
+MA0050.2.IRF1,IRF1,Interferon-regulatory factors,P10914,ChIP-seq,vertebrates,Homo sapiens
+MA0058.2.MAX,MAX,bHLH-ZIP factors,P61244,ChIP-seq,vertebrates,Homo sapiens
+MA0052.2.MEF2A,MEF2A,Regulators of differentiation,Q02078,ChIP-seq,vertebrates,Homo sapiens
+MA0100.2.Myb,Myb,Myb/SANT domain factors,P06876,ChIP-seq,vertebrates,Mus musculus
+MA0147.2.Myc,Myc,bHLH-ZIP factors,P01108,ChIP-seq,vertebrates,Mus musculus
+MA0104.3.Mycn,Mycn,bHLH-ZIP factors,P03966,ChIP-seq,vertebrates,Mus musculus
+MA0150.2.Nfe2l2,Nfe2l2,Jun-related factors,Q60795,ChIP-seq,vertebrates,Mus musculus
+MA0105.3.NFKB1,NFKB1,NF-kappaB-related factors,P19838,ChIP-seq,vertebrates,Homo sapiens
+MA0060.2.NFYA,NFYA,NFY,P23511,ChIP-seq,vertebrates,Homo sapiens
+MA0014.2.PAX5,PAX5,Paired domain only,Q02548,ChIP-seq,vertebrates,Homo sapiens
+MA0080.3.Spi1,Spi1,Ets-related factors,P17433,ChIP-seq,vertebrates,Mus musculus
+MA0143.3.Sox2,Sox2,SOX-related factors,P48432,ChIP-seq,vertebrates,Mus musculus
+MA0079.3.SP1,SP1,Three-zinc finger Krüppel-related factors,P08047,ChIP-seq,vertebrates,Homo sapiens
+MA0083.2.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,ChIP-seq,vertebrates,Homo sapiens
+MA0137.3.STAT1,STAT1,STAT factors,P42224,ChIP-seq,vertebrates,Homo sapiens
+MA0144.2.STAT3,STAT3,STAT factors,P40763,ChIP-seq,vertebrates,Homo sapiens
+MA0140.2.GATA1::TAL1,GATA1+TAL1,GATA-type zinc fingers;Tal-related factors,P15976;P17542,ChIP-seq,vertebrates,Homo sapiens
+MA0003.2.TFAP2A,TFAP2A,AP-2,P05549,ChIP-seq,vertebrates,Homo sapiens
+MA0106.2.TP53,TP53,p53-related factors,P04637,ChIP-seq,vertebrates,Homo sapiens
+MA0093.2.USF1,USF1,bHLH-ZIP factors,P22415,ChIP-seq,vertebrates,Homo sapiens
+MA0095.2.YY1,YY1,More than 3 adjacent zinc finger factors,P25490,ChIP-seq,vertebrates,Homo sapiens
+MA0103.2.ZEB1,ZEB1,HD-ZF factors,P37275,ChIP-seq,vertebrates,Homo sapiens
+MA0529.1.BEAF-32,BEAF-32,,Q7JN06,ChIP-chip,insects,Drosophila melanogaster
+MA0216.2.cad,cad,HOX-related factors,P09085,ChIP-chip,insects,Drosophila melanogaster
+MA0530.1.cnc::maf-S,cnc+maf-S,Jun-related factors;Maf-related factors,P20482;Q4QPP9,ChIP-chip,insects,Drosophila melanogaster
+MA0531.1.CTCF,CTCF,More than 3 adjacent zinc finger factors,Q9VS55,ChIP-chip,insects,Drosophila melanogaster
+MA0452.2.Kr,Kr,More than 3 adjacent zinc finger factors,P07247,ChIP-chip,insects,Drosophila melanogaster
+MA0532.1.Stat92E,Stat92E,STAT factors,Q24151,ChIP-chip,insects,Drosophila melanogaster
+MA0533.1.su(Hw),su(Hw),Factors with multiple dispersed zinc fingers,P08970,ChIP-chip,insects,Drosophila melanogaster
+MA0534.1.EcR::usp,EcR+usp,,P34021;P20153,ChIP-seq,insects,Drosophila melanogaster
+MA0237.2.pan,pan,,Q8IMA8,ChIP-chip,insects,Drosophila melanogaster
+MA0535.1.Mad,Mad,SMAD factors,P42003,ChIP-chip,insects,Drosophila melanogaster
+MA0536.1.pnr,pnr,GATA-type zinc fingers,Q9VEZ8,ChIP-chip,insects,Drosophila melanogaster
+MA0247.2.tin,tin,,P22711,ChIP-chip,insects,Drosophila melanogaster
+MA0537.1.blmp-1,blmp-1,More than 3 adjacent zinc finger factors,Q93560,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0538.1.daf-12,daf-12,GATA-type zinc fingers,G5EFF5,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0540.1.dpy-27,dpy-27,,P48996,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0541.1.efl-1,efl-1,E2F-related factors,G5EF11,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0542.1.elt-3,elt-3,GATA-type zinc fingers,G5ECF7,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0543.1.eor-1,eor-1,,G5EDU4,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0544.1.snpc-4,snpc-4,Myb/SANT domain factors,P91868,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0545.1.hlh-1,hlh-1,,P22980,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0546.1.pha-4,pha-4,Forkhead box (FOX) factors,Q17381,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0547.1.skn-1,skn-1,,P34707,ChIP-seq,nematodes,Caenorhabditis elegans
+MA0548.1.AGL15,AGL15,,Q38847,ChIP-chip,plants,Arabidopsis thaliana
+MA0549.1.BZR2,BZR2,,Q9LN63,ChIP-chip,plants,Arabidopsis thaliana
+MA0550.1.BZR1,BZR1,,Q8S307,ChIP-chip,plants,Arabidopsis thaliana
+MA0551.1.HY5,HY5,,O24646,ChIP-chip,plants,Arabidopsis thaliana
+MA0552.1.PIF1,PIF1,,Q8GZM7,ChIP-chip,plants,Arabidopsis thaliana
+MA0553.1.SMZ,SMZ,,Q6PV68,ChIP-chip,plants,Arabidopsis thaliana
+MA0554.1.SOC1,SOC1,,O64645,ChIP-chip,plants,Arabidopsis thaliana
+MA0555.1.SVP,SVP,,Q9FVC1,ChIP-chip,plants,Arabidopsis thaliana
+MA0556.1.AP3,AP3,,P35632,ChIP-seq,plants,Arabidopsis thaliana
+MA0557.1.FHY3,FHY3,,Q9LIE5,ChIP-seq,plants,Arabidopsis thaliana
+MA0558.1.FLC,FLC,,Q5Q9J1,ChIP-seq,plants,Arabidopsis thaliana
+MA0559.1.PI,PI,,P48007,ChIP-seq,plants,Arabidopsis thaliana
+MA0560.1.PIF3,PIF3,,O80536,ChIP-seq,plants,Arabidopsis thaliana
+MA0561.1.PIF4,PIF4,,Q8W2F3,ChIP-seq,plants,Arabidopsis thaliana
+MA0562.1.PIF5,PIF5,,Q84LH8,ChIP-seq,plants,Arabidopsis thaliana
+MA0563.1.SEP3,SEP3,,O22456,ChIP-seq,plants,Arabidopsis thaliana
+MA0564.1.ABI3,ABI3,,Q01593,PBM,plants,Arabidopsis thaliana
+MA0565.1.FUS3,FUS3,,Q9LW31,PBM,plants,Arabidopsis thaliana
+MA0566.1.MYC2,MYC2,,Q39204,PBM,plants,Arabidopsis thaliana
+MA0567.1.ERF1B,ERF1B,,Q8LDC8,PBM,plants,Arabidopsis thaliana
+MA0568.1.MYC3,MYC3,,Q9FIP9,PBM,plants,Arabidopsis thaliana
+MA0569.1.MYC4,MYC4,,O49687,PBM,plants,Arabidopsis thaliana
+MA0570.1.ABF1,ABF1,,Q9M7Q5,SELEX,plants,Arabidopsis thaliana
+MA0005.2.AG,AG,,P17839,SELEX,plants,Arabidopsis thaliana
+MA0571.1.ANT,ANT,,Q38914,SELEX,plants,Arabidopsis thaliana
+MA0008.2.HAT5,HAT5,,Q02283,SELEX,plants,Arabidopsis thaliana
+MA0110.2.ATHB-5,ATHB-5,,P46667,SELEX,plants,Arabidopsis thaliana
+MA0573.1.ATHB-9,ATHB-9,,O04292,SELEX,plants,Arabidopsis thaliana
+MA0574.1.MYB15,MYB15,Myb/SANT domain factors,Q9LTC4,SELEX,plants,Arabidopsis thaliana
+MA0575.1.F3A4.140,F3A4.140,Myb/SANT domain factors,Q9SN12,SELEX,plants,Arabidopsis thaliana
+MA0576.1.RAX3,RAX3,Myb/SANT domain factors,Q9M2Y9,SELEX,plants,Arabidopsis thaliana
+MA0577.1.SPL3,SPL3,,P93015,SELEX,plants,Arabidopsis thaliana
+MA0578.1.SPL8,SPL8,,Q8GXL3,SELEX,plants,Arabidopsis thaliana
+MA0579.1.CDC5,CDC5,Myb/SANT domain factors,P92948,SELEX,plants,Arabidopsis thaliana
+MA0580.1.DYT1,DYT1,,O81900,SELEX,plants,Arabidopsis thaliana
+MA0581.1.LEC2,LEC2,,Q1PFR7,SELEX,plants,Arabidopsis thaliana
+MA0582.1.RAV1,RAV1,,Q9ZWM9,SELEX,plants,Arabidopsis thaliana
+MA0583.1.RAV1(var.2),RAV1(var.2),,Q9ZWM9,SELEX,plants,Arabidopsis thaliana
+MA0584.1.SEP1,SEP1,,P29382,SELEX,plants,Arabidopsis thaliana
+MA0001.2.AGL3,AGL3,,P29383,SELEX,plants,Arabidopsis thaliana
+MA0585.1.AGL1,AGL1,,P29381,SELEX,plants,Arabidopsis thaliana
+MA0586.1.SPL14,SPL14,,Q8RY95,SELEX,plants,Arabidopsis thaliana
+MA0587.1.TCP16,TCP16,TCP domain,Q9M1U4,SELEX,plants,Arabidopsis thaliana
+MA0588.1.TGA1,TGA1,,Q39237,SELEX,plants,Arabidopsis thaliana
+MA0589.1.ZAP1,ZAP1,,Q9SI37,SELEX,plants,Arabidopsis thaliana
+MA0590.1.LFY,LFY,,Q00958,SELEX,plants,Arabidopsis thaliana
+MA0591.1.Bach1::Mafk,Bach1+Mafk,Jun-related factors;Maf-related factors,P97302;Q61827,ChIP-seq,vertebrates,Mus musculus
+MA0592.1.ESRRA,ESRRA,Steroid hormone receptors (NR3),P11474,ChIP-seq,vertebrates,Homo sapiens
+MA0593.1.FOXP2,FOXP2,Forkhead box (FOX) factors,O15409,ChIP-seq,vertebrates,Homo sapiens
+MA0594.1.Hoxa9,Hoxa9,HOX-related factors,P09631,ChIP-seq,vertebrates,Mus musculus
+MA0595.1.SREBF1,SREBF1,bHLH-ZIP factors,P36956,ChIP-seq,vertebrates,Homo sapiens
+MA0596.1.SREBF2,SREBF2,bHLH-ZIP factors,Q12772,ChIP-seq,vertebrates,Homo sapiens
+MA0597.1.THAP1,THAP1,THAP-related factors,Q9NVV9,ChIP-seq,vertebrates,Homo sapiens
+MA0598.1.EHF,EHF,Ets-related factors,Q9NZC4,ChIP-seq,vertebrates,Homo sapiens
+MA0599.1.KLF5,KLF5,Three-zinc finger Krüppel-related factors,Q13887,ChIP-seq,vertebrates,Homo sapiens
+MA0600.1.RFX2,RFX2,RFX-related factors,P48378,ChIP-seq,vertebrates,Homo sapiens
+MA0113.2.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,ChIP-seq,vertebrates,Mus musculus
+MA0601.1.Arid3b,Arid3b,ARID-related factors,Q9Z1N7,PBM,vertebrates,Mus musculus
+MA0602.1.Arid5a,Arid5a,ARID-related factors,Q3U108,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0603.1.Arntl,Arntl,PAS domain factors,Q9WTL8,PBM,vertebrates,Mus musculus
+MA0604.1.Atf1,Atf1,CREB-related factors,P81269,PBM,vertebrates,Mus musculus
+MA0605.1.Atf3,Atf3,Fos-related factors,Q60765,PBM,vertebrates,Mus musculus
+MA0606.1.NFAT5,NFAT5,NFAT-related factors,A0A1D5NT38,PBM,vertebrates,Gallus gallus
+MA0607.1.Bhlha15,Bhlha15,Tal-related factors,Q9QYC3,PBM,vertebrates,Mus musculus
+MA0608.1.Creb3l2,Creb3l2,CREB-related factors,Q8BH52,PBM,vertebrates,Mus musculus
+MA0609.1.Crem,Crem,CREB-related factors,P27699,PBM,vertebrates,Mus musculus
+MA0610.1.DMRT3,DMRT3,DMRT,Q9NQL9,PBM,vertebrates,Homo sapiens
+MA0611.1.Dux,Dux,Paired-related HD factors,A1JVI8,PBM,vertebrates,Mus musculus
+MA0612.1.EMX1,EMX1,NK-related factors,Q04741,PBM,vertebrates,Homo sapiens
+MA0613.1.FOXG1,FOXG1,Forkhead box (FOX) factors,P55316,PBM,vertebrates,Homo sapiens
+MA0614.1.Foxj2,Foxj2,Forkhead box (FOX) factors,Q9ES18,PBM,vertebrates,Mus musculus
+MA0615.1.Gmeb1,Gmeb1,GMEB,Q9JL60,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA1099.1.Hes1,Hes1,Hairy-related factors,P35428,PBM,vertebrates,Mus musculus
+MA0616.1.Hes2,Hes2,Hairy-related factors,O54792,PBM,vertebrates,Mus musculus
+MA0617.1.Id2,Id2,HLH domain only,P41136,PBM,vertebrates,Mus musculus
+MA0618.1.LBX1,LBX1,NK-related factors,P52954,PBM,vertebrates,Homo sapiens
+MA0619.1.LIN54,LIN54,,F1NCE0,PBM,vertebrates,Gallus gallus
+MA0620.1.Mitf,Mitf,bHLH-ZIP factors,Q08874,PBM,vertebrates,Mus musculus
+MA0621.1.mix-a,mix-a,Paired-related HD factors,P21711,PBM,vertebrates,Xenopus laevis
+MA0622.1.Mlxip,Mlxip,bHLH-ZIP factors,Q2VPU4,PBM,vertebrates,Mus musculus
+MA0623.1.Neurog1,Neurog1,Tal-related factors,P70660,PBM,vertebrates,Mus musculus
+MA0624.1.NFATC1,NFATC1,NFAT-related factors,G1MTN6,PBM,vertebrates,Meleagris gallopavo
+MA0625.1.NFATC3,NFATC3,NFAT-related factors,Q12968,PBM,vertebrates,Homo sapiens
+MA0626.1.Npas2,Npas2,PAS domain factors,P97460,PBM,vertebrates,Mus musculus
+MA0627.1.Pou2f3,Pou2f3,POU domain factors,P31362,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0628.1.POU6F1,POU6F1,POU domain factors,Q14863,PBM,vertebrates,Homo sapiens
+MA0629.1.Rhox11,Rhox11,Paired-related HD factors,Q810N8,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0630.1.SHOX,SHOX,Paired-related HD factors,O15266,PBM,vertebrates,Homo sapiens
+MA0631.1.Six3,Six3,HD-SINE factors,Q62233,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0632.1.Tcfl5,Tcfl5,PAS domain factors,Q32NY8,PBM,vertebrates,Mus musculus
+MA0633.1.Twist2,Twist2,Tal-related factors,Q9D030,PBM,vertebrates,Mus musculus
+MA0634.1.ALX3,ALX3,Paired-related HD factors,O95076,HT-SELEX,vertebrates,Homo sapiens
+MA0007.3.Ar,Ar,Steroid hormone receptors (NR3),P19091,HT-SELEX,vertebrates,Mus musculus
+MA0635.1.BARHL2,BARHL2,NK-related factors,Q9NY43,HT-SELEX,vertebrates,Homo sapiens
+MA0636.1.BHLHE41,BHLHE41,Hairy-related factors,Q9C0J9,HT-SELEX,vertebrates,Homo sapiens
+MA0637.1.CENPB,CENPB,,P07199,HT-SELEX,vertebrates,Homo sapiens
+MA0638.1.CREB3,CREB3,CREB-related factors,O43889,HT-SELEX,vertebrates,Homo sapiens
+MA0639.1.DBP,DBP,C/EBP-related,Q10586,HT-SELEX,vertebrates,Homo sapiens
+MA0154.3.EBF1,EBF1,Early B-Cell Factor-related factors,Q9UH73,HT-SELEX,vertebrates,Homo sapiens
+MA0598.2.EHF,EHF,Ets-related factors,Q9NZC4,HT-SELEX,vertebrates,Homo sapiens
+MA0640.1.ELF3,ELF3,Ets-related factors,P78545,HT-SELEX,vertebrates,Homo sapiens
+MA0641.1.ELF4,ELF4,Ets-related factors,Q99607,HT-SELEX,vertebrates,Homo sapiens
+MA0136.2.ELF5,ELF5,Ets-related factors,Q9UKW6,HT-SELEX,vertebrates,Homo sapiens
+MA0027.2.EN1,EN1,NK-related factors,Q05925,HT-SELEX,vertebrates,Homo sapiens
+MA0642.1.EN2,EN2,NK-related factors,P19622,HT-SELEX,vertebrates,Homo sapiens
+MA0643.1.Esrrg,Esrrg,Steroid hormone receptors (NR3),P62509,HT-SELEX,vertebrates,Mus musculus
+MA0644.1.ESX1,ESX1,Paired-related HD factors,Q8N693,HT-SELEX,vertebrates,Homo sapiens
+MA0645.1.ETV6,ETV6,Ets-related factors,P41212,HT-SELEX,vertebrates,Homo sapiens
+MA0475.2.FLI1,FLI1,Ets-related factors,Q01543,HT-SELEX,vertebrates,Homo sapiens
+MA0042.2.FOXI1,FOXI1,Forkhead box (FOX) factors,Q12951,HT-SELEX,vertebrates,Homo sapiens
+MA0033.2.FOXL1,FOXL1,Forkhead box (FOX) factors,Q12952,HT-SELEX,vertebrates,Homo sapiens
+MA0157.2.FOXO3,FOXO3,Forkhead box (FOX) factors,O43524,HT-SELEX,vertebrates,Homo sapiens
+MA0646.1.GCM1,GCM1,GCM factors,Q9NP62,HT-SELEX,vertebrates,Homo sapiens
+MA0647.1.GRHL1,GRHL1,Grainyhead-related factors,Q9NZI5,HT-SELEX,vertebrates,Homo sapiens
+MA0648.1.GSC,GSC,Paired-related HD factors,P56915,HT-SELEX,vertebrates,Homo sapiens
+MA0649.1.HEY2,HEY2,Hairy-related factors,Q9UBP5,HT-SELEX,vertebrates,Homo sapiens
+MA0131.2.HINFP,HINFP,Factors with multiple dispersed zinc fingers,Q9BQA5,HT-SELEX,vertebrates,Homo sapiens
+MA0043.2.HLF,HLF,C/EBP-related,Q16534,HT-SELEX,vertebrates,Homo sapiens
+MA0046.2.HNF1A,HNF1A,POU domain factors,P20823,HT-SELEX,vertebrates,Homo sapiens
+MA0153.2.HNF1B,HNF1B,POU domain factors,P35680,HT-SELEX,vertebrates,Homo sapiens
+MA0650.1.HOXA13,HOXA13,HOX-related factors,P31271,HT-SELEX,vertebrates,Homo sapiens
+MA0651.1.HOXC11,HOXC11,HOX-related factors,O43248,HT-SELEX,vertebrates,Homo sapiens
+MA0486.2.HSF1,HSF1,HSF factors,Q00613,HT-SELEX,vertebrates,Homo sapiens
+MA0652.1.IRF8,IRF8,Interferon-regulatory factors,Q02556,HT-SELEX,vertebrates,Homo sapiens
+MA0653.1.IRF9,IRF9,Interferon-regulatory factors,Q00978,HT-SELEX,vertebrates,Homo sapiens
+MA0654.1.ISX,ISX,Paired-related HD factors,Q2M1V0,HT-SELEX,vertebrates,Homo sapiens
+MA0655.1.JDP2,JDP2,Fos-related factors,Q8WYK2,HT-SELEX,vertebrates,Homo sapiens
+MA0656.1.JDP2(var.2),JDP2(var.2),Fos-related factors,Q8WYK2,HT-SELEX,vertebrates,Homo sapiens
+MA0657.1.KLF13,KLF13,Three-zinc finger Krüppel-related factors,Q9Y2Y9,HT-SELEX,vertebrates,Homo sapiens
+MA0658.1.LHX6,LHX6,HD-LIM factors,Q9UPM6,HT-SELEX,vertebrates,Homo sapiens
+MA0659.1.MAFG,MAFG,Maf-related factors,O15525,HT-SELEX,vertebrates,Homo sapiens
+MA0660.1.MEF2B,MEF2B,Regulators of differentiation,Q02080,HT-SELEX,vertebrates,Homo sapiens
+MA0661.1.MEOX1,MEOX1,HOX-related factors,P50221,HT-SELEX,vertebrates,Homo sapiens
+MA0662.1.MIXL1,MIXL1,Paired-related HD factors,Q9H2W2,HT-SELEX,vertebrates,Homo sapiens
+MA0663.1.MLX,MLX,bHLH-ZIP factors,Q9UH92,HT-SELEX,vertebrates,Homo sapiens
+MA0664.1.MLXIPL,MLXIPL,bHLH-ZIP factors,Q9NP71,HT-SELEX,vertebrates,Homo sapiens
+MA0665.1.MSC,MSC,Tal-related factors,O60682,HT-SELEX,vertebrates,Homo sapiens
+MA0666.1.MSX1,MSX1,NK-related factors,P28360,HT-SELEX,vertebrates,Homo sapiens
+MA0667.1.MYF6,MYF6,MyoD / ASC-related factors,P23409,HT-SELEX,vertebrates,Homo sapiens
+MA0668.1.NEUROD2,NEUROD2,Tal-related factors,Q15784,HT-SELEX,vertebrates,Homo sapiens
+MA0669.1.NEUROG2,NEUROG2,Tal-related factors,Q9H2A3,HT-SELEX,vertebrates,Homo sapiens
+MA0670.1.NFIA,NFIA,Nuclear factor 1,Q12857,HT-SELEX,vertebrates,Homo sapiens
+MA0671.1.NFIX,NFIX,Nuclear factor 1,Q14938,HT-SELEX,vertebrates,Homo sapiens
+MA0048.2.NHLH1,NHLH1,Tal-related factors,Q02575,HT-SELEX,vertebrates,Homo sapiens
+MA0672.1.NKX2-3,NKX2-3,NK-related factors,Q8TAU0,HT-SELEX,vertebrates,Homo sapiens
+MA0673.1.NKX2-8,NKX2-8,NK-related factors,O15522,HT-SELEX,vertebrates,Homo sapiens
+MA0674.1.NKX6-1,NKX6-1,NK-related factors,P78426,HT-SELEX,vertebrates,Homo sapiens
+MA0675.1.NKX6-2,NKX6-2,NK-related factors,Q9C056,HT-SELEX,vertebrates,Homo sapiens
+MA0676.1.Nr2e1,Nr2e1,RXR-related receptors (NR2),Q9Y466,HT-SELEX,vertebrates,Mus musculus
+MA0677.1.Nr2f6,Nr2f6,RXR-related receptors (NR2),P43136,HT-SELEX,vertebrates,Mus musculus
+MA0678.1.OLIG2,OLIG2,Tal-related factors,Q13516,HT-SELEX,vertebrates,Homo sapiens
+MA0679.1.ONECUT1,ONECUT1,HD-CUT factors,Q9UBC0,HT-SELEX,vertebrates,Homo sapiens
+MA0068.2.PAX4,PAX4,Paired plus homeo domain,O43316,HT-SELEX,vertebrates,Homo sapiens
+MA0680.1.PAX7,PAX7,Paired plus homeo domain,P23759,HT-SELEX,vertebrates,Homo sapiens
+MA0681.1.Phox2b,Phox2b,Paired-related HD factors,Q99453,HT-SELEX,vertebrates,Mus musculus
+MA0682.1.Pitx1,Pitx1,Paired-related HD factors,P70314,HT-SELEX,vertebrates,Mus musculus
+MA0683.1.POU4F2,POU4F2,POU domain factors,Q12837,HT-SELEX,vertebrates,Homo sapiens
+MA0075.2.Prrx2,Prrx2,Paired-related HD factors,Q06348,HT-SELEX,vertebrates,Mus musculus
+MA0684.1.RUNX3,RUNX3,Runt-related factors,Q13761,HT-SELEX,vertebrates,Homo sapiens
+MA0512.2.Rxra,Rxra,RXR-related receptors (NR2),P28700,HT-SELEX,vertebrates,Mus musculus
+MA0685.1.SP4,SP4,Three-zinc finger Krüppel-related factors,Q02446,HT-SELEX,vertebrates,Homo sapiens
+MA0686.1.SPDEF,SPDEF,Ets-related factors,O95238,HT-SELEX,vertebrates,Homo sapiens
+MA0080.4.SPI1,SPI1,Ets-related factors,P17947,HT-SELEX,vertebrates,Homo sapiens
+MA0687.1.SPIC,SPIC,Ets-related factors,Q8N5J4,HT-SELEX,vertebrates,Homo sapiens
+MA0083.3.SRF,SRF,Responders to external signals (SRF/RLM1),P11831,HT-SELEX,vertebrates,Homo sapiens
+MA0009.2.T,T,Brachyury-related factors,O15178,HT-SELEX,vertebrates,Homo sapiens
+MA0688.1.TBX2,TBX2,TBX2-related factors,Q13207,HT-SELEX,vertebrates,Homo sapiens
+MA0689.1.TBX20,TBX20,TBX1-related factors,Q9UMR3,HT-SELEX,vertebrates,Homo sapiens
+MA0690.1.TBX21,TBX21,TBrain-related factors,Q9UL17,HT-SELEX,vertebrates,Homo sapiens
+MA0090.2.TEAD1,TEAD1,TEF-1-related factors,P28347,HT-SELEX,vertebrates,Homo sapiens
+MA0691.1.TFAP4,TFAP4,bHLH-ZIP factors,Q01664,HT-SELEX,vertebrates,Homo sapiens
+MA0145.3.TFCP2,TFCP2,CP2-related factors,Q12800,HT-SELEX,vertebrates,Homo sapiens
+MA0692.1.TFEB,TFEB,bHLH-ZIP factors,P19484,HT-SELEX,vertebrates,Homo sapiens
+MA0693.1.Vdr,Vdr,Thyroid hormone receptor-related factors (NR1),P48281,HT-SELEX,vertebrates,Mus musculus
+MA0694.1.ZBTB7B,ZBTB7B,More than 3 adjacent zinc finger factors,O15156,HT-SELEX,vertebrates,Homo sapiens
+MA0695.1.ZBTB7C,ZBTB7C,More than 3 adjacent zinc finger factors,A1YPR0,HT-SELEX,vertebrates,Homo sapiens
+MA0696.1.ZIC1,ZIC1,More than 3 adjacent zinc finger factors,Q15915,HT-SELEX,vertebrates,Homo sapiens
+MA0697.1.ZIC3,ZIC3,More than 3 adjacent zinc finger factors,O60481,HT-SELEX,vertebrates,Homo sapiens
+MA0698.1.ZBTB18,ZBTB18,More than 3 adjacent zinc finger factors,Q99592,HT-SELEX,vertebrates,Homo sapiens
+MA0699.1.LBX2,LBX2,NK-related factors,Q6XYB7,HT-SELEX,vertebrates,Homo sapiens
+MA0700.1.LHX2,LHX2,HD-LIM factors,P50458,HT-SELEX,vertebrates,Homo sapiens
+MA0701.1.LHX9,LHX9,HD-LIM factors,Q9NQ69,HT-SELEX,vertebrates,Homo sapiens
+MA0702.1.LMX1A,LMX1A,HD-LIM factors,Q8TE12,HT-SELEX,vertebrates,Homo sapiens
+MA0703.1.LMX1B,LMX1B,HD-LIM factors,O60663,HT-SELEX,vertebrates,Homo sapiens
+MA0704.1.Lhx4,Lhx4,HD-LIM factors,P53776,HT-SELEX,vertebrates,Mus musculus
+MA0705.1.Lhx8,Lhx8,HD-LIM factors,O35652,HT-SELEX,vertebrates,Mus musculus
+MA0706.1.MEOX2,MEOX2,HOX-related factors,Q6FHY5,HT-SELEX,vertebrates,Homo sapiens
+MA0707.1.MNX1,MNX1,HOX-related factors,P50219,HT-SELEX,vertebrates,Homo sapiens
+MA0708.1.MSX2,MSX2,NK-related factors,P35548,HT-SELEX,vertebrates,Homo sapiens
+MA0709.1.Msx3,Msx3,NK-related factors,P70354,HT-SELEX,vertebrates,Mus musculus
+MA0122.2.NKX3-2,NKX3-2,NK-related factors,P78367,HT-SELEX,vertebrates,Homo sapiens
+MA0710.1.NOTO,NOTO,NK-related factors,A8MTQ0,HT-SELEX,vertebrates,Homo sapiens
+MA0124.2.Nkx3-1,Nkx3-1,NK-related factors,P97436,HT-SELEX,vertebrates,Mus musculus
+MA0711.1.OTX1,OTX1,Paired-related HD factors,P32242,HT-SELEX,vertebrates,Homo sapiens
+MA0712.1.OTX2,OTX2,Paired-related HD factors,P32243,HT-SELEX,vertebrates,Homo sapiens
+MA0132.2.PDX1,PDX1,HOX-related factors,P52945,HT-SELEX,vertebrates,Homo sapiens
+MA0713.1.PHOX2A,PHOX2A,Paired-related HD factors,O14813,HT-SELEX,vertebrates,Homo sapiens
+MA0714.1.PITX3,PITX3,Paired-related HD factors,O75364,HT-SELEX,vertebrates,Homo sapiens
+MA0715.1.PROP1,PROP1,Paired-related HD factors,O75360,HT-SELEX,vertebrates,Homo sapiens
+MA0716.1.PRRX1,PRRX1,Paired-related HD factors,P54821,HT-SELEX,vertebrates,Homo sapiens
+MA0717.1.RAX2,RAX2,Paired-related HD factors,Q96IS3,HT-SELEX,vertebrates,Homo sapiens
+MA0718.1.RAX,RAX,Paired-related HD factors,Q9Y2V3,HT-SELEX,vertebrates,Homo sapiens
+MA0719.1.RHOXF1,RHOXF1,Paired-related HD factors,Q8NHV9,HT-SELEX,vertebrates,Homo sapiens
+MA0720.1.Shox2,Shox2,Paired-related HD factors,P70390,HT-SELEX,vertebrates,Mus musculus
+MA0721.1.UNCX,UNCX,Paired-related HD factors,A6NJT0,HT-SELEX,vertebrates,Homo sapiens
+MA0722.1.VAX1,VAX1,NK-related factors,Q5SQQ9,HT-SELEX,vertebrates,Homo sapiens
+MA0723.1.VAX2,VAX2,NK-related factors,Q9UIW0,HT-SELEX,vertebrates,Homo sapiens
+MA0724.1.VENTX,VENTX,NK-related factors,O95231,HT-SELEX,vertebrates,Homo sapiens
+MA0725.1.VSX1,VSX1,Paired-related HD factors,Q9NZR4,HT-SELEX,vertebrates,Homo sapiens
+MA0726.1.VSX2,VSX2,Paired-related HD factors,P58304,HT-SELEX,vertebrates,Homo sapiens
+MA0112.3.ESR1,ESR1,Steroid hormone receptors (NR3),P03372,HT-SELEX,vertebrates,Homo sapiens
+MA0141.3.ESRRB,ESRRB,Steroid hormone receptors (NR3),O95718,HT-SELEX,vertebrates,Homo sapiens
+MA0592.2.Esrra,Esrra,Steroid hormone receptors (NR3),O08580,HT-SELEX,vertebrates,Mus musculus
+MA0114.3.Hnf4a,Hnf4a,RXR-related receptors (NR2),P49698,HT-SELEX,vertebrates,Mus musculus
+MA0017.2.NR2F1,NR2F1,RXR-related receptors (NR2),P10589,HT-SELEX,vertebrates,Homo sapiens
+MA0113.3.NR3C1,NR3C1,Steroid hormone receptors (NR3),P04150,HT-SELEX,vertebrates,Homo sapiens
+MA0727.1.NR3C2,NR3C2,Steroid hormone receptors (NR3),P08235,HT-SELEX,vertebrates,Homo sapiens
+MA0728.1.Nr2f6(var.2),Nr2f6(var.2),RXR-related receptors (NR2),P43136,HT-SELEX,vertebrates,Mus musculus
+MA0729.1.RARA,RARA,Thyroid hormone receptor-related factors (NR1),P10276,HT-SELEX,vertebrates,Homo sapiens
+MA0730.1.RARA(var.2),RARA(var.2),Thyroid hormone receptor-related factors (NR1),P10276,HT-SELEX,vertebrates,Homo sapiens
+MA0731.1.BCL6B,BCL6B,More than 3 adjacent zinc finger factors,A8KA13,HT-SELEX,vertebrates,Homo sapiens
+MA0472.2.EGR2,EGR2,Three-zinc finger Krüppel-related factors,P11161,HT-SELEX,vertebrates,Homo sapiens
+MA0732.1.EGR3,EGR3,Three-zinc finger Krüppel-related factors,Q06889,HT-SELEX,vertebrates,Homo sapiens
+MA0733.1.EGR4,EGR4,Three-zinc finger Krüppel-related factors,Q05215,HT-SELEX,vertebrates,Homo sapiens
+MA0734.1.GLI2,GLI2,More than 3 adjacent zinc finger factors,P10070,HT-SELEX,vertebrates,Homo sapiens
+MA0735.1.GLIS1,GLIS1,More than 3 adjacent zinc finger factors,Q8NBF1,HT-SELEX,vertebrates,Homo sapiens
+MA0736.1.GLIS2,GLIS2,More than 3 adjacent zinc finger factors,Q9BZE0,HT-SELEX,vertebrates,Homo sapiens
+MA0737.1.GLIS3,GLIS3,More than 3 adjacent zinc finger factors,Q8NEA6,HT-SELEX,vertebrates,Homo sapiens
+MA0738.1.HIC2,HIC2,Factors with multiple dispersed zinc fingers,Q96JB3,HT-SELEX,vertebrates,Homo sapiens
+MA0739.1.Hic1,Hic1,Factors with multiple dispersed zinc fingers,Q9R1Y5,HT-SELEX,vertebrates,Mus musculus
+MA0740.1.KLF14,KLF14,Three-zinc finger Krüppel-related factors,Q8TD94,HT-SELEX,vertebrates,Homo sapiens
+MA0741.1.KLF16,KLF16,Three-zinc finger Krüppel-related factors,Q9BXK1,HT-SELEX,vertebrates,Homo sapiens
+MA0742.1.Klf12,Klf12,Three-zinc finger Krüppel-related factors,O35738,HT-SELEX,vertebrates,Mus musculus
+MA0743.1.SCRT1,SCRT1,More than 3 adjacent zinc finger factors,Q9BWW7,HT-SELEX,vertebrates,Homo sapiens
+MA0744.1.SCRT2,SCRT2,More than 3 adjacent zinc finger factors,Q9NQ03,HT-SELEX,vertebrates,Homo sapiens
+MA0745.1.SNAI2,SNAI2,More than 3 adjacent zinc finger factors,O43623,HT-SELEX,vertebrates,Homo sapiens
+MA0746.1.SP3,SP3,Three-zinc finger Krüppel-related factors,Q02447,HT-SELEX,vertebrates,Homo sapiens
+MA0747.1.SP8,SP8,Three-zinc finger Krüppel-related factors,Q8IXZ3,HT-SELEX,vertebrates,Homo sapiens
+MA0748.1.YY2,YY2,More than 3 adjacent zinc finger factors,O15391,HT-SELEX,vertebrates,Homo sapiens
+MA0749.1.ZBED1,ZBED1,BED zinc finger factors,O96006,HT-SELEX,vertebrates,Homo sapiens
+MA0750.1.ZBTB7A,ZBTB7A,More than 3 adjacent zinc finger factors,O95365,HT-SELEX,vertebrates,Homo sapiens
+MA0751.1.ZIC4,ZIC4,More than 3 adjacent zinc finger factors,Q8N9L1,HT-SELEX,vertebrates,Homo sapiens
+MA0088.2.ZNF143,ZNF143,More than 3 adjacent zinc finger factors,P52747,HT-SELEX,vertebrates,Homo sapiens
+MA0752.1.ZNF410,ZNF410,More than 3 adjacent zinc finger factors,Q86VK4,HT-SELEX,vertebrates,Homo sapiens
+MA0753.1.ZNF740,ZNF740,Other factors with up to three adjacent zinc fingers,Q8NDX6,HT-SELEX,vertebrates,Homo sapiens
+MA0754.1.CUX1,CUX1,HD-CUT factors,P39880,HT-SELEX,vertebrates,Homo sapiens
+MA0755.1.CUX2,CUX2,HD-CUT factors,O14529,HT-SELEX,vertebrates,Homo sapiens
+MA0756.1.ONECUT2,ONECUT2,HD-CUT factors,O95948,HT-SELEX,vertebrates,Homo sapiens
+MA0757.1.ONECUT3,ONECUT3,HD-CUT factors,O60422,HT-SELEX,vertebrates,Homo sapiens
+MA0469.2.E2F3,E2F3,E2F-related factors,O00716,HT-SELEX,vertebrates,Homo sapiens
+MA0758.1.E2F7,E2F7,E2F-related factors,Q96AV8,HT-SELEX,vertebrates,Homo sapiens
+MA0473.2.ELF1,ELF1,Ets-related factors,P32519,HT-SELEX,vertebrates,Homo sapiens
+MA0759.1.ELK3,ELK3,Ets-related factors,P41970,HT-SELEX,vertebrates,Homo sapiens
+MA0760.1.ERF,ERF,Ets-related factors,P50548,HT-SELEX,vertebrates,Homo sapiens
+MA0474.2.ERG,ERG,Ets-related factors,P11308,HT-SELEX,vertebrates,Homo sapiens
+MA0098.3.ETS1,ETS1,Ets-related factors,P14921,HT-SELEX,vertebrates,Homo sapiens
+MA0761.1.ETV1,ETV1,Ets-related factors,P50549,HT-SELEX,vertebrates,Homo sapiens
+MA0762.1.ETV2,ETV2,Ets-related factors,Q3KNT2,HT-SELEX,vertebrates,Homo sapiens
+MA0763.1.ETV3,ETV3,Ets-related factors,P41162,HT-SELEX,vertebrates,Homo sapiens
+MA0764.1.ETV4,ETV4,Ets-related factors,P43268,HT-SELEX,vertebrates,Homo sapiens
+MA0765.1.ETV5,ETV5,Ets-related factors,P41161,HT-SELEX,vertebrates,Homo sapiens
+MA0156.2.FEV,FEV,Ets-related factors,Q99581,HT-SELEX,vertebrates,Homo sapiens
+MA0766.1.GATA5,GATA5,GATA-type zinc fingers,Q9BWX5,HT-SELEX,vertebrates,Homo sapiens
+MA0767.1.GCM2,GCM2,GCM factors,O75603,HT-SELEX,vertebrates,Homo sapiens
+MA0768.1.LEF1,LEF1,TCF-7-related factors,Q9UJU2,HT-SELEX,vertebrates,Homo sapiens
+MA0769.1.Tcf7,Tcf7,TCF-7-related factors,Q00417,HT-SELEX,vertebrates,Mus musculus
+MA0770.1.HSF2,HSF2,HSF factors,Q03933,HT-SELEX,vertebrates,Homo sapiens
+MA0771.1.HSF4,HSF4,HSF factors,Q9ULV5,HT-SELEX,vertebrates,Homo sapiens
+MA0772.1.IRF7,IRF7,Interferon-regulatory factors,Q92985,HT-SELEX,vertebrates,Homo sapiens
+MA0052.3.MEF2A,MEF2A,Regulators of differentiation,Q02078,HT-SELEX,vertebrates,Homo sapiens
+MA0773.1.MEF2D,MEF2D,Regulators of differentiation,Q05BX2,HT-SELEX,vertebrates,Homo sapiens
+MA0498.2.MEIS1,MEIS1,TALE-type homeo domain factors,O00470,HT-SELEX,vertebrates,Homo sapiens
+MA0774.1.MEIS2,MEIS2,TALE-type homeo domain factors,O14770,HT-SELEX,vertebrates,Homo sapiens
+MA0775.1.MEIS3,MEIS3,TALE-type homeo domain factors,Q99687,HT-SELEX,vertebrates,Homo sapiens
+MA0776.1.MYBL1,MYBL1,Myb/SANT domain factors,P10243,HT-SELEX,vertebrates,Homo sapiens
+MA0777.1.MYBL2,MYBL2,Myb/SANT domain factors,P10244,HT-SELEX,vertebrates,Homo sapiens
+MA0105.4.NFKB1,NFKB1,NF-kappaB-related factors,P19838,HT-SELEX,vertebrates,Homo sapiens
+MA0778.1.NFKB2,NFKB2,NF-kappaB-related factors,Q00653,HT-SELEX,vertebrates,Homo sapiens
+MA0779.1.PAX1,PAX1,Paired domain only,P15863,HT-SELEX,vertebrates,Homo sapiens
+MA0780.1.PAX3,PAX3,Paired plus homeo domain,P23760,HT-SELEX,vertebrates,Homo sapiens
+MA0781.1.PAX9,PAX9,Paired domain only,P55771,HT-SELEX,vertebrates,Homo sapiens
+MA0782.1.PKNOX1,PKNOX1,TALE-type homeo domain factors,P55347,HT-SELEX,vertebrates,Homo sapiens
+MA0783.1.PKNOX2,PKNOX2,TALE-type homeo domain factors,Q96KN3,HT-SELEX,vertebrates,Homo sapiens
+MA0784.1.POU1F1,POU1F1,POU domain factors,P28069,HT-SELEX,vertebrates,Homo sapiens
+MA0785.1.POU2F1,POU2F1,POU domain factors,P14859,HT-SELEX,vertebrates,Homo sapiens
+MA0786.1.POU3F1,POU3F1,POU domain factors,Q03052,HT-SELEX,vertebrates,Homo sapiens
+MA0787.1.POU3F2,POU3F2,POU domain factors,P20265,HT-SELEX,vertebrates,Homo sapiens
+MA0788.1.POU3F3,POU3F3,POU domain factors,P20264,HT-SELEX,vertebrates,Homo sapiens
+MA0789.1.POU3F4,POU3F4,POU domain factors,P49335,HT-SELEX,vertebrates,Homo sapiens
+MA0790.1.POU4F1,POU4F1,POU domain factors,Q01851,HT-SELEX,vertebrates,Homo sapiens
+MA0791.1.POU4F3,POU4F3,POU domain factors,Q15319,HT-SELEX,vertebrates,Homo sapiens
+MA0792.1.POU5F1B,POU5F1B,POU domain factors,Q06416,HT-SELEX,vertebrates,Homo sapiens
+MA0793.1.POU6F2,POU6F2,POU domain factors,P78424,HT-SELEX,vertebrates,Homo sapiens
+MA0794.1.PROX1,PROX1,HD-PROS factors,Q92786,HT-SELEX,vertebrates,Homo sapiens
+MA0600.2.RFX2,RFX2,RFX-related factors,P48378,HT-SELEX,vertebrates,Homo sapiens
+MA0795.1.SMAD3,SMAD3,SMAD factors,P84022,HT-SELEX,vertebrates,Homo sapiens
+MA0796.1.TGIF1,TGIF1,TALE-type homeo domain factors,Q15583,HT-SELEX,vertebrates,Homo sapiens
+MA0797.1.TGIF2,TGIF2,TALE-type homeo domain factors,Q9GZN2,HT-SELEX,vertebrates,Homo sapiens
+MA0798.1.RFX3,RFX3,RFX-related factors,P48380,HT-SELEX,vertebrates,Homo sapiens
+MA0799.1.RFX4,RFX4,RFX-related factors,Q33E94,HT-SELEX,vertebrates,Homo sapiens
+MA0510.2.RFX5,RFX5,RFX-related factors,P48382,HT-SELEX,vertebrates,Homo sapiens
+MA0511.2.RUNX2,RUNX2,Runt-related factors,Q13950,HT-SELEX,vertebrates,Homo sapiens
+MA0800.1.EOMES,EOMES,TBrain-related factors,O95936,HT-SELEX,vertebrates,Homo sapiens
+MA0801.1.MGA,MGA,TBX6-related factors,Q8IWI9,HT-SELEX,vertebrates,Homo sapiens
+MA0802.1.TBR1,TBR1,TBrain-related factors,Q16650,HT-SELEX,vertebrates,Homo sapiens
+MA0803.1.TBX15,TBX15,TBX1-related factors,Q96SF7,HT-SELEX,vertebrates,Homo sapiens
+MA0804.1.TBX19,TBX19,Brachyury-related factors,O60806,HT-SELEX,vertebrates,Homo sapiens
+MA0805.1.TBX1,TBX1,TBX1-related factors,O43435,HT-SELEX,vertebrates,Homo sapiens
+MA0806.1.TBX4,TBX4,TBX2-related factors,P57082,HT-SELEX,vertebrates,Homo sapiens
+MA0807.1.TBX5,TBX5,TBX2-related factors,Q99593,HT-SELEX,vertebrates,Homo sapiens
+MA0808.1.TEAD3,TEAD3,TEF-1-related factors,Q99594,HT-SELEX,vertebrates,Homo sapiens
+MA0809.1.TEAD4,TEAD4,TEF-1-related factors,Q15561,HT-SELEX,vertebrates,Homo sapiens
+MA0810.1.TFAP2A(var.2),TFAP2A(var.2),AP-2,P05549,HT-SELEX,vertebrates,Homo sapiens
+MA0003.3.TFAP2A,TFAP2A,AP-2,P05549,HT-SELEX,vertebrates,Homo sapiens
+MA0811.1.TFAP2B,TFAP2B,AP-2,Q92481,HT-SELEX,vertebrates,Homo sapiens
+MA0812.1.TFAP2B(var.2),TFAP2B(var.2),AP-2,Q92481,HT-SELEX,vertebrates,Homo sapiens
+MA0813.1.TFAP2B(var.3),TFAP2B(var.3),AP-2,Q92481,HT-SELEX,vertebrates,Homo sapiens
+MA0524.2.TFAP2C,TFAP2C,AP-2,Q92754,HT-SELEX,vertebrates,Homo sapiens
+MA0814.1.TFAP2C(var.2),TFAP2C(var.2),AP-2,Q92754,HT-SELEX,vertebrates,Homo sapiens
+MA0815.1.TFAP2C(var.3),TFAP2C(var.3),AP-2,Q92754,HT-SELEX,vertebrates,Homo sapiens
+MA0816.1.Ascl2,Ascl2,MyoD / ASC-related factors,O35885,HT-SELEX,vertebrates,Mus musculus
+MA0461.2.Atoh1,Atoh1,Tal-related factors,P48985,HT-SELEX,vertebrates,Mus musculus
+MA0464.2.BHLHE40,BHLHE40,Hairy-related factors,O14503,HT-SELEX,vertebrates,Homo sapiens
+MA0817.1.BHLHE23,BHLHE23,Tal-related factors,Q8NDY6,HT-SELEX,vertebrates,Homo sapiens
+MA0818.1.BHLHE22,BHLHE22,Tal-related factors,Q8NFJ8,HT-SELEX,vertebrates,Homo sapiens
+MA0819.1.CLOCK,CLOCK,PAS domain factors,O15516,HT-SELEX,vertebrates,Homo sapiens
+MA0820.1.FIGLA,FIGLA,Tal-related factors,Q6QHK4,HT-SELEX,vertebrates,Homo sapiens
+MA0821.1.HES5,HES5,Hairy-related factors,Q5TA89,HT-SELEX,vertebrates,Homo sapiens
+MA0822.1.HES7,HES7,Hairy-related factors,Q9BYE0,HT-SELEX,vertebrates,Homo sapiens
+MA0823.1.HEY1,HEY1,Hairy-related factors,Q9Y5J3,HT-SELEX,vertebrates,Homo sapiens
+MA0824.1.ID4,ID4,HLH domain only,P47928,HT-SELEX,vertebrates,Homo sapiens
+MA0058.3.MAX,MAX,bHLH-ZIP factors,P61244,HT-SELEX,vertebrates,Homo sapiens
+MA0825.1.MNT,MNT,bHLH-ZIP factors,Q99583,HT-SELEX,vertebrates,Homo sapiens
+MA0826.1.OLIG1,OLIG1,Tal-related factors,Q8TAK6,HT-SELEX,vertebrates,Homo sapiens
+MA0827.1.OLIG3,OLIG3,Tal-related factors,Q7RTU3,HT-SELEX,vertebrates,Homo sapiens
+MA0828.1.SREBF2(var.2),SREBF2(var.2),bHLH-ZIP factors,Q12772,HT-SELEX,vertebrates,Homo sapiens
+MA0829.1.Srebf1(var.2),Srebf1(var.2),bHLH-ZIP factors,Q9WTN3,HT-SELEX,vertebrates,Mus musculus
+MA0522.2.TCF3,TCF3,E2A-related factors,P15923,HT-SELEX,vertebrates,Homo sapiens
+MA0830.1.TCF4,TCF4,E2A-related factors,P15884,HT-SELEX,vertebrates,Homo sapiens
+MA0831.1.TFE3,TFE3,bHLH-ZIP factors,P19532,HT-SELEX,vertebrates,Homo sapiens
+MA0832.1.Tcf21,Tcf21,Tal-related factors,O35437,HT-SELEX,vertebrates,Mus musculus
+MA0833.1.ATF4,ATF4,ATF-4-related factors,P18848,HT-SELEX,vertebrates,Homo sapiens
+MA0834.1.ATF7,ATF7,Jun-related factors,P17544,HT-SELEX,vertebrates,Homo sapiens
+MA0835.1.BATF3,BATF3,B-ATF-related factors,Q9NR55,HT-SELEX,vertebrates,Homo sapiens
+MA0466.2.CEBPB,CEBPB,C/EBP-related,P17676,HT-SELEX,vertebrates,Homo sapiens
+MA0836.1.CEBPD,CEBPD,C/EBP-related,P49716,HT-SELEX,vertebrates,Homo sapiens
+MA0837.1.CEBPE,CEBPE,C/EBP-related,Q15744,HT-SELEX,vertebrates,Homo sapiens
+MA0838.1.CEBPG,CEBPG,C/EBP-related,P53567,HT-SELEX,vertebrates,Homo sapiens
+MA0839.1.CREB3L1,CREB3L1,CREB-related factors,Q96BA8,HT-SELEX,vertebrates,Homo sapiens
+MA0840.1.Creb5,Creb5,CREB-related factors,Q8K1L0,HT-SELEX,vertebrates,Mus musculus
+MA0117.2.Mafb,Mafb,Maf-related factors,P54841,HT-SELEX,vertebrates,Mus musculus
+MA0841.1.NFE2,NFE2,Jun-related factors,Q16621,HT-SELEX,vertebrates,Homo sapiens
+MA0842.1.NRL,NRL,Maf-related factors,P54845,HT-SELEX,vertebrates,Homo sapiens
+MA0843.1.TEF,TEF,TEF-1-related factors,Q10587,HT-SELEX,vertebrates,Homo sapiens
+MA0844.1.XBP1,XBP1,XBP-1-related factors,P17861,HT-SELEX,vertebrates,Homo sapiens
+MA0845.1.FOXB1,FOXB1,Forkhead box (FOX) factors,Q99853,HT-SELEX,vertebrates,Homo sapiens
+MA0032.2.FOXC1,FOXC1,Forkhead box (FOX) factors,Q12948,HT-SELEX,vertebrates,Homo sapiens
+MA0846.1.FOXC2,FOXC2,Forkhead box (FOX) factors,Q99958,HT-SELEX,vertebrates,Homo sapiens
+MA0847.1.FOXD2,FOXD2,Forkhead box (FOX) factors,O60548,HT-SELEX,vertebrates,Homo sapiens
+MA0848.1.FOXO4,FOXO4,Forkhead box (FOX) factors,P98177,HT-SELEX,vertebrates,Homo sapiens
+MA0849.1.FOXO6,FOXO6,Forkhead box (FOX) factors,A8MYZ6,HT-SELEX,vertebrates,Homo sapiens
+MA0850.1.FOXP3,FOXP3,Forkhead box (FOX) factors,B7ZLG1,HT-SELEX,vertebrates,Homo sapiens
+MA0851.1.Foxj3,Foxj3,Forkhead box (FOX) factors,Q8BUR3,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0852.1.Foxk1,Foxk1,Forkhead box (FOX) factors,P42128,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0853.1.Alx4,Alx4,Paired-related HD factors,O35137,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0854.1.Alx1,Alx1,Paired-related HD factors,Q8C8B0,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0855.1.RXRB,RXRB,RXR-related receptors (NR2),P28702,HT-SELEX,vertebrates,Homo sapiens
+MA0856.1.RXRG,RXRG,RXR-related receptors (NR2),P48443,HT-SELEX,vertebrates,Homo sapiens
+MA0857.1.Rarb,Rarb,Thyroid hormone receptor-related factors (NR1),P22605,HT-SELEX,vertebrates,Mus musculus
+MA0858.1.Rarb(var.2),Rarb(var.2),Thyroid hormone receptor-related factors (NR1),P22605,HT-SELEX,vertebrates,Mus musculus
+MA0859.1.Rarg,Rarg,Thyroid hormone receptor-related factors (NR1),P18911,HT-SELEX,vertebrates,Mus musculus
+MA0860.1.Rarg(var.2),Rarg(var.2),Thyroid hormone receptor-related factors (NR1),P18911,HT-SELEX,vertebrates,Mus musculus
+MA0525.2.TP63,TP63,p53-related factors,Q9H3D4,HT-SELEX,vertebrates,Homo sapiens
+MA0106.3.TP53,TP53,p53-related factors,P04637,HT-SELEX,vertebrates,Homo sapiens
+MA0861.1.TP73,TP73,p53-related factors,O15350,HT-SELEX,vertebrates,Homo sapiens
+MA0862.1.GMEB2,GMEB2,GMEB,Q9UKD1,HT-SELEX,vertebrates,Homo sapiens
+MA0863.1.MTF1,MTF1,More than 3 adjacent zinc finger factors,Q14872,HT-SELEX,vertebrates,Homo sapiens
+MA0024.3.E2F1,E2F1,E2F-related factors,Q01094,HT-SELEX,vertebrates,Homo sapiens
+MA0864.1.E2F2,E2F2,E2F-related factors,Q14209,HT-SELEX,vertebrates,Homo sapiens
+MA0865.1.E2F8,E2F8,E2F-related factors,A0AVK6,HT-SELEX,vertebrates,Homo sapiens
+MA0866.1.SOX21,SOX21,SOX-related factors,Q9Y651,HT-SELEX,vertebrates,Homo sapiens
+MA0867.1.SOX4,SOX4,SOX-related factors,Q06945,HT-SELEX,vertebrates,Homo sapiens
+MA0868.1.SOX8,SOX8,SOX-related factors,P57073,HT-SELEX,vertebrates,Homo sapiens
+MA0869.1.Sox11,Sox11,SOX-related factors,Q7M6Y2,HT-SELEX,vertebrates,Mus musculus
+MA0870.1.Sox1,Sox1,SOX-related factors,P53783,HT-SELEX,vertebrates,Mus musculus
+MA0871.1.TFEC,TFEC,bHLH-ZIP factors,O14948,HT-SELEX,vertebrates,Homo sapiens
+MA0872.1.TFAP2A(var.3),TFAP2A(var.3),AP-2,P05549,HT-SELEX,vertebrates,Homo sapiens
+MA0028.2.ELK1,ELK1,Ets-related factors,P19419,HT-SELEX,vertebrates,Homo sapiens
+MA0873.1.HOXD12,HOXD12,HOX-related factors,P35452,HT-SELEX,vertebrates,Homo sapiens
+MA0874.1.Arx,Arx,Paired-related HD factors,O35085,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0875.1.BARX1,BARX1,NK-related factors,Q9HBU1,HT-SELEX,vertebrates,Homo sapiens
+MA0876.1.BSX,BSX,NK-related factors,Q3C1V8,HT-SELEX,vertebrates,Homo sapiens
+MA0877.1.Barhl1,Barhl1,NK-related factors,P63157,HT-SELEX,vertebrates,Mus musculus
+MA0878.1.CDX1,CDX1,HOX-related factors,P47902,HT-SELEX,vertebrates,Homo sapiens
+MA0879.1.Dlx1,Dlx1,NK-related factors,Q64317,PBM,vertebrates,Mus musculus
+MA0880.1.Dlx3,Dlx3,NK-related factors,Q64205,PBM,vertebrates,Mus musculus
+MA0881.1.Dlx4,Dlx4,NK-related factors,P70436,PBM,vertebrates,Mus musculus
+MA0882.1.DLX6,DLX6,NK-related factors,P56179,HT-SELEX,vertebrates,Homo sapiens
+MA0883.1.Dmbx1,Dmbx1,Paired-related HD factors,Q91ZK4,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0884.1.DUXA,DUXA,Paired-related HD factors,A6NLW8,HT-SELEX,vertebrates,Homo sapiens
+MA0885.1.Dlx2,Dlx2,NK-related factors,P40764,HT-SELEX,vertebrates,Mus musculus
+MA0886.1.EMX2,EMX2,NK-related factors,Q04743,HT-SELEX,vertebrates,Homo sapiens
+MA0887.1.EVX1,EVX1,HOX-related factors,P49640,HT-SELEX,vertebrates,Homo sapiens
+MA0888.1.EVX2,EVX2,HOX-related factors,Q03828,HT-SELEX,vertebrates,Homo sapiens
+MA0889.1.GBX1,GBX1,HOX-related factors,Q14549,HT-SELEX,vertebrates,Homo sapiens
+MA0890.1.GBX2,GBX2,HOX-related factors,P52951,HT-SELEX,vertebrates,Homo sapiens
+MA0891.1.GSC2,GSC2,Paired-related HD factors,O15499,HT-SELEX,vertebrates,Homo sapiens
+MA0892.1.GSX1,GSX1,HOX-related factors,A4IFQ3,HT-SELEX,vertebrates,Homo sapiens
+MA0893.1.GSX2,GSX2,HOX-related factors,Q9BZM3,HT-SELEX,vertebrates,Homo sapiens
+MA0894.1.HESX1,HESX1,Paired-related HD factors,Q9UBX0,HT-SELEX,vertebrates,Homo sapiens
+MA0895.1.HMBOX1,HMBOX1,POU domain factors,Q6NT76,HT-SELEX,vertebrates,Homo sapiens
+MA0896.1.Hmx1,Hmx1,NK-related factors,O70218,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0897.1.Hmx2,Hmx2,NK-related factors,P43687,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0898.1.Hmx3,Hmx3,NK-related factors,P42581,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0899.1.HOXA10,HOXA10,HOX-related factors,P31260,HT-SELEX,vertebrates,Homo sapiens
+MA0900.1.HOXA2,HOXA2,HOX-related factors,O43364,HT-SELEX,vertebrates,Homo sapiens
+MA0901.1.HOXB13,HOXB13,HOX-related factors,Q92826,HT-SELEX,vertebrates,Homo sapiens
+MA0902.1.HOXB2,HOXB2,HOX-related factors,P14652,HT-SELEX,vertebrates,Homo sapiens
+MA0903.1.HOXB3,HOXB3,HOX-related factors,P14651,HT-SELEX,vertebrates,Homo sapiens
+MA0904.1.Hoxb5,Hoxb5,HOX-related factors,P09079,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0905.1.HOXC10,HOXC10,HOX-related factors,Q9NYD6,HT-SELEX,vertebrates,Homo sapiens
+MA0906.1.HOXC12,HOXC12,HOX-related factors,P31275,HT-SELEX,vertebrates,Homo sapiens
+MA0907.1.HOXC13,HOXC13,HOX-related factors,P31276,HT-SELEX,vertebrates,Homo sapiens
+MA0908.1.HOXD11,HOXD11,HOX-related factors,P31277,HT-SELEX,vertebrates,Homo sapiens
+MA0909.1.HOXD13,HOXD13,HOX-related factors,P35453,HT-SELEX,vertebrates,Homo sapiens
+MA0910.1.Hoxd8,Hoxd8,HOX-related factors,P23463,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0911.1.Hoxa11,Hoxa11,HOX-related factors,P31270,HT-SELEX,vertebrates,Mus musculus
+MA0912.1.Hoxd3,Hoxd3,HOX-related factors,P09027,universal protein binding microarray (PBM),vertebrates,Mus musculus
+MA0913.1.Hoxd9,Hoxd9,HOX-related factors,P28357,HT-SELEX,vertebrates,Mus musculus
+MA0914.1.ISL2,ISL2,HD-LIM factors,Q96A47,HT-SELEX,vertebrates,Homo sapiens
+MA0915.1.dve,dve,,Q9W268,PBM,insects,Drosophila melanogaster
+MA0916.1.Ets21C,Ets21C,Ets-related factors,P29776,PBM,insects,Drosophila melanogaster
+MA0917.1.gcm2,gcm2,GCM factors,Q9VLA2,PBM,insects,Drosophila melanogaster
+MA0918.1.unc-62,unc-62,TALE-type homeo domain factors,A8WL06,PBM,nematodes,Caenorhabditis briggsae
+MA0919.1.dsc-1,dsc-1,,A8X4D9,PBM,nematodes,Caenorhabditis briggsae
+MA0920.1.fkh-2,fkh-2,Forkhead box (FOX) factors,A8XJN7,PBM,nematodes,Caenorhabditis briggsae
+MA0921.1.ceh-48,ceh-48,HD-CUT factors,O45080,PBM,nematodes,Caenorhabditis elegans
+MA0922.1.ces-2,ces-2,,Q94126,PBM,nematodes,Caenorhabditis elegans
+MA0923.1.lim-4,lim-4,HD-LIM factors,G5EEA1,PBM,nematodes,Caenorhabditis elegans
+MA0924.1.pal-1,pal-1,HOX-related factors,P34766,PBM,nematodes,Caenorhabditis elegans
+MA0925.1.sma-4,sma-4,SMAD factors,P45897,PBM,nematodes,Caenorhabditis elegans
+MA0926.1.unc-86,unc-86,POU domain factors,P13528,PBM,nematodes,Caenorhabditis elegans
+MA0927.1.vab-7,vab-7,HOX-related factors,Q93899,PBM,nematodes,Caenorhabditis elegans
+MA0928.1.zfh-2,zfh-2,,V6CLN5,PBM,nematodes,Caenorhabditis elegans
+MA0328.2.MATALPHA2,MATALPHA2,TALE-type homeo domain factors,P0CY08,PBM,fungi,Saccharomyces cerevisiae S288c
+MA0929.1.NCU00019,NCU00019,Forkhead box (FOX) factors,Q7RY86,PBM,fungi,Neurospora crassa
+MA0930.1.ABF3,ABF3,,Q9M7Q3,PBM,plants,Arabidopsis thaliana
+MA0931.1.ABI5,ABI5,,Q9SJN0,PBM,plants,Arabidopsis thaliana
+MA0932.1.AHL12,AHL12,HMGA factors,Q8LPN5,PBM,plants,Arabidopsis thaliana
+MA0933.1.AHL20,AHL20,HMGA factors,Q8GWQ2,PBM,plants,Arabidopsis thaliana
+MA0934.1.AHL25,AHL25,HMGA factors,Q6DBQ1,PBM,plants,Arabidopsis thaliana
+MA0935.1.NAC025,NAC025,,Q8GY42,PBM,plants,Arabidopsis thaliana
+MA0936.1.T11I18.17,T11I18.17,,Q9SQQ6,PBM,plants,Arabidopsis thaliana
+MA0937.1.NAC055,NAC055,,Q9LDY8,PBM,plants,Arabidopsis thaliana
+MA0938.1.NAC058,NAC058,,Q9LS50,PBM,plants,Arabidopsis thaliana
+MA0939.1.NAC080,NAC080,,Q9FLR3,PBM,plants,Arabidopsis thaliana
+MA0940.1.AP1,AP1,,P35631,ChIP-seq,plants,Arabidopsis thaliana
+MA0941.1.ABF2,ABF2,,Q9M7Q4,PBM,plants,Arabidopsis thaliana
+MA0942.1.ARF1,ARF1,,Q8L7G0,PBM,plants,Arabidopsis thaliana
+MA0943.1.ARF5,ARF5,,P93024,PBM,plants,Arabidopsis thaliana
+MA0944.1.ARF8,ARF8,,Q9FGV1,PBM,plants,Arabidopsis thaliana
+MA0945.1.ARR1,ARR1,Myb/SANT domain factors,Q940D0,PBM,plants,Arabidopsis thaliana
+MA0946.1.ARR11,ARR11,Myb/SANT domain factors,Q9FXD6,PBM,plants,Arabidopsis thaliana
+MA0947.1.ARR14,ARR14,Myb/SANT domain factors,Q8L9Y3,PBM,plants,Arabidopsis thaliana
+MA0948.1.ARR18,ARR18,Myb/SANT domain factors,Q9FGT7,PBM,plants,Arabidopsis thaliana
+MA0949.1.ARR2,ARR2,Myb/SANT domain factors,Q9ZWJ9,PBM,plants,Arabidopsis thaliana
+MA0950.1.ATHB-12,ATHB-12,HD-ZIP factors,Q9M276,PBM,plants,Arabidopsis thaliana
+MA0951.1.ATHB-16,ATHB-16,HD-ZIP factors,Q940J1,PBM,plants,Arabidopsis thaliana
+MA0952.1.ATHB-51,ATHB-51,HD-ZIP factors,Q9LZR0,PBM,plants,Arabidopsis thaliana
+MA0953.1.ATHB-6,ATHB-6,HD-ZIP factors,P46668,PBM,plants,Arabidopsis thaliana
+MA0954.1.ATHB-7,ATHB-7,HD-ZIP factors,P46897,PBM,plants,Arabidopsis thaliana
+MA0955.1.POPTR_0002s00440g,POPTR_0002s00440g,,B9GPL8,PBM,plants,Populus trichocarpa
+MA0956.1.BEE2,BEE2,,Q93VJ4,PBM,plants,Arabidopsis thaliana
+MA0957.1.BHLH3,BHLH3,,O23487,PBM,plants,Arabidopsis thaliana
+MA0958.1.BHLH13,BHLH13,,Q9LNJ5,PBM,plants,Arabidopsis thaliana
+MA0959.1.AIB,AIB,,Q9ZPY8,PBM,plants,Arabidopsis thaliana
+MA0960.1.BHLH104,BHLH104,,Q8L467,PBM,plants,Arabidopsis thaliana
+MA0961.1.BHLH112,BHLH112,,Q94JL3,PBM,plants,Oryza sativa Japonica Group
+MA0962.1.BHLH34,BHLH34,,Q9LTC7,PBM,plants,Arabidopsis thaliana
+MA0963.1.BHLH78,BHLH78,,Q9FJL4,PBM,plants,Arabidopsis thaliana
+MA0964.1.BIM1,BIM1,,Q9LEZ3,PBM,plants,Arabidopsis thaliana
+MA0965.1.BIM2,BIM2,,Q9CAA4,PBM,plants,Arabidopsis thaliana
+MA0966.1.BIM3,BIM3,,Q9FMB6,PBM,plants,Arabidopsis thaliana
+MA0967.1.BZIP60,BZIP60,,Q9C7S0,PBM,plants,Arabidopsis thaliana
+MA0968.1.bZIP68,bZIP68,,Q84LG2,PBM,plants,Arabidopsis thaliana
+MA0969.1.CMTA2,CMTA2,,Q6NPP4,PBM,plants,Arabidopsis thaliana
+MA0970.1.CMTA3,CMTA3,,Q8GSA7,PBM,plants,Arabidopsis thaliana
+MA0971.1.DREB1A,DREB1A,,Q9M0L0,PBM,plants,Arabidopsis thaliana
+MA0972.1.CCA1,CCA1,Myb/SANT domain factors,P92973,PBM,plants,Arabidopsis thaliana
+MA0973.1.CDF2,CDF2,Dof-type,Q93ZL5,PBM,plants,Arabidopsis thaliana
+MA0974.1.CDF3,CDF3,Dof-type,Q8LFV3,PBM,plants,Arabidopsis thaliana
+MA0975.1.CRF2,CRF2,,Q9SUQ2,PBM,plants,Arabidopsis thaliana
+MA0976.1.CRF4,CRF4,,Q9SUE3,PBM,plants,Arabidopsis thaliana
+MA0977.1.DOF2.5,DOF2.5,Dof-type,Q9ZPY0,PBM,plants,Arabidopsis thaliana
+MA0978.1.DREB1E,DREB1E,,Q9SGJ6,PBM,plants,Arabidopsis thaliana
+MA0979.1.ERF008,ERF008,,O22174,PBM,plants,Arabidopsis thaliana
+MA0980.1.RAP2-10,RAP2-10,,Q9SW63,PBM,plants,Arabidopsis thaliana
+MA0981.1.DOF1.8,DOF1.8,Dof-type,Q84JQ8,PBM,plants,Arabidopsis thaliana
+MA0982.1.DOF2.4,DOF2.4,Dof-type,O80928,PBM,plants,Arabidopsis thaliana
+MA0983.1.DOF5.6,DOF5.6,Dof-type,Q9FM03,PBM,plants,Arabidopsis thaliana
+MA0984.1.DOF5.7,DOF5.7,Dof-type,Q9LSL6,PBM,plants,Arabidopsis thaliana
+MA0985.1.DRE1C,DRE1C,AP2 MBD_like,Q9SYS6,PBM,plants,Arabidopsis thaliana
+MA0986.1.DREB2C,DREB2C,,Q8LFR2,PBM,plants,Arabidopsis thaliana
+MA0987.1.PHYPADRAFT_140773,PHYPADRAFT_140773,Dof-type,A9T5V8,PBM,plants,Physcomitrella patens
+MA0988.1.PHYPADRAFT_143875,PHYPADRAFT_143875,,A9TDF9,PBM,plants,Physcomitrella patens
+MA0989.1.PHYPADRAFT_153324,PHYPADRAFT_153324,Dof-type,A9TZW5,PBM,plants,Physcomitrella patens
+MA0990.1.EDT1,EDT1,HD-ZIP factors,Q9FX31,PBM,plants,Arabidopsis thaliana
+MA0992.1.ERF4,ERF4,,O80340,PBM,plants,Arabidopsis thaliana
+MA0993.1.ERF7,ERF7,,Q9LDE4,PBM,plants,Arabidopsis thaliana
+MA0994.1.ERF8,ERF8,,Q9MAI5,PBM,plants,Arabidopsis thaliana
+MA0995.1.ERF039,ERF039,,Q9SUK8,PBM,plants,Arabidopsis thaliana
+MA0996.1.ERF043,ERF043,,Q9M080,PBM,plants,Arabidopsis thaliana
+MA0997.1.ERF069,ERF069,,Q8W4I5,PBM,plants,Arabidopsis thaliana
+MA0998.1.ERF096,ERF096,,Q9LSX0,PBM,plants,Arabidopsis thaliana
+MA0999.1.ERF098,ERF098,,Q9LTC5,PBM,plants,Arabidopsis thaliana
+MA1000.1.ERF105,ERF105,,Q8VY90,PBM,plants,Arabidopsis thaliana
+MA1001.1.ERF11,ERF11,,Q9C5I3,PBM,plants,Arabidopsis thaliana
+MA1002.1.ERF112,ERF112,,P93007,PBM,plants,Arabidopsis thaliana
+MA1004.1.ERF13,ERF13,,Q8L9K1,PBM,plants,Arabidopsis thaliana
+MA1005.1.ERF3,ERF3,,O80339,PBM,plants,Arabidopsis thaliana
+MA1006.1.ERF6,ERF6,,Q8VZ91,PBM,plants,Arabidopsis thaliana
+MA1007.1.PHYPADRAFT_173530,PHYPADRAFT_173530,,A9U3V6,PBM,plants,Physcomitrella patens
+MA1008.1.PHYPADRAFT_182268,PHYPADRAFT_182268,,A9S898,PBM,plants,Physcomitrella patens
+MA1009.1.ARF3,ARF3,,O23661,PBM,plants,Arabidopsis thaliana
+MA1010.1.PHYPADRAFT_64121,PHYPADRAFT_64121,,A9RC32,PBM,plants,Physcomitrella patens
+MA1011.1.PHYPADRAFT_72483,PHYPADRAFT_72483,,A9RZ73,PBM,plants,Physcomitrella patens
+MA1012.1.AGL27,AGL27,,Q9AT76,ChIP-seq,plants,Arabidopsis thaliana
+MA1013.1.GATA10,GATA10,GATA-type zinc fingers,Q8VZP4,PBM,plants,Arabidopsis thaliana
+MA1014.1.GATA11,GATA11,GATA-type zinc fingers,Q6DBP8,PBM,plants,Arabidopsis thaliana
+MA1015.1.GATA12,GATA12,GATA-type zinc fingers,P69781,PBM,plants,Arabidopsis thaliana
+MA1016.1.GATA15,GATA15,GATA-type zinc fingers,Q8LG10,PBM,plants,Arabidopsis thaliana
+MA1017.1.GATA8,GATA8,GATA-type zinc fingers,Q9SV30,PBM,plants,Arabidopsis thaliana
+MA1018.1.GATA9,GATA9,GATA-type zinc fingers,O82632,PBM,plants,Arabidopsis thaliana
+MA1019.1.Glyma19g26560.1,Glyma19g26560.1,TCP domain,I1N7U7,PBM,plants,Glycine max
+MA1020.1.GT-1,GT-1,Trihelix,Q9FX53,PBM,plants,Arabidopsis thaliana
+MA1021.1.PHYPADRAFT_48267,PHYPADRAFT_48267,,A9TN45,PBM,plants,Physcomitrella patens
+MA1022.1.PHYPADRAFT_38837,PHYPADRAFT_38837,Dof-type,A9TZG0,PBM,plants,Physcomitrella patens
+MA1023.1.PHYPADRAFT_28324,PHYPADRAFT_28324,,A9RGN0,PBM,plants,Physcomitrella patens
+MA1024.1.HAT1,HAT1,HD-ZIP factors,P46600,PBM,plants,Arabidopsis thaliana
+MA1025.1.HBI1,HBI1,,Q9ZPW3,PBM,plants,Arabidopsis thaliana
+MA1026.1.ATHB-15,ATHB-15,HD-ZIP factors,Q9ZU11,PBM,plants,Arabidopsis thaliana
+MA1027.1.KAN1,KAN1,Myb/SANT domain factors,Q93WJ9,PBM,plants,Arabidopsis thaliana
+MA1028.1.KAN4,KAN4,Myb/SANT domain factors,Q9FJV5,PBM,plants,Arabidopsis thaliana
+MA1030.1.P0510F09.23,P0510F09.23,Myb/SANT domain factors,Q5N9C9,PBM,plants,Oryza sativa Japonica Group
+MA1031.1.OJ1581_H09.2,OJ1581_H09.2,TCP domain,Q6H878,PBM,plants,Oryza sativa Japonica Group
+MA1032.1.DREB1G,DREB1G,,Q6EP77,PBM,plants,Oryza sativa Japonica Group
+MA1033.1.OJ1058_F05.8,OJ1058_F05.8,,Q75HX9,PBM,plants,Oryza sativa Japonica Group
+MA1034.1.Os05g0497200,Os05g0497200,,Q75K84,PBM,plants,Oryza sativa Japonica Group
+MA1035.1.TCP4,TCP4,TCP domain,Q8LPR5,PBM,plants,Arabidopsis thaliana
+MA1036.1.MYB111,MYB111,Myb/SANT domain factors,Q9FJ07,PBM,plants,Arabidopsis thaliana
+MA1037.1.MYB24,MYB24,Myb/SANT domain factors,Q9SPG9,PBM,plants,Arabidopsis thaliana
+MA1038.1.MYB3,MYB3,Myb/SANT domain factors,Q9S9K9,PBM,plants,Arabidopsis thaliana
+MA1039.1.MYB4,MYB4,Myb/SANT domain factors,Q9SZP1,PBM,plants,Arabidopsis thaliana
+MA1040.1.MYB46,MYB46,Myb/SANT domain factors,Q9LXV2,PBM,plants,Arabidopsis thaliana
+MA1041.1.MYB55,MYB55,Myb/SANT domain factors,Q9M118,PBM,plants,Arabidopsis thaliana
+MA1042.1.MYB59,MYB59,Myb/SANT domain factors,Q4JL84,PBM,plants,Arabidopsis thaliana
+MA1043.1.NAC083,NAC083,,Q9FY93,PBM,plants,Arabidopsis thaliana
+MA1044.1.NAC92,NAC92,,Q9FKA0,PBM,plants,Arabidopsis thaliana
+MA1045.1.NAC043,NAC043,,Q84WP6,PBM,plants,Arabidopsis thaliana
+MA1046.1.NTL9,NTL9,,F4JN35,PBM,plants,Arabidopsis thaliana
+MA1047.1.TGA5,TGA5,,Q39163,PBM,plants,Arabidopsis thaliana
+MA1048.1.ERF018,ERF018,,Q9S7L5,PBM,plants,Arabidopsis thaliana
+MA1049.1.ERF094,ERF094,,Q9LND1,PBM,plants,Arabidopsis thaliana
+MA1050.1.OsI_08196,OsI_08196,TCP domain,A2X7K8,PBM,plants,Oryza sativa Indica Group
+MA1051.1.RAP2-3,RAP2-3,,P42736,PBM,plants,Arabidopsis thaliana
+MA1052.1.RAP2-6,RAP2-6,,Q7G1L2,PBM,plants,Arabidopsis thaliana
+MA1053.1.ERF109,ERF109,,Q9SZ06,PBM,plants,Arabidopsis thaliana
+MA1054.1.ARALYDRAFT_897773,ARALYDRAFT_897773,TCP domain,D7L3Y2,PBM,plants,Arabidopsis lyrata subsp. lyrata
+MA1055.1.SPL1,SPL1,,Q9SMX9,PBM,plants,Arabidopsis thaliana
+MA1056.1.SPL11,SPL11,,Q9FZK0,PBM,plants,Arabidopsis thaliana
+MA1057.1.SPL12,SPL12,,Q9S7P5,PBM,plants,Arabidopsis thaliana
+MA1058.1.SPL4,SPL4,,Q9S7A9,PBM,plants,Arabidopsis thaliana
+MA1059.1.SPL5,SPL5,,Q9S758,PBM,plants,Arabidopsis thaliana
+MA1060.1.SPL7,SPL7,,Q8S9G8,PBM,plants,Arabidopsis thaliana
+MA1061.1.SPT,SPT,,Q9FUA4,PBM,plants,Arabidopsis thaliana
+MA1062.1.TCP15,TCP15,TCP domain,Q9C9L2,PBM,plants,Arabidopsis thaliana
+MA1063.1.TCP19,TCP19,TCP domain,Q9LT89,PBM,plants,Arabidopsis thaliana
+MA1064.1.TCP2,TCP2,TCP domain,Q93V43,PBM,plants,Arabidopsis thaliana
+MA1065.1.TCP20,TCP20,TCP domain,Q9LSD5,PBM,plants,Arabidopsis thaliana
+MA1066.1.TCP23,TCP23,TCP domain,Q9LQF0,PBM,plants,Arabidopsis thaliana
+MA1067.1.TCP5,TCP5,TCP domain,Q9FME3,PBM,plants,Arabidopsis thaliana
+MA1068.1.TGA2,TGA2,,P43273,PBM,plants,Arabidopsis thaliana
+MA1069.1.TGA6,TGA6,,Q39140,PBM,plants,Arabidopsis thaliana
+MA1070.1.TGA7,TGA7,,Q93ZE2,PBM,plants,Arabidopsis thaliana
+MA1071.1.DOF5.3,DOF5.3,Dof-type,Q84TE9,PBM,plants,Arabidopsis thaliana
+MA1073.1.TRB2,TRB2,Myb/SANT domain factors,Q9FJW5,PBM,plants,Arabidopsis thaliana
+MA1074.1.UNE10,UNE10,,Q8GZ38,PBM,plants,Arabidopsis thaliana
+MA1075.1.WRKY12,WRKY12,,Q93WY4,PBM,plants,Arabidopsis thaliana
+MA1076.1.WRKY15,WRKY15,,O22176,PBM,plants,Arabidopsis thaliana
+MA1077.1.WRKY18,WRKY18,,Q9C5T4,PBM,plants,Arabidopsis thaliana
+MA1078.1.WRKY2,WRKY2,,Q9FG77,PBM,plants,Arabidopsis thaliana
+MA1079.1.WRKY21,WRKY21,,O04336,PBM,plants,Arabidopsis thaliana
+MA1080.1.WRKY23,WRKY23,,O22900,PBM,plants,Arabidopsis thaliana
+MA1081.1.WRKY25,WRKY25,,O22921,PBM,plants,Arabidopsis thaliana
+MA1083.1.WRKY30,WRKY30,,Q9FL62,PBM,plants,Arabidopsis thaliana
+MA1084.1.WRKY38,WRKY38,,Q8GWF1,PBM,plants,Arabidopsis thaliana
+MA1085.1.WRKY40,WRKY40,,Q9SAH7,PBM,plants,Arabidopsis thaliana
+MA1086.1.WRKY43,WRKY43,,Q8GY11,PBM,plants,Arabidopsis thaliana
+MA1087.1.WRKY45,WRKY45,,Q9S763,PBM,plants,Arabidopsis thaliana
+MA1088.1.WRKY48,WRKY48,,Q9FGZ4,PBM,plants,Arabidopsis thaliana
+MA1089.1.WRKY57,WRKY57,,Q9C983,PBM,plants,Arabidopsis thaliana
+MA1090.1.WRKY60,WRKY60,,Q9SK33,PBM,plants,Arabidopsis thaliana
+MA1091.1.WRKY62,WRKY62,,Q9LZV6,PBM,plants,Arabidopsis thaliana
+MA1092.1.WRKY63,WRKY63,,Q9C6H5,PBM,plants,Arabidopsis thaliana
+MA1093.1.WRKY75,WRKY75,,Q9FYA2,PBM,plants,Arabidopsis thaliana
+MA1094.1.WRKY8,WRKY8,,Q9FL26,PBM,plants,Arabidopsis thaliana
+MA1095.1.ARALYDRAFT_495258,ARALYDRAFT_495258,TCP domain,D7MRK3,PBM,plants,Arabidopsis lyrata subsp. lyrata
+MA1096.1.ARALYDRAFT_496250,ARALYDRAFT_496250,TCP domain,D7MUG0,PBM,plants,Arabidopsis lyrata subsp. lyrata
+MA1097.1.ARALYDRAFT_493022,ARALYDRAFT_493022,TCP domain,D7MCT1,PBM,plants,Arabidopsis lyrata subsp. lyrata
+MA1098.1.ARALYDRAFT_484486,ARALYDRAFT_484486,TCP domain,D7LRC3,PBM,plants,Arabidopsis lyrata subsp. lyrata
+MA1100.1.ASCL1,ASCL1,MyoD / ASC-related factors,P50553,ChIP-seq,vertebrates,Homo sapiens
+MA1101.1.BACH2,BACH2,Jun-related factors,Q9BYV9,ChIP-seq,vertebrates,Homo sapiens
+MA0018.3.CREB1,CREB1,CREB-related factors,P16220,ChIP-seq,vertebrates,Homo sapiens
+MA1102.1.CTCFL,CTCFL,More than 3 adjacent zinc finger factors,Q8NI51,ChIP-seq,vertebrates,Homo sapiens
+MA0852.2.FOXK1,FOXK1,Forkhead box (FOX) factors,P85037,ChIP-seq,vertebrates,Homo sapiens
+MA1103.1.FOXK2,FOXK2,Forkhead box (FOX) factors,Q01167,ChIP-seq,vertebrates,Homo sapiens
+MA0481.2.FOXP1,FOXP1,Forkhead box (FOX) factors,Q9H334,ChIP-seq,vertebrates,Homo sapiens
+MA0036.3.GATA2,GATA2,GATA-type zinc fingers,P23769,ChIP-seq,vertebrates,Homo sapiens
+MA1104.1.GATA6,GATA6,GATA-type zinc fingers,Q92908,ChIP-seq,vertebrates,Homo sapiens
+MA1105.1.GRHL2,GRHL2,Grainyhead-related factors,Q6ISB3,ChIP-seq,vertebrates,Homo sapiens
+MA1106.1.HIF1A,HIF1A,PAS domain factors,Q16665,ChIP-seq,vertebrates,Homo sapiens
+MA0039.3.KLF4,KLF4,Three-zinc finger Kruppel-related factors,O43474,ChIP-seq,vertebrates,Homo sapiens
+MA1107.1.KLF9,KLF9,Three-zinc finger Kruppel-related factors,Q13886,ChIP-seq,vertebrates,Homo sapiens
+MA0495.2.MAFF,MAFF,Maf-related factors,Q9ULX9,ChIP-seq,vertebrates,Homo sapiens
+MA0496.2.MAFK,MAFK,Maf-related factors,O60675,ChIP-seq,vertebrates,Homo sapiens
+MA0620.2.MITF,MITF,bHLH-ZIP factors,O75030,ChIP-seq,vertebrates,Homo sapiens
+MA1108.1.MXI1,MXI1,bHLH-ZIP factors,P50539,ChIP-seq,vertebrates,Homo sapiens
+MA0147.3.MYC,MYC,bHLH-ZIP factors,P01106,ChIP-seq,vertebrates,Homo sapiens
+MA0100.3.MYB,MYB,Myb/SANT domain factors,P10242,ChIP-seq,vertebrates,Homo sapiens
+MA0104.4.MYCN,MYCN,bHLH-ZIP factors,P04198,ChIP-seq,vertebrates,Homo sapiens
+MA1109.1.NEUROD1,NEUROD1,Tal-related factors,Q13562,ChIP-seq,vertebrates,Homo sapiens
+MA0161.2.NFIC,NFIC,Nuclear factor 1,P08651,ChIP-seq,vertebrates,Homo sapiens
+MA0060.3.NFYA,NFYA,NFY,P23511,ChIP-seq,vertebrates,Homo sapiens
+MA1110.1.NR1H4,NR1H4,Thyroid hormone receptor-related factors (NR1),Q96RI1,ChIP-seq,vertebrates,Homo sapiens
+MA1111.1.NR2F2,NR2F2,RXR-related receptors (NR2),P24468,ChIP-seq,vertebrates,Homo sapiens
+MA1112.1.NR4A1,NR4A1,NGFI-B-related receptors (NR4),P22736,ChIP-seq,vertebrates,Homo sapiens
+MA0014.3.PAX5,PAX5,Paired domain only,Q02548,ChIP-seq,vertebrates,Homo sapiens
+MA1113.1.PBX2,PBX2,TALE-type homeo domain factors,P40425,ChIP-seq,vertebrates,Homo sapiens
+MA1114.1.PBX3,PBX3,TALE-type homeo domain factors,P40426,ChIP-seq,vertebrates,Homo sapiens
+MA1115.1.POU5F1,POU5F1,POU domain factors,Q01860,ChIP-seq,vertebrates,Homo sapiens
+MA0508.2.PRDM1,PRDM1,More than 3 adjacent zinc finger factors,O75626,ChIP-seq,vertebrates,Homo sapiens
+MA1116.1.RBPJ,RBPJ,CSL-related factors,Q06330,ChIP-seq,vertebrates,Homo sapiens
+MA1117.1.RELB,RELB,NF-kappaB-related factors,Q01201,ChIP-seq,vertebrates,Homo sapiens
+MA1118.1.SIX1,SIX1,HD-SINE factors,Q15475,ChIP-seq,vertebrates,Homo sapiens
+MA1119.1.SIX2,SIX2,HD-SINE factors,Q9NPC8,ChIP-seq,vertebrates,Homo sapiens
+MA0442.2.SOX10,SOX10,SOX-related factors,P56693,ChIP-seq,vertebrates,Homo sapiens
+MA1120.1.SOX13,SOX13,SOX-related factors,Q9UN79,ChIP-seq,vertebrates,Homo sapiens
+MA1121.1.TEAD2,TEAD2,TEF-1-related factors,Q15562,ChIP-seq,vertebrates,Homo sapiens
+MA1122.1.TFDP1,TFDP1,E2F-related factors,Q14186,ChIP-seq,vertebrates,Homo sapiens
+MA1123.1.TWIST1,TWIST1,Tal-related factors,Q15672,ChIP-seq,vertebrates,Homo sapiens
+MA0526.2.USF2,USF2,bHLH-ZIP factors,Q15853,ChIP-seq,vertebrates,Homo sapiens
+MA0750.2.ZBTB7A,ZBTB7A,More than 3 adjacent zinc finger factors,O95365,ChIP-seq,vertebrates,Homo sapiens
+MA0103.3.ZEB1,ZEB1,HD-ZF factors,P37275,ChIP-seq,vertebrates,Homo sapiens
+MA1124.1.ZNF24,ZNF24,More than 3 adjacent zinc finger factors,P17028,ChIP-seq,vertebrates,Homo sapiens
+MA1125.1.ZNF384,ZNF384,More than 3 adjacent zinc finger factors,Q8TF68,ChIP-seq,vertebrates,Homo sapiens
+MA1154.1.ZNF282,ZNF282,More than 3 adjacent zinc finger factors,Q9UDV7,HT-SELEX,vertebrates,Homo sapiens
+MA1155.1.ZSCAN4,ZSCAN4,More than 3 adjacent zinc finger factors,Q8NAM6,HT-SELEX,vertebrates,Homo sapiens
+MA0086.2.sna,sna,More than 3 adjacent zinc finger factors,P08044,SMiLE-seq,insects,Drosophila melanogaster
+MA0037.3.GATA3,GATA3,GATA-type zinc fingers,P23771,SMiLE-seq,vertebrates,Homo sapiens
+MA0099.3.FOS::JUN,FOS+JUN,Fos-related factors;Jun-related factors,P01100;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1126.1.FOS::JUN(var.2),FOS+JUN(var.2),Fos-related factors;Jun-related factors,P01100;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1127.1.FOSB::JUN,FOSB+JUN,Fos-related factors;Jun-related factors,P53539;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1128.1.FOSL1::JUN,FOSL1+JUN,Fos-related factors;Jun-related factors,P15407;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1129.1.FOSL1::JUN(var.2),FOSL1+JUN(var.2),Fos-related factors;Jun-related factors,P15407;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1130.1.FOSL2::JUN,FOSL2+JUN,Fos-related factors;Jun-related factors,P15408;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1131.1.FOSL2::JUN(var.2),FOSL2+JUN(var.2),Fos-related factors;Jun-related factors,P15408;P05412,SMiLE-seq,vertebrates,Homo sapiens
+MA1132.1.JUN::JUNB,JUN+JUNB,Jun-related factors,P05412;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1133.1.JUN::JUNB(var.2),JUN+JUNB(var.2),Jun-related factors,P05412;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1134.1.FOS::JUNB,FOS+JUNB,Fos-related factors;Jun-related factors,P01100;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1135.1.FOSB::JUNB,FOSB+JUNB,Fos-related factors;Jun-related factors,P53539;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1136.1.FOSB::JUNB(var.2),FOSB+JUNB(var.2),Fos-related factors;Jun-related factors,P53539;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1137.1.FOSL1::JUNB,FOSL1+JUNB,Fos-related factors;Jun-related factors,P15407;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1138.1.FOSL2::JUNB,FOSL2+JUNB,Fos-related factors;Jun-related factors,P15408;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1139.1.FOSL2::JUNB(var.2),FOSL2+JUNB(var.2),Fos-related factors;Jun-related factors,P15408;P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1140.1.JUNB(var.2),JUNB(var.2),Jun-related factors,P17275,SMiLE-seq,vertebrates,Homo sapiens
+MA1141.1.FOS::JUND,FOS+JUND,Fos-related factors;Jun-related factors,P01100;P17535,SMiLE-seq,vertebrates,Homo sapiens
+MA1142.1.FOSL1::JUND,FOSL1+JUND,Fos-related factors;Jun-related factors,P15407;P17535,SMiLE-seq,vertebrates,Homo sapiens
+MA1143.1.FOSL1::JUND(var.2),FOSL1+JUND(var.2),Fos-related factors;Jun-related factors,P15407;P17535,SMiLE-seq,vertebrates,Homo sapiens
+MA1144.1.FOSL2::JUND,FOSL2+JUND,Fos-related factors;Jun-related factors,P15408;P17535,SMiLE-seq,vertebrates,Homo sapiens
+MA1145.1.FOSL2::JUND(var.2),FOSL2+JUND(var.2),Fos-related factors;Jun-related factors,P15408;P17535,SMiLE-seq,vertebrates,Homo sapiens
+MA1146.1.NR1A4::RXRA,NR1A4+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q96RI1;P19793,SMiLE-seq,vertebrates,Homo sapiens
+MA1147.1.NR4A2::RXRA,NR4A2+RXRA,NGFI-B-related receptors (NR4);RXR-related receptors (NR2),P43354;P19793,SMiLE-seq,vertebrates,Homo sapiens
+MA1148.1.PPARA::RXRA,PPARA+RXRA,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),Q07869;P19793,SMiLE-seq,vertebrates,Homo sapiens
+MA1149.1.RARA::RXRG,RARA+RXRG,RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1),P10276;P48443,SMiLE-seq,vertebrates,Homo sapiens
+MA1150.1.RORB,RORB,Thyroid hormone receptor-related factors (NR1),Q92753,SMiLE-seq,vertebrates,Homo sapiens
+MA1151.1.RORC,RORC,Thyroid hormone receptor-related factors (NR1),P51449,SMiLE-seq,vertebrates,Homo sapiens
+MA1152.1.SOX15,SOX15,SOX-related factors,O60248,SMiLE-seq,vertebrates,Homo sapiens
+MA0831.2.TFE3,TFE3,bHLH-ZIP factors,P19532,SMiLE-seq,vertebrates,Homo sapiens
+MA0693.2.VDR,VDR,Thyroid hormone receptor-related factors (NR1),P11473,SMiLE-seq,vertebrates,Homo sapiens
+MA1153.1.Smad4,Smad4,SMAD factors,P97471,SMiLE-seq,vertebrates,Mus musculus
+MA1156.1.JKD,JKD,,Q700D2,DAP-seq,plants,Arabidopsis thaliana
+MA1157.1.NUC,NUC,,Q9FFH3,DAP-seq,plants,Arabidopsis thaliana
+MA1158.1.MGP,MGP,,Q9ZWA6,DAP-seq,plants,Arabidopsis thaliana
+MA1159.1.SGR5,SGR5,,F4IPE3,DAP-seq,plants,Arabidopsis thaliana
+MA1160.1.AT1G14580,AT1G14580,,Q8RWX7,DAP-seq,plants,Arabidopsis thaliana
+MA1161.1.TSO1,TSO1,CPP,Q9LUI3,DAP-seq,plants,Arabidopsis thaliana
+MA1162.1.TCX2,TCX2,CPP,F4JIF5,DAP-seq,plants,Arabidopsis thaliana
+MA1163.1.AT5G45580,AT5G45580,G2like,C0SVS4,DAP-seq,plants,Arabidopsis thaliana
+MA1164.1.AT4G37180,AT4G37180,G2like,F4JRB0,DAP-seq,plants,Arabidopsis thaliana
+MA1165.1.AT1G49560,AT1G49560,G2like,Q9FX84,DAP-seq,plants,Arabidopsis thaliana
+MA1166.1.AT3G12730,AT3G12730,G2like,Q8VYI2,DAP-seq,plants,Arabidopsis thaliana
+MA1167.1.AT2G03500,AT2G03500,G2like,Q9ZQ85,DAP-seq,plants,Arabidopsis thaliana
+MA1168.1.AT3G04030,AT3G04030,G2like,Q9SQQ9,DAP-seq,plants,Arabidopsis thaliana
+MA1169.1.MYB105,MYB105,Myb,Q9SEZ4,DAP-seq,plants,Arabidopsis thaliana
+MA1170.1.MYB118,MYB118,Myb,Q9LVW4,DAP-seq,plants,Arabidopsis thaliana
+MA1171.1.MYB52,MYB52,Myb,Q6R0C4,DAP-seq,plants,Arabidopsis thaliana
+MA1172.1.MYB3R5,MYB3R5,Myb,Q6R032,DAP-seq,plants,Arabidopsis thaliana
+MA1173.1.MYB101,MYB101,Myb,O80883,DAP-seq,plants,Arabidopsis thaliana
+MA1174.1.MYB56,MYB56,Myb,Q6R053,DAP-seq,plants,Arabidopsis thaliana
+MA1175.1.MYB81,MYB81,Myb,Q9SLH1,DAP-seq,plants,Arabidopsis thaliana
+MA1176.1.MYB119,MYB119,Myb,Q9FIM4,DAP-seq,plants,Arabidopsis thaliana
+MA1177.1.MYB65,MYB65,Myb,Q9FR97,DAP-seq,plants,Arabidopsis thaliana
+MA1178.1.MYB3R1,MYB3R1,Myb,Q9S7G7,DAP-seq,plants,Arabidopsis thaliana
+MA1179.1.MYB1,MYB1,Myb,Q42575,DAP-seq,plants,Arabidopsis thaliana
+MA1180.1.MYB3R4,MYB3R4,Myb,Q94FL9,DAP-seq,plants,Arabidopsis thaliana
+MA1181.1.MYB113,MYB113,Myb,Q9FNV9,DAP-seq,plants,Arabidopsis thaliana
+MA1182.1.At3g09600,At3g09600,Myb-related,Q8RWU3,DAP-seq,plants,Arabidopsis thaliana
+MA1183.1.At5g52660,At5g52660,Myb-related,Q8H0W3,DAP-seq,plants,Arabidopsis thaliana
+MA1184.1.RVE1,RVE1,Myb-related,F4KGY6,DAP-seq,plants,Arabidopsis thaliana
+MA1185.1.LHY1,LHY1,Myb-related,F4HQG9,DAP-seq,plants,Arabidopsis thaliana
+MA1187.1.LCL1,LCL1,Myb-related,Q6R0G4,DAP-seq,plants,Arabidopsis thaliana
+MA1189.1.AT5G61620,AT5G61620,Myb-related,Q9FKF9,DAP-seq,plants,Arabidopsis thaliana
+MA1190.1.At4g01280,At4g01280,Myb-related,C0SVG5,DAP-seq,plants,Arabidopsis thaliana
+MA1191.1.AT3G10113,AT3G10113,Myb-related,F4J2J6,DAP-seq,plants,Arabidopsis thaliana
+MA1197.1.CAMTA1,CAMTA1,CAMTA,Q9FY74,DAP-seq,plants,Arabidopsis thaliana
+MA1198.1.HAT2,HAT2,,P46601,DAP-seq,plants,Arabidopsis thaliana
+MA1199.1.AGL16,AGL16,,A2RVQ5,DAP-seq,plants,Arabidopsis thaliana
+MA1200.1.AGL25,AGL25,,Q9S7Q7,DAP-seq,plants,Arabidopsis thaliana
+MA1201.1.AGL42,AGL42,,Q9FIS1,DAP-seq,plants,Arabidopsis thaliana
+MA1202.1.AGL55,AGL55,,Q9C960,DAP-seq,plants,Arabidopsis thaliana
+MA1203.1.AGL63,AGL63,,Q9SA07,DAP-seq,plants,Arabidopsis thaliana
+MA1204.1.AGL13,AGL13,,Q38837,DAP-seq,plants,Arabidopsis thaliana
+MA1205.1.AGL6,AGL6,,P29386,DAP-seq,plants,Arabidopsis thaliana
+MA1206.1.ARF2,ARF2,,Q94JM3,DAP-seq,plants,Arabidopsis thaliana
+MA1207.1.GT3a,GT3a,Trihelix,Q9SDW0,DAP-seq,plants,Arabidopsis thaliana
+MA1208.1.GT2,GT2,Trihelix,Q39117,DAP-seq,plants,Arabidopsis thaliana
+MA1209.1.ATHB20,ATHB20,,Q8LAT0,DAP-seq,plants,Arabidopsis thaliana
+MA1210.1.HAT22,HAT22,,P46604,DAP-seq,plants,Arabidopsis thaliana
+MA1211.1.ATHB18,ATHB18,,A9Z1E8,DAP-seq,plants,Arabidopsis thaliana
+MA1212.1.ATHB13,ATHB13,,Q8LC03,DAP-seq,plants,Arabidopsis thaliana
+MA1213.1.ATHB21,ATHB21,HD-ZIP factors,Q9ZU70,DAP-seq,plants,Arabidopsis thaliana
+MA1214.1.ATHB40,ATHB40,HD-ZIP factors,O23208,DAP-seq,plants,Arabidopsis thaliana
+MA1215.1.ATHB53,ATHB53,HD-ZIP factors,Q9LVR0,DAP-seq,plants,Arabidopsis thaliana
+MA1216.1.RAP21,RAP21,,Q8LC30,DAP-seq,plants,Arabidopsis thaliana
+MA1217.1.CBF2,CBF2,,Q9SYS6,DAP-seq,plants,Arabidopsis thaliana
+MA1218.1.CBF4,CBF4,,Q9FJ93,DAP-seq,plants,Arabidopsis thaliana
+MA1220.1.TINY,TINY,,Q39127,DAP-seq,plants,Arabidopsis thaliana
+MA1221.1.RAP26,RAP26,,Q7G1L2,DAP-seq,plants,Arabidopsis thaliana
+MA1222.1.AT1G44830,AT1G44830,,Q9LPE8,DAP-seq,plants,Arabidopsis thaliana
+MA1223.1.AT3G60490,AT3G60490,,Q9M210,DAP-seq,plants,Arabidopsis thaliana
+MA1224.1.CBF1,CBF1,,P93835,DAP-seq,plants,Arabidopsis thaliana
+MA1225.1.ERF5,ERF5,,O80341,DAP-seq,plants,Arabidopsis thaliana
+MA1226.1.AT5G18450,AT5G18450,,P61827,DAP-seq,plants,Arabidopsis thaliana
+MA1227.1.AT1G12630,AT1G12630,,Q38Q39,DAP-seq,plants,Arabidopsis thaliana
+MA1228.1.AT4G18450,AT4G18450,,Q8LBQ7,DAP-seq,plants,Arabidopsis thaliana
+MA1229.1.AT2G44940,AT2G44940,,Q8LBQ7,DAP-seq,plants,Arabidopsis thaliana
+MA1230.1.AT1G77200,AT1G77200,,O80654,DAP-seq,plants,Arabidopsis thaliana
+MA1231.1.ERF15,ERF15,,Q8VYM0,DAP-seq,plants,Arabidopsis thaliana
+MA1232.1.AT4G28140,AT4G28140,,Q9M0J3,DAP-seq,plants,Arabidopsis thaliana
+MA1233.1.AT1G71450,AT1G71450,,Q9C912,DAP-seq,plants,Arabidopsis thaliana
+MA1234.1.AT1G19210,AT1G19210,,Q84QC2,DAP-seq,plants,Arabidopsis thaliana
+MA1235.1.AIL7,AIL7,,Q6J9N8,DAP-seq,plants,Arabidopsis thaliana
+MA1237.1.AT4G16750,AT4G16750,,Q9SUK8,DAP-seq,plants,Arabidopsis thaliana
+MA1238.1.ERF38,ERF38,,Q9ZQP3,DAP-seq,plants,Arabidopsis thaliana
+MA1239.1.ERF104,ERF104,,Q9FKG1,DAP-seq,plants,Arabidopsis thaliana
+MA1240.1.ERF10,ERF10,,Q9ZWA2,DAP-seq,plants,Arabidopsis thaliana
+MA1241.1.AT4G32800,AT4G32800,,Q9M080,DAP-seq,plants,Arabidopsis thaliana
+MA1242.1.AT3G57600,AT3G57600,,Q9SVX5,DAP-seq,plants,Arabidopsis thaliana
+MA1243.1.DREB19,DREB19,,O80917,DAP-seq,plants,Arabidopsis thaliana
+MA1244.1.ABR1,ABR1,,Q9FGF8,DAP-seq,plants,Arabidopsis thaliana
+MA1245.1.AT2G33710,AT2G33710,,P93007,DAP-seq,plants,Arabidopsis thaliana
+MA1246.1.LEP,LEP,,Q9M644,DAP-seq,plants,Arabidopsis thaliana
+MA1247.1.AT1G28160,AT1G28160,,Q9FZ90,DAP-seq,plants,Arabidopsis thaliana
+MA1248.1.DREB26,DREB26,,Q9SFE4,DAP-seq,plants,Arabidopsis thaliana
+MA1249.1.RAP210,RAP210,,Q9SW63,DAP-seq,plants,Arabidopsis thaliana
+MA1250.1.AT1G75490,AT1G75490,,Q9LQZ2,DAP-seq,plants,Arabidopsis thaliana
+MA1251.1.DEAR5,DEAR5,,Q8W3M3,DAP-seq,plants,Arabidopsis thaliana
+MA1252.1.PUCHI,PUCHI,,Q6J9Q2,DAP-seq,plants,Arabidopsis thaliana
+MA1253.1.AT3G16280,AT3G16280,,Q9LU18,DAP-seq,plants,Arabidopsis thaliana
+MA1254.1.ERF13,ERF13,,Q8L9k1,DAP-seq,plants,Arabidopsis thaliana
+MA1255.1.AT1G22810,AT1G22810,,O80542,DAP-seq,plants,Arabidopsis thaliana
+MA1256.1.RAP212,RAP212,,Q9SSA8,DAP-seq,plants,Arabidopsis thaliana
+MA1257.1.ERF9,ERF9,,Q9FE67,DAP-seq,plants,Arabidopsis thaliana
+MA1259.1.AT1G01250,AT1G01250,,Q1ECI2,DAP-seq,plants,Arabidopsis thaliana
+MA1260.1.AT1G77640,AT1G77640,,Q9CAP4,DAP-seq,plants,Arabidopsis thaliana
+MA1261.1.AT5G67000,AT5G67000,,Q38Q40,DAP-seq,plants,Arabidopsis thaliana
+MA1262.1.ERF2,ERF2,,O80338,DAP-seq,plants,Arabidopsis thaliana
+MA1263.1.AT1G36060,AT1G36060,,Q9SKW5,DAP-seq,plants,Arabidopsis thaliana
+MA1264.1.ESE1,ESE1,,A0A178VAV2,DAP-seq,plants,Arabidopsis thaliana
+MA1265.1.AT4G31060,AT4G31060,,Q6NLD5,DAP-seq,plants,Arabidopsis thaliana
+MA1266.1.RAP211,RAP211,,Q6J9S1,DAP-seq,plants,Arabidopsis thaliana
+MA1267.1.AT5G66940,AT5G66940,Dof-type,Q9FGD6,DAP-seq,plants,Arabidopsis thaliana
+MA1268.1.AT1G69570,AT1G69570,Dof-type,Q9SEZ3,DAP-seq,plants,Arabidopsis thaliana
+MA1269.1.dof4.5,dof4.5,Dof-type,O49550,DAP-seq,plants,Arabidopsis thaliana
+MA1270.1.AT3G45610,AT3G45610,Dof-type,Q9M1E6,DAP-seq,plants,Arabidopsis thaliana
+MA1271.1.DAG2,DAG2,Dof-type,Q9ZPY0,DAP-seq,plants,Arabidopsis thaliana
+MA1272.1.AT2G28810,AT2G28810,Dof-type,Q9ZV33,DAP-seq,plants,Arabidopsis thaliana
+MA1273.1.dof4.2,dof4.2,Dof-type,Q9SUB1,DAP-seq,plants,Arabidopsis thaliana
+MA1274.1.OBP3,OBP3,Dof-type,Q9M2U1,DAP-seq,plants,Arabidopsis thaliana
+MA1275.1.AT1G47655,AT1G47655,Dof-type,Q9SX97,DAP-seq,plants,Arabidopsis thaliana
+MA1276.1.AT3G52440,AT3G52440,Dof-type,Q9SVC5,DAP-seq,plants,Arabidopsis thaliana
+MA1277.1.Adof1,Adof1,Dof-type,O82155,DAP-seq,plants,Arabidopsis thaliana
+MA1278.1.OBP1,OBP1,Dof-type,Q39088,DAP-seq,plants,Arabidopsis thaliana
+MA1279.1.COG1,COG1,Dof-type,P68350,DAP-seq,plants,Arabidopsis thaliana
+MA1280.1.OBP4,OBP4,Dof-type,Q8LDR0,DAP-seq,plants,Arabidopsis thaliana
+MA1281.1.AT5G02460,AT5G02460,Dof-type,Q9LZ56,DAP-seq,plants,Arabidopsis thaliana
+MA1282.1.PTF1,PTF1,TCP domain,Q9S7W5,DAP-seq,plants,Arabidopsis thaliana
+MA1283.1.TCP14,TCP14,TCP domain,Q93Z00,DAP-seq,plants,Arabidopsis thaliana
+MA1284.1.TCP1,TCP1,TCP domain,Q9FYG7,DAP-seq,plants,Arabidopsis thaliana
+MA1285.1.At2g45680,At2g45680,TCP domain,O64647,DAP-seq,plants,Arabidopsis thaliana
+MA1286.1.TCP24,TCP24,TCP domain,Q9C758,DAP-seq,plants,Arabidopsis thaliana
+MA1287.1.At5g08330,At5g08330,TCP domain,Q9FTA2,DAP-seq,plants,Arabidopsis thaliana
+MA1288.1.At1g72010,At1g72010,TCP domain,Q9C7G4,DAP-seq,plants,Arabidopsis thaliana
+MA1289.1.TCP3,TCP3,TCP domain,Q9MAH8,DAP-seq,plants,Arabidopsis thaliana
+MA1290.1.TCP17,TCP17,TCP domain,Q9LEZ9,DAP-seq,plants,Arabidopsis thaliana
+MA1291.1.TCP7,TCP7,TCP domain,Q9FMX2,DAP-seq,plants,Arabidopsis thaliana
+MA1292.1.MYB27,MYB27,TCP domain,Q9SCP1,DAP-seq,plants,Arabidopsis thaliana
+MA1293.1.MYB57,MYB57,TCP domain,Q9SSA1,DAP-seq,plants,Arabidopsis thaliana
+MA1294.1.MYB62,MYB62,TCP domain,Q9C9G7,DAP-seq,plants,Arabidopsis thaliana
+MA1295.1.WRKY20,WRKY20,,Q93WV0,DAP-seq,plants,Arabidopsis thaliana
+MA1296.1.WRKY46,WRKY46,,Q9SKD9,DAP-seq,plants,Arabidopsis thaliana
+MA1297.1.WRKY26,WRKY26,,Q9C5T3,DAP-seq,plants,Arabidopsis thaliana
+MA1298.1.WRKY29,WRKY29,,Q9SUS1,DAP-seq,plants,Arabidopsis thaliana
+MA1299.1.WRKY17,WRKY17,,Q9SJA8,DAP-seq,plants,Arabidopsis thaliana
+MA1300.1.WRKY6,WRKY6,,Q9C519,DAP-seq,plants,Arabidopsis thaliana
+MA1301.1.WRKY33,WRKY33,,Q8S8P5,DAP-seq,plants,Arabidopsis thaliana
+MA1302.1.WRKY65,WRKY65,,Q9LP56,DAP-seq,plants,Arabidopsis thaliana
+MA1303.1.WRKY22,WRKY22,,O04609,DAP-seq,plants,Arabidopsis thaliana
+MA1304.1.WRKY59,WRKY59,,Q9SJ09,DAP-seq,plants,Arabidopsis thaliana
+MA1305.1.WRKY55,WRKY55,,Q9SHB5,DAP-seq,plants,Arabidopsis thaliana
+MA1306.1.WRKY11,WRKY11,,Q9SV15,DAP-seq,plants,Arabidopsis thaliana
+MA1307.1.WRKY31,WRKY31,,Q93WT0,DAP-seq,plants,Arabidopsis thaliana
+MA1308.1.WRKY70,WRKY70,,Q9LY00,DAP-seq,plants,Arabidopsis thaliana
+MA1309.1.WRKY3,WRKY3,,Q9ZQ70,DAP-seq,plants,Arabidopsis thaliana
+MA1310.1.WRKY42,WRKY42,,Q9XEC3,DAP-seq,plants,Arabidopsis thaliana
+MA1311.1.WRKY28,WRKY28,,Q8VWJ2,DAP-seq,plants,Arabidopsis thaliana
+MA1312.1.WRKY47,WRKY47,,Q9ZSI7,DAP-seq,plants,Arabidopsis thaliana
+MA1313.1.WRKY7,WRKY7,,Q9STX0,DAP-seq,plants,Arabidopsis thaliana
+MA1314.1.WRKY14,WRKY14,,Q9SA80,DAP-seq,plants,Arabidopsis thaliana
+MA1315.1.WRKY24,WRKY24,,Q9FFS3,DAP-seq,plants,Arabidopsis thaliana
+MA1316.1.WRKY71,WRKY71,,Q93WV4,DAP-seq,plants,Arabidopsis thaliana
+MA1317.1.WRKY50,WRKY50,,Q8VWQ5,DAP-seq,plants,Arabidopsis thaliana
+MA1318.1.WRKY27,WRKY27,,Q9FLX8,DAP-seq,plants,Arabidopsis thaliana
+MA1319.1.SPL3,SPL3,,P93015,DAP-seq,plants,Arabidopsis thaliana
+MA1320.1.SPL15,SPL15,,Q9M2Q6,DAP-seq,plants,Arabidopsis thaliana
+MA1321.1.SPL13,SPL13,,B9DI20,DAP-seq,plants,Arabidopsis thaliana
+MA1322.1.SPL9,SPL9,,Q700W2,DAP-seq,plants,Arabidopsis thaliana
+MA1323.1.GATA19,GATA19,GATA-type zinc fingers,Q6QPM2,DAP-seq,plants,Arabidopsis thaliana
+MA1324.1.GATA20,GATA20,GATA-type zinc fingers,Q9ZPX0,DAP-seq,plants,Arabidopsis thaliana
+MA1325.1.GATA14,GATA14,GATA-type zinc fingers,Q9M1U2,DAP-seq,plants,Arabidopsis thaliana
+MA1326.1.ATHB33,ATHB33,ZF-HD,Q9FRL5,DAP-seq,plants,Arabidopsis thaliana
+MA1328.1.ATHB34,ATHB34,ZF-HD,Q8LFD3,DAP-seq,plants,Arabidopsis thaliana
+MA1331.1.AT1G78700,AT1G78700,BES1,Q9ZV88,DAP-seq,plants,Arabidopsis thaliana
+MA1332.1.AT4G36780,AT4G36780,BES2,Q94A43,DAP-seq,plants,Arabidopsis thaliana
+MA1333.1.AT4G18890,AT4G18890,BES3,O49404,DAP-seq,plants,Arabidopsis thaliana
+MA1334.1.GBF6,GBF6,,O65683,DAP-seq,plants,Arabidopsis thaliana
+MA1335.1.TGA4,TGA4,,Q39162,DAP-seq,plants,Arabidopsis thaliana
+MA1336.1.TGA3,TGA3,,Q39234,DAP-seq,plants,Arabidopsis thaliana
+MA1337.1.bZIP44,bZIP44,,C0Z2L5,DAP-seq,plants,Arabidopsis thaliana
+MA1338.1.AREB3,AREB3,,Q9LES3,DAP-seq,plants,Arabidopsis thaliana
+MA1339.1.bZIP43,bZIP43,,Q9FMC2,DAP-seq,plants,Arabidopsis thaliana
+MA1340.1.bZIP3,bZIP3,,Q9LFU3,DAP-seq,plants,Arabidopsis thaliana
+MA1341.1.bZIP53,bZIP53,,Q9LZP8,DAP-seq,plants,Arabidopsis thaliana
+MA1342.1.bZIP50,bZIP50,,Q93ZE2,DAP-seq,plants,Arabidopsis thaliana
+MA1343.1.bZIP52,bZIP52,,Q8VWG0,DAP-seq,plants,Arabidopsis thaliana
+MA1344.1.bZIP28,bZIP28,,Q9SG86,DAP-seq,plants,Arabidopsis thaliana
+MA1345.1.bZIP48,bZIP48,,Q8RU59,DAP-seq,plants,Arabidopsis thaliana
+MA1346.1.TGA10,TGA10,,E3VNM4,DAP-seq,plants,Arabidopsis thaliana
+MA1347.1.bZIP68,bZIP68,,Q84LG2,DAP-seq,plants,Arabidopsis thaliana
+MA1348.1.TGA9,TGA9,,Q93XM6,DAP-seq,plants,Arabidopsis thaliana
+MA1349.1.bZIP16,bZIP16,,Q501B2,DAP-seq,plants,Arabidopsis thaliana
+MA1350.1.bZIP42,bZIP42,,Q9LW45,DAP-seq,plants,Arabidopsis thaliana
+MA1351.1.GBF3,GBF3,,Q42510,DAP-seq,plants,Arabidopsis thaliana
+MA1352.1.TRP1,TRP1,Myb-related,Q8L7L8,DAP-seq,plants,Arabidopsis thaliana
+MA1353.1.AT1G72740,AT1G72740,Myb-related,F4IEY4,DAP-seq,plants,Arabidopsis thaliana
+MA1354.1.AT4G12670,AT4G12670,Myb-related,Q700D7,DAP-seq,plants,Arabidopsis thaliana
+MA1355.1.TBP3,TBP3,Myb-related,Q9JFW5,DAP-seq,plants,Arabidopsis thaliana
+MA1356.1.TRP2,TRP2,Myb-related,Q9SNB9,DAP-seq,plants,Arabidopsis thaliana
+MA1357.1.bHLH80,bHLH80,,Q9C8P8,DAP-seq,plants,Arabidopsis thaliana
+MA1358.1.bHLH130,bHLH130,,Q66GR3,DAP-seq,plants,Arabidopsis thaliana
+MA1359.1.bHLH31,bHLH31,,Q0JXE7,DAP-seq,plants,Arabidopsis thaliana
+MA1360.1.bHLH74,bHLH74,,Q6NKN9,DAP-seq,plants,Arabidopsis thaliana
+MA1361.1.bHLH18,bHLH18,,Q1PF17,DAP-seq,plants,Arabidopsis thaliana
+MA1362.1.bHLH77,bHLH77,,Q9LK48,DAP-seq,plants,Arabidopsis thaliana
+MA1363.1.bHLH69,bHLH69,,Q8S3D5,DAP-seq,plants,Arabidopsis thaliana
+MA1364.1.PIF7,PIF7,,Q570R7,DAP-seq,plants,Arabidopsis thaliana
+MA1368.1.AT3G25990,AT3G25990,Trihelix,Q9LU92,DAP-seq,plants,Arabidopsis thaliana
+MA1369.1.HDG1,HDG1,,Q9M2E8,DAP-seq,plants,Arabidopsis thaliana
+MA1370.1.IDD5,IDD5,,Q9ZUL3,DAP-seq,plants,Arabidopsis thaliana
+MA1371.1.IDD4,IDD4,,Q8GYC1,DAP-seq,plants,Arabidopsis thaliana
+MA1372.1.STZ,STZ,,Q96289,DAP-seq,plants,Arabidopsis thaliana
+MA1373.1.IDD2,IDD2,,Q9SCQ6,DAP-seq,plants,Arabidopsis thaliana
+MA1374.1.IDD7,IDD7,,Q8H1F5,DAP-seq,plants,Arabidopsis thaliana
+MA1375.1.ANL2,ANL2,HD-ZIP factors,Q0WV12,DAP-seq,plants,Arabidopsis thaliana
+MA1377.1.PLT1,PLT1,,Q5YGP8,DAP-seq,plants,Arabidopsis thaliana
+MA1379.1.SOL1,SOL1,CPP,Q9M9H7,DAP-seq,plants,Arabidopsis thaliana
+MA1380.1.AT2G20110,AT2G20110,CPP,Q9SL70,DAP-seq,plants,Arabidopsis thaliana
+MA1381.1.AT3G46070,AT3G46070,,Q9LX86,DAP-seq,plants,Arabidopsis thaliana
+MA1382.1.FAR1,FAR1,C3H Zinc Figer,Q9SWG3,DAP-seq,plants,Arabidopsis thaliana
+MA1383.1.KAN2,KAN2,G2-like,Q9C616,DAP-seq,plants,Arabidopsis thaliana
+MA1384.1.AT2G01060,AT2G01060,G2-like,Q9SJW0,DAP-seq,plants,Arabidopsis thaliana
+MA1386.1.AT1G25550,AT1G25550,G2-like,Q9FPE8,DAP-seq,plants,Arabidopsis thaliana
+MA1387.1.AT1G13300,AT1G13300,G2-like,Q9FX67,DAP-seq,plants,Arabidopsis thaliana
+MA1388.1.AT3G24120,AT3G24120,G2-like,Q94A57,DAP-seq,plants,Arabidopsis thaliana
+MA1389.1.AT5G29000,AT5G29000,G2-like,Q8GUN5,DAP-seq,plants,Arabidopsis thaliana
+MA1390.1.AT1G68670,AT1G68670,G2-like,Q8VZS3,DAP-seq,plants,Arabidopsis thaliana
+MA1391.1.MYB33,MYB33,Myb,Q8W1W6,DAP-seq,plants,Arabidopsis thaliana
+MA1392.1.MYB98,MYB98,Myb,Q9S7L2,DAP-seq,plants,Arabidopsis thaliana
+MA1396.1.GATA6,GATA6,GATA-type zinc fingers,Q9SD38,DAP-seq,plants,Arabidopsis thaliana
+MA1398.1.At5g47390,At5g47390,Myb-related,Q9LVS0,DAP-seq,plants,Arabidopsis thaliana
+MA1399.1.At5g08520,At5g08520,Myb-related,Q9FNN6,DAP-seq,plants,Arabidopsis thaliana
+MA1401.1.EPR1,EPR1,Myb-related,B3H5A8,DAP-seq,plants,Arabidopsis thaliana
+MA1402.1.BPC6,BPC6,BBR-BPC,Q8L999,DAP-seq,plants,Arabidopsis thaliana
+MA1403.1.BPC5,BPC5,BBR-BPC,F4JUI3,DAP-seq,plants,Arabidopsis thaliana
+MA1404.1.BPC1,BPC1,BBR-BPC,Q9SKD0,DAP-seq,plants,Arabidopsis thaliana
+MA0954.2.ATHB7,ATHB7,,P46897,DAP-seq,plants,Arabidopsis thaliana
+MA1000.2.ERF105,ERF105,,Q8VY90,DAP-seq,plants,Arabidopsis thaliana
+MA0586.2.SPL14,SPL14,,Q8RY95,DAP-seq,plants,Arabidopsis thaliana
+MA1026.2.ATHB15,ATHB15,HD-ZIP factors,Q9ZU11,DAP-seq,plants,Arabidopsis thaliana
+MA0548.2.AGL15,AGL15,,Q38847,DAP-seq,plants,Arabidopsis thaliana
+MA0550.2.BZR1,BZR1,BES1,Q8S307,DAP-seq,plants,Arabidopsis thaliana
+MA1059.2.SPL5,SPL5,,Q9S758,DAP-seq,plants,Arabidopsis thaliana
+MA1405.1.SIZF2,SIZF2,,I3NN78,PBM,plants,Solanum lycopersicum
+MA1406.1.ATHB4,ATHB4,HD-ZIP factors,P92953,PBM,plants,Arabidopsis thaliana
+MA1407.1.bZIP14,bZIP14,,Q84JK2,PBM,plants,Phaeodactylum tricornutum
+MA1409.1.OsRR22,OsRR22,ARR,Q5SML5,PBM,plants,Oryza sativa
+MA1413.1.UIF1,UIF1,Myb-related,F4JRB0,PBM,plants,Arabidopsis thaliana
+MA1414.1.E2FA,E2FA,E2F,Q9FNY0,ChIP-seq,plants,Arabidopsis thaliana
+MA1415.1.REF6,REF6,,Q9STM3,ChIP-seq,plants,Arabidopsis thaliana
+MA1085.2.WRKY40,WRKY40,,Q9SAH7,ChIP-seq,plants,Arabidopsis thaliana
+MA1417.1.O2,O2,,P12959,ChIP-seq,plants,Zea mays
+MA0162.3.EGR1,EGR1,Three-zinc finger Kruppel-related factors,P18146,HT-SELEX,vertebrates,Homo sapiens
+MA1418.1.IRF3,IRF3,Interferon-regulatory factors,Q14653,HT-SELEX,vertebrates,Homo sapiens
+MA1419.1.IRF4,IRF4,Interferon-regulatory factors,Q15306,HT-SELEX,vertebrates,Homo sapiens
+MA1420.1.IRF5,IRF5,Interferon-regulatory factors,Q13568,HT-SELEX,vertebrates,Homo sapiens
+MA1421.1.TCF7L1,TCF7L1,TCF-7-related factors,Q9HCS4,HT-SELEX,vertebrates,Homo sapiens
 

@@ -1,25 +1,24 @@
 import os
-#import sys
 import re
 import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-f', '--input-file', type=str, required=True, help='name of the input file')
-parser.add_argument('-fmt', '--input-format', choices=['jaspar-2014', 'jaspar-2016', 'hocomoco-pcm'], type=str, required=True, help='format of the input file')
+parser.add_argument('-i', '--input-file', type=str, required=True, help='name of the input file')
+parser.add_argument('-f', '--input-format', choices=['jaspar-2014', 'jaspar-2016', 'hocomoco-pcm'], type=str, required=True, help='format of the input file')
 parser.add_argument('-o', '--output-folder', type=str, required=True, help='name of output Folder')
 
 args = parser.parse_args()
 
-#inputFileName = sys.argv[1]
-#outputFolder = sys.argv[2]
-#inputFormat = sys.argv[3]
-
-
+# read the input file
 with open(args.input_file, "r") as f:
     content = f.readlines()
 
 n_lines = len(content)
+
+###################################################################################################
+# JASPAR 2014
+###################################################################################################
 
 if args.input_format == "jaspar-2014":
     for i in range(n_lines/5):
@@ -40,6 +39,10 @@ if args.input_format == "jaspar-2014":
             f.write(count_g + "\n")
             f.write(count_t + "\n")
 
+###################################################################################################
+# JASPAR 2016
+###################################################################################################
+
 elif args.input_format == "jaspar-2016":
     for i in range(n_lines/5):
         motif_name = content[i * 5 + 0].replace(">","").replace("\t", ".").strip()
@@ -58,6 +61,10 @@ elif args.input_format == "jaspar-2016":
             f.write(count_c + "\n")
             f.write(count_g + "\n")
             f.write(count_t + "\n")
+
+###################################################################################################
+# HOCOMOCO
+###################################################################################################
 
 elif args.input_format == "hocomoco-pcm":
 
@@ -96,9 +103,4 @@ elif args.input_format == "hocomoco-pcm":
                         f.write(count_c + "\n")
                         f.write(count_g + "\n")
                         f.write(count_t + "\n")
-
-
-else:
-    print("Unknown input format.")
-    exit(1)
 

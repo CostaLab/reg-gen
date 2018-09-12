@@ -135,9 +135,9 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter(["factors"], key_type="family", search="inexact")
-        self.assertEqual(len(ms2.motifs_map), 676)
+        self.assertEqual(len(ms2.motifs_map), 673)
         m2k, k2m = ms2.get_mappings(key_type="family")
-        self.assertEqual(len(m2k), 676)
+        self.assertEqual(len(m2k), 673)
         self.assertEqual(len(k2m), 59)
 
         ms2 = self.motif_set.filter(["Paired.*factors"], key_type="family", search="regex")
@@ -153,9 +153,9 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter([".*factors"], key_type="family", search="regex")
-        self.assertEqual(len(ms2.motifs_map), 676)
+        self.assertEqual(len(ms2.motifs_map), 673)
         m2k, k2m = ms2.get_mappings(key_type="family")
-        self.assertEqual(len(m2k), 676)
+        self.assertEqual(len(m2k), 673)
         self.assertEqual(len(k2m), 59)
 
     def test_filter_uniprot(self):
@@ -199,9 +199,9 @@ class MotifSetTest(unittest.TestCase):
         # implicitly, we are also testing the case insensitiveness of the string matching of all three types
 
         ms2 = self.motif_set.filter(["chip-seq"], key_type="data_source", search="exact")
-        self.assertEqual(len(ms2.motifs_map), 433)
+        self.assertEqual(len(ms2.motifs_map), 431)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
-        self.assertEqual(len(m2k), 433)
+        self.assertEqual(len(m2k), 431)
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter(["chip"], key_type="data_source", search="exact")
@@ -211,25 +211,25 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 0)
 
         ms2 = self.motif_set.filter(["chip-seq"], key_type="data_source", search="inexact")
-        self.assertEqual(len(ms2.motifs_map), 433)
+        self.assertEqual(len(ms2.motifs_map), 431)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
-        self.assertEqual(len(m2k), 433)
+        self.assertEqual(len(m2k), 431)
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter(["chip"], key_type="data_source", search="inexact")
-        self.assertEqual(len(ms2.motifs_map), 433)
+        self.assertEqual(len(ms2.motifs_map), 431)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
-        self.assertEqual(len(m2k), 433)
+        self.assertEqual(len(m2k), 431)
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter(["chip-seq"], key_type="data_source", search="regex")
-        self.assertEqual(len(ms2.motifs_map), 433)
+        self.assertEqual(len(ms2.motifs_map), 431)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
-        self.assertEqual(len(m2k), 433)
+        self.assertEqual(len(m2k), 431)
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter(["(chip|selex)"], key_type="data_source", search="regex")
-        self.assertEqual(len(ms2.motifs_map), 591)
+        self.assertEqual(len(ms2.motifs_map), 588)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
-        self.assertEqual(len(m2k), 591)
+        self.assertEqual(len(m2k), 588)
         self.assertEqual(len(k2m), 2)

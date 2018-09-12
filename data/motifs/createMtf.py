@@ -41,7 +41,7 @@ for inputFileName in glob.glob(inputLocation + "*.pwm"):
     ll = inputFileName.split("/")[-1].split(".")[0].split("_")
     matrix_id = ll[0]
     pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
-    version = "1"
+    version = ".".join(pwm_name.split(".")[2:])
     gene_names = hocomoco_anno[pwm_name][0]
     group = hocomoco_anno[pwm_name][1]
     if not group:
@@ -77,11 +77,13 @@ with open("jaspar_anno.csv", "rb") as f:
         jaspar_anno[l[0]] = l[1:]
 for inputFileName in glob.glob(inputLocation + "*.pwm"):
     raw_name = inputFileName.split("/")[-1]
+    raw_name = inputFileName.split("/")[-1]
     full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
+    print full_name
     name_fields = pwm_name.split(".")
     matrix_id = name_fields[0]
     if not version:
-        version = "1"
+        version = name_fields[1]
     gene_names = re.sub("\(var\.\d+\)", "", jaspar_anno[full_name][0])
     group = jaspar_anno[full_name][1]
     if not group:
