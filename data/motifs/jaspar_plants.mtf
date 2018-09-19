@@ -1,0 +1,489 @@
+MA0001	MA0001.2.AGL3	jaspar_plants	2	AGL3	.	P29383	SELEX	plants	Arabidopsis thaliana
+MA0005	MA0005.2.AG	jaspar_plants	2	AG	.	P17839	SELEX	plants	Arabidopsis thaliana
+MA0008	MA0008.2.HAT5	jaspar_plants	2	HAT5	.	Q02283	SELEX	plants	Arabidopsis thaliana
+MA0020	MA0020.1.Dof2	jaspar_plants	1	Dof2	Dof-type	Q41800	SELEX	plants	Zea mays
+MA0021	MA0021.1.Dof3	jaspar_plants	1	Dof3	Dof-type	Q41801	SELEX	plants	Zea mays
+MA0034	MA0034.1.Gam1	jaspar_plants	1	Gam1	Myb/SANT domain factors	Q96464	SELEX	plants	Hordeum vulgare
+MA0044	MA0044.1.HMG-1	jaspar_plants	1	HMG-1	.	Q41026	SELEX	plants	Pisum sativum
+MA0045	MA0045.1.HMG-I_Y	jaspar_plants	1	HMG-I/Y	.	Q43877	SELEX	plants	Pisum sativum
+MA0053	MA0053.1.MNB1A	jaspar_plants	1	MNB1A	Dof-type	P38564	SELEX	plants	Zea mays
+MA0054	MA0054.1.myb.Ph3	jaspar_plants	1	myb.Ph3	Myb/SANT domain factors	Q02994	SELEX	plants	Petunia x hybrida
+MA0064	MA0064.1.PBF	jaspar_plants	1	PBF	Dof-type	O24463	SELEX	plants	Zea mays
+MA0082	MA0082.1.squamosa	jaspar_plants	1	squamosa	.	Q38742	SELEX	plants	Antirrhinum majus
+MA0096	MA0096.1.bZIP910	jaspar_plants	1	bZIP910	.	O22676	SELEX	plants	Antirrhinum majus
+MA0097	MA0097.1.bZIP911	jaspar_plants	1	bZIP911	.	O22677	SELEX	plants	Antirrhinum majus
+MA0110	MA0110.2.ATHB-5	jaspar_plants	2	ATHB-5	.	P46667	SELEX	plants	Arabidopsis thaliana
+MA0120	MA0120.1.id1	jaspar_plants	1	id1	.	O65215	SELEX	plants	Zea mays
+MA0121	MA0121.1.ARR10	jaspar_plants	1	ARR10	Myb/SANT domain factors	O49397	SELEX	plants	Arabidopsis thaliana
+MA0123	MA0123.1.abi4	jaspar_plants	1	abi4	.	Q8L7W9	SELEX	plants	Zea mays
+MA0127	MA0127.1.PEND	jaspar_plants	1	PEND	.	Q5DW98	SELEX	plants	Pisum sativum
+MA0128	MA0128.1.EmBP-1	jaspar_plants	1	EmBP-1	.	P25032	SELEX	plants	Triticum aestivum
+MA0129	MA0129.1.TGA1A	jaspar_plants	1	TGA1A	.	P14232	SELEX	plants	Nicotiana sp.
+MA0548	MA0548.2.AGL15	jaspar_plants	2	AGL15	.	Q38847	DAP-seq	plants	Arabidopsis thaliana
+MA0549	MA0549.1.BZR2	jaspar_plants	1	BZR2	.	Q9LN63	ChIP-chip	plants	Arabidopsis thaliana
+MA0550	MA0550.2.BZR1	jaspar_plants	2	BZR1	BES1	Q8S307	DAP-seq	plants	Arabidopsis thaliana
+MA0551	MA0551.1.HY5	jaspar_plants	1	HY5	.	O24646	ChIP-chip	plants	Arabidopsis thaliana
+MA0552	MA0552.1.PIF1	jaspar_plants	1	PIF1	.	Q8GZM7	ChIP-chip	plants	Arabidopsis thaliana
+MA0553	MA0553.1.SMZ	jaspar_plants	1	SMZ	.	Q6PV68	ChIP-chip	plants	Arabidopsis thaliana
+MA0554	MA0554.1.SOC1	jaspar_plants	1	SOC1	.	O64645	ChIP-chip	plants	Arabidopsis thaliana
+MA0555	MA0555.1.SVP	jaspar_plants	1	SVP	.	Q9FVC1	ChIP-chip	plants	Arabidopsis thaliana
+MA0556	MA0556.1.AP3	jaspar_plants	1	AP3	.	P35632	ChIP-seq	plants	Arabidopsis thaliana
+MA0557	MA0557.1.FHY3	jaspar_plants	1	FHY3	.	Q9LIE5	ChIP-seq	plants	Arabidopsis thaliana
+MA0558	MA0558.1.FLC	jaspar_plants	1	FLC	.	Q5Q9J1	ChIP-seq	plants	Arabidopsis thaliana
+MA0559	MA0559.1.PI	jaspar_plants	1	PI	.	P48007	ChIP-seq	plants	Arabidopsis thaliana
+MA0560	MA0560.1.PIF3	jaspar_plants	1	PIF3	.	O80536	ChIP-seq	plants	Arabidopsis thaliana
+MA0561	MA0561.1.PIF4	jaspar_plants	1	PIF4	.	Q8W2F3	ChIP-seq	plants	Arabidopsis thaliana
+MA0562	MA0562.1.PIF5	jaspar_plants	1	PIF5	.	Q84LH8	ChIP-seq	plants	Arabidopsis thaliana
+MA0563	MA0563.1.SEP3	jaspar_plants	1	SEP3	.	O22456	ChIP-seq	plants	Arabidopsis thaliana
+MA0564	MA0564.1.ABI3	jaspar_plants	1	ABI3	.	Q01593	PBM	plants	Arabidopsis thaliana
+MA0565	MA0565.1.FUS3	jaspar_plants	1	FUS3	.	Q9LW31	PBM	plants	Arabidopsis thaliana
+MA0566	MA0566.1.MYC2	jaspar_plants	1	MYC2	.	Q39204	PBM	plants	Arabidopsis thaliana
+MA0567	MA0567.1.ERF1B	jaspar_plants	1	ERF1B	.	Q8LDC8	PBM	plants	Arabidopsis thaliana
+MA0568	MA0568.1.MYC3	jaspar_plants	1	MYC3	.	Q9FIP9	PBM	plants	Arabidopsis thaliana
+MA0569	MA0569.1.MYC4	jaspar_plants	1	MYC4	.	O49687	PBM	plants	Arabidopsis thaliana
+MA0570	MA0570.1.ABF1	jaspar_plants	1	ABF1	.	Q9M7Q5	SELEX	plants	Arabidopsis thaliana
+MA0571	MA0571.1.ANT	jaspar_plants	1	ANT	.	Q38914	SELEX	plants	Arabidopsis thaliana
+MA0573	MA0573.1.ATHB-9	jaspar_plants	1	ATHB-9	.	O04292	SELEX	plants	Arabidopsis thaliana
+MA0574	MA0574.1.MYB15	jaspar_plants	1	MYB15	Myb/SANT domain factors	Q9LTC4	SELEX	plants	Arabidopsis thaliana
+MA0575	MA0575.1.F3A4.140	jaspar_plants	1	F3A4.140	Myb/SANT domain factors	Q9SN12	SELEX	plants	Arabidopsis thaliana
+MA0576	MA0576.1.RAX3	jaspar_plants	1	RAX3	Myb/SANT domain factors	Q9M2Y9	SELEX	plants	Arabidopsis thaliana
+MA0577	MA0577.1.SPL3	jaspar_plants	1	SPL3	.	P93015	SELEX	plants	Arabidopsis thaliana
+MA0578	MA0578.1.SPL8	jaspar_plants	1	SPL8	.	Q8GXL3	SELEX	plants	Arabidopsis thaliana
+MA0579	MA0579.1.CDC5	jaspar_plants	1	CDC5	Myb/SANT domain factors	P92948	SELEX	plants	Arabidopsis thaliana
+MA0580	MA0580.1.DYT1	jaspar_plants	1	DYT1	.	O81900	SELEX	plants	Arabidopsis thaliana
+MA0581	MA0581.1.LEC2	jaspar_plants	1	LEC2	.	Q1PFR7	SELEX	plants	Arabidopsis thaliana
+MA0582	MA0582.1.RAV1	jaspar_plants	1	RAV1	.	Q9ZWM9	SELEX	plants	Arabidopsis thaliana
+MA0583	MA0583.1.RAV1(var.2)	jaspar_plants	2	RAV1	.	Q9ZWM9	SELEX	plants	Arabidopsis thaliana
+MA0584	MA0584.1.SEP1	jaspar_plants	1	SEP1	.	P29382	SELEX	plants	Arabidopsis thaliana
+MA0585	MA0585.1.AGL1	jaspar_plants	1	AGL1	.	P29381	SELEX	plants	Arabidopsis thaliana
+MA0586	MA0586.2.SPL14	jaspar_plants	2	SPL14	.	Q8RY95	DAP-seq	plants	Arabidopsis thaliana
+MA0587	MA0587.1.TCP16	jaspar_plants	1	TCP16	TCP domain	Q9M1U4	SELEX	plants	Arabidopsis thaliana
+MA0588	MA0588.1.TGA1	jaspar_plants	1	TGA1	.	Q39237	SELEX	plants	Arabidopsis thaliana
+MA0589	MA0589.1.ZAP1	jaspar_plants	1	ZAP1	.	Q9SI37	SELEX	plants	Arabidopsis thaliana
+MA0590	MA0590.1.LFY	jaspar_plants	1	LFY	.	Q00958	SELEX	plants	Arabidopsis thaliana
+MA0930	MA0930.1.ABF3	jaspar_plants	1	ABF3	.	Q9M7Q3	PBM	plants	Arabidopsis thaliana
+MA0931	MA0931.1.ABI5	jaspar_plants	1	ABI5	.	Q9SJN0	PBM	plants	Arabidopsis thaliana
+MA0932	MA0932.1.AHL12	jaspar_plants	1	AHL12	HMGA factors	Q8LPN5	PBM	plants	Arabidopsis thaliana
+MA0933	MA0933.1.AHL20	jaspar_plants	1	AHL20	HMGA factors	Q8GWQ2	PBM	plants	Arabidopsis thaliana
+MA0934	MA0934.1.AHL25	jaspar_plants	1	AHL25	HMGA factors	Q6DBQ1	PBM	plants	Arabidopsis thaliana
+MA0935	MA0935.1.NAC025	jaspar_plants	1	NAC025	.	Q8GY42	PBM	plants	Arabidopsis thaliana
+MA0936	MA0936.1.T11I18.17	jaspar_plants	1	T11I18.17	.	Q9SQQ6	PBM	plants	Arabidopsis thaliana
+MA0937	MA0937.1.NAC055	jaspar_plants	1	NAC055	.	Q9LDY8	PBM	plants	Arabidopsis thaliana
+MA0938	MA0938.1.NAC058	jaspar_plants	1	NAC058	.	Q9LS50	PBM	plants	Arabidopsis thaliana
+MA0939	MA0939.1.NAC080	jaspar_plants	1	NAC080	.	Q9FLR3	PBM	plants	Arabidopsis thaliana
+MA0940	MA0940.1.AP1	jaspar_plants	1	AP1	.	P35631	ChIP-seq	plants	Arabidopsis thaliana
+MA0941	MA0941.1.ABF2	jaspar_plants	1	ABF2	.	Q9M7Q4	PBM	plants	Arabidopsis thaliana
+MA0942	MA0942.1.ARF1	jaspar_plants	1	ARF1	.	Q8L7G0	PBM	plants	Arabidopsis thaliana
+MA0943	MA0943.1.ARF5	jaspar_plants	1	ARF5	.	P93024	PBM	plants	Arabidopsis thaliana
+MA0944	MA0944.1.ARF8	jaspar_plants	1	ARF8	.	Q9FGV1	PBM	plants	Arabidopsis thaliana
+MA0945	MA0945.1.ARR1	jaspar_plants	1	ARR1	Myb/SANT domain factors	Q940D0	PBM	plants	Arabidopsis thaliana
+MA0946	MA0946.1.ARR11	jaspar_plants	1	ARR11	Myb/SANT domain factors	Q9FXD6	PBM	plants	Arabidopsis thaliana
+MA0947	MA0947.1.ARR14	jaspar_plants	1	ARR14	Myb/SANT domain factors	Q8L9Y3	PBM	plants	Arabidopsis thaliana
+MA0948	MA0948.1.ARR18	jaspar_plants	1	ARR18	Myb/SANT domain factors	Q9FGT7	PBM	plants	Arabidopsis thaliana
+MA0949	MA0949.1.ARR2	jaspar_plants	1	ARR2	Myb/SANT domain factors	Q9ZWJ9	PBM	plants	Arabidopsis thaliana
+MA0950	MA0950.1.ATHB-12	jaspar_plants	1	ATHB-12	HD-ZIP factors	Q9M276	PBM	plants	Arabidopsis thaliana
+MA0951	MA0951.1.ATHB-16	jaspar_plants	1	ATHB-16	HD-ZIP factors	Q940J1	PBM	plants	Arabidopsis thaliana
+MA0952	MA0952.1.ATHB-51	jaspar_plants	1	ATHB-51	HD-ZIP factors	Q9LZR0	PBM	plants	Arabidopsis thaliana
+MA0953	MA0953.1.ATHB-6	jaspar_plants	1	ATHB-6	HD-ZIP factors	P46668	PBM	plants	Arabidopsis thaliana
+MA0954	MA0954.2.ATHB7	jaspar_plants	2	ATHB7	.	P46897	DAP-seq	plants	Arabidopsis thaliana
+MA0955	MA0955.1.POPTR_0002s00440g	jaspar_plants	1	POPTR_0002s00440g	.	B9GPL8	PBM	plants	Populus trichocarpa
+MA0956	MA0956.1.BEE2	jaspar_plants	1	BEE2	.	Q93VJ4	PBM	plants	Arabidopsis thaliana
+MA0957	MA0957.1.BHLH3	jaspar_plants	1	BHLH3	.	O23487	PBM	plants	Arabidopsis thaliana
+MA0958	MA0958.1.BHLH13	jaspar_plants	1	BHLH13	.	Q9LNJ5	PBM	plants	Arabidopsis thaliana
+MA0959	MA0959.1.AIB	jaspar_plants	1	AIB	.	Q9ZPY8	PBM	plants	Arabidopsis thaliana
+MA0960	MA0960.1.BHLH104	jaspar_plants	1	BHLH104	.	Q8L467	PBM	plants	Arabidopsis thaliana
+MA0961	MA0961.1.BHLH112	jaspar_plants	1	BHLH112	.	Q94JL3	PBM	plants	Oryza sativa Japonica Group
+MA0962	MA0962.1.BHLH34	jaspar_plants	1	BHLH34	.	Q9LTC7	PBM	plants	Arabidopsis thaliana
+MA0963	MA0963.1.BHLH78	jaspar_plants	1	BHLH78	.	Q9FJL4	PBM	plants	Arabidopsis thaliana
+MA0964	MA0964.1.BIM1	jaspar_plants	1	BIM1	.	Q9LEZ3	PBM	plants	Arabidopsis thaliana
+MA0965	MA0965.1.BIM2	jaspar_plants	1	BIM2	.	Q9CAA4	PBM	plants	Arabidopsis thaliana
+MA0966	MA0966.1.BIM3	jaspar_plants	1	BIM3	.	Q9FMB6	PBM	plants	Arabidopsis thaliana
+MA0967	MA0967.1.BZIP60	jaspar_plants	1	BZIP60	.	Q9C7S0	PBM	plants	Arabidopsis thaliana
+MA0968	MA0968.1.bZIP68	jaspar_plants	1	bZIP68	.	Q84LG2	PBM	plants	Arabidopsis thaliana
+MA0969	MA0969.1.CMTA2	jaspar_plants	1	CMTA2	.	Q6NPP4	PBM	plants	Arabidopsis thaliana
+MA0970	MA0970.1.CMTA3	jaspar_plants	1	CMTA3	.	Q8GSA7	PBM	plants	Arabidopsis thaliana
+MA0971	MA0971.1.DREB1A	jaspar_plants	1	DREB1A	.	Q9M0L0	PBM	plants	Arabidopsis thaliana
+MA0972	MA0972.1.CCA1	jaspar_plants	1	CCA1	Myb/SANT domain factors	P92973	PBM	plants	Arabidopsis thaliana
+MA0973	MA0973.1.CDF2	jaspar_plants	1	CDF2	Dof-type	Q93ZL5	PBM	plants	Arabidopsis thaliana
+MA0974	MA0974.1.CDF3	jaspar_plants	1	CDF3	Dof-type	Q8LFV3	PBM	plants	Arabidopsis thaliana
+MA0975	MA0975.1.CRF2	jaspar_plants	1	CRF2	.	Q9SUQ2	PBM	plants	Arabidopsis thaliana
+MA0976	MA0976.1.CRF4	jaspar_plants	1	CRF4	.	Q9SUE3	PBM	plants	Arabidopsis thaliana
+MA0977	MA0977.1.DOF2.5	jaspar_plants	1	DOF2.5	Dof-type	Q9ZPY0	PBM	plants	Arabidopsis thaliana
+MA0978	MA0978.1.DREB1E	jaspar_plants	1	DREB1E	.	Q9SGJ6	PBM	plants	Arabidopsis thaliana
+MA0979	MA0979.1.ERF008	jaspar_plants	1	ERF008	.	O22174	PBM	plants	Arabidopsis thaliana
+MA0980	MA0980.1.RAP2-10	jaspar_plants	1	RAP2-10	.	Q9SW63	PBM	plants	Arabidopsis thaliana
+MA0981	MA0981.1.DOF1.8	jaspar_plants	1	DOF1.8	Dof-type	Q84JQ8	PBM	plants	Arabidopsis thaliana
+MA0982	MA0982.1.DOF2.4	jaspar_plants	1	DOF2.4	Dof-type	O80928	PBM	plants	Arabidopsis thaliana
+MA0983	MA0983.1.DOF5.6	jaspar_plants	1	DOF5.6	Dof-type	Q9FM03	PBM	plants	Arabidopsis thaliana
+MA0984	MA0984.1.DOF5.7	jaspar_plants	1	DOF5.7	Dof-type	Q9LSL6	PBM	plants	Arabidopsis thaliana
+MA0985	MA0985.1.DRE1C	jaspar_plants	1	DRE1C	AP2 MBD_like	Q9SYS6	PBM	plants	Arabidopsis thaliana
+MA0986	MA0986.1.DREB2C	jaspar_plants	1	DREB2C	.	Q8LFR2	PBM	plants	Arabidopsis thaliana
+MA0987	MA0987.1.PHYPADRAFT_140773	jaspar_plants	1	PHYPADRAFT_140773	Dof-type	A9T5V8	PBM	plants	Physcomitrella patens
+MA0988	MA0988.1.PHYPADRAFT_143875	jaspar_plants	1	PHYPADRAFT_143875	.	A9TDF9	PBM	plants	Physcomitrella patens
+MA0989	MA0989.1.PHYPADRAFT_153324	jaspar_plants	1	PHYPADRAFT_153324	Dof-type	A9TZW5	PBM	plants	Physcomitrella patens
+MA0990	MA0990.1.EDT1	jaspar_plants	1	EDT1	HD-ZIP factors	Q9FX31	PBM	plants	Arabidopsis thaliana
+MA0992	MA0992.1.ERF4	jaspar_plants	1	ERF4	.	O80340	PBM	plants	Arabidopsis thaliana
+MA0993	MA0993.1.ERF7	jaspar_plants	1	ERF7	.	Q9LDE4	PBM	plants	Arabidopsis thaliana
+MA0994	MA0994.1.ERF8	jaspar_plants	1	ERF8	.	Q9MAI5	PBM	plants	Arabidopsis thaliana
+MA0995	MA0995.1.ERF039	jaspar_plants	1	ERF039	.	Q9SUK8	PBM	plants	Arabidopsis thaliana
+MA0996	MA0996.1.ERF043	jaspar_plants	1	ERF043	.	Q9M080	PBM	plants	Arabidopsis thaliana
+MA0997	MA0997.1.ERF069	jaspar_plants	1	ERF069	.	Q8W4I5	PBM	plants	Arabidopsis thaliana
+MA0998	MA0998.1.ERF096	jaspar_plants	1	ERF096	.	Q9LSX0	PBM	plants	Arabidopsis thaliana
+MA0999	MA0999.1.ERF098	jaspar_plants	1	ERF098	.	Q9LTC5	PBM	plants	Arabidopsis thaliana
+MA1000	MA1000.2.ERF105	jaspar_plants	2	ERF105	.	Q8VY90	DAP-seq	plants	Arabidopsis thaliana
+MA1001	MA1001.1.ERF11	jaspar_plants	1	ERF11	.	Q9C5I3	PBM	plants	Arabidopsis thaliana
+MA1002	MA1002.1.ERF112	jaspar_plants	1	ERF112	.	P93007	PBM	plants	Arabidopsis thaliana
+MA1004	MA1004.1.ERF13	jaspar_plants	1	ERF13	.	Q8L9K1	PBM	plants	Arabidopsis thaliana
+MA1005	MA1005.1.ERF3	jaspar_plants	1	ERF3	.	O80339	PBM	plants	Arabidopsis thaliana
+MA1006	MA1006.1.ERF6	jaspar_plants	1	ERF6	.	Q8VZ91	PBM	plants	Arabidopsis thaliana
+MA1007	MA1007.1.PHYPADRAFT_173530	jaspar_plants	1	PHYPADRAFT_173530	.	A9U3V6	PBM	plants	Physcomitrella patens
+MA1008	MA1008.1.PHYPADRAFT_182268	jaspar_plants	1	PHYPADRAFT_182268	.	A9S898	PBM	plants	Physcomitrella patens
+MA1009	MA1009.1.ARF3	jaspar_plants	1	ARF3	.	O23661	PBM	plants	Arabidopsis thaliana
+MA1010	MA1010.1.PHYPADRAFT_64121	jaspar_plants	1	PHYPADRAFT_64121	.	A9RC32	PBM	plants	Physcomitrella patens
+MA1011	MA1011.1.PHYPADRAFT_72483	jaspar_plants	1	PHYPADRAFT_72483	.	A9RZ73	PBM	plants	Physcomitrella patens
+MA1012	MA1012.1.AGL27	jaspar_plants	1	AGL27	.	Q9AT76	ChIP-seq	plants	Arabidopsis thaliana
+MA1013	MA1013.1.GATA10	jaspar_plants	1	GATA10	GATA-type zinc fingers	Q8VZP4	PBM	plants	Arabidopsis thaliana
+MA1014	MA1014.1.GATA11	jaspar_plants	1	GATA11	GATA-type zinc fingers	Q6DBP8	PBM	plants	Arabidopsis thaliana
+MA1015	MA1015.1.GATA12	jaspar_plants	1	GATA12	GATA-type zinc fingers	P69781	PBM	plants	Arabidopsis thaliana
+MA1016	MA1016.1.GATA15	jaspar_plants	1	GATA15	GATA-type zinc fingers	Q8LG10	PBM	plants	Arabidopsis thaliana
+MA1017	MA1017.1.GATA8	jaspar_plants	1	GATA8	GATA-type zinc fingers	Q9SV30	PBM	plants	Arabidopsis thaliana
+MA1018	MA1018.1.GATA9	jaspar_plants	1	GATA9	GATA-type zinc fingers	O82632	PBM	plants	Arabidopsis thaliana
+MA1019	MA1019.1.Glyma19g26560.1	jaspar_plants	1	Glyma19g26560.1	TCP domain	I1N7U7	PBM	plants	Glycine max
+MA1020	MA1020.1.GT-1	jaspar_plants	1	GT-1	Trihelix	Q9FX53	PBM	plants	Arabidopsis thaliana
+MA1021	MA1021.1.PHYPADRAFT_48267	jaspar_plants	1	PHYPADRAFT_48267	.	A9TN45	PBM	plants	Physcomitrella patens
+MA1022	MA1022.1.PHYPADRAFT_38837	jaspar_plants	1	PHYPADRAFT_38837	Dof-type	A9TZG0	PBM	plants	Physcomitrella patens
+MA1023	MA1023.1.PHYPADRAFT_28324	jaspar_plants	1	PHYPADRAFT_28324	.	A9RGN0	PBM	plants	Physcomitrella patens
+MA1024	MA1024.1.HAT1	jaspar_plants	1	HAT1	HD-ZIP factors	P46600	PBM	plants	Arabidopsis thaliana
+MA1025	MA1025.1.HBI1	jaspar_plants	1	HBI1	.	Q9ZPW3	PBM	plants	Arabidopsis thaliana
+MA1026	MA1026.2.ATHB15	jaspar_plants	2	ATHB15	HD-ZIP factors	Q9ZU11	DAP-seq	plants	Arabidopsis thaliana
+MA1027	MA1027.1.KAN1	jaspar_plants	1	KAN1	Myb/SANT domain factors	Q93WJ9	PBM	plants	Arabidopsis thaliana
+MA1028	MA1028.1.KAN4	jaspar_plants	1	KAN4	Myb/SANT domain factors	Q9FJV5	PBM	plants	Arabidopsis thaliana
+MA1030	MA1030.1.P0510F09.23	jaspar_plants	1	P0510F09.23	Myb/SANT domain factors	Q5N9C9	PBM	plants	Oryza sativa Japonica Group
+MA1031	MA1031.1.OJ1581_H09.2	jaspar_plants	1	OJ1581_H09.2	TCP domain	Q6H878	PBM	plants	Oryza sativa Japonica Group
+MA1032	MA1032.1.DREB1G	jaspar_plants	1	DREB1G	.	Q6EP77	PBM	plants	Oryza sativa Japonica Group
+MA1033	MA1033.1.OJ1058_F05.8	jaspar_plants	1	OJ1058_F05.8	.	Q75HX9	PBM	plants	Oryza sativa Japonica Group
+MA1034	MA1034.1.Os05g0497200	jaspar_plants	1	Os05g0497200	.	Q75K84	PBM	plants	Oryza sativa Japonica Group
+MA1035	MA1035.1.TCP4	jaspar_plants	1	TCP4	TCP domain	Q8LPR5	PBM	plants	Arabidopsis thaliana
+MA1036	MA1036.1.MYB111	jaspar_plants	1	MYB111	Myb/SANT domain factors	Q9FJ07	PBM	plants	Arabidopsis thaliana
+MA1037	MA1037.1.MYB24	jaspar_plants	1	MYB24	Myb/SANT domain factors	Q9SPG9	PBM	plants	Arabidopsis thaliana
+MA1038	MA1038.1.MYB3	jaspar_plants	1	MYB3	Myb/SANT domain factors	Q9S9K9	PBM	plants	Arabidopsis thaliana
+MA1039	MA1039.1.MYB4	jaspar_plants	1	MYB4	Myb/SANT domain factors	Q9SZP1	PBM	plants	Arabidopsis thaliana
+MA1040	MA1040.1.MYB46	jaspar_plants	1	MYB46	Myb/SANT domain factors	Q9LXV2	PBM	plants	Arabidopsis thaliana
+MA1041	MA1041.1.MYB55	jaspar_plants	1	MYB55	Myb/SANT domain factors	Q9M118	PBM	plants	Arabidopsis thaliana
+MA1042	MA1042.1.MYB59	jaspar_plants	1	MYB59	Myb/SANT domain factors	Q4JL84	PBM	plants	Arabidopsis thaliana
+MA1043	MA1043.1.NAC083	jaspar_plants	1	NAC083	.	Q9FY93	PBM	plants	Arabidopsis thaliana
+MA1044	MA1044.1.NAC92	jaspar_plants	1	NAC92	.	Q9FKA0	PBM	plants	Arabidopsis thaliana
+MA1045	MA1045.1.NAC043	jaspar_plants	1	NAC043	.	Q84WP6	PBM	plants	Arabidopsis thaliana
+MA1046	MA1046.1.NTL9	jaspar_plants	1	NTL9	.	F4JN35	PBM	plants	Arabidopsis thaliana
+MA1047	MA1047.1.TGA5	jaspar_plants	1	TGA5	.	Q39163	PBM	plants	Arabidopsis thaliana
+MA1048	MA1048.1.ERF018	jaspar_plants	1	ERF018	.	Q9S7L5	PBM	plants	Arabidopsis thaliana
+MA1049	MA1049.1.ERF094	jaspar_plants	1	ERF094	.	Q9LND1	PBM	plants	Arabidopsis thaliana
+MA1050	MA1050.1.OsI_08196	jaspar_plants	1	OsI_08196	TCP domain	A2X7K8	PBM	plants	Oryza sativa Indica Group
+MA1051	MA1051.1.RAP2-3	jaspar_plants	1	RAP2-3	.	P42736	PBM	plants	Arabidopsis thaliana
+MA1052	MA1052.1.RAP2-6	jaspar_plants	1	RAP2-6	.	Q7G1L2	PBM	plants	Arabidopsis thaliana
+MA1053	MA1053.1.ERF109	jaspar_plants	1	ERF109	.	Q9SZ06	PBM	plants	Arabidopsis thaliana
+MA1054	MA1054.1.ARALYDRAFT_897773	jaspar_plants	1	ARALYDRAFT_897773	TCP domain	D7L3Y2	PBM	plants	Arabidopsis lyrata subsp. lyrata
+MA1055	MA1055.1.SPL1	jaspar_plants	1	SPL1	.	Q9SMX9	PBM	plants	Arabidopsis thaliana
+MA1056	MA1056.1.SPL11	jaspar_plants	1	SPL11	.	Q9FZK0	PBM	plants	Arabidopsis thaliana
+MA1057	MA1057.1.SPL12	jaspar_plants	1	SPL12	.	Q9S7P5	PBM	plants	Arabidopsis thaliana
+MA1058	MA1058.1.SPL4	jaspar_plants	1	SPL4	.	Q9S7A9	PBM	plants	Arabidopsis thaliana
+MA1059	MA1059.2.SPL5	jaspar_plants	2	SPL5	.	Q9S758	DAP-seq	plants	Arabidopsis thaliana
+MA1060	MA1060.1.SPL7	jaspar_plants	1	SPL7	.	Q8S9G8	PBM	plants	Arabidopsis thaliana
+MA1061	MA1061.1.SPT	jaspar_plants	1	SPT	.	Q9FUA4	PBM	plants	Arabidopsis thaliana
+MA1062	MA1062.1.TCP15	jaspar_plants	1	TCP15	TCP domain	Q9C9L2	PBM	plants	Arabidopsis thaliana
+MA1063	MA1063.1.TCP19	jaspar_plants	1	TCP19	TCP domain	Q9LT89	PBM	plants	Arabidopsis thaliana
+MA1064	MA1064.1.TCP2	jaspar_plants	1	TCP2	TCP domain	Q93V43	PBM	plants	Arabidopsis thaliana
+MA1065	MA1065.1.TCP20	jaspar_plants	1	TCP20	TCP domain	Q9LSD5	PBM	plants	Arabidopsis thaliana
+MA1066	MA1066.1.TCP23	jaspar_plants	1	TCP23	TCP domain	Q9LQF0	PBM	plants	Arabidopsis thaliana
+MA1067	MA1067.1.TCP5	jaspar_plants	1	TCP5	TCP domain	Q9FME3	PBM	plants	Arabidopsis thaliana
+MA1068	MA1068.1.TGA2	jaspar_plants	1	TGA2	.	P43273	PBM	plants	Arabidopsis thaliana
+MA1069	MA1069.1.TGA6	jaspar_plants	1	TGA6	.	Q39140	PBM	plants	Arabidopsis thaliana
+MA1070	MA1070.1.TGA7	jaspar_plants	1	TGA7	.	Q93ZE2	PBM	plants	Arabidopsis thaliana
+MA1071	MA1071.1.DOF5.3	jaspar_plants	1	DOF5.3	Dof-type	Q84TE9	PBM	plants	Arabidopsis thaliana
+MA1073	MA1073.1.TRB2	jaspar_plants	1	TRB2	Myb/SANT domain factors	Q9FJW5	PBM	plants	Arabidopsis thaliana
+MA1074	MA1074.1.UNE10	jaspar_plants	1	UNE10	.	Q8GZ38	PBM	plants	Arabidopsis thaliana
+MA1075	MA1075.1.WRKY12	jaspar_plants	1	WRKY12	.	Q93WY4	PBM	plants	Arabidopsis thaliana
+MA1076	MA1076.1.WRKY15	jaspar_plants	1	WRKY15	.	O22176	PBM	plants	Arabidopsis thaliana
+MA1077	MA1077.1.WRKY18	jaspar_plants	1	WRKY18	.	Q9C5T4	PBM	plants	Arabidopsis thaliana
+MA1078	MA1078.1.WRKY2	jaspar_plants	1	WRKY2	.	Q9FG77	PBM	plants	Arabidopsis thaliana
+MA1079	MA1079.1.WRKY21	jaspar_plants	1	WRKY21	.	O04336	PBM	plants	Arabidopsis thaliana
+MA1080	MA1080.1.WRKY23	jaspar_plants	1	WRKY23	.	O22900	PBM	plants	Arabidopsis thaliana
+MA1081	MA1081.1.WRKY25	jaspar_plants	1	WRKY25	.	O22921	PBM	plants	Arabidopsis thaliana
+MA1083	MA1083.1.WRKY30	jaspar_plants	1	WRKY30	.	Q9FL62	PBM	plants	Arabidopsis thaliana
+MA1084	MA1084.1.WRKY38	jaspar_plants	1	WRKY38	.	Q8GWF1	PBM	plants	Arabidopsis thaliana
+MA1085	MA1085.2.WRKY40	jaspar_plants	2	WRKY40	.	Q9SAH7	ChIP-seq	plants	Arabidopsis thaliana
+MA1086	MA1086.1.WRKY43	jaspar_plants	1	WRKY43	.	Q8GY11	PBM	plants	Arabidopsis thaliana
+MA1087	MA1087.1.WRKY45	jaspar_plants	1	WRKY45	.	Q9S763	PBM	plants	Arabidopsis thaliana
+MA1088	MA1088.1.WRKY48	jaspar_plants	1	WRKY48	.	Q9FGZ4	PBM	plants	Arabidopsis thaliana
+MA1089	MA1089.1.WRKY57	jaspar_plants	1	WRKY57	.	Q9C983	PBM	plants	Arabidopsis thaliana
+MA1090	MA1090.1.WRKY60	jaspar_plants	1	WRKY60	.	Q9SK33	PBM	plants	Arabidopsis thaliana
+MA1091	MA1091.1.WRKY62	jaspar_plants	1	WRKY62	.	Q9LZV6	PBM	plants	Arabidopsis thaliana
+MA1092	MA1092.1.WRKY63	jaspar_plants	1	WRKY63	.	Q9C6H5	PBM	plants	Arabidopsis thaliana
+MA1093	MA1093.1.WRKY75	jaspar_plants	1	WRKY75	.	Q9FYA2	PBM	plants	Arabidopsis thaliana
+MA1094	MA1094.1.WRKY8	jaspar_plants	1	WRKY8	.	Q9FL26	PBM	plants	Arabidopsis thaliana
+MA1095	MA1095.1.ARALYDRAFT_495258	jaspar_plants	1	ARALYDRAFT_495258	TCP domain	D7MRK3	PBM	plants	Arabidopsis lyrata subsp. lyrata
+MA1096	MA1096.1.ARALYDRAFT_496250	jaspar_plants	1	ARALYDRAFT_496250	TCP domain	D7MUG0	PBM	plants	Arabidopsis lyrata subsp. lyrata
+MA1097	MA1097.1.ARALYDRAFT_493022	jaspar_plants	1	ARALYDRAFT_493022	TCP domain	D7MCT1	PBM	plants	Arabidopsis lyrata subsp. lyrata
+MA1098	MA1098.1.ARALYDRAFT_484486	jaspar_plants	1	ARALYDRAFT_484486	TCP domain	D7LRC3	PBM	plants	Arabidopsis lyrata subsp. lyrata
+MA1156	MA1156.1.JKD	jaspar_plants	1	JKD	.	Q700D2	DAP-seq	plants	Arabidopsis thaliana
+MA1157	MA1157.1.NUC	jaspar_plants	1	NUC	.	Q9FFH3	DAP-seq	plants	Arabidopsis thaliana
+MA1158	MA1158.1.MGP	jaspar_plants	1	MGP	.	Q9ZWA6	DAP-seq	plants	Arabidopsis thaliana
+MA1159	MA1159.1.SGR5	jaspar_plants	1	SGR5	.	F4IPE3	DAP-seq	plants	Arabidopsis thaliana
+MA1160	MA1160.1.AT1G14580	jaspar_plants	1	AT1G14580	.	Q8RWX7	DAP-seq	plants	Arabidopsis thaliana
+MA1161	MA1161.1.TSO1	jaspar_plants	1	TSO1	CPP	Q9LUI3	DAP-seq	plants	Arabidopsis thaliana
+MA1162	MA1162.1.TCX2	jaspar_plants	1	TCX2	CPP	F4JIF5	DAP-seq	plants	Arabidopsis thaliana
+MA1163	MA1163.1.AT5G45580	jaspar_plants	1	AT5G45580	G2like	C0SVS4	DAP-seq	plants	Arabidopsis thaliana
+MA1164	MA1164.1.AT4G37180	jaspar_plants	1	AT4G37180	G2like	F4JRB0	DAP-seq	plants	Arabidopsis thaliana
+MA1165	MA1165.1.AT1G49560	jaspar_plants	1	AT1G49560	G2like	Q9FX84	DAP-seq	plants	Arabidopsis thaliana
+MA1166	MA1166.1.AT3G12730	jaspar_plants	1	AT3G12730	G2like	Q8VYI2	DAP-seq	plants	Arabidopsis thaliana
+MA1167	MA1167.1.AT2G03500	jaspar_plants	1	AT2G03500	G2like	Q9ZQ85	DAP-seq	plants	Arabidopsis thaliana
+MA1168	MA1168.1.AT3G04030	jaspar_plants	1	AT3G04030	G2like	Q9SQQ9	DAP-seq	plants	Arabidopsis thaliana
+MA1169	MA1169.1.MYB105	jaspar_plants	1	MYB105	Myb	Q9SEZ4	DAP-seq	plants	Arabidopsis thaliana
+MA1170	MA1170.1.MYB118	jaspar_plants	1	MYB118	Myb	Q9LVW4	DAP-seq	plants	Arabidopsis thaliana
+MA1171	MA1171.1.MYB52	jaspar_plants	1	MYB52	Myb	Q6R0C4	DAP-seq	plants	Arabidopsis thaliana
+MA1172	MA1172.1.MYB3R5	jaspar_plants	1	MYB3R5	Myb	Q6R032	DAP-seq	plants	Arabidopsis thaliana
+MA1173	MA1173.1.MYB101	jaspar_plants	1	MYB101	Myb	O80883	DAP-seq	plants	Arabidopsis thaliana
+MA1174	MA1174.1.MYB56	jaspar_plants	1	MYB56	Myb	Q6R053	DAP-seq	plants	Arabidopsis thaliana
+MA1175	MA1175.1.MYB81	jaspar_plants	1	MYB81	Myb	Q9SLH1	DAP-seq	plants	Arabidopsis thaliana
+MA1176	MA1176.1.MYB119	jaspar_plants	1	MYB119	Myb	Q9FIM4	DAP-seq	plants	Arabidopsis thaliana
+MA1177	MA1177.1.MYB65	jaspar_plants	1	MYB65	Myb	Q9FR97	DAP-seq	plants	Arabidopsis thaliana
+MA1178	MA1178.1.MYB3R1	jaspar_plants	1	MYB3R1	Myb	Q9S7G7	DAP-seq	plants	Arabidopsis thaliana
+MA1179	MA1179.1.MYB1	jaspar_plants	1	MYB1	Myb	Q42575	DAP-seq	plants	Arabidopsis thaliana
+MA1180	MA1180.1.MYB3R4	jaspar_plants	1	MYB3R4	Myb	Q94FL9	DAP-seq	plants	Arabidopsis thaliana
+MA1181	MA1181.1.MYB113	jaspar_plants	1	MYB113	Myb	Q9FNV9	DAP-seq	plants	Arabidopsis thaliana
+MA1182	MA1182.1.At3g09600	jaspar_plants	1	At3g09600	Myb-related	Q8RWU3	DAP-seq	plants	Arabidopsis thaliana
+MA1183	MA1183.1.At5g52660	jaspar_plants	1	At5g52660	Myb-related	Q8H0W3	DAP-seq	plants	Arabidopsis thaliana
+MA1184	MA1184.1.RVE1	jaspar_plants	1	RVE1	Myb-related	F4KGY6	DAP-seq	plants	Arabidopsis thaliana
+MA1185	MA1185.1.LHY1	jaspar_plants	1	LHY1	Myb-related	F4HQG9	DAP-seq	plants	Arabidopsis thaliana
+MA1186	MA1186.1.At1g49010	jaspar_plants	1	At1g49010	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1187	MA1187.1.LCL1	jaspar_plants	1	LCL1	Myb-related	Q6R0G4	DAP-seq	plants	Arabidopsis thaliana
+MA1188	MA1188.1.At3g11280	jaspar_plants	1	At3g11280	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1189	MA1189.1.AT5G61620	jaspar_plants	1	AT5G61620	Myb-related	Q9FKF9	DAP-seq	plants	Arabidopsis thaliana
+MA1190	MA1190.1.At4g01280	jaspar_plants	1	At4g01280	Myb-related	C0SVG5	DAP-seq	plants	Arabidopsis thaliana
+MA1191	MA1191.1.AT3G10113	jaspar_plants	1	AT3G10113	Myb-related	F4J2J6	DAP-seq	plants	Arabidopsis thaliana
+MA1192	MA1192.1.At5g58900	jaspar_plants	1	At5g58900	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1193	MA1193.1.At2g38090	jaspar_plants	1	At2g38090	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1194	MA1194.1.AT3G10580	jaspar_plants	1	AT3G10580	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1195	MA1195.1.AT5G56840	jaspar_plants	1	AT5G56840	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1196	MA1196.1.At5g05790	jaspar_plants	1	At5g05790	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1197	MA1197.1.CAMTA1	jaspar_plants	1	CAMTA1	CAMTA	Q9FY74	DAP-seq	plants	Arabidopsis thaliana
+MA1198	MA1198.1.HAT2	jaspar_plants	1	HAT2	.	P46601	DAP-seq	plants	Arabidopsis thaliana
+MA1199	MA1199.1.AGL16	jaspar_plants	1	AGL16	.	A2RVQ5	DAP-seq	plants	Arabidopsis thaliana
+MA1200	MA1200.1.AGL25	jaspar_plants	1	AGL25	.	Q9S7Q7	DAP-seq	plants	Arabidopsis thaliana
+MA1201	MA1201.1.AGL42	jaspar_plants	1	AGL42	.	Q9FIS1	DAP-seq	plants	Arabidopsis thaliana
+MA1202	MA1202.1.AGL55	jaspar_plants	1	AGL55	.	Q9C960	DAP-seq	plants	Arabidopsis thaliana
+MA1203	MA1203.1.AGL63	jaspar_plants	1	AGL63	.	Q9SA07	DAP-seq	plants	Arabidopsis thaliana
+MA1204	MA1204.1.AGL13	jaspar_plants	1	AGL13	.	Q38837	DAP-seq	plants	Arabidopsis thaliana
+MA1205	MA1205.1.AGL6	jaspar_plants	1	AGL6	.	P29386	DAP-seq	plants	Arabidopsis thaliana
+MA1206	MA1206.1.ARF2	jaspar_plants	1	ARF2	.	Q94JM3	DAP-seq	plants	Arabidopsis thaliana
+MA1207	MA1207.1.GT3a	jaspar_plants	1	GT3a	Trihelix	Q9SDW0	DAP-seq	plants	Arabidopsis thaliana
+MA1208	MA1208.1.GT2	jaspar_plants	1	GT2	Trihelix	Q39117	DAP-seq	plants	Arabidopsis thaliana
+MA1209	MA1209.1.ATHB20	jaspar_plants	1	ATHB20	.	Q8LAT0	DAP-seq	plants	Arabidopsis thaliana
+MA1210	MA1210.1.HAT22	jaspar_plants	1	HAT22	.	P46604	DAP-seq	plants	Arabidopsis thaliana
+MA1211	MA1211.1.ATHB18	jaspar_plants	1	ATHB18	.	A9Z1E8	DAP-seq	plants	Arabidopsis thaliana
+MA1212	MA1212.1.ATHB13	jaspar_plants	1	ATHB13	.	Q8LC03	DAP-seq	plants	Arabidopsis thaliana
+MA1213	MA1213.1.ATHB21	jaspar_plants	1	ATHB21	HD-ZIP factors	Q9ZU70	DAP-seq	plants	Arabidopsis thaliana
+MA1214	MA1214.1.ATHB40	jaspar_plants	1	ATHB40	HD-ZIP factors	O23208	DAP-seq	plants	Arabidopsis thaliana
+MA1215	MA1215.1.ATHB53	jaspar_plants	1	ATHB53	HD-ZIP factors	Q9LVR0	DAP-seq	plants	Arabidopsis thaliana
+MA1216	MA1216.1.RAP21	jaspar_plants	1	RAP21	.	Q8LC30	DAP-seq	plants	Arabidopsis thaliana
+MA1217	MA1217.1.CBF2	jaspar_plants	1	CBF2	.	Q9SYS6	DAP-seq	plants	Arabidopsis thaliana
+MA1218	MA1218.1.CBF4	jaspar_plants	1	CBF4	.	Q9FJ93	DAP-seq	plants	Arabidopsis thaliana
+MA1219	MA1219.1.CEJ1	jaspar_plants	1	CEJ1	.		DAP-seq	plants	Arabidopsis thaliana
+MA1220	MA1220.1.TINY	jaspar_plants	1	TINY	.	Q39127	DAP-seq	plants	Arabidopsis thaliana
+MA1221	MA1221.1.RAP26	jaspar_plants	1	RAP26	.	Q7G1L2	DAP-seq	plants	Arabidopsis thaliana
+MA1222	MA1222.1.AT1G44830	jaspar_plants	1	AT1G44830	.	Q9LPE8	DAP-seq	plants	Arabidopsis thaliana
+MA1223	MA1223.1.AT3G60490	jaspar_plants	1	AT3G60490	.	Q9M210	DAP-seq	plants	Arabidopsis thaliana
+MA1224	MA1224.1.CBF1	jaspar_plants	1	CBF1	.	P93835	DAP-seq	plants	Arabidopsis thaliana
+MA1225	MA1225.1.ERF5	jaspar_plants	1	ERF5	.	O80341	DAP-seq	plants	Arabidopsis thaliana
+MA1226	MA1226.1.AT5G18450	jaspar_plants	1	AT5G18450	.	P61827	DAP-seq	plants	Arabidopsis thaliana
+MA1227	MA1227.1.AT1G12630	jaspar_plants	1	AT1G12630	.	Q38Q39	DAP-seq	plants	Arabidopsis thaliana
+MA1228	MA1228.1.AT4G18450	jaspar_plants	1	AT4G18450	.	Q8LBQ7	DAP-seq	plants	Arabidopsis thaliana
+MA1229	MA1229.1.AT2G44940	jaspar_plants	1	AT2G44940	.	Q8LBQ7	DAP-seq	plants	Arabidopsis thaliana
+MA1230	MA1230.1.AT1G77200	jaspar_plants	1	AT1G77200	.	O80654	DAP-seq	plants	Arabidopsis thaliana
+MA1231	MA1231.1.ERF15	jaspar_plants	1	ERF15	.	Q8VYM0	DAP-seq	plants	Arabidopsis thaliana
+MA1232	MA1232.1.AT4G28140	jaspar_plants	1	AT4G28140	.	Q9M0J3	DAP-seq	plants	Arabidopsis thaliana
+MA1233	MA1233.1.AT1G71450	jaspar_plants	1	AT1G71450	.	Q9C912	DAP-seq	plants	Arabidopsis thaliana
+MA1234	MA1234.1.AT1G19210	jaspar_plants	1	AT1G19210	.	Q84QC2	DAP-seq	plants	Arabidopsis thaliana
+MA1235	MA1235.1.AIL7	jaspar_plants	1	AIL7	.	Q6J9N8	DAP-seq	plants	Arabidopsis thaliana
+MA1236	MA1236.1.ESE3	jaspar_plants	1	ESE3	.		DAP-seq	plants	Arabidopsis thaliana
+MA1237	MA1237.1.AT4G16750	jaspar_plants	1	AT4G16750	.	Q9SUK8	DAP-seq	plants	Arabidopsis thaliana
+MA1238	MA1238.1.ERF38	jaspar_plants	1	ERF38	.	Q9ZQP3	DAP-seq	plants	Arabidopsis thaliana
+MA1239	MA1239.1.ERF104	jaspar_plants	1	ERF104	.	Q9FKG1	DAP-seq	plants	Arabidopsis thaliana
+MA1240	MA1240.1.ERF10	jaspar_plants	1	ERF10	.	Q9ZWA2	DAP-seq	plants	Arabidopsis thaliana
+MA1241	MA1241.1.AT4G32800	jaspar_plants	1	AT4G32800	.	Q9M080	DAP-seq	plants	Arabidopsis thaliana
+MA1242	MA1242.1.AT3G57600	jaspar_plants	1	AT3G57600	.	Q9SVX5	DAP-seq	plants	Arabidopsis thaliana
+MA1243	MA1243.1.DREB19	jaspar_plants	1	DREB19	.	O80917	DAP-seq	plants	Arabidopsis thaliana
+MA1244	MA1244.1.ABR1	jaspar_plants	1	ABR1	.	Q9FGF8	DAP-seq	plants	Arabidopsis thaliana
+MA1245	MA1245.1.AT2G33710	jaspar_plants	1	AT2G33710	.	P93007	DAP-seq	plants	Arabidopsis thaliana
+MA1246	MA1246.1.LEP	jaspar_plants	1	LEP	.	Q9M644	DAP-seq	plants	Arabidopsis thaliana
+MA1247	MA1247.1.AT1G28160	jaspar_plants	1	AT1G28160	.	Q9FZ90	DAP-seq	plants	Arabidopsis thaliana
+MA1248	MA1248.1.DREB26	jaspar_plants	1	DREB26	.	Q9SFE4	DAP-seq	plants	Arabidopsis thaliana
+MA1249	MA1249.1.RAP210	jaspar_plants	1	RAP210	.	Q9SW63	DAP-seq	plants	Arabidopsis thaliana
+MA1250	MA1250.1.AT1G75490	jaspar_plants	1	AT1G75490	.	Q9LQZ2	DAP-seq	plants	Arabidopsis thaliana
+MA1251	MA1251.1.DEAR5	jaspar_plants	1	DEAR5	.	Q8W3M3	DAP-seq	plants	Arabidopsis thaliana
+MA1252	MA1252.1.PUCHI	jaspar_plants	1	PUCHI	.	Q6J9Q2	DAP-seq	plants	Arabidopsis thaliana
+MA1253	MA1253.1.AT3G16280	jaspar_plants	1	AT3G16280	.	Q9LU18	DAP-seq	plants	Arabidopsis thaliana
+MA1254	MA1254.1.ERF13	jaspar_plants	1	ERF13	.	Q8L9k1	DAP-seq	plants	Arabidopsis thaliana
+MA1255	MA1255.1.AT1G22810	jaspar_plants	1	AT1G22810	.	O80542	DAP-seq	plants	Arabidopsis thaliana
+MA1256	MA1256.1.RAP212	jaspar_plants	1	RAP212	.	Q9SSA8	DAP-seq	plants	Arabidopsis thaliana
+MA1257	MA1257.1.ERF9	jaspar_plants	1	ERF9	.	Q9FE67	DAP-seq	plants	Arabidopsis thaliana
+MA1258	MA1258.1.DREB2	jaspar_plants	1	DREB2	.		DAP-seq	plants	Arabidopsis thaliana
+MA1259	MA1259.1.AT1G01250	jaspar_plants	1	AT1G01250	.	Q1ECI2	DAP-seq	plants	Arabidopsis thaliana
+MA1260	MA1260.1.AT1G77640	jaspar_plants	1	AT1G77640	.	Q9CAP4	DAP-seq	plants	Arabidopsis thaliana
+MA1261	MA1261.1.AT5G67000	jaspar_plants	1	AT5G67000	.	Q38Q40	DAP-seq	plants	Arabidopsis thaliana
+MA1262	MA1262.1.ERF2	jaspar_plants	1	ERF2	.	O80338	DAP-seq	plants	Arabidopsis thaliana
+MA1263	MA1263.1.AT1G36060	jaspar_plants	1	AT1G36060	.	Q9SKW5	DAP-seq	plants	Arabidopsis thaliana
+MA1264	MA1264.1.ESE1	jaspar_plants	1	ESE1	.	A0A178VAV2	DAP-seq	plants	Arabidopsis thaliana
+MA1265	MA1265.1.AT4G31060	jaspar_plants	1	AT4G31060	.	Q6NLD5	DAP-seq	plants	Arabidopsis thaliana
+MA1266	MA1266.1.RAP211	jaspar_plants	1	RAP211	.	Q6J9S1	DAP-seq	plants	Arabidopsis thaliana
+MA1267	MA1267.1.AT5G66940	jaspar_plants	1	AT5G66940	Dof-type	Q9FGD6	DAP-seq	plants	Arabidopsis thaliana
+MA1268	MA1268.1.AT1G69570	jaspar_plants	1	AT1G69570	Dof-type	Q9SEZ3	DAP-seq	plants	Arabidopsis thaliana
+MA1269	MA1269.1.dof4.5	jaspar_plants	1	dof4.5	Dof-type	O49550	DAP-seq	plants	Arabidopsis thaliana
+MA1270	MA1270.1.AT3G45610	jaspar_plants	1	AT3G45610	Dof-type	Q9M1E6	DAP-seq	plants	Arabidopsis thaliana
+MA1271	MA1271.1.DAG2	jaspar_plants	1	DAG2	Dof-type	Q9ZPY0	DAP-seq	plants	Arabidopsis thaliana
+MA1272	MA1272.1.AT2G28810	jaspar_plants	1	AT2G28810	Dof-type	Q9ZV33	DAP-seq	plants	Arabidopsis thaliana
+MA1273	MA1273.1.dof4.2	jaspar_plants	1	dof4.2	Dof-type	Q9SUB1	DAP-seq	plants	Arabidopsis thaliana
+MA1274	MA1274.1.OBP3	jaspar_plants	1	OBP3	Dof-type	Q9M2U1	DAP-seq	plants	Arabidopsis thaliana
+MA1275	MA1275.1.AT1G47655	jaspar_plants	1	AT1G47655	Dof-type	Q9SX97	DAP-seq	plants	Arabidopsis thaliana
+MA1276	MA1276.1.AT3G52440	jaspar_plants	1	AT3G52440	Dof-type	Q9SVC5	DAP-seq	plants	Arabidopsis thaliana
+MA1277	MA1277.1.Adof1	jaspar_plants	1	Adof1	Dof-type	O82155	DAP-seq	plants	Arabidopsis thaliana
+MA1278	MA1278.1.OBP1	jaspar_plants	1	OBP1	Dof-type	Q39088	DAP-seq	plants	Arabidopsis thaliana
+MA1279	MA1279.1.COG1	jaspar_plants	1	COG1	Dof-type	P68350	DAP-seq	plants	Arabidopsis thaliana
+MA1280	MA1280.1.OBP4	jaspar_plants	1	OBP4	Dof-type	Q8LDR0	DAP-seq	plants	Arabidopsis thaliana
+MA1281	MA1281.1.AT5G02460	jaspar_plants	1	AT5G02460	Dof-type	Q9LZ56	DAP-seq	plants	Arabidopsis thaliana
+MA1282	MA1282.1.PTF1	jaspar_plants	1	PTF1	TCP domain	Q9S7W5	DAP-seq	plants	Arabidopsis thaliana
+MA1283	MA1283.1.TCP14	jaspar_plants	1	TCP14	TCP domain	Q93Z00	DAP-seq	plants	Arabidopsis thaliana
+MA1284	MA1284.1.TCP1	jaspar_plants	1	TCP1	TCP domain	Q9FYG7	DAP-seq	plants	Arabidopsis thaliana
+MA1285	MA1285.1.At2g45680	jaspar_plants	1	At2g45680	TCP domain	O64647	DAP-seq	plants	Arabidopsis thaliana
+MA1286	MA1286.1.TCP24	jaspar_plants	1	TCP24	TCP domain	Q9C758	DAP-seq	plants	Arabidopsis thaliana
+MA1287	MA1287.1.At5g08330	jaspar_plants	1	At5g08330	TCP domain	Q9FTA2	DAP-seq	plants	Arabidopsis thaliana
+MA1288	MA1288.1.At1g72010	jaspar_plants	1	At1g72010	TCP domain	Q9C7G4	DAP-seq	plants	Arabidopsis thaliana
+MA1289	MA1289.1.TCP3	jaspar_plants	1	TCP3	TCP domain	Q9MAH8	DAP-seq	plants	Arabidopsis thaliana
+MA1290	MA1290.1.TCP17	jaspar_plants	1	TCP17	TCP domain	Q9LEZ9	DAP-seq	plants	Arabidopsis thaliana
+MA1291	MA1291.1.TCP7	jaspar_plants	1	TCP7	TCP domain	Q9FMX2	DAP-seq	plants	Arabidopsis thaliana
+MA1292	MA1292.1.MYB27	jaspar_plants	1	MYB27	TCP domain	Q9SCP1	DAP-seq	plants	Arabidopsis thaliana
+MA1293	MA1293.1.MYB57	jaspar_plants	1	MYB57	TCP domain	Q9SSA1	DAP-seq	plants	Arabidopsis thaliana
+MA1294	MA1294.1.MYB62	jaspar_plants	1	MYB62	TCP domain	Q9C9G7	DAP-seq	plants	Arabidopsis thaliana
+MA1295	MA1295.1.WRKY20	jaspar_plants	1	WRKY20	.	Q93WV0	DAP-seq	plants	Arabidopsis thaliana
+MA1296	MA1296.1.WRKY46	jaspar_plants	1	WRKY46	.	Q9SKD9	DAP-seq	plants	Arabidopsis thaliana
+MA1297	MA1297.1.WRKY26	jaspar_plants	1	WRKY26	.	Q9C5T3	DAP-seq	plants	Arabidopsis thaliana
+MA1298	MA1298.1.WRKY29	jaspar_plants	1	WRKY29	.	Q9SUS1	DAP-seq	plants	Arabidopsis thaliana
+MA1299	MA1299.1.WRKY17	jaspar_plants	1	WRKY17	.	Q9SJA8	DAP-seq	plants	Arabidopsis thaliana
+MA1300	MA1300.1.WRKY6	jaspar_plants	1	WRKY6	.	Q9C519	DAP-seq	plants	Arabidopsis thaliana
+MA1301	MA1301.1.WRKY33	jaspar_plants	1	WRKY33	.	Q8S8P5	DAP-seq	plants	Arabidopsis thaliana
+MA1302	MA1302.1.WRKY65	jaspar_plants	1	WRKY65	.	Q9LP56	DAP-seq	plants	Arabidopsis thaliana
+MA1303	MA1303.1.WRKY22	jaspar_plants	1	WRKY22	.	O04609	DAP-seq	plants	Arabidopsis thaliana
+MA1304	MA1304.1.WRKY59	jaspar_plants	1	WRKY59	.	Q9SJ09	DAP-seq	plants	Arabidopsis thaliana
+MA1305	MA1305.1.WRKY55	jaspar_plants	1	WRKY55	.	Q9SHB5	DAP-seq	plants	Arabidopsis thaliana
+MA1306	MA1306.1.WRKY11	jaspar_plants	1	WRKY11	.	Q9SV15	DAP-seq	plants	Arabidopsis thaliana
+MA1307	MA1307.1.WRKY31	jaspar_plants	1	WRKY31	.	Q93WT0	DAP-seq	plants	Arabidopsis thaliana
+MA1308	MA1308.1.WRKY70	jaspar_plants	1	WRKY70	.	Q9LY00	DAP-seq	plants	Arabidopsis thaliana
+MA1309	MA1309.1.WRKY3	jaspar_plants	1	WRKY3	.	Q9ZQ70	DAP-seq	plants	Arabidopsis thaliana
+MA1310	MA1310.1.WRKY42	jaspar_plants	1	WRKY42	.	Q9XEC3	DAP-seq	plants	Arabidopsis thaliana
+MA1311	MA1311.1.WRKY28	jaspar_plants	1	WRKY28	.	Q8VWJ2	DAP-seq	plants	Arabidopsis thaliana
+MA1312	MA1312.1.WRKY47	jaspar_plants	1	WRKY47	.	Q9ZSI7	DAP-seq	plants	Arabidopsis thaliana
+MA1313	MA1313.1.WRKY7	jaspar_plants	1	WRKY7	.	Q9STX0	DAP-seq	plants	Arabidopsis thaliana
+MA1314	MA1314.1.WRKY14	jaspar_plants	1	WRKY14	.	Q9SA80	DAP-seq	plants	Arabidopsis thaliana
+MA1315	MA1315.1.WRKY24	jaspar_plants	1	WRKY24	.	Q9FFS3	DAP-seq	plants	Arabidopsis thaliana
+MA1316	MA1316.1.WRKY71	jaspar_plants	1	WRKY71	.	Q93WV4	DAP-seq	plants	Arabidopsis thaliana
+MA1317	MA1317.1.WRKY50	jaspar_plants	1	WRKY50	.	Q8VWQ5	DAP-seq	plants	Arabidopsis thaliana
+MA1318	MA1318.1.WRKY27	jaspar_plants	1	WRKY27	.	Q9FLX8	DAP-seq	plants	Arabidopsis thaliana
+MA1319	MA1319.1.SPL3	jaspar_plants	1	SPL3	.	P93015	DAP-seq	plants	Arabidopsis thaliana
+MA1320	MA1320.1.SPL15	jaspar_plants	1	SPL15	.	Q9M2Q6	DAP-seq	plants	Arabidopsis thaliana
+MA1321	MA1321.1.SPL13	jaspar_plants	1	SPL13	.	B9DI20	DAP-seq	plants	Arabidopsis thaliana
+MA1322	MA1322.1.SPL9	jaspar_plants	1	SPL9	.	Q700W2	DAP-seq	plants	Arabidopsis thaliana
+MA1323	MA1323.1.GATA19	jaspar_plants	1	GATA19	GATA-type zinc fingers	Q6QPM2	DAP-seq	plants	Arabidopsis thaliana
+MA1324	MA1324.1.GATA20	jaspar_plants	1	GATA20	GATA-type zinc fingers	Q9ZPX0	DAP-seq	plants	Arabidopsis thaliana
+MA1325	MA1325.1.GATA14	jaspar_plants	1	GATA14	GATA-type zinc fingers	Q9M1U2	DAP-seq	plants	Arabidopsis thaliana
+MA1326	MA1326.1.ATHB33	jaspar_plants	1	ATHB33	ZF-HD	Q9FRL5	DAP-seq	plants	Arabidopsis thaliana
+MA1327	MA1327.1.ATHB23	jaspar_plants	1	ATHB23	ZF-HD		DAP-seq	plants	Arabidopsis thaliana
+MA1328	MA1328.1.ATHB34	jaspar_plants	1	ATHB34	ZF-HD	Q8LFD3	DAP-seq	plants	Arabidopsis thaliana
+MA1329	MA1329.1.ATHB25	jaspar_plants	1	ATHB25	ZF-HD		DAP-seq	plants	Arabidopsis thaliana
+MA1330	MA1330.1.ATHB24	jaspar_plants	1	ATHB24	ZF-HD		DAP-seq	plants	Arabidopsis thaliana
+MA1331	MA1331.1.AT1G78700	jaspar_plants	1	AT1G78700	BES1	Q9ZV88	DAP-seq	plants	Arabidopsis thaliana
+MA1332	MA1332.1.AT4G36780	jaspar_plants	1	AT4G36780	BES2	Q94A43	DAP-seq	plants	Arabidopsis thaliana
+MA1333	MA1333.1.AT4G18890	jaspar_plants	1	AT4G18890	BES3	O49404	DAP-seq	plants	Arabidopsis thaliana
+MA1334	MA1334.1.GBF6	jaspar_plants	1	GBF6	.	O65683	DAP-seq	plants	Arabidopsis thaliana
+MA1335	MA1335.1.TGA4	jaspar_plants	1	TGA4	.	Q39162	DAP-seq	plants	Arabidopsis thaliana
+MA1336	MA1336.1.TGA3	jaspar_plants	1	TGA3	.	Q39234	DAP-seq	plants	Arabidopsis thaliana
+MA1337	MA1337.1.bZIP44	jaspar_plants	1	bZIP44	.	C0Z2L5	DAP-seq	plants	Arabidopsis thaliana
+MA1338	MA1338.1.AREB3	jaspar_plants	1	AREB3	.	Q9LES3	DAP-seq	plants	Arabidopsis thaliana
+MA1339	MA1339.1.bZIP43	jaspar_plants	1	bZIP43	.	Q9FMC2	DAP-seq	plants	Arabidopsis thaliana
+MA1340	MA1340.1.bZIP3	jaspar_plants	1	bZIP3	.	Q9LFU3	DAP-seq	plants	Arabidopsis thaliana
+MA1341	MA1341.1.bZIP53	jaspar_plants	1	bZIP53	.	Q9LZP8	DAP-seq	plants	Arabidopsis thaliana
+MA1342	MA1342.1.bZIP50	jaspar_plants	1	bZIP50	.	Q93ZE2	DAP-seq	plants	Arabidopsis thaliana
+MA1343	MA1343.1.bZIP52	jaspar_plants	1	bZIP52	.	Q8VWG0	DAP-seq	plants	Arabidopsis thaliana
+MA1344	MA1344.1.bZIP28	jaspar_plants	1	bZIP28	.	Q9SG86	DAP-seq	plants	Arabidopsis thaliana
+MA1345	MA1345.1.bZIP48	jaspar_plants	1	bZIP48	.	Q8RU59	DAP-seq	plants	Arabidopsis thaliana
+MA1346	MA1346.1.TGA10	jaspar_plants	1	TGA10	.	E3VNM4	DAP-seq	plants	Arabidopsis thaliana
+MA1347	MA1347.1.bZIP68	jaspar_plants	1	bZIP68	.	Q84LG2	DAP-seq	plants	Arabidopsis thaliana
+MA1348	MA1348.1.TGA9	jaspar_plants	1	TGA9	.	Q93XM6	DAP-seq	plants	Arabidopsis thaliana
+MA1349	MA1349.1.bZIP16	jaspar_plants	1	bZIP16	.	Q501B2	DAP-seq	plants	Arabidopsis thaliana
+MA1350	MA1350.1.bZIP42	jaspar_plants	1	bZIP42	.	Q9LW45	DAP-seq	plants	Arabidopsis thaliana
+MA1351	MA1351.1.GBF3	jaspar_plants	1	GBF3	.	Q42510	DAP-seq	plants	Arabidopsis thaliana
+MA1352	MA1352.1.TRP1	jaspar_plants	1	TRP1	Myb-related	Q8L7L8	DAP-seq	plants	Arabidopsis thaliana
+MA1353	MA1353.1.AT1G72740	jaspar_plants	1	AT1G72740	Myb-related	F4IEY4	DAP-seq	plants	Arabidopsis thaliana
+MA1354	MA1354.1.AT4G12670	jaspar_plants	1	AT4G12670	Myb-related	Q700D7	DAP-seq	plants	Arabidopsis thaliana
+MA1355	MA1355.1.TBP3	jaspar_plants	1	TBP3	Myb-related	Q9JFW5	DAP-seq	plants	Arabidopsis thaliana
+MA1356	MA1356.1.TRP2	jaspar_plants	1	TRP2	Myb-related	Q9SNB9	DAP-seq	plants	Arabidopsis thaliana
+MA1357	MA1357.1.bHLH80	jaspar_plants	1	bHLH80	.	Q9C8P8	DAP-seq	plants	Arabidopsis thaliana
+MA1358	MA1358.1.bHLH130	jaspar_plants	1	bHLH130	.	Q66GR3	DAP-seq	plants	Arabidopsis thaliana
+MA1359	MA1359.1.bHLH31	jaspar_plants	1	bHLH31	.	Q0JXE7	DAP-seq	plants	Arabidopsis thaliana
+MA1360	MA1360.1.bHLH74	jaspar_plants	1	bHLH74	.	Q6NKN9	DAP-seq	plants	Arabidopsis thaliana
+MA1361	MA1361.1.bHLH18	jaspar_plants	1	bHLH18	.	Q1PF17	DAP-seq	plants	Arabidopsis thaliana
+MA1362	MA1362.1.bHLH77	jaspar_plants	1	bHLH77	.	Q9LK48	DAP-seq	plants	Arabidopsis thaliana
+MA1363	MA1363.1.bHLH69	jaspar_plants	1	bHLH69	.	Q8S3D5	DAP-seq	plants	Arabidopsis thaliana
+MA1364	MA1364.1.PIF7	jaspar_plants	1	PIF7	.	Q570R7	DAP-seq	plants	Arabidopsis thaliana
+MA1365	MA1365.1.AT5G47660	jaspar_plants	1	AT5G47660	Trihelix		DAP-seq	plants	Arabidopsis thaliana
+MA1366	MA1366.1.AT1G76880	jaspar_plants	1	AT1G76880	Trihelix		DAP-seq	plants	Arabidopsis thaliana
+MA1367	MA1367.1.AT1G76870	jaspar_plants	1	AT1G76870	Trihelix		DAP-seq	plants	Arabidopsis thaliana
+MA1368	MA1368.1.AT3G25990	jaspar_plants	1	AT3G25990	Trihelix	Q9LU92	DAP-seq	plants	Arabidopsis thaliana
+MA1369	MA1369.1.HDG1	jaspar_plants	1	HDG1	.	Q9M2E8	DAP-seq	plants	Arabidopsis thaliana
+MA1370	MA1370.1.IDD5	jaspar_plants	1	IDD5	.	Q9ZUL3	DAP-seq	plants	Arabidopsis thaliana
+MA1371	MA1371.1.IDD4	jaspar_plants	1	IDD4	.	Q8GYC1	DAP-seq	plants	Arabidopsis thaliana
+MA1372	MA1372.1.STZ	jaspar_plants	1	STZ	.	Q96289	DAP-seq	plants	Arabidopsis thaliana
+MA1373	MA1373.1.IDD2	jaspar_plants	1	IDD2	.	Q9SCQ6	DAP-seq	plants	Arabidopsis thaliana
+MA1374	MA1374.1.IDD7	jaspar_plants	1	IDD7	.	Q8H1F5	DAP-seq	plants	Arabidopsis thaliana
+MA1375	MA1375.1.ANL2	jaspar_plants	1	ANL2	HD-ZIP factors	Q0WV12	DAP-seq	plants	Arabidopsis thaliana
+MA1376	MA1376.1.DEAR3	jaspar_plants	1	DEAR3	.		DAP-seq	plants	Arabidopsis thaliana
+MA1377	MA1377.1.PLT1	jaspar_plants	1	PLT1	.	Q5YGP8	DAP-seq	plants	Arabidopsis thaliana
+MA1378	MA1378.1.PLT3	jaspar_plants	1	PLT3	.		DAP-seq	plants	Arabidopsis thaliana
+MA1379	MA1379.1.SOL1	jaspar_plants	1	SOL1	CPP	Q9M9H7	DAP-seq	plants	Arabidopsis thaliana
+MA1380	MA1380.1.AT2G20110	jaspar_plants	1	AT2G20110	CPP	Q9SL70	DAP-seq	plants	Arabidopsis thaliana
+MA1381	MA1381.1.AT3G46070	jaspar_plants	1	AT3G46070	.	Q9LX86	DAP-seq	plants	Arabidopsis thaliana
+MA1382	MA1382.1.FAR1	jaspar_plants	1	FAR1	C3H Zinc Figer	Q9SWG3	DAP-seq	plants	Arabidopsis thaliana
+MA1383	MA1383.1.KAN2	jaspar_plants	1	KAN2	G2-like	Q9C616	DAP-seq	plants	Arabidopsis thaliana
+MA1384	MA1384.1.AT2G01060	jaspar_plants	1	AT2G01060	G2-like	Q9SJW0	DAP-seq	plants	Arabidopsis thaliana
+MA1385	MA1385.1.AT2G40260	jaspar_plants	1	AT2G40260	G2-like		DAP-seq	plants	Arabidopsis thaliana
+MA1386	MA1386.1.AT1G25550	jaspar_plants	1	AT1G25550	G2-like	Q9FPE8	DAP-seq	plants	Arabidopsis thaliana
+MA1387	MA1387.1.AT1G13300	jaspar_plants	1	AT1G13300	G2-like	Q9FX67	DAP-seq	plants	Arabidopsis thaliana
+MA1388	MA1388.1.AT3G24120	jaspar_plants	1	AT3G24120	G2-like	Q94A57	DAP-seq	plants	Arabidopsis thaliana
+MA1389	MA1389.1.AT5G29000	jaspar_plants	1	AT5G29000	G2-like	Q8GUN5	DAP-seq	plants	Arabidopsis thaliana
+MA1390	MA1390.1.AT1G68670	jaspar_plants	1	AT1G68670	G2-like	Q8VZS3	DAP-seq	plants	Arabidopsis thaliana
+MA1391	MA1391.1.MYB33	jaspar_plants	1	MYB33	Myb	Q8W1W6	DAP-seq	plants	Arabidopsis thaliana
+MA1392	MA1392.1.MYB98	jaspar_plants	1	MYB98	Myb	Q9S7L2	DAP-seq	plants	Arabidopsis thaliana
+MA1393	MA1393.1.MYB70	jaspar_plants	1	MYB70	Myb		DAP-seq	plants	Arabidopsis thaliana
+MA1394	MA1394.1.MYB73	jaspar_plants	1	MYB73	Myb		DAP-seq	plants	Arabidopsis thaliana
+MA1395	MA1395.1.MYB77	jaspar_plants	1	MYB77	Myb		DAP-seq	plants	Arabidopsis thaliana
+MA1396	MA1396.1.GATA6	jaspar_plants	1	GATA6	GATA-type zinc fingers	Q9SD38	DAP-seq	plants	Arabidopsis thaliana
+MA1397	MA1397.1.At1g74840	jaspar_plants	1	At1g74840	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1398	MA1398.1.At5g47390	jaspar_plants	1	At5g47390	Myb-related	Q9LVS0	DAP-seq	plants	Arabidopsis thaliana
+MA1399	MA1399.1.At5g08520	jaspar_plants	1	At5g08520	Myb-related	Q9FNN6	DAP-seq	plants	Arabidopsis thaliana
+MA1400	MA1400.1.At1g19000	jaspar_plants	1	At1g19000	Myb-related		DAP-seq	plants	Arabidopsis thaliana
+MA1401	MA1401.1.EPR1	jaspar_plants	1	EPR1	Myb-related	B3H5A8	DAP-seq	plants	Arabidopsis thaliana
+MA1402	MA1402.1.BPC6	jaspar_plants	1	BPC6	BBR-BPC	Q8L999	DAP-seq	plants	Arabidopsis thaliana
+MA1403	MA1403.1.BPC5	jaspar_plants	1	BPC5	BBR-BPC	F4JUI3	DAP-seq	plants	Arabidopsis thaliana
+MA1404	MA1404.1.BPC1	jaspar_plants	1	BPC1	BBR-BPC	Q9SKD0	DAP-seq	plants	Arabidopsis thaliana
+MA1405	MA1405.1.SIZF2	jaspar_plants	1	SIZF2	.	I3NN78	PBM	plants	Solanum lycopersicum
+MA1406	MA1406.1.ATHB4	jaspar_plants	1	ATHB4	HD-ZIP factors	P92953	PBM	plants	Arabidopsis thaliana
+MA1407	MA1407.1.bZIP14	jaspar_plants	1	bZIP14	.	Q84JK2	PBM	plants	Phaeodactylum tricornutum
+MA1408	MA1408.1.FaEOBII	jaspar_plants	1	FaEOBII	Myb-related		PBM	plants	Fragaria x ananassa
+MA1409	MA1409.1.OsRR22	jaspar_plants	1	OsRR22	ARR	Q5SML5	PBM	plants	Oryza sativa
+MA1410	MA1410.1.StBRC1	jaspar_plants	1	StBRC1	TCP domain		PBM	plants	Solanum lycopersicum
+MA1411	MA1411.1.TSAR1	jaspar_plants	1	TSAR1	.		PBM	plants	Medicago truncatula
+MA1412	MA1412.1.TSAR2	jaspar_plants	1	TSAR2	.		PBM	plants	Medicago truncatula
+MA1413	MA1413.1.UIF1	jaspar_plants	1	UIF1	Myb-related	F4JRB0	PBM	plants	Arabidopsis thaliana
+MA1414	MA1414.1.E2FA	jaspar_plants	1	E2FA	E2F	Q9FNY0	ChIP-seq	plants	Arabidopsis thaliana
+MA1415	MA1415.1.REF6	jaspar_plants	1	REF6	.	Q9STM3	ChIP-seq	plants	Arabidopsis thaliana
+MA1416	MA1416.1.RAMOSA1	jaspar_plants	1	RAMOSA1	.		ChIP-seq	plants	Zea mays
+MA1417	MA1417.1.O2	jaspar_plants	1	O2	.	P12959	ChIP-seq	plants	Zea mays

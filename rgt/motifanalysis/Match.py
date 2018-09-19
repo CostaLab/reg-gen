@@ -64,6 +64,8 @@ def options(parser):
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
 
+    # _TODO: --filter "species:sapiens,mus;source:selex"
+
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
                                       "These arguments are only used with the --promoters-only option (for the "

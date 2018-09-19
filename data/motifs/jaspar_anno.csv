@@ -43,7 +43,7 @@ MA0041.1.Foxd3,Foxd3,Forkhead box (FOX) factors,Q63245,SELEX,vertebrates,Rattus 
 MA0042.1.FOXI1,FOXI1,Forkhead box (FOX) factors,Q12951,SELEX,vertebrates,Homo sapiens
 MA0043.1.HLF,HLF,C/EBP-related,Q16534,SELEX,vertebrates,Homo sapiens
 MA0044.1.HMG-1,HMG-1,,Q41026,SELEX,plants,Pisum sativum
-MA0045.1.HMG-I/Y,HMG-I/Y,,Q43877,SELEX,plants,Pisum sativum
+MA0045.1.HMG-I_Y,HMG-I/Y,,Q43877,SELEX,plants,Pisum sativum
 MA0046.1.HNF1A,HNF1A,POU domain factors,ABR09270,COMPILED,vertebrates,Vertebrata
 MA0047.1.Foxa2,Foxa2,Forkhead box (FOX) factors,P32182,COMPILED,vertebrates,Rattus norvegicus
 MA0048.1.NHLH1,NHLH1,Tal-related factors,Q02575,SELEX,vertebrates,Homo sapiens
@@ -105,6 +105,7 @@ MA0104.1.Mycn,Mycn,bHLH-ZIP factors,P03966,SELEX,vertebrates,Mus musculus
 MA0105.2.NFKB1,NFKB1,NF-kappaB-related factors,P19838,SELEX,vertebrates,Homo sapiens
 MA0106.1.TP53,TP53,p53-related factors,P04637,SELEX,vertebrates,Homo sapiens
 MA0107.1.RELA,RELA,NF-kappaB-related factors,Q04206,SELEX,vertebrates,Homo sapiens
+MA0108.1.TBP,TBP,TBP-related factors,,,vertebrates,
 MA0108.2.TBP,TBP,TBP-related factors,P20226,,vertebrates,
 MA0109.1.HLTF,HLTF,Myb/SANT domain factors,Q95216,SELEX,vertebrates,Oryctolagus cuniculus
 MA0110.1.ATHB-5,ATHB-5,Homeo,11762265,SELEX,plants,Arabidopsis thaliana
@@ -275,181 +276,181 @@ MA0261.1.lin-14,lin-14,,Q21446,SELEX,nematodes,Caenorhabditis elegans
 MA0262.1.mab-3,mab-3,,O18214,EMSA,nematodes,Caenorhabditis elegans
 MA0263.1.ceh-10::ttx-3,ceh-10+ttx-3,HD-LIM factors;Paired-related HD factors,P41935;G5EE86,EMSA,nematodes,Caenorhabditis elegans
 MA0264.1.ceh-22,ceh-22,NK-related factors,P41936,PBM,nematodes,Caenorhabditis elegans
-MA0265.1.ABF1,ABF1,,P14164,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0266.1.ABF2,ABF2,,Q02486,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0267.1.ACE2,ACE2,Other factors with up to three adjacent zinc fingers,P21192,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0268.1.ADR1,ADR1,Other factors with up to three adjacent zinc fingers,P07248,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0265.1.ABF1,ABF1,,P14164,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0266.1.ABF2,ABF2,,Q02486,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0267.1.ACE2,ACE2,Other factors with up to three adjacent zinc fingers,P21192,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0268.1.ADR1,ADR1,Other factors with up to three adjacent zinc fingers,P07248,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0269.1.AFT1,AFT1,,P22149,PBM,fungi,Saccharomyces cerevisiae
-MA0270.1.AFT2,AFT2,,Q08957,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0270.1.AFT2,AFT2,,Q08957,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0271.1.ARG80,ARG80,,P07249,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0272.1.ARG81,ARG81,,P05085,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0273.1.ARO80,ARO80,,Q04052,PBM,fungi,Saccharomyces cerevisiae
 MA0274.1.ARR1,ARR1,,Q06596,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0275.1.ASG1,ASG1,,P40467,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0275.1.ASG1,ASG1,,P40467,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0276.1.ASH1,ASH1,GATA-type zinc fingers,P34233,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0277.1.AZF1,AZF1,,P41696,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0277.1.AZF1,AZF1,,P41696,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0278.1.BAS1,BAS1,Myb/SANT domain factors,P22035,PBM,fungi,Saccharomyces cerevisiae
 MA0279.1.CAD1,CAD1,,P24813,COMPILED,fungi,Saccharomyces cerevisiae
-MA0280.1.CAT8,CAT8,,P39113,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0281.1.CBF1,CBF1,,P17106,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0282.1.CEP3,CEP3,,P40969,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0283.1.CHA4,CHA4,,P43634,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0284.1.CIN5,CIN5,,P40917,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0285.1.CRZ1,CRZ1,Other factors with up to three adjacent zinc fingers,P53968,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0286.1.CST6,CST6,,P40535,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0280.1.CAT8,CAT8,,P39113,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0281.1.CBF1,CBF1,,P17106,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0282.1.CEP3,CEP3,,P40969,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0283.1.CHA4,CHA4,,P43634,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0284.1.CIN5,CIN5,,P40917,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0285.1.CRZ1,CRZ1,Other factors with up to three adjacent zinc fingers,P53968,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0286.1.CST6,CST6,,P40535,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0287.1.CUP2,CUP2,,P15315,COMPILED,fungi,Saccharomyces cerevisiae
-MA0288.1.CUP9,CUP9,TALE-type homeo domain factors,P41817,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0289.1.DAL80,DAL80,GATA-type zinc fingers,P26343,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0288.1.CUP9,CUP9,TALE-type homeo domain factors,P41817,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0289.1.DAL80,DAL80,GATA-type zinc fingers,P26343,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0290.1.DAL81,DAL81,,P21657,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0291.1.DAL82,DAL82,,P21705,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0292.1.ECM22,ECM22,,Q05958,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0293.1.ECM23,ECM23,GATA-type zinc fingers,Q02710,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0294.1.EDS1,EDS1,,P38073,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0295.1.FHL1,FHL1,Forkhead box (FOX) factors,P39521,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0291.1.DAL82,DAL82,,P21705,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0292.1.ECM22,ECM22,,Q05958,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0293.1.ECM23,ECM23,GATA-type zinc fingers,Q02710,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0294.1.EDS1,EDS1,,P38073,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0295.1.FHL1,FHL1,Forkhead box (FOX) factors,P39521,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0296.1.FKH1,FKH1,Forkhead box (FOX) factors,P40466,PBM,fungi,Saccharomyces cerevisiae
-MA0297.1.FKH2,FKH2,Forkhead box (FOX) factors,P41813,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0298.1.FZF1,FZF1,Factors with multiple dispersed zinc fingers,P32805,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0297.1.FKH2,FKH2,Forkhead box (FOX) factors,P41813,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0298.1.FZF1,FZF1,Factors with multiple dispersed zinc fingers,P32805,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0299.1.GAL4,GAL4,,P04386,PBM,fungi,Saccharomyces cerevisiae
-MA0300.1.GAT1,GAT1,GATA-type zinc fingers,P43574,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0301.1.GAT3,GAT3,GATA-type zinc fingers,Q07928,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0302.1.GAT4,GAT4,GATA-type zinc fingers,P40569,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0300.1.GAT1,GAT1,GATA-type zinc fingers,P43574,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0301.1.GAT3,GAT3,GATA-type zinc fingers,Q07928,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0302.1.GAT4,GAT4,GATA-type zinc fingers,P40569,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0303.1.GCN4,GCN4,,P03069,PBM,fungi,Saccharomyces cerevisiae
 MA0304.1.GCR1,GCR1,,P07261,COMPILED,fungi,Saccharomyces cerevisiae
 MA0305.1.GCR2,GCR2,,Q01722,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0306.1.GIS1,GIS1,Other factors with up to three adjacent zinc fingers,Q03833,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0307.1.GLN3,GLN3,GATA-type zinc fingers,P18494,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0306.1.GIS1,GIS1,Other factors with up to three adjacent zinc fingers,Q03833,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0307.1.GLN3,GLN3,GATA-type zinc fingers,P18494,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0308.1.GSM1,GSM1,,P42950,PBM,fungi,Saccharomyces cerevisiae
-MA0309.1.GZF3,GZF3,GATA-type zinc fingers,P42944,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0310.1.HAC1,HAC1,,P41546,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0311.1.HAL9,HAL9,,Q12180,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0312.1.HAP1,HAP1,,P0CE41,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0309.1.GZF3,GZF3,GATA-type zinc fingers,P42944,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0310.1.HAC1,HAC1,,P41546,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0311.1.HAL9,HAL9,,Q12180,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0312.1.HAP1,HAP1,,P0CE41,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0313.1.HAP2,HAP2,Heteromeric CCAAT-binding factors,P06774,COMPILED,fungi,Saccharomyces cerevisiae
 MA0314.1.HAP3,HAP3,Heteromeric CCAAT-binding factors,P13434,COMPILED,fungi,Saccharomyces cerevisiae
 MA0316.1.HAP5,HAP5,Heteromeric CCAAT-binding factors,Q02516,COMPILED,fungi,Saccharomyces cerevisiae
-MA0317.1.HCM1,HCM1,Forkhead box (FOX) factors,P25364,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0318.1.HMRA2,HMRA2,TALE-type homeo domain factors,P0CY13,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0319.1.HSF1,HSF1,HSF factors,P10961,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0317.1.HCM1,HCM1,Forkhead box (FOX) factors,P25364,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0318.1.HMRA2,HMRA2,TALE-type homeo domain factors,P0CY13,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0319.1.HSF1,HSF1,HSF factors,P10961,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0320.1.IME1,IME1,,P21190,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0321.1.INO2,INO2,,P26798,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0322.1.INO4,INO4,,P13902,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0323.1.IXR1,IXR1,,P33417,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0324.1.LEU3,LEU3,,P08638,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0325.1.LYS14,LYS14,,P40971,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0324.1.LEU3,LEU3,,P08638,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0325.1.LYS14,LYS14,,P40971,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0326.1.MAC1,MAC1,,P35192,COMPILED,fungi,Saccharomyces cerevisiae
 MA0327.1.HMRA1,HMRA1,,P0CY11,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0328.1.MATALPHA2,MATALPHA2,TALE-type homeo domain factors,YCL067C,COMPILED,fungi,Saccharomyces cerevisiae
-MA0329.1.MBP1,MBP1,,P39678,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0329.1.MBP1,MBP1,,P39678,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0330.1.MBP1::SWI6,MBP1+SWI6,,P39678;P09959,COMPILED,fungi,Saccharomyces cerevisiae
 MA0331.1.MCM1,MCM1,,P11746,COMPILED,fungi,Saccharomyces cerevisiae
 MA0332.1.MET28,MET28,,P40573,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0333.1.MET31,MET31,,Q03081,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0334.1.MET32,MET32,Other factors with up to three adjacent zinc fingers,Q12041,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0333.1.MET31,MET31,,Q03081,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0334.1.MET32,MET32,Other factors with up to three adjacent zinc fingers,Q12041,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0335.1.MET4,MET4,,P32389,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0336.1.MGA1,MGA1,HSF factors,P53050,PBM,fungi,Saccharomyces cerevisiae
-MA0337.1.MIG1,MIG1,Other factors with up to three adjacent zinc fingers,P27705,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0338.1.MIG2,MIG2,Other factors with up to three adjacent zinc fingers,P53035,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0339.1.MIG3,MIG3,Other factors with up to three adjacent zinc fingers,P39943,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0337.1.MIG1,MIG1,Other factors with up to three adjacent zinc fingers,P27705,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0338.1.MIG2,MIG2,Other factors with up to three adjacent zinc fingers,P53035,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0339.1.MIG3,MIG3,Other factors with up to three adjacent zinc fingers,P39943,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0340.1.MOT3,MOT3,Other factors with up to three adjacent zinc fingers,P54785,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0341.1.MSN2,MSN2,Other factors with up to three adjacent zinc fingers,P33748,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0342.1.MSN4,MSN4,Other factors with up to three adjacent zinc fingers,P33749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0341.1.MSN2,MSN2,Other factors with up to three adjacent zinc fingers,P33748,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0342.1.MSN4,MSN4,Other factors with up to three adjacent zinc fingers,P33749,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0343.1.NDT80,NDT80,,P38830,PBM,fungi,Saccharomyces cerevisiae
-MA0344.1.NHP10,NHP10,,Q03435,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0344.1.NHP10,NHP10,,Q03435,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0345.1.NHP6A,NHP6A,,P11632,PBM,fungi,Saccharomyces cerevisiae
 MA0346.1.NHP6B,NHP6B,,P11633,PBM,fungi,Saccharomyces cerevisiae
 MA0347.1.NRG1,NRG1,Other factors with up to three adjacent zinc fingers,Q03125,PBM,fungi,Saccharomyces cerevisiae
-MA0348.1.OAF1,OAF1,,P39720,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0348.1.OAF1,OAF1,,P39720,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0349.1.OPI1,OPI1,,P21957,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0350.1.TOD6,TOD6,Myb/SANT domain factors,P34219,PBM,fungi,Saccharomyces cerevisiae
 MA0351.1.DOT6,DOT6,Myb/SANT domain factors,P40059,PBM,fungi,Saccharomyces cerevisiae
-MA0352.1.PDR1,PDR1,,P12383,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0352.1.PDR1,PDR1,,P12383,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0353.1.PDR3,PDR3,,P33200,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0354.1.PDR8,PDR8,,Q06149,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0355.1.PHD1,PHD1,,P36093,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0356.1.PHO2,PHO2,,P07269,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0354.1.PDR8,PDR8,,Q06149,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0355.1.PHD1,PHD1,,P36093,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0356.1.PHO2,PHO2,,P07269,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0357.1.PHO4,PHO4,,P07270,PBM,fungi,Saccharomyces cerevisiae
-MA0358.1.PUT3,PUT3,,P25502,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0359.1.RAP1,RAP1,Myb/SANT domain factors,P11938,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0360.1.RDR1,RDR1,,Q08904,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0361.1.RDS1,RDS1,,P25611,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0362.1.RDS2,RDS2,,P19541,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0363.1.REB1,REB1,Myb/SANT domain factors,P21538,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0364.1.REI1,REI1,Factors with multiple dispersed zinc fingers,P38344,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0365.1.RFX1,RFX1,RFX-related factors,P48743,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0366.1.RGM1,RGM1,,Q00453,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0367.1.RGT1,RGT1,,P32862,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0368.1.RIM101,RIM101,Factors with multiple dispersed zinc fingers,P33400,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0358.1.PUT3,PUT3,,P25502,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0359.1.RAP1,RAP1,Myb/SANT domain factors,P11938,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0360.1.RDR1,RDR1,,Q08904,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0361.1.RDS1,RDS1,,P25611,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0362.1.RDS2,RDS2,,P19541,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0363.1.REB1,REB1,Myb/SANT domain factors,P21538,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0364.1.REI1,REI1,Factors with multiple dispersed zinc fingers,P38344,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0365.1.RFX1,RFX1,RFX-related factors,P48743,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0366.1.RGM1,RGM1,,Q00453,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0367.1.RGT1,RGT1,,P32862,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0368.1.RIM101,RIM101,Factors with multiple dispersed zinc fingers,P33400,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0369.1.RLM1,RLM1,Regulators of differentiation,Q12224,COMPILED,fungi,Saccharomyces cerevisiae
 MA0370.1.RME1,RME1,Factors with multiple dispersed zinc fingers,P32338,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0371.1.ROX1,ROX1,,P25042,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0372.1.RPH1,RPH1,Other factors with up to three adjacent zinc fingers,P39956,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0373.1.RPN4,RPN4,,Q03465,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0374.1.RSC3,RSC3,,Q06639,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0375.1.RSC30,RSC30,,P38781,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0371.1.ROX1,ROX1,,P25042,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0372.1.RPH1,RPH1,Other factors with up to three adjacent zinc fingers,P39956,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0373.1.RPN4,RPN4,,Q03465,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0374.1.RSC3,RSC3,,Q06639,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0375.1.RSC30,RSC30,,P38781,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0376.1.RTG3,RTG3,,P38165,PBM,fungi,Saccharomyces cerevisiae
 MA0377.1.SFL1,SFL1,HSF factors,P20134,PBM,fungi,Saccharomyces cerevisiae
 MA0378.1.SFP1,SFP1,Factors with multiple dispersed zinc fingers,P32432,PBM,fungi,Saccharomyces cerevisiae
-MA0379.1.MOT2,MOT2,,P34909,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0380.1.SIP4,SIP4,,P46954,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0381.1.SKN7,SKN7,HSF factors,P38889,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0379.1.MOT2,MOT2,,P34909,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0380.1.SIP4,SIP4,,P46954,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0381.1.SKN7,SKN7,HSF factors,P38889,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0382.1.SKO1,SKO1,,Q02100,COMPILED,fungi,Saccharomyces cerevisiae
 MA0383.1.SMP1,SMP1,Regulators of differentiation,P38128,PBM,fungi,Saccharomyces cerevisiae
 MA0384.1.SNT2,SNT2,Myb/SANT domain factors,P53127,COMPILED,fungi,Saccharomyces cerevisiae
-MA0385.1.SOK2,SOK2,,P53438,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0385.1.SOK2,SOK2,,P53438,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0386.1.SPT15,SPT15,TBP-related factors,P13393,PBM,fungi,Saccharomyces cerevisiae
 MA0387.1.SPT2,SPT2,,P06843,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0388.1.SPT23,SPT23,,P35210,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0389.1.SRD1,SRD1,GATA-type zinc fingers,P09007,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0389.1.SRD1,SRD1,GATA-type zinc fingers,P09007,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0390.1.STB3,STB3,,Q12427,PBM,fungi,Saccharomyces cerevisiae
-MA0391.1.STB4,STB4,,P50104,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0392.1.STB5,STB5,,P38699,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0391.1.STB4,STB4,,P50104,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0392.1.STB5,STB5,,P38699,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0393.1.STE12,STE12,,P13574,COMPILED,fungi,Saccharomyces cerevisiae
 MA0394.1.STP1,STP1,Factors with multiple dispersed zinc fingers,Q00947,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0395.1.STP2,STP2,Factors with multiple dispersed zinc fingers,P38704,PBM,fungi,Saccharomyces cerevisiae
-MA0396.1.STP3,STP3,,Q05937,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0397.1.STP4,STP4,,Q07351,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0398.1.SUM1,SUM1,,P46676,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0396.1.STP3,STP3,,Q05937,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0397.1.STP4,STP4,,Q07351,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0398.1.SUM1,SUM1,,P46676,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0399.1.SUT1,SUT1,,P53032,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0400.1.SUT2,SUT2,,Q12286,PBM,fungi,Saccharomyces cerevisiae
-MA0401.1.SWI4,SWI4,,P25302,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0402.1.SWI5,SWI5,,P08153,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0403.1.TBF1,TBF1,Myb/SANT domain factors,Q02457,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0404.1.TBS1,TBS1,,P38114,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0405.1.TEA1,TEA1,,P47988,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0406.1.TEC1,TEC1,,P18412,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0401.1.SWI4,SWI4,,P25302,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0402.1.SWI5,SWI5,,P08153,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0403.1.TBF1,TBF1,Myb/SANT domain factors,Q02457,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0404.1.TBS1,TBS1,,P38114,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0405.1.TEA1,TEA1,,P47988,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0406.1.TEC1,TEC1,,P18412,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0407.1.THI2,THI2,,P38141,COMPILED,fungi,Saccharomyces cerevisiae
-MA0408.1.TOS8,TOS8,TALE-type homeo domain factors,P53147,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0409.1.TYE7,TYE7,,P33122,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0410.1.UGA3,UGA3,,P26370,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0411.1.UPC2,UPC2,,Q12151,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0408.1.TOS8,TOS8,TALE-type homeo domain factors,P53147,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0409.1.TYE7,TYE7,,P33122,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0410.1.UGA3,UGA3,,P26370,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0411.1.UPC2,UPC2,,Q12151,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0412.1.UME6,UME6,,P39001,COMPILED,fungi,Saccharomyces cerevisiae
 MA0413.1.USV1,USV1,,Q12132,PBM,fungi,Saccharomyces cerevisiae
-MA0414.1.XBP1,XBP1,,P40489,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0414.1.XBP1,XBP1,,P40489,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0415.1.YAP1,YAP1,,P19880,PBM,fungi,Saccharomyces cerevisiae
-MA0416.1.YAP3,YAP3,,P38749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0416.1.YAP3,YAP3,,P38749,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0417.1.YAP5,YAP5,,P40574,ChIP-chip,fungi,Saccharomyces cerevisiae
 MA0418.1.YAP6,YAP6,,Q03935,PBM,fungi,Saccharomyces cerevisiae
 MA0419.1.YAP7,YAP7,,Q08182,COMPILED,fungi,Saccharomyces cerevisiae
-MA0420.1.ERT1,ERT1,,P38140,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0420.1.ERT1,ERT1,,P38140,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0421.1.NSI1,NSI1,Myb/SANT domain factors,Q12457,COMPILED,fungi,Saccharomyces cerevisiae
-MA0422.1.URC2,URC2,,Q04411,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0423.1.YER130C,YER130C,Other factors with up to three adjacent zinc fingers,P39959,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0424.1.YER184C,YER184C,,P39961,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0425.1.YGR067C,YGR067C,Other factors with up to three adjacent zinc fingers,P53243,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0422.1.URC2,URC2,,Q04411,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0423.1.YER130C,YER130C,Other factors with up to three adjacent zinc fingers,P39959,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0424.1.YER184C,YER184C,,P39961,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0425.1.YGR067C,YGR067C,Other factors with up to three adjacent zinc fingers,P53243,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0426.1.YHP1,YHP1,,Q04116,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0428.1.YKL222C,YKL222C,,P35995,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0429.1.YLL054C,YLL054C,,Q12244,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0430.1.YLR278C,YLR278C,,Q05854,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0431.1.TDA9,TDA9,Other factors with up to three adjacent zinc fingers,Q04545,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0432.1.YNR063W,YNR063W,,P53749,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0433.1.YOX1,YOX1,,P34161,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0434.1.YPR013C,YPR013C,Other factors with up to three adjacent zinc fingers,Q12145,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0428.1.YKL222C,YKL222C,,P35995,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0429.1.YLL054C,YLL054C,,Q12244,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0430.1.YLR278C,YLR278C,,Q05854,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0431.1.TDA9,TDA9,Other factors with up to three adjacent zinc fingers,Q04545,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0432.1.YNR063W,YNR063W,,P53749,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0433.1.YOX1,YOX1,,P34161,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0434.1.YPR013C,YPR013C,Other factors with up to three adjacent zinc fingers,Q12145,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0435.1.YPR015C,YPR015C,Other factors with up to three adjacent zinc fingers,Q12531,PBM,fungi,Saccharomyces cerevisiae
-MA0436.1.YPR022C,YPR022C,Other factors with up to three adjacent zinc fingers,Q12139,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0437.1.YPR196W,YPR196W,,Q06595,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0438.1.YRM1,YRM1,,Q12340,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
-MA0439.1.YRR1,YRR1,,Q12172,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0436.1.YPR022C,YPR022C,Other factors with up to three adjacent zinc fingers,Q12139,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0437.1.YPR196W,YPR196W,,Q06595,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0438.1.YRM1,YRM1,,Q12340,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0439.1.YRR1,YRR1,,Q12172,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0440.1.ZAP1,ZAP1,Factors with multiple dispersed zinc fingers,P47043,ChIP-chip,fungi,Saccharomyces cerevisiae
-MA0441.1.ZMS1,ZMS1,Other factors with up to three adjacent zinc fingers,P46974,PBM, CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
+MA0441.1.ZMS1,ZMS1,Other factors with up to three adjacent zinc fingers,P46974,PBM; CSA and/or DIP-chip,fungi,Saccharomyces cerevisiae
 MA0442.1.SOX10,SOX10,SOX-related factors,P56693,COMPILED,vertebrates,Rattus norvegicus
 MA0443.1.btd,btd,Other factors with up to three adjacent zinc fingers,Q24266,bacterial 1-hybrid,insects,Drosophila melanogaster
 MA0444.1.CG34031,CG34031,,M9NDG6,bacterial 1-hybrid,insects,Drosophila melanogaster
@@ -1317,10 +1318,17 @@ MA1182.1.At3g09600,At3g09600,Myb-related,Q8RWU3,DAP-seq,plants,Arabidopsis thali
 MA1183.1.At5g52660,At5g52660,Myb-related,Q8H0W3,DAP-seq,plants,Arabidopsis thaliana
 MA1184.1.RVE1,RVE1,Myb-related,F4KGY6,DAP-seq,plants,Arabidopsis thaliana
 MA1185.1.LHY1,LHY1,Myb-related,F4HQG9,DAP-seq,plants,Arabidopsis thaliana
+MA1186.1.At1g49010,At1g49010,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
 MA1187.1.LCL1,LCL1,Myb-related,Q6R0G4,DAP-seq,plants,Arabidopsis thaliana
+MA1188.1.At3g11280,At3g11280,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
 MA1189.1.AT5G61620,AT5G61620,Myb-related,Q9FKF9,DAP-seq,plants,Arabidopsis thaliana
 MA1190.1.At4g01280,At4g01280,Myb-related,C0SVG5,DAP-seq,plants,Arabidopsis thaliana
 MA1191.1.AT3G10113,AT3G10113,Myb-related,F4J2J6,DAP-seq,plants,Arabidopsis thaliana
+MA1192.1.At5g58900,At5g58900,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
+MA1193.1.At2g38090,At2g38090,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
+MA1194.1.AT3G10580,AT3G10580,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
+MA1195.1.AT5G56840,AT5G56840,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
+MA1196.1.At5g05790,At5g05790,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
 MA1197.1.CAMTA1,CAMTA1,CAMTA,Q9FY74,DAP-seq,plants,Arabidopsis thaliana
 MA1198.1.HAT2,HAT2,,P46601,DAP-seq,plants,Arabidopsis thaliana
 MA1199.1.AGL16,AGL16,,A2RVQ5,DAP-seq,plants,Arabidopsis thaliana
@@ -1343,6 +1351,7 @@ MA1215.1.ATHB53,ATHB53,HD-ZIP factors,Q9LVR0,DAP-seq,plants,Arabidopsis thaliana
 MA1216.1.RAP21,RAP21,,Q8LC30,DAP-seq,plants,Arabidopsis thaliana
 MA1217.1.CBF2,CBF2,,Q9SYS6,DAP-seq,plants,Arabidopsis thaliana
 MA1218.1.CBF4,CBF4,,Q9FJ93,DAP-seq,plants,Arabidopsis thaliana
+MA1219.1.CEJ1,CEJ1,,,DAP-seq,plants,Arabidopsis thaliana
 MA1220.1.TINY,TINY,,Q39127,DAP-seq,plants,Arabidopsis thaliana
 MA1221.1.RAP26,RAP26,,Q7G1L2,DAP-seq,plants,Arabidopsis thaliana
 MA1222.1.AT1G44830,AT1G44830,,Q9LPE8,DAP-seq,plants,Arabidopsis thaliana
@@ -1359,6 +1368,7 @@ MA1232.1.AT4G28140,AT4G28140,,Q9M0J3,DAP-seq,plants,Arabidopsis thaliana
 MA1233.1.AT1G71450,AT1G71450,,Q9C912,DAP-seq,plants,Arabidopsis thaliana
 MA1234.1.AT1G19210,AT1G19210,,Q84QC2,DAP-seq,plants,Arabidopsis thaliana
 MA1235.1.AIL7,AIL7,,Q6J9N8,DAP-seq,plants,Arabidopsis thaliana
+MA1236.1.ESE3,ESE3,,,DAP-seq,plants,Arabidopsis thaliana
 MA1237.1.AT4G16750,AT4G16750,,Q9SUK8,DAP-seq,plants,Arabidopsis thaliana
 MA1238.1.ERF38,ERF38,,Q9ZQP3,DAP-seq,plants,Arabidopsis thaliana
 MA1239.1.ERF104,ERF104,,Q9FKG1,DAP-seq,plants,Arabidopsis thaliana
@@ -1380,6 +1390,7 @@ MA1254.1.ERF13,ERF13,,Q8L9k1,DAP-seq,plants,Arabidopsis thaliana
 MA1255.1.AT1G22810,AT1G22810,,O80542,DAP-seq,plants,Arabidopsis thaliana
 MA1256.1.RAP212,RAP212,,Q9SSA8,DAP-seq,plants,Arabidopsis thaliana
 MA1257.1.ERF9,ERF9,,Q9FE67,DAP-seq,plants,Arabidopsis thaliana
+MA1258.1.DREB2,DREB2,,,DAP-seq,plants,Arabidopsis thaliana
 MA1259.1.AT1G01250,AT1G01250,,Q1ECI2,DAP-seq,plants,Arabidopsis thaliana
 MA1260.1.AT1G77640,AT1G77640,,Q9CAP4,DAP-seq,plants,Arabidopsis thaliana
 MA1261.1.AT5G67000,AT5G67000,,Q38Q40,DAP-seq,plants,Arabidopsis thaliana
@@ -1448,7 +1459,10 @@ MA1323.1.GATA19,GATA19,GATA-type zinc fingers,Q6QPM2,DAP-seq,plants,Arabidopsis 
 MA1324.1.GATA20,GATA20,GATA-type zinc fingers,Q9ZPX0,DAP-seq,plants,Arabidopsis thaliana
 MA1325.1.GATA14,GATA14,GATA-type zinc fingers,Q9M1U2,DAP-seq,plants,Arabidopsis thaliana
 MA1326.1.ATHB33,ATHB33,ZF-HD,Q9FRL5,DAP-seq,plants,Arabidopsis thaliana
+MA1327.1.ATHB23,ATHB23,ZF-HD,,DAP-seq,plants,Arabidopsis thaliana
 MA1328.1.ATHB34,ATHB34,ZF-HD,Q8LFD3,DAP-seq,plants,Arabidopsis thaliana
+MA1329.1.ATHB25,ATHB25,ZF-HD,,DAP-seq,plants,Arabidopsis thaliana
+MA1330.1.ATHB24,ATHB24,ZF-HD,,DAP-seq,plants,Arabidopsis thaliana
 MA1331.1.AT1G78700,AT1G78700,BES1,Q9ZV88,DAP-seq,plants,Arabidopsis thaliana
 MA1332.1.AT4G36780,AT4G36780,BES2,Q94A43,DAP-seq,plants,Arabidopsis thaliana
 MA1333.1.AT4G18890,AT4G18890,BES3,O49404,DAP-seq,plants,Arabidopsis thaliana
@@ -1483,6 +1497,9 @@ MA1361.1.bHLH18,bHLH18,,Q1PF17,DAP-seq,plants,Arabidopsis thaliana
 MA1362.1.bHLH77,bHLH77,,Q9LK48,DAP-seq,plants,Arabidopsis thaliana
 MA1363.1.bHLH69,bHLH69,,Q8S3D5,DAP-seq,plants,Arabidopsis thaliana
 MA1364.1.PIF7,PIF7,,Q570R7,DAP-seq,plants,Arabidopsis thaliana
+MA1365.1.AT5G47660,AT5G47660,Trihelix,,DAP-seq,plants,Arabidopsis thaliana
+MA1366.1.AT1G76880,AT1G76880,Trihelix,,DAP-seq,plants,Arabidopsis thaliana
+MA1367.1.AT1G76870,AT1G76870,Trihelix,,DAP-seq,plants,Arabidopsis thaliana
 MA1368.1.AT3G25990,AT3G25990,Trihelix,Q9LU92,DAP-seq,plants,Arabidopsis thaliana
 MA1369.1.HDG1,HDG1,,Q9M2E8,DAP-seq,plants,Arabidopsis thaliana
 MA1370.1.IDD5,IDD5,,Q9ZUL3,DAP-seq,plants,Arabidopsis thaliana
@@ -1491,13 +1508,16 @@ MA1372.1.STZ,STZ,,Q96289,DAP-seq,plants,Arabidopsis thaliana
 MA1373.1.IDD2,IDD2,,Q9SCQ6,DAP-seq,plants,Arabidopsis thaliana
 MA1374.1.IDD7,IDD7,,Q8H1F5,DAP-seq,plants,Arabidopsis thaliana
 MA1375.1.ANL2,ANL2,HD-ZIP factors,Q0WV12,DAP-seq,plants,Arabidopsis thaliana
+MA1376.1.DEAR3,DEAR3,,,DAP-seq,plants,Arabidopsis thaliana
 MA1377.1.PLT1,PLT1,,Q5YGP8,DAP-seq,plants,Arabidopsis thaliana
+MA1378.1.PLT3,PLT3,,,DAP-seq,plants,Arabidopsis thaliana
 MA1379.1.SOL1,SOL1,CPP,Q9M9H7,DAP-seq,plants,Arabidopsis thaliana
 MA1380.1.AT2G20110,AT2G20110,CPP,Q9SL70,DAP-seq,plants,Arabidopsis thaliana
 MA1381.1.AT3G46070,AT3G46070,,Q9LX86,DAP-seq,plants,Arabidopsis thaliana
 MA1382.1.FAR1,FAR1,C3H Zinc Figer,Q9SWG3,DAP-seq,plants,Arabidopsis thaliana
 MA1383.1.KAN2,KAN2,G2-like,Q9C616,DAP-seq,plants,Arabidopsis thaliana
 MA1384.1.AT2G01060,AT2G01060,G2-like,Q9SJW0,DAP-seq,plants,Arabidopsis thaliana
+MA1385.1.AT2G40260,AT2G40260,G2-like,,DAP-seq,plants,Arabidopsis thaliana
 MA1386.1.AT1G25550,AT1G25550,G2-like,Q9FPE8,DAP-seq,plants,Arabidopsis thaliana
 MA1387.1.AT1G13300,AT1G13300,G2-like,Q9FX67,DAP-seq,plants,Arabidopsis thaliana
 MA1388.1.AT3G24120,AT3G24120,G2-like,Q94A57,DAP-seq,plants,Arabidopsis thaliana
@@ -1505,9 +1525,14 @@ MA1389.1.AT5G29000,AT5G29000,G2-like,Q8GUN5,DAP-seq,plants,Arabidopsis thaliana
 MA1390.1.AT1G68670,AT1G68670,G2-like,Q8VZS3,DAP-seq,plants,Arabidopsis thaliana
 MA1391.1.MYB33,MYB33,Myb,Q8W1W6,DAP-seq,plants,Arabidopsis thaliana
 MA1392.1.MYB98,MYB98,Myb,Q9S7L2,DAP-seq,plants,Arabidopsis thaliana
+MA1393.1.MYB70,MYB70,Myb,,DAP-seq,plants,Arabidopsis thaliana
+MA1394.1.MYB73,MYB73,Myb,,DAP-seq,plants,Arabidopsis thaliana
+MA1395.1.MYB77,MYB77,Myb,,DAP-seq,plants,Arabidopsis thaliana
 MA1396.1.GATA6,GATA6,GATA-type zinc fingers,Q9SD38,DAP-seq,plants,Arabidopsis thaliana
+MA1397.1.At1g74840,At1g74840,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
 MA1398.1.At5g47390,At5g47390,Myb-related,Q9LVS0,DAP-seq,plants,Arabidopsis thaliana
 MA1399.1.At5g08520,At5g08520,Myb-related,Q9FNN6,DAP-seq,plants,Arabidopsis thaliana
+MA1400.1.At1g19000,At1g19000,Myb-related,,DAP-seq,plants,Arabidopsis thaliana
 MA1401.1.EPR1,EPR1,Myb-related,B3H5A8,DAP-seq,plants,Arabidopsis thaliana
 MA1402.1.BPC6,BPC6,BBR-BPC,Q8L999,DAP-seq,plants,Arabidopsis thaliana
 MA1403.1.BPC5,BPC5,BBR-BPC,F4JUI3,DAP-seq,plants,Arabidopsis thaliana
@@ -1522,11 +1547,16 @@ MA1059.2.SPL5,SPL5,,Q9S758,DAP-seq,plants,Arabidopsis thaliana
 MA1405.1.SIZF2,SIZF2,,I3NN78,PBM,plants,Solanum lycopersicum
 MA1406.1.ATHB4,ATHB4,HD-ZIP factors,P92953,PBM,plants,Arabidopsis thaliana
 MA1407.1.bZIP14,bZIP14,,Q84JK2,PBM,plants,Phaeodactylum tricornutum
+MA1408.1.FaEOBII,FaEOBII,Myb-related,,PBM,plants,Fragaria x ananassa
 MA1409.1.OsRR22,OsRR22,ARR,Q5SML5,PBM,plants,Oryza sativa
+MA1410.1.StBRC1,StBRC1,TCP domain,,PBM,plants,Solanum lycopersicum
+MA1411.1.TSAR1,TSAR1,,,PBM,plants,Medicago truncatula
+MA1412.1.TSAR2,TSAR2,,,PBM,plants,Medicago truncatula
 MA1413.1.UIF1,UIF1,Myb-related,F4JRB0,PBM,plants,Arabidopsis thaliana
 MA1414.1.E2FA,E2FA,E2F,Q9FNY0,ChIP-seq,plants,Arabidopsis thaliana
 MA1415.1.REF6,REF6,,Q9STM3,ChIP-seq,plants,Arabidopsis thaliana
 MA1085.2.WRKY40,WRKY40,,Q9SAH7,ChIP-seq,plants,Arabidopsis thaliana
+MA1416.1.RAMOSA1,RAMOSA1,,,ChIP-seq,plants,Zea mays
 MA1417.1.O2,O2,,P12959,ChIP-seq,plants,Zea mays
 MA0162.3.EGR1,EGR1,Three-zinc finger Kruppel-related factors,P18146,HT-SELEX,vertebrates,Homo sapiens
 MA1418.1.IRF3,IRF3,Interferon-regulatory factors,Q14653,HT-SELEX,vertebrates,Homo sapiens
