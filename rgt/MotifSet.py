@@ -30,9 +30,12 @@ class MotifAnnotation:
       - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
       - data_source -- A string representing the 'Source' this transcription factor was generated from,
         eg ChiP-Seq, SELEX..
+      - "tax_group" -- A string representing the taxonomic group of the organism this transcription factor was found in (vertebrates, plants, ...)
+      - "species" -- A string representing the species of the organism this transcription factor was found in (Homo sapiens, Mus musculus,...)
+
     """
 
-    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source):
+    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source, tax_group, species):
         self.tf_id = tf_id
         self.name = name
         self.database = database
@@ -41,6 +44,8 @@ class MotifAnnotation:
         self.family = family
         self.uniprot_ids = uniprot_ids
         self.data_source = data_source
+        self.tax_group = tax_group
+        self.species = species
 
     def __str__(self):
         return str(self.__dict__)
@@ -91,19 +96,22 @@ class MotifSet:
 
         self.motifs_map[motif.name] = motif
 
-    def filter(self, keys, key_type="name", search="exact"):
+    def filter(self, values, search="exact"):
         """
         Returns a new MotifSet containing all matching motifs. By default, it expects a list of motif names, but this
         can be configured via the key_type parameter.
 
         *Keyword arguments:*
-
-          - values -- List of strings representing the motif to filter this set on. Actual values depend on key_type.
-          - key_type -- "name" for matching on the motif name;
+          - values -- dictionary whose values are a list of strings representing the motif to filter this set on.
+                        Actual meaning of the items' values depends on the respective key.
+                        valid keys:
+                        "name" for the motif name;
                         "family" for motif family/description;
-                        "uniprot_ids" for matching on UniProt IDs (might be more than one);
-                        "gene_names" for matching on the gene names (symbols);
+                        "uniprot_ids" for UniProt IDs (might be more than one);
+                        "gene_names" for the gene names (symbols);
                         "data_source" for Chip-Seq, SELEX, etc.
+                        "tax_group" for taxonomic group (vertebrates, plants, ...)
+                        "species" for species (Homo sapiens, Mus musculus,...)
           - search -- Search mode (default = 'exact'). If "exact", only perfect matches will be accepted. If
             "inexact", key inclusion will be considered a match. For example, if keys=["ARNT"] and
             key_type="gene_names" and search="inexact", all motifs corresponding to the gene names "ARNT", "ARNT2",
@@ -115,26 +123,38 @@ class MotifSet:
           - motif_set -- Set of filtered motifs.
         """
 
-        if not isinstance(keys, list):
-            raise ValueError("keys must be a list")
+        if not isinstance(values, dict):
+            raise ValueError("values must be a dictionary")
 
-        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source"]
+        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
+        invalid_key = 0
 
-        if key_type not in valid_keys:
+        for key_type in keys(values):
+            if not key_type in valid_keys:
+                print("dictionary contains invalid key: ", key)
+                invalid_key = 1
+
+        # Alternative:
+        #for key_type in keys(values):
+            #if not key_type in valid_keys:
+                #del values[key_type]
+
+        if invalid_key:
             raise ValueError("key_type must be one of {}".format(valid_keys))
 
         motif_set = MotifSet(preload_motifs=False)
 
-        for key in keys:
-            for m in self.motifs_map.values():
-                attr_vals = getattr(m, key_type)
-                # this is to avoid duplicating code for string-attributes and list-attributes
-                if not isinstance(attr_vals, list):
-                    attr_vals = [attr_vals]
+        for key_type in keys(values):
+            for key in values[key_type]:
+                for m in self.motifs_map.values():
+                    attr_vals = getattr(m, key_type)
+                    # this is to avoid duplicating code for string-attributes and list-attributes
+                    if not isinstance(attr_vals, list):
+                        attr_vals = [attr_vals]
 
-                for attr_val in attr_vals:
-                    if strmatch(key, attr_val, search=search):
-                        motif_set.add(m)
+                    for attr_val in attr_vals:
+                        if strmatch(key, attr_val, search=search):
+                            motif_set.add(m)
 
         return motif_set
 
@@ -150,6 +170,8 @@ class MotifSet:
                         "uniprot_ids" for matching on UniProt IDs (might be more than one);
                         "gene_names" for matching on the gene names (symbols);
                         "data_source" for Chip-Seq, SELEX, etc.
+                        "tax_group" for matching taxonomic group (vertebrates, plants, ...)
+                        "species" for matching species (Homo sapiens, Mus musculus,...)
 
         *Return:*
 
@@ -158,7 +180,7 @@ class MotifSet:
           - key2motifs -- Inverse of motif2keys. It maps the key values to their corresponding motifs.
         """
 
-        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source"]
+        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
 
         if key_type not in valid_keys:
             raise ValueError("key_type must be one of {}".format(valid_keys))
@@ -219,8 +241,10 @@ class MotifSet:
                 tf_class = line_list[5].strip()
                 uniprot_ids = line_list[6].strip().split(";")
                 data_source = line_list[7].strip() if len(line_list) > 7 else ""
+                tax_group = line_list[8].strip() if len(line_list) > 8 else ""
+                species = line_list[9].strip() if len(line_list) > 9 else ""
 
-                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source))
+                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source, tax_group, species))
 
             # Termination
             mtf_file.close()
