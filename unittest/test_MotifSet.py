@@ -247,13 +247,19 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 2)
 
         ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus"]}, search="exact")
-        self.assertEqual(len(ms2.motif_map), 1140)
+        self.assertEqual(len(ms2.motif_map), 13)
         m2k, k2m = ms2.get_mappings(key_type="family")
-        self.assertEqual(len(m2k), 1140)
+        self.assertEqual(len(m2k), 1138)
         self.assertEqual(len(k2m), 1)
 
         ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"], 'tax_group': ["vertebrates", "plants"]}, search="exact")
-        self.assertEqual(len(ms2.motif_map), 1296)
+        self.assertEqual(len(ms2.motif_map), 25)
         m2k, k2m = ms2.get_mappings(key_type="tax_group")
-        self.assertEqual(len(m2k), 1296)
+        self.assertEqual(len(m2k), 25)
         self.assertEqual(len(k2m), 1)
+
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus", "Homo sapiens"]}, search="exact")
+        self.assertEqual(len(ms2.motif_map), 25)
+        m2k, k2m = ms2.get_mappings(key_type="species")
+        self.assertEqual(len(m2k), 25)
+        self.assertEqual(len(k2m), 2)
