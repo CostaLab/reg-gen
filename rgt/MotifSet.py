@@ -144,8 +144,8 @@ class MotifSet:
 
         for key_type in values.keys():
             current = self.motifs_map.values()
+            motif_set = MotifSet(preload_motifs=False)
             for key in values[key_type]:
-                motif_set = MotifSet(preload_motifs=False)
                 for m in current:
                     attr_vals = getattr(m, key_type)
                     # this is to avoid duplicating code for string-attributes and list-attributes
@@ -155,7 +155,7 @@ class MotifSet:
                     for attr_val in attr_vals:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
-                current = motif_set.motifs_map.values()
+            current = motif_set.motifs_map.values()
 
         return motif_set
 
