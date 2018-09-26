@@ -41,6 +41,11 @@ class MotifSetTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.motif_set.filter({'test': []})
 
+    def test_get_mappings_wrong_key_type(self):
+        ms = MotifSet()
+        with self.assertRaises(ValueError):
+            ms.get_mappings("test")
+
     def test_filter_names(self):
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 1)
@@ -204,7 +209,7 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(m2k), 431)
         self.assertEqual(len(k2m), 1)
 
-        ms2 = self.motif_set.filter({'data_source': ["chip"], 'species': ["Homo sapiens"]}, search="exact")
+        ms2 = self.motif_set.filter({'data_source': ["chip"], 'species': ["Homo sapiens", "Mus musculus"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 0)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
         self.assertEqual(len(m2k), 0)
@@ -233,3 +238,22 @@ class MotifSetTest(unittest.TestCase):
         m2k, k2m = ms2.get_mappings(key_type="data_source")
         self.assertEqual(len(m2k), 588)
         self.assertEqual(len(k2m), 2)
+
+    def test_filter(self):
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"]}, search="exact")
+        self.assertEqual(len(ms2.motifs_map), 1138)
+        m2k, k2m = ms2.get_mappings(key_type="data_source")
+        self.assertEqual(len(m2k), 1138)
+        self.assertEqual(len(k2m), 2)
+
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus"]}, search="exact")
+        self.assertEqual(len(ms2.motif_map), 1140)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 1140)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"], 'tax_group': ["vertebrates", "plants"]}, search="exact")
+        self.assertEqual(len(ms2.motif_map), 1296)
+        m2k, k2m = ms2.get_mappings(key_type="tax_group")
+        self.assertEqual(len(m2k), 1296)
+        self.assertEqual(len(k2m), 1)

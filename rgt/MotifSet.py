@@ -129,13 +129,13 @@ class MotifSet:
         valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
         invalid_key = 0
 
-        for key_type in keys(values):
+        for key_type in values.keys():
             if not key_type in valid_keys:
                 print("dictionary contains invalid key: ", key)
                 invalid_key = 1
 
         # Alternative:
-        #for key_type in keys(values):
+        #for key_type in values.keys():
             #if not key_type in valid_keys:
                 #del values[key_type]
 
@@ -144,7 +144,7 @@ class MotifSet:
 
         motif_set = MotifSet(preload_motifs=False)
 
-        for key_type in keys(values):
+        for key_type in values.keys():
             for key in values[key_type]:
                 for m in self.motifs_map.values():
                     attr_vals = getattr(m, key_type)
@@ -215,7 +215,7 @@ class MotifSet:
 
         *Keyword arguments:*
 
-          - file_name_list -- A string, or a list of strings, representing .mtf file paths.
+          - mtf_filenames -- A string, or a list of strings, representing .mtf file paths.
         """
 
         if isinstance(mtf_filenames, list):

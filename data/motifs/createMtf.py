@@ -77,7 +77,7 @@ if options.hoc:
         if species == "HUMAN":
             species = "Homo sapiens"
         elif species == "MOUSE":
-            species = "Mus Musculus"
+            species = "Mus musculus"
         resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup, species])
 
     # Sorting results by ID
