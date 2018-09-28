@@ -573,7 +573,7 @@ class RNADNABindingSet:
                 # Load binding site
                 if len(l) == 12:
                     l.insert(8, "_")
-                if len(l) == 13:
+                if len(l) == 13 or len(l) == 15:
                     if "\tchrM:" in line: continue # skip chromosome Mitocondria
                     # Format of each line in txp
                     #     [0] Sequence-ID
@@ -973,8 +973,12 @@ class RNADNABindingSet:
             cur_rbs = self.sequences[num_of_rbs]
             next_rbs = self.sequences[next_of_rbs]
             while cur_rbs.rna.distance(next_rbs.rna) < 4 and next_of_rbs < len(self.sequences) - 2:
+                if not cur_rbs.rna.distance(next_rbs.rna) > 0:
+                    next_of_rbs += 1
+                    next_rbs = self.sequences[next_of_rbs]
+                    continue
                 # different RNA binding motif and same parallel
-                if cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
+                elif cur_rbs.rna.motif != next_rbs.rna.motif or cur_rbs.rna.orientation != next_rbs.rna.orientation:
                     # no RNA overlap
                     if self.region_distance(cur_rbs.dna, next_rbs.dna) > 0 and self.region_distance(cur_rbs.rna, next_rbs.rna) > 0:
                         # DNA gap smaller than 10bp and no overlap
