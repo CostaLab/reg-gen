@@ -134,7 +134,7 @@ class MotifSet:
                 print("dictionary contains invalid key: ", key_type)
                 invalid_key = 1
 
-        # Alternative:
+        # Alternative (instead of Error):
         #for key_type in values.keys():
             #if not key_type in valid_keys:
                 #del values[key_type]
@@ -142,8 +142,9 @@ class MotifSet:
         if invalid_key:
             raise ValueError("key_type must be one of {}".format(valid_keys))
 
+        current = self.motifs_map.values()
+
         for key_type in values.keys():
-            current = self.motifs_map.values()
             motif_set = MotifSet(preload_motifs=False)
             for key in values[key_type]:
                 for m in current:
@@ -155,7 +156,7 @@ class MotifSet:
                     for attr_val in attr_vals:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
-                current = motif_set.motifs_map.values()
+            current = motif_set.motifs_map.values()
 
         return motif_set
 
