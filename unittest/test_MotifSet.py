@@ -13,24 +13,19 @@ from rgt.MotifSet import MotifSet
 # NB: test based on hocomoco
 class MotifSetTest(unittest.TestCase):
     def setUp(self):
-        dirname = os.path.dirname(__file__)
-        mtf_file = os.path.join(dirname, "../data/motifs/hocomoco.mtf")
-
         # we must enforce the use hocomoco as database
-        self.motif_set = MotifSet(preload_motifs=False)
-        self.motif_set.read_mtf(mtf_file)
+        self.motif_set = MotifSet(preload_motifs="hocomoco")
 
     def test_create_default(self):
-
         ms = MotifSet()
         self.assertEqual(len(ms.motifs_map), 0, msg="motif dictionary must be empty by default (no preload)")
 
     def test_create_empty(self):
-        ms = MotifSet(preload_motifs=False)
+        ms = MotifSet(preload_motifs=None)
         self.assertEqual(len(ms.motifs_map), 0, msg="motif dictionary must be empty")
 
     def test_create_non_empty(self):
-        ms = MotifSet(preload_motifs=True)
+        ms = MotifSet(preload_motifs="hocomoco")
         self.assertGreater(len(ms.motifs_map), 0, msg="motif dictionary must be non empty")
 
     def test_filter_values_not_dict(self):
@@ -246,20 +241,44 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(m2k), 1138)
         self.assertEqual(len(k2m), 2)
 
-        ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus"]}, search="exact")
+        ms2 = self.motif_set.filter(
+            {'data_source': ["chip-seq", "integrative"], 'family': ["Steroid hormone receptors (NR3)"],
+             'species': ["Mus musculus"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 14)
         m2k, k2m = ms2.get_mappings(key_type="family")
         self.assertEqual(len(m2k), 14)
         self.assertEqual(len(k2m), 1)
 
-        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"], 'tax_group': ["vertebrates", "plants"]}, search="exact")
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"],
+                                     'tax_group': ["vertebrates", "plants"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 25)
         m2k, k2m = ms2.get_mappings(key_type="tax_group")
         self.assertEqual(len(m2k), 25)
         self.assertEqual(len(k2m), 1)
 
-        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus", "Homo sapiens"]}, search="exact")
+        ms2 = self.motif_set.filter({'data_source': ["chip-seq"], 'family': ["Steroid hormone receptors (NR3)"],
+                                     'species': ["Mus musculus", "Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 25)
         m2k, k2m = ms2.get_mappings(key_type="species")
         self.assertEqual(len(m2k), 25)
         self.assertEqual(len(k2m), 2)
+
+        ms2 = self.motif_set.filter({'data_source': ["chip"], 'family': ["NR3"], 'tax_group': ["brates"]},
+                                    search="inexact")
+        self.assertEqual(len(ms2.motifs_map), 25)
+        m2k, k2m = ms2.get_mappings(key_type="tax_group")
+        self.assertEqual(len(m2k), 25)
+        self.assertEqual(len(k2m), 1)
+
+        ms2 = self.motif_set.filter({'family': [".*related factors"]}, search="regex")
+        self.assertEqual(len(ms2.motifs_map), 587)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 587)
+        self.assertEqual(len(k2m), 36)
+
+        ms2 = self.motif_set.filter({'data_source': ["(chip|integr)"], 'family': ["multiple"],
+                                     'species': ["(musculus|sapiens)"]}, search="regex")
+        self.assertEqual(len(ms2.motifs_map), 57)
+        m2k, k2m = ms2.get_mappings(key_type="family")
+        self.assertEqual(len(m2k), 57)
+        self.assertEqual(len(k2m), 1)

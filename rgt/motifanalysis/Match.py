@@ -63,6 +63,9 @@ def options(parser):
                              "overlapping input regions are NOT affected by this.")
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
+    parser.add_argument("--filter", type=str, default="",
+                        help="List of key types with respective keys to filter which TFs should be matched with "
+                             "the genomic region e.g. \"species:sapiens,mus;source:selex\".")
 
     # _TODO: --filter "species:sapiens,mus;source:selex"
 
@@ -200,7 +203,7 @@ def main(args):
         target_genes = GeneSet("target_genes")
         target_genes.read(args.target_genes_filename)
 
-        # TODO what do we do with unmapped genes? maybe just print them out
+        # TODO: what do we do with unmapped genes? maybe just print them out
         target_regions = annotation.get_promoters(gene_set=target_genes, promoter_length=args.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
@@ -309,35 +312,12 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
+    ms = MotifSet(preload_motifs=True)
+
     # Initialization
-    motif_list = []
-
-    # Default motif data
-    motif_data = MotifData()
-    if args.motif_dbs:
-        # must overwrite the default DBs
-        motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", motif_data.repositories_list)
-    else:
-        print(">> motif repositories:", motif_data.repositories_list)
-
-    # Creating thresholds object
-    threshold_table = ThresholdTable(motif_data)
-
-    # Fetching list with all motif file names
-    motif_file_names = []
-    for motif_repository in motif_data.get_pwm_list():
-        for motif_file_name in glob(npath(os.path.join(motif_repository, "*.pwm"))):
-            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
-            # if the user has given a list of motifs to use, we only
-            # add those to our list
-            if not selected_motifs or motif_name in selected_motifs:
-                motif_file_names.append(motif_file_name)
-
-    # Iterating on grouped file name list
-    for motif_file_name in motif_file_names:
-        # Append motif motif_list
-        motif_list.append(Motif(motif_file_name, args.pseudocounts, args.fpr, threshold_table))
+    # FIXME: --motif-dbs argument is completely ignored here
+    # FIXME: --use-only-motifs is completely ignored here
+    motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:

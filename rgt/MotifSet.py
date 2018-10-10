@@ -4,17 +4,17 @@ MotifSet
 Represents a transcription factor motif and the standardization of motif annotation.
 
 """
-
 # Python 3 compatibility
 from __future__ import print_function
 
 # Python
+from glob import glob
 import glob
 import os
 
 # Internal
-from rgt.Util import npath, MotifData, strmatch
-
+from rgt.Util import npath, MotifData, strmatch, get_rgtdata_path
+from rgt.motifanalysis.Motif import Motif, ThresholdTable
 
 class MotifAnnotation:
     """
@@ -59,16 +59,16 @@ class MotifSet:
     Represents a set of motifs. It contains MotifAnnotation instances.
     """
 
-    def __init__(self, preload_motifs=False):
+    def __init__(self, preload_motifs=None):
         self.motifs_map = {}
         self.networks = {}
         self.motifs_enrichment = {}
         self.conditions = []
+        self.motif_data = None
 
         if preload_motifs:
-            motif_data = MotifData()
-
-            self.read_mtf(motif_data.mtf_list)
+            self.motif_data = MotifData(repositories=preload_motifs)
+            self.read_mtf(self.motif_data.mtf_list)
 
     def __len__(self):
         return len(self.motifs_map)
@@ -127,24 +127,20 @@ class MotifSet:
             raise ValueError("values must be a dictionary")
 
         valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
-        invalid_key = 0
 
         for key_type in values.keys():
             if not key_type in valid_keys:
                 print("dictionary contains invalid key: ", key_type)
-                invalid_key = 1
+                raise ValueError("key_type must be one of {}".format(valid_keys))
 
-        # Alternative (instead of Error):
-        #for key_type in values.keys():
-            #if not key_type in valid_keys:
-                #del values[key_type]
-
-        if invalid_key:
-            raise ValueError("key_type must be one of {}".format(valid_keys))
+        # TODO: maybe just ignore invalid keys instead of raising an error
 
         current = self.motifs_map.values()
 
+        motif_set = None
+
         for key_type in values.keys():
+
             motif_set = MotifSet(preload_motifs=False)
             for key in values[key_type]:
                 for m in current:
@@ -412,3 +408,17 @@ class MotifSet:
                     f.write(gene + "\ttarget\n")
 
             f.close()
+
+    def create_motif_list(self, pseudocounts, fpr):
+
+        motif_list = []
+
+        threshold_table = ThresholdTable(self.motif_data)
+
+        for motif_name in self.motifs_map.keys():
+            ma = self.motifs_map[motif_name]
+
+            motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
+            motif_list.append(Motif(motif_file_name, pseudocounts, fpr, threshold_table))
+
+        return motif_list

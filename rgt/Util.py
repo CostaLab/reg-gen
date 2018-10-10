@@ -149,9 +149,14 @@ class GenomeData(ConfigurationFile):
 class MotifData(ConfigurationFile):
     """Represent motif (PWM) data. Inherits ConfigurationFile."""
 
-    def __init__(self):
+    def __init__(self, repositories=None):
         ConfigurationFile.__init__(self)
-        self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
+        if repositories:
+            if not isinstance(repositories, list):
+                repositories = [repositories]
+            self.repositories_list = repositories
+        else:
+            self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
