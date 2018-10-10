@@ -155,7 +155,7 @@ class MotifSet:
                     for attr_val in attr_vals:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
-            current = motif_set.motifs_map.values()
+                current = motif_set.motifs_map.values()
 
         return motif_set
 
