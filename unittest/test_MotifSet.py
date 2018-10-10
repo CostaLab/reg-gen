@@ -247,7 +247,7 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 2)
 
         ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"], 'family': ["Steroid hormone receptors (NR3)"], 'species': ["Mus musculus"]}, search="exact")
-        self.assertEqual(len(ms2.motifs_map), 13)
+        self.assertEqual(len(ms2.motifs_map), 14)
         m2k, k2m = ms2.get_mappings(key_type="family")
         self.assertEqual(len(m2k), 1138)
         self.assertEqual(len(k2m), 1)
