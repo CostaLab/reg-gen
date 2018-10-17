@@ -20,7 +20,7 @@ pseudocounts = 1.0
 outFile = open(args.output_file, "w")
 outFile.write("\t".join(["MOTIF"] + [str(e) for e in fprList]) + "\n")
 
-# Iterating on all PWMs
+# Iterating on all PWMs in the given input folder
 for pwmFileName in sorted(glob(args.input_folder + "/*.pwm")):
     # Creating PSSM
     name = ".".join(basename(pwmFileName).split(".")[:-1])

@@ -49,6 +49,8 @@ if [ ${source} == "-h" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -h
         echo
+        echo "Create Fpr file..."
+        python createFpr.py -i "hocomoco" -o "hocomoco.fpr"
 
         # clean up
         rm HOCOMOCOv11_full_pcms_HUMAN_mono.txt
@@ -70,6 +72,9 @@ elif [ ${source} == "-j" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -j
         echo
+        echo "Create Fpr file..."
+        python createFpr.py -i "jaspar_vertebrates" -o "jaspar_vertebrates.fpr"
+        python createFpr.py -i "jaspar-plants" -o "jaspar_plants.fpr"
 
         # clean up
         rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
@@ -89,27 +94,32 @@ elif [ ${source} == "-all" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -h
         echo
+        echo "Create Fpr file..."
+        python createFpr.py -i "hocomoco" -o "hocomoco.fpr"
 
         # clean up
         rm HOCOMOCOv11_full_pcms_HUMAN_mono.txt
         rm HOCOMOCOv11_full_pcms_MOUSE_mono.txt
 
-        echo
-        echo "JASPAR"
-        echo
-        echo "Create Pwm files.."
-        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
-        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
-        python createPwm.py -i JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_vertebrates
-        python createPwm.py -i JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_plants
-        echo
-        echo "Create Mtf file..."
-        ./make_annotation.sh -j
-        echo
+          echo
+          echo "JASPAR"
+          echo
+          echo "Create Pwm files.."
+          wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+          wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
+          python createPwm.py -i JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_vertebrates
+          python createPwm.py -i JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_plants
+          echo
+          echo "Create Mtf file..."
+          ./make_annotation.sh -j
+          echo
+          echo "Create Fpr file..."
+          python createFpr.py -i "jaspar_vertebrates" -o "jaspar_vertebrates.fpr"
+          python createFpr.py -i "jaspar-plants" -o "jaspar_plants.fpr"
 
-        # clean up
-        rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
-        rm JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
+          # clean up
+          rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+          rm JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
 
 else
     echo "ERROR"
