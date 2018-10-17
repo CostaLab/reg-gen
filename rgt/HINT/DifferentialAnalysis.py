@@ -64,7 +64,7 @@ def diff_analysis_args(parser):
                         help="The false discovery rate. DEFAULT: 0.05")
     parser.add_argument("--bc", action="store_true", default=False,
                         help="If set, all analysis will be based on bias corrected signal. DEFAULT: False")
-    parser.add_argument("--nc", type=int, metavar="INT", default=cpu_count(),
+    parser.add_argument("--nc", type=int, metavar="INT", default=1,
                         help="The number of cores. DEFAULT: 1")
 
     # Output Options
@@ -192,7 +192,6 @@ def get_bc_signal(arguments):
         signal2 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam2,
                                   bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
                                   forward_shift=forward_shift, reverse_shift=reverse_shift)
-
 
         if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
             continue
