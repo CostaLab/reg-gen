@@ -2,6 +2,10 @@
 # Python 3 compatibility
 from __future__ import print_function
 
+# import cProfile, pstats, StringIO
+# pr = cProfile.Profile()
+# pr.enable()
+
 # Python
 import unittest
 import os
@@ -19,14 +23,24 @@ class MotifSetTest(unittest.TestCase):
     def test_create_default(self):
         ms = MotifSet()
         self.assertEqual(len(ms.motifs_map), 0, msg="motif dictionary must be empty by default (no preload)")
+        motif_list = ms.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 0)
 
     def test_create_empty(self):
         ms = MotifSet(preload_motifs=None)
         self.assertEqual(len(ms.motifs_map), 0, msg="motif dictionary must be empty")
+        motif_list = ms.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 0)
 
     def test_create_non_empty(self):
         ms = MotifSet(preload_motifs="hocomoco")
         self.assertGreater(len(ms.motifs_map), 0, msg="motif dictionary must be non empty")
+        # pr.disable()
+        # s = StringIO.StringIO()
+        # sortby = 'cumulative'
+        # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        # ps.print_stats()
+        # print(s.getvalue())
 
     def test_filter_values_not_dict(self):
         with self.assertRaises(ValueError):
@@ -44,9 +58,14 @@ class MotifSetTest(unittest.TestCase):
     def test_filter_names(self):
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 1)
+        print(ms2.motif_data)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 1)
 
         ms2 = self.motif_set.filter({'name': ["ALX1"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 0)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 0)
 
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="inexact")
         self.assertEqual(len(ms2.motifs_map), 1)
@@ -234,7 +253,22 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(m2k), 588)
         self.assertEqual(len(k2m), 2)
 
+    def test_filter_database(self):
+        ms2 = self.motif_set.filter({'database': ["jaspar_vertebrates"]}, search="exact")
+        self.assertEqual(len(ms2.motifs_map), 0)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 0)
+        self.assertEqual(len(k2m), 0)
+
+        ms2 = self.motif_set.filter({'database': ["jaspar_vertebrates"]}, search="inexact")
+        self.assertEqual(len(ms2.motifs_map), 0)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 0)
+        self.assertEqual(len(k2m), 0)
+
     def test_filter(self):
+        #test different combinations of key_types and keys
+
         ms2 = self.motif_set.filter({'data_source': ["chip-seq", "integrative"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 1138)
         m2k, k2m = ms2.get_mappings(key_type="data_source")
@@ -275,6 +309,8 @@ class MotifSetTest(unittest.TestCase):
         m2k, k2m = ms2.get_mappings(key_type="family")
         self.assertEqual(len(m2k), 587)
         self.assertEqual(len(k2m), 36)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 587)
 
         ms2 = self.motif_set.filter({'data_source': ["(chip|integr)"], 'family': ["multiple"],
                                      'species': ["(musculus|sapiens)"]}, search="regex")

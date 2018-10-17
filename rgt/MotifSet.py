@@ -57,6 +57,10 @@ class MotifAnnotation:
 class MotifSet:
     """
     Represents a set of motifs. It contains MotifAnnotation instances.
+
+     *Keyword arguments:*
+
+          - preload_motifs -- Must be a list of repositories from which the motifs should be taken
     """
 
     def __init__(self, preload_motifs=None):
@@ -64,7 +68,6 @@ class MotifSet:
         self.networks = {}
         self.motifs_enrichment = {}
         self.conditions = []
-        self.motif_data = None
 
         if preload_motifs:
             self.motif_data = MotifData(repositories=preload_motifs)
@@ -126,11 +129,11 @@ class MotifSet:
         if not isinstance(values, dict):
             raise ValueError("values must be a dictionary")
 
-        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
+        valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database"]
 
         for key_type in values.keys():
             if not key_type in valid_keys:
-                print("dictionary contains invalid key: ", key_type)
+                print("filter dictionary contains invalid key: ", key_type)
                 raise ValueError("key_type must be one of {}".format(valid_keys))
 
         # TODO: maybe just ignore invalid keys instead of raising an error
@@ -141,7 +144,7 @@ class MotifSet:
 
         for key_type in values.keys():
 
-            motif_set = MotifSet(preload_motifs=False)
+            motif_set = MotifSet(preload_motifs=None)
             for key in values[key_type]:
                 for m in current:
                     attr_vals = getattr(m, key_type)
@@ -153,6 +156,12 @@ class MotifSet:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
             current = motif_set.motifs_map.values()
+
+        # add motif_data attribute to motif_set
+        # FIXME motif_set.motif_data is not correct
+        if hasattr(self, 'motif_data'):
+            motif_set.motif_data = self.motif_data
+
 
         return motif_set
 
@@ -178,10 +187,10 @@ class MotifSet:
           - key2motifs -- Inverse of motif2keys. It maps the key values to their corresponding motifs.
         """
 
-        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species"]
+        valid_keys = ["gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database"]
 
         if key_type not in valid_keys:
-            raise ValueError("key_type must be one of {}".format(valid_keys))
+            raise ValueError("get_mappings key_type must be one of {}".format(valid_keys))
 
         motif2keys = {}
         key2motifs = {}
@@ -413,12 +422,13 @@ class MotifSet:
 
         motif_list = []
 
-        threshold_table = ThresholdTable(self.motif_data)
+        if hasattr(self, 'motif_data'):
+            threshold_table = ThresholdTable(self.motif_data)
 
-        for motif_name in self.motifs_map.keys():
-            ma = self.motifs_map[motif_name]
+            for motif_name in self.motifs_map:
+                ma = self.motifs_map[motif_name]
 
-            motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
-            motif_list.append(Motif(motif_file_name, pseudocounts, fpr, threshold_table))
+                motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
+                motif_list.append(Motif(motif_file_name, pseudocounts, fpr, threshold_table))
 
         return motif_list

@@ -63,11 +63,11 @@ def options(parser):
                              "overlapping input regions are NOT affected by this.")
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
-    parser.add_argument("--filter", type=str, default="",
+    parser.add_argument("--filter", dest="motif_filter", type=str, default="",
                         help="List of key types with respective keys to filter which TFs should be matched with "
-                             "the genomic region e.g. \"species:sapiens,mus;source:selex\".")
-
-    # _TODO: --filter "species:sapiens,mus;source:selex"
+                             "the genomic region e.g. \"species:sapiens,mus;source:selex\"."
+                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\" and \"database\"")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -123,6 +123,15 @@ def main(args):
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
+    # Converting given filter list to a dictionary that can be used by the filter function
+    # dictionary might contain invalid keys which will raise in error when applying the filter function
+    filter_values = {}
+    items = args.motif_filter.strip().split(";")
+    for i in range(0, len(items)):
+        cur_item = items[i].strip().split(":")
+        key = cur_item[0]
+        filter_values[key] = cur_item[1].strip().split(",")
+
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -142,16 +151,17 @@ def main(args):
     print(">> fpr threshold:", args.fpr)
 
     # Reading motif file
-    selected_motifs = []
 
-    if args.selected_motifs_filename:
-        try:
-            with open(args.selected_motifs_filename) as f:
-                selected_motifs = f.read().splitlines()
-                selected_motifs = filter(None, selected_motifs)
-                print(">> motif file loaded:", len(selected_motifs), "motifs")
-        except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
+    # selected_motifs = []
+    #
+    # if args.selected_motifs_filename:
+    #     try:
+    #         with open(args.selected_motifs_filename) as f:
+    #             selected_motifs = f.read().splitlines()
+    #             selected_motifs = filter(None, selected_motifs)
+    #             print(">> motif file loaded:", len(selected_motifs), "motifs")
+    #     except Exception:
+    #         err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Regions
@@ -312,11 +322,16 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    ms = MotifSet(preload_motifs=True)
+    if 'database' in filter_values.keys():
+        ms = MotifSet(preload_motifs=filter_values['database'])
+    else:
+        # FIXME preload motifs from all available databases
+        ms = MotifSet() #currently no motifs are preloaded
 
     # Initialization
     # FIXME: --motif-dbs argument is completely ignored here
     # FIXME: --use-only-motifs is completely ignored here
+    ms = ms.filter(filter_values, search="inexact")
     motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
 
     # Performing normalized threshold strategy if requested
