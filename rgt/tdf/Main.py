@@ -216,7 +216,7 @@ def main():
             # Project level index file
 
             for item in os.listdir(args.path):
-                print("\t"+item)
+                # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue

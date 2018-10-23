@@ -351,7 +351,7 @@ class Report(object):
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
                   prop={'size': 12}, ncol=3)
         pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-        pp.savefig(f) # bbox_extra_artists=(plt.gci()),,  bbox_inches='tight'
+        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
     def barplot(self, filename, dbs=False):
@@ -432,8 +432,12 @@ class Report(object):
             tick.label.set_fontsize(12)
         ax.xaxis.label.set_size(14)
         ax.yaxis.label.set_size(14)
+        ax.legend([rects_de, rects_nde, rect], ["Targets", "Non-targets", "Sig. DBD"],
+                  fontsize=legend_fontsize,
+                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
+                  prop={'size': 12}, ncol=3)
         pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
-        pp.savefig(f, bbox_extra_artists=(plt.gci()))
+        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
     def boxplot(self, filename, matrix, sig_region, truecounts, sig_boolean, ylabel):
@@ -506,10 +510,14 @@ class Report(object):
             tick.label.set_fontsize(12)
         ax.xaxis.label.set_size(14)
         ax.yaxis.label.set_size(14)
+        ax.legend([dot_legend, bp["boxes"][0], rect], ["Targets", "Non-targets", "Sig. DBD"],
+                  fontsize=legend_fontsize,
+                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
+                  prop={'size': 12}, ncol=3)
 
-        # pp = PdfPages(os.path.join(dir, filename + '.pdf'))
-        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
-        # pp.close()
+        pp = PdfPages(os.path.splitext(os.path.join(self.pars.o, filename))[0] + '.pdf')
+        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        pp.close()
 
     def gen_html_promotertest(self):
         align = 50
