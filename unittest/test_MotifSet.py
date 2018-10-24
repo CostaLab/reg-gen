@@ -253,6 +253,12 @@ class MotifSetTest(unittest.TestCase):
         self.assertEqual(len(k2m), 2)
 
     def test_filter_database(self):
+        ms2 = self.motif_set.filter({'database': ["hocomoco"]}, search="exact")
+        self.assertEqual(len(ms2.motifs_map), 1296)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 1296)
+        self.assertEqual(len(k2m), 1)
+
         ms2 = self.motif_set.filter({'database': ["jaspar_vertebrates"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 0)
         m2k, k2m = ms2.get_mappings(key_type="database")
@@ -264,6 +270,24 @@ class MotifSetTest(unittest.TestCase):
         m2k, k2m = ms2.get_mappings(key_type="database")
         self.assertEqual(len(m2k), 0)
         self.assertEqual(len(k2m), 0)
+
+        ms2 = self.motif_set.filter({'database': ["uniprobe"]}, search="inexact")
+        self.assertEqual(len(ms2.motifs_map), 0)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 0)
+        self.assertEqual(len(k2m), 0)
+
+        ms2 = self.motif_set.filter({'database': ["jaspar"]}, search="regex")
+        self.assertEqual(len(ms2.motifs_map), 0)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 0)
+        self.assertEqual(len(k2m), 0)
+
+        ms2 = self.motif_set.filter({'database': ["(hocomoco|jaspar)"]}, search="regex")
+        self.assertEqual(len(ms2.motifs_map), 1296)
+        m2k, k2m = ms2.get_mappings(key_type="database")
+        self.assertEqual(len(m2k), 1296)
+        self.assertEqual(len(k2m), 1)
 
     def test_filter(self):
         #test different combinations of key_types and keys

@@ -41,7 +41,7 @@ class MotifAnnotation:
     """
 
     def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source, tax_group, species,
-                 threshold):
+                 thresholds):
         self.tf_id = tf_id
         self.name = name
         self.database = database
@@ -52,7 +52,7 @@ class MotifAnnotation:
         self.data_source = data_source
         self.tax_group = tax_group
         self.species = species
-        self.threshold = threshold
+        self.thresholds = thresholds
 
     def __str__(self):
         return str(self.__dict__)
@@ -166,6 +166,17 @@ class MotifSet:
                             motif_set.add(m)
             current = motif_set.motifs_map.values()
 
+        # create motif_data attribute by looping over all motifs in motif_set
+        motif_set.motif_data = MotifData(repositories="Empty")  # all attributes of motif_data are empty lists
+        for ma in motif_set.motifs_map.values():
+            if ma.database not in motif_set.motif_data.repositories_list:
+                motif_set.motif_data.repositories_list.append(ma.database)
+            pwm_path = motif_set.motif_data.get_pwm_path(ma.database)
+            logo_file = motif_set.motif_data.get_logo_file(ma.database)
+            mtf_path = motif_set.motif_data.get_mtf_path(ma.database)
+            motif_set.motif_data.pwm_list.append(pwm_path)
+            motif_set.motif_data.logo_list.append(logo_file)
+            motif_set.motif_data.mtf_list.append(mtf_path)
 
         return motif_set
 
@@ -256,12 +267,12 @@ class MotifSet:
                 species = line_list[9].strip()
                 threshold_list = line_list[10].strip().split(",")
                 fpr_list = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
-                threshold = {}
+                thresholds = {}
                 for i in range(0, 6):
-                    threshold[fpr_list[i]] = float(threshold_list[i])
+                    thresholds[fpr_list[i]] = float(threshold_list[i])
 
                 self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source,
-                                         tax_group, species, threshold))
+                                         tax_group, species, thresholds))
 
             # Termination
             mtf_file.close()
@@ -439,8 +450,8 @@ class MotifSet:
 
             # check whether ma provides the motif matching threshold for the given fpr
             # recalculate (and store) it otherwise
-            if ma.threshold[fpr]:
-                threshold = ma.threshold[fpr]
+            if ma.thresholds[fpr]:
+                threshold = ma.thresholds[fpr]
             else:
                 pfm = parsers.pfm(motif_file_name)
                 bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
