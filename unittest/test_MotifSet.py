@@ -58,7 +58,6 @@ class MotifSetTest(unittest.TestCase):
     def test_filter_names(self):
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2.motifs_map), 1)
-        print(ms2.motif_data)
         motif_list = ms2.create_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 1)
 

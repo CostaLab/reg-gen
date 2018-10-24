@@ -19,7 +19,8 @@ from ..GeneSet import GeneSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
 from ..AnnotationSet import AnnotationSet
-from .Motif import Motif, ThresholdTable
+from ..MotifSet import MotifSet, MotifAnnotation
+from .Motif import Motif
 from .Util import bed_to_bb
 
 # External
@@ -129,7 +130,7 @@ def main(args):
     items = args.motif_filter.strip().split(";")
     for i in range(0, len(items)):
         cur_item = items[i].strip().split(":")
-        key = cur_item[0]
+        key = cur_item[0].strip()
         filter_values[key] = cur_item[1].strip().split(",")
 
     ###################################################################################################
@@ -322,11 +323,10 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    if 'database' in filter_values.keys():
+    if 'database' in filter_values:
         ms = MotifSet(preload_motifs=filter_values['database'])
     else:
-        # FIXME preload motifs from all available databases
-        ms = MotifSet() #currently no motifs are preloaded
+        ms = MotifSet(preload_motifs="default")
 
     # Initialization
     # FIXME: --motif-dbs argument is completely ignored here
@@ -486,7 +486,7 @@ def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=N
             threshold = unique_threshold
         else:
             motif_max = motif.max
-            threshold = motif.threshold_rc if rc else motif.threshold
+            threshold = motif.threshold
 
         for r in search_result:
             position = r.pos

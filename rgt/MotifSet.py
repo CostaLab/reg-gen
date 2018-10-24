@@ -14,7 +14,11 @@ import os
 
 # Internal
 from rgt.Util import npath, MotifData, strmatch, get_rgtdata_path
-from rgt.motifanalysis.Motif import Motif, ThresholdTable
+from rgt.motifanalysis.Motif import Motif
+
+from MOODS import tools, parsers
+
+
 
 class MotifAnnotation:
     """
@@ -30,12 +34,14 @@ class MotifAnnotation:
       - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
       - data_source -- A string representing the 'Source' this transcription factor was generated from,
         eg ChiP-Seq, SELEX..
-      - "tax_group" -- A string representing the taxonomic group of the organism this transcription factor was found in (vertebrates, plants, ...)
-      - "species" -- A string representing the species of the organism this transcription factor was found in (Homo sapiens, Mus musculus,...)
+      - tax_group -- A string representing the taxonomic group of the organism this transcription factor was found in (vertebrates, plants, ...)
+      - species -- A string representing the species of the organism this transcription factor was found in (Homo sapiens, Mus musculus,...)
+      - threshold -- A dictionary of motif matching thresholds using corresponding fpr values as keys
 
     """
 
-    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source, tax_group, species):
+    def __init__(self, tf_id, name, database, version, gene_names, family, uniprot_ids, data_source, tax_group, species,
+                 threshold):
         self.tf_id = tf_id
         self.name = name
         self.database = database
@@ -46,6 +52,7 @@ class MotifAnnotation:
         self.data_source = data_source
         self.tax_group = tax_group
         self.species = species
+        self.threshold = threshold
 
     def __str__(self):
         return str(self.__dict__)
@@ -61,6 +68,7 @@ class MotifSet:
      *Keyword arguments:*
 
           - preload_motifs -- Must be a list of repositories from which the motifs should be taken
+          if preload_motifs == None all available repositories should be used
     """
 
     def __init__(self, preload_motifs=None):
@@ -115,6 +123,7 @@ class MotifSet:
                         "data_source" for Chip-Seq, SELEX, etc.
                         "tax_group" for taxonomic group (vertebrates, plants, ...)
                         "species" for species (Homo sapiens, Mus musculus,...)
+                        "database" where the TF data is taken from
           - search -- Search mode (default = 'exact'). If "exact", only perfect matches will be accepted. If
             "inexact", key inclusion will be considered a match. For example, if keys=["ARNT"] and
             key_type="gene_names" and search="inexact", all motifs corresponding to the gene names "ARNT", "ARNT2",
@@ -156,11 +165,6 @@ class MotifSet:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
             current = motif_set.motifs_map.values()
-
-        # add motif_data attribute to motif_set
-        # FIXME motif_set.motif_data is not correct
-        if hasattr(self, 'motif_data'):
-            motif_set.motif_data = self.motif_data
 
 
         return motif_set
@@ -247,11 +251,17 @@ class MotifSet:
                 gene_names = line_list[4].strip().split("+")
                 tf_class = line_list[5].strip()
                 uniprot_ids = line_list[6].strip().split(";")
-                data_source = line_list[7].strip() if len(line_list) > 7 else ""
-                tax_group = line_list[8].strip() if len(line_list) > 8 else ""
-                species = line_list[9].strip() if len(line_list) > 9 else ""
+                data_source = line_list[7].strip()
+                tax_group = line_list[8].strip()
+                species = line_list[9].strip()
+                threshold_list = line_list[10].strip().split(",")
+                fpr_list = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
+                threshold = {}
+                for i in range(0, 6):
+                    threshold[fpr_list[i]] = float(threshold_list[i])
 
-                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source, tax_group, species))
+                self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source,
+                                         tax_group, species, threshold))
 
             # Termination
             mtf_file.close()
@@ -422,13 +432,22 @@ class MotifSet:
 
         motif_list = []
 
-        if hasattr(self, 'motif_data'):
-            threshold_table = ThresholdTable(self.motif_data)
+        for motif_name in self.motifs_map:
+            ma = self.motifs_map[motif_name]
 
-            for motif_name in self.motifs_map:
-                ma = self.motifs_map[motif_name]
+            motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
 
-                motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
-                motif_list.append(Motif(motif_file_name, pseudocounts, fpr, threshold_table))
+            # check whether ma provides the motif matching threshold for the given fpr
+            # recalculate (and store) it otherwise
+            if ma.threshold[fpr]:
+                threshold = ma.threshold[fpr]
+            else:
+                pfm = parsers.pfm(motif_file_name)
+                bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+                pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+                threshold = tools.threshold_from_p(pssm, bg, fpr)
+                ma.threshold[fpr] = threshold
+
+            motif_list.append(Motif(motif_file_name, pseudocounts, threshold))
 
         return motif_list

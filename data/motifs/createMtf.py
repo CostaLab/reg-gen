@@ -20,14 +20,22 @@ import glob
 import csv
 import re
 from optparse import OptionParser
+from glob import glob
+from os.path import basename
+
+from MOODS import tools, parsers
+import argparse
+
 
 
 # Parameters
 dataLocation = "./"
 group = "."
+fprList = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
+pseudocounts = 1.0
 
 # Option Parser
-usage_message=""
+usage_message = ""
 parser = OptionParser(usage=usage_message)
 
 parser.add_option("--all", dest="all", action="store_true", default=False, help="Create all mtf files")
@@ -61,7 +69,7 @@ if options.hoc:
         csvf = csv.reader(f)
         for l in csvf:
             hocomoco_anno[l[0]] = l[1:]
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
+    for inputFileName in glob(inputLocation + "*.pwm"):
         ll = inputFileName.split("/")[-1].split(".")[0].split("_")
         matrix_id = ll[0]
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
@@ -78,7 +86,23 @@ if options.hoc:
             species = "Homo sapiens"
         elif species == "MOUSE":
             species = "Mus musculus"
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup, species])
+
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+                             species, threshold])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -105,8 +129,7 @@ if options.jv:
             if not l:
                 continue
             jaspar_anno[l[0]] = l[1:]
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
-        raw_name = inputFileName.split("/")[-1]
+    for inputFileName in glob(inputLocation + "*.pwm"):
         raw_name = inputFileName.split("/")[-1]
         full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
         name_fields = pwm_name.split(".")
@@ -121,8 +144,23 @@ if options.jv:
         data_source = jaspar_anno[full_name][3]
         taxGroup = jaspar_anno[full_name][4]
         species = jaspar_anno[full_name][5]
-        resultMatrix.append([matrix_id, full_name, source, version, gene_names, group, uniprot, data_source, taxGroup, species])
 
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+                             species, threshold])
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
 
@@ -148,8 +186,7 @@ if options.jp:
             if not l:
                 continue
             jaspar_anno[l[0]] = l[1:]
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
-        raw_name = inputFileName.split("/")[-1]
+    for inputFileName in glob(inputLocation + "*.pwm"):
         raw_name = inputFileName.split("/")[-1]
         full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
         name_fields = pwm_name.split(".")
@@ -164,8 +201,23 @@ if options.jp:
         data_source = jaspar_anno[full_name][3]
         taxGroup = jaspar_anno[full_name][4]
         species = jaspar_anno[full_name][5]
-        resultMatrix.append([matrix_id, full_name, source, version, gene_names, group, uniprot, data_source, taxGroup, species])
 
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+                             species, threshold])
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
 
@@ -184,13 +236,13 @@ if options.t:
     source = "transfac_public"
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
+    for inputFileName in glob(inputLocation + "*.pwm"):
         ll = inputFileName.split("/")[-1].split(".")[0].split("_")
         matrix_id = ll[0]
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = "1"
         gene_names = ll[1]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -210,13 +262,13 @@ if options.up:
     source = "uniprobe_primary"
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
+    for inputFileName in glob(inputLocation + "*.pwm"):
         ll = inputFileName.split("/")[-1].split(".")[0].split("_")
         matrix_id = ll[0]
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = ll[1]
         gene_names = ll[2]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -236,13 +288,13 @@ if options.us:
     source = "uniprobe_secondary"
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
-    for inputFileName in glob.glob(inputLocation + "*.pwm"):
+    for inputFileName in glob(inputLocation + "*.pwm"):
         ll = inputFileName.split("/")[-1].split(".")[0].split("_")
         matrix_id = ll[0]
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = ll[1]
         gene_names = ll[2]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", "."])
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
 
     # Sorting results by ID and version
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])

@@ -34,10 +34,10 @@ class MatchTest(unittest.TestCase):
         pssm_list = []
         thresholds = []
 
-        motif = Motif(os.path.join(dirname, jasp_dir, "MA0139.1.CTCF.pwm"), 1, 0.0001, None)
+        motif = Motif(os.path.join(dirname, jasp_dir, "MA0139.1.CTCF.pwm"), 1, 8.308)
 
         thresholds.append(motif.threshold)
-        thresholds.append(motif.threshold_rc)
+        thresholds.append(motif.threshold)
         pssm_list.append(motif.pssm)
         pssm_list.append(motif.pssm_rc)
 

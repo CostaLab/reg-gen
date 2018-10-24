@@ -80,5 +80,5 @@ if [ ${source} -eq 0 ] || [ ${source} -eq 2 ]
         echo
 
         echo "Re-creating Mtf file.."
-        python createMtf.py --hoc
+        python createMtf.py --t --up --us
 fi

@@ -33,7 +33,7 @@ fi
 
 
 
-# if $source is set correctly, start creating all desired files
+# if $source is set correctly, start creating all desired files(Pwm, Mtf)
 
 if [ ${source} == "-h" ]
     then
@@ -49,8 +49,6 @@ if [ ${source} == "-h" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -h
         echo
-        echo "Create Fpr file..."
-        python createFpr.py -i "hocomoco" -o "hocomoco.fpr"
 
         # clean up
         rm HOCOMOCOv11_full_pcms_HUMAN_mono.txt
@@ -72,9 +70,6 @@ elif [ ${source} == "-j" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -j
         echo
-        echo "Create Fpr file..."
-        python createFpr.py -i "jaspar_vertebrates" -o "jaspar_vertebrates.fpr"
-        python createFpr.py -i "jaspar-plants" -o "jaspar_plants.fpr"
 
         # clean up
         rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
@@ -94,8 +89,6 @@ elif [ ${source} == "-all" ]
         echo "Create Mtf file..."
         ./make_annotation.sh -h
         echo
-        echo "Create Fpr file..."
-        python createFpr.py -i "hocomoco" -o "hocomoco.fpr"
 
         # clean up
         rm HOCOMOCOv11_full_pcms_HUMAN_mono.txt
@@ -113,9 +106,6 @@ elif [ ${source} == "-all" ]
           echo "Create Mtf file..."
           ./make_annotation.sh -j
           echo
-          echo "Create Fpr file..."
-          python createFpr.py -i "jaspar_vertebrates" -o "jaspar_vertebrates.fpr"
-          python createFpr.py -i "jaspar-plants" -o "jaspar_plants.fpr"
 
           # clean up
           rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
