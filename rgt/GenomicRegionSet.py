@@ -2753,7 +2753,7 @@ class GenomicRegionSet:
                                     name=cc[0].name+":"+cc[1].name,
                                     data=str(p)))
             z.sort()
-            print(z.sequences[1:10])
+            # print(z.sequences[1:10])
             for i, zz in enumerate(z):
                 if i == 0:
                     previous_z = zz
