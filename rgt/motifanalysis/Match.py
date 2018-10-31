@@ -323,7 +323,7 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    if 'database' in filter_values:
+    if 'database' in filter_values:  # here filter_values acts the same as filter_values[keys]
         ms = MotifSet(preload_motifs=filter_values['database'])
     else:
         ms = MotifSet(preload_motifs="default")

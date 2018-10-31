@@ -154,6 +154,7 @@ class MotifSet:
         for key_type in values.keys():
 
             motif_set = MotifSet(preload_motifs=None)
+
             for key in values[key_type]:
                 for m in current:
                     attr_vals = getattr(m, key_type)
@@ -166,17 +167,7 @@ class MotifSet:
                             motif_set.add(m)
             current = motif_set.motifs_map.values()
 
-        # create motif_data attribute by looping over all motifs in motif_set
-        motif_set.motif_data = MotifData(repositories="Empty")  # all attributes of motif_data are empty lists
-        for ma in motif_set.motifs_map.values():
-            if ma.database not in motif_set.motif_data.repositories_list:
-                motif_set.motif_data.repositories_list.append(ma.database)
-            pwm_path = motif_set.motif_data.get_pwm_path(ma.database)
-            logo_file = motif_set.motif_data.get_logo_file(ma.database)
-            mtf_path = motif_set.motif_data.get_mtf_path(ma.database)
-            motif_set.motif_data.pwm_list.append(pwm_path)
-            motif_set.motif_data.logo_list.append(logo_file)
-            motif_set.motif_data.mtf_list.append(mtf_path)
+        motif_set.motif_data = self.motif_data  # contains data from more motifs than those in motif_set.motifs_map
 
         return motif_set
 

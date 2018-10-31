@@ -6,14 +6,14 @@
 
 if [ $# -eq 0 ]
     then
-         read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use both " source
+         read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use all " source
 elif [ $# -eq 1 ]
     then
         if [ $1 == "-h" ] || [ $1 == "-j" ] || [ $1 == "-all" ]
             then
                 source=$1
         else
-            read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use both " source
+            read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use all " source
         fi
 elif [ $# -eq 2 ]
     then
@@ -24,10 +24,10 @@ elif [ $# -eq 2 ]
             then
                 source="-all"
         else
-           read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use both " source
+           read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use all " source
         fi
 else
-    read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use both " source
+    read -p "Type -h to use HOCOMOCO, -j to use JASPAR and -all to use all " source
 fi
 
 

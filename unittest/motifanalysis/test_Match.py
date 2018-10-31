@@ -27,46 +27,11 @@ class MatchTest(unittest.TestCase):
         self.genome_file = Fastafile(self.genome_data.get_genome())
 
     def test_match_multiple(self):
-        dirname = os.path.dirname(__file__)
-        jasp_dir = "../../data/motifs/jaspar_vertebrates/"
-
-        scanner = scan.Scanner(7)
-
-        pssm_list = []
-        thresholds = []
-
-        motif = Motif(os.path.join(dirname, jasp_dir, "MA0139.1.CTCF.pwm"), 1, 8.308)
-
-        thresholds.append(motif.threshold)
-        thresholds.append(motif.threshold)
-        pssm_list.append(motif.pssm)
-        pssm_list.append(motif.pssm_rc)
-
-        bg = tools.flat_bg(4)
-        scanner.set_motifs(pssm_list, bg, thresholds)
-
-        genomic_region = GenomicRegion("chr1", 0, 5022)
-
-        # Reading sequence associated to genomic_region
-        sequence = str(self.genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
-
-        grs = match_multiple(scanner, [motif], sequence, genomic_region)
-
-        self.assertSequenceEqual(grs.sequences,
-                                 [GenomicRegion("chr1", 4270, 4289, name="MA0139.1.CTCF", orientation="+"),
-                                  GenomicRegion("chr1", 4180, 4199, name="MA0139.1.CTCF", orientation="-")])
-
-
-    def test_match_multiple_using_filter(self):
-        dirname = os.path.dirname(__file__)
-        jasp_dir = "../../data/motifs/jaspar_vertebrates/"
 
         ms = MotifSet(preload_motifs="default")
         ms = ms.filter({'database': ["jaspar_vertebrates"], 'name': ["MA0139.1.CTCF"]}, search="inexact")
 
-        ma = ms.motifs_map["MA0139.1.CTCF"]
-        self.assertEqual(ma.thresholds[0.0001], 8.308, "wrong threshold")
-        motif = Motif(os.path.join(dirname, jasp_dir, "MA0139.1.CTCF.pwm"), 1, ma.thresholds[0.0001])
+        motif = ms.create_motif_list(1, 0.0001)[0]
 
         scanner = scan.Scanner(7)
 

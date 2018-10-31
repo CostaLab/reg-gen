@@ -44,7 +44,6 @@ class Motif:
 
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
-        #repository = input_file_name.split("/")[-2]
 
         # Creating PFM & PSSM
         self.pfm = parsers.pfm(str(input_file_name))
@@ -64,19 +63,6 @@ class Motif:
             self.alphabet += ["m", "1"]
 
         self.threshold = threshold
-
-        # Evaluating threshold
-        # try:
-        #     if pseudocounts != 1.0:
-        #         raise ValueError()
-        #     self.threshold = [fpr]
-        # except Exception:
-        #     # FIXME: this requires a modified version of MOODS. Not sure if we actually need it.
-        #     # self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr, 2000.0)  # 10000.0 would take too long
-        #     self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
-        #     print(">>> recomputing threshold for %s: %f" % (self.name, self.threshold))
-
-        #self.threshold_rc = tools.threshold_from_p(self.pssm_rc, self.bg, fpr)
 
         self.consensus = "".join([self.alphabet[i][0] for i in argmax(self.pssm, axis=0)])
         self.consensus_rc = "".join([self.alphabet[i][0] for i in argmax(self.pssm_rc, axis=0)])

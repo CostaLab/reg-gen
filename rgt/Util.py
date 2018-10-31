@@ -151,23 +151,20 @@ class MotifData(ConfigurationFile):
 
     def __init__(self, repositories=None):
         ConfigurationFile.__init__(self)
-        if repositories == "Empty":
-            self.repositories_list, self.pwm_list, self.logo_list, self.mtf_list, self.fpr_list  = [], [], [], [], []
+        if not repositories or repositories == "default":
+            self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
         else:
-            if not repositories or repositories == "default":
-                self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
-            else:
-                if not isinstance(repositories, list):
-                    repositories = [repositories]
-                self.repositories_list = repositories
+            if not isinstance(repositories, list):
+                repositories = [repositories]
+            self.repositories_list = repositories
 
-            self.pwm_list = []
-            self.logo_list = []
-            self.mtf_list = []
-            for current_repository in self.repositories_list:
-                self.pwm_list.append(self.get_pwm_path(current_repository))
-                self.logo_list.append(self.get_logo_file(current_repository))
-                self.mtf_list.append(self.get_mtf_path(current_repository))
+        self.pwm_list = []
+        self.logo_list = []
+        self.mtf_list = []
+        for current_repository in self.repositories_list:
+            self.pwm_list.append(self.get_pwm_path(current_repository))
+            self.logo_list.append(self.get_logo_file(current_repository))
+            self.mtf_list.append(self.get_mtf_path(current_repository))
 
     def get_repositories_list(self):
         """Returns the current repository list."""
