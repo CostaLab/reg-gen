@@ -2717,3 +2717,61 @@ class GenomicRegionSet:
                                       final=ff, name=r.name, orientation=r.orientation)
                     z.add(g)
         return z
+
+    def intersect_merge_pvalue(self, y, strandness=False):
+        z = GenomicRegionSet(self.name)
+        new_z = GenomicRegionSet(self.name)
+        if len(self) == 0 or len(y) == 0:
+            return z
+
+        else:
+            pull_regions = []
+            for i, s in enumerate(self):
+                # pull_regions.append([s])
+                # print(s.data)
+                for ss in y:
+                    if s.overlap(ss, strandness=strandness):
+                        # pull_regions[i].append(ss)
+                        # print(ss.data)
+                        pull_regions.append([s, ss])
+
+            # print(len(pull_regions))
+            for cc in pull_regions:
+                # print(cc)
+                # ps = [float(x.data) for x in cc]
+                ps = [float(cc[0].data), float(cc[1].data)]
+                ps.sort(reverse=True)
+                # print(ps)
+                # print(len(ps))
+
+                p = - min([numpy.log10(len(ps)) - x - numpy.log10(j + 1) for j, x in enumerate(ps)])
+                # print(p)
+                z.add(GenomicRegion(chrom=cc[0].chrom,
+                                    initial=max(cc[0].initial, cc[0].initial),
+                                    final=min(cc[0].final, cc[0].final),
+                                    orientation=cc[0].orientation,
+                                    name=cc[0].name+":"+cc[1].name,
+                                    data=str(p)))
+            z.sort()
+            print(z.sequences[1:10])
+            for i, zz in enumerate(z):
+                if i == 0:
+                    previous_z = zz
+                    continue
+                else:
+                    if zz.overlap(previous_z, strandness=True):
+                        ps = [float(previous_z.data), float(zz.data)]
+                        ps.sort(reverse=True)
+                        p = - min([numpy.log10(len(ps)) - x - numpy.log10(j + 1) for j, x in enumerate(ps)])
+                        previous_z = GenomicRegion(chrom=zz.chrom,
+                                                   initial=min(previous_z.initial, zz.initial),
+                                                   final=max(previous_z.final, zz.final),
+                                                   orientation=previous_z.orientation,
+                                                   name=previous_z.name,
+                                                   data=str(p))
+
+                    else:
+                        new_z.add(previous_z)
+                        previous_z = zz
+            new_z.add(previous_z)
+            return new_z
