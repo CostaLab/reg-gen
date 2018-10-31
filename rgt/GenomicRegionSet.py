@@ -559,21 +559,23 @@ class GenomicRegionSet:
                 if asso_names["overlap"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(asso_names["overlap"]),
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=0))
                 elif asso_names["close_l"] and asso_names["close_r"]:
                     ss = [asso_names["close_l"][1],
                           asso_names["close_r"][1]]
+                    dd = [str(asso_names["close_l"][0]),
+                          str(asso_names["close_r"][0])]
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(ss),
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=":".join(dd)))
                 elif asso_names["close_l"] and not asso_names["close_r"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=asso_names["close_l"][1],
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=str(asso_names["close_l"][0])))
                 elif not asso_names["close_l"] and asso_names["close_r"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=asso_names["close_r"][1],
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=str(asso_names["close_r"][0])))
                     # ss = []
                     # try: ss.append(asso_names["close_l"][1])
                     # except: pass
