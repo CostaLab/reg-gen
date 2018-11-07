@@ -448,7 +448,7 @@ class MotifSet:
                 bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
                 pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
                 threshold = tools.threshold_from_p(pssm, bg, fpr)
-                ma.threshold[fpr] = threshold
+                ma.thresholds[fpr] = threshold
 
             motif_list.append(Motif(motif_file_name, pseudocounts, threshold))
 

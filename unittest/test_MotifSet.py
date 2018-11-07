@@ -349,7 +349,8 @@ class MotifSetTest(unittest.TestCase):
         ms2 = self.motif_set.filter({'name': ["PITX"]}, search="inexact")  # 5 Motifs
         threshold = ms2.__getitem__("PITX2_HUMAN.H11MO.0.D").thresholds[0.0001]
         for ma in iter(ms2):
-            ma.threshold = {}  # delete threshold dict to execute the code beyond the else in create-motif-list()
+            for fpr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
+                ma.thresholds[fpr] = []  # delete threshold dict to execute the code beyond the else in create-motif-list()
         ml = ms2.create_motif_list(1.0, 0.0001)
         self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list calculates threshold incorrectly")
         self.assertEqual(len(ml), 5)
