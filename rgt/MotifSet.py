@@ -430,7 +430,7 @@ class MotifSet:
 
             f.close()
 
-    def create_motif_list(self, pseudocounts, fpr):
+    def create_motif_list(self, pseudocounts=1.0, fpr=0.0001):
 
         motif_list = []
 
