@@ -68,7 +68,8 @@ class MotifSet:
      *Keyword arguments:*
 
           - preload_motifs -- Must be a list of repositories from which the motifs should be taken
-          if preload_motifs == None all available repositories should be used
+          if preload_motifs == None an empty MotifSet is created
+          if preload_motifs == "default" all available(determined in config file) repositories are used to load motifs
     """
 
     def __init__(self, preload_motifs=None):
@@ -142,8 +143,7 @@ class MotifSet:
 
         for key_type in values.keys():
             if not key_type in valid_keys:
-                print("filter dictionary contains invalid key: ", key_type)
-                raise ValueError("key_type must be one of {}".format(valid_keys))
+                raise ValueError("wrong key-type: key_type must be one of {}".format(valid_keys))
 
         # TODO: maybe just ignore invalid keys instead of raising an error
 
@@ -201,7 +201,7 @@ class MotifSet:
         motif2keys = {}
         key2motifs = {}
 
-        for m in self.motifs_map.values():
+        for m in iter(self):
             attr_vals = getattr(m, key_type)
             # this is to avoid duplicating code for string-attributes and list-attributes
             if not isinstance(attr_vals, list):

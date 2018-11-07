@@ -16,6 +16,19 @@ class MotifSetTest(unittest.TestCase):
         # we must enforce the use hocomoco as database
         self.motif_set = MotifSet(preload_motifs="hocomoco")
 
+    def test_built_in_functions(self):
+        ms = MotifSet(preload_motifs="hocomoco")
+        self.assertTrue(str(ms).startswith("MotifSet:{"), msg="str(ms): wrong format")
+        self.assertTrue(repr(ms) == str(ms), msg="MotifSet: repr does not equal str")
+        ms2 = ms.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="exact")
+        self.assertTrue("'name': 'ALX1_HUMAN.H11MO.0.B'" in str(ms2), msg="str(ms2): wrong MotifMap")
+        self.assertTrue(str(ms2).startswith("MotifSet:{"), msg="str(ms2): wrong format")
+        ma = ms2.__getitem__("ALX1_HUMAN.H11MO.0.B")
+        self.assertTrue("'thresholds': {1e-05: 13.4015, 0.0001: 10.3565, 0.001: 6.52, 0.0005: 7.778, 5e-05: 11.318,"
+                        " 0.005: 3.1595}" in str(ma), msg="str(ma): threshold missing")
+        self.assertTrue("'name': 'ALX1_HUMAN.H11MO.0.B'" in str(ma), msg="str(ma): wrong Motif")
+        self.assertTrue(repr(ma) == str(ma), msg="MotifAnnotation: repr does not equal str")
+
     def test_create_default(self):
         ms = MotifSet()
         self.assertEqual(len(ms), 0, msg="motif dictionary must be empty by default (no preload)")
@@ -31,12 +44,6 @@ class MotifSetTest(unittest.TestCase):
     def test_create_non_empty(self):
         ms = MotifSet(preload_motifs="hocomoco")
         self.assertGreater(len(ms), 0, msg="motif dictionary must be non empty")
-        # pr.disable()
-        # s = StringIO.StringIO()
-        # sortby = 'cumulative'
-        # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        # ps.print_stats()
-        # print(s.getvalue())
 
     def test_filter_values_not_dict(self):
         with self.assertRaises(ValueError):

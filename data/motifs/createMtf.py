@@ -242,7 +242,22 @@ if options.t:
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = "1"
         gene_names = ll[1]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
+
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -268,7 +283,22 @@ if options.up:
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = ll[1]
         gene_names = ll[2]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
+
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -294,7 +324,22 @@ if options.us:
         pwm_name = ".".join(inputFileName.split("/")[-1].split(".")[:-1])
         version = ll[1]
         gene_names = ll[2]
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", "."])
+
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID and version
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
