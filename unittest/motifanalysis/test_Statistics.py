@@ -21,8 +21,8 @@ class StatisticsTest(unittest.TestCase):
 
     def test_multiple_test_correction(self):
         pvalues = [0.001, 0.005, 0.1, 0.5, 0.01]
-        corrected_pvalues = np.array([0.005, 0.0125, 0.125, 0.5, 0.01666667])
         rejected_hypotheses = np.array([True, True, False, False, True])
+        corrected_pvalues = np.array([0.005, 0.0125, 0.125, 0.5, 0.01666667])
 
         rej, cor = multiple_test_correction(pvalues)
 
@@ -30,6 +30,18 @@ class StatisticsTest(unittest.TestCase):
                                                                       "rejected hypotheses")
         self.assertTrue(np.allclose(cor, corrected_pvalues), msg="multiple_test_correction returns wrong list of"
                                                                  " corrected pvalues")
+
+        pvalues = [0.01, 0.05, 0.1, 0.5]
+        rejected_hypotheses = np.array([False, False, False, False])
+        corrected_pvalues = np.array([0.08333333, 0.20833333, 0.27777777, 1])
+
+        rej, cor = multiple_test_correction(pvalues, method="negcorr")
+
+        self.assertTrue(np.array_equal(rej, rejected_hypotheses), msg="multiple_test_correction(negcorr) returns wrong"
+                                                                      " list of rejected hypotheses")
+        self.assertTrue(np.allclose(cor, corrected_pvalues), msg="multiple_test_correction(negcorr) returns wrong"
+                                                                 " list of corrected pvalues")
+
 
     def test_fisher_table(self):
         regions = GenomicRegionSet("regions")
@@ -67,3 +79,13 @@ class StatisticsTest(unittest.TestCase):
 
         for mn in motif_names:
             self.assertEqual(intersecting[mn]+not_intersecting[mn], 36)
+
+        result = get_fisher_dict(motif_names, regions, mpbs, gene_set=True, mpbs_set=True)
+        gs = result[2]
+        ms = result[3]
+
+        for mn in ["TFIP11", "ACO2", "HAT5"]:
+            self.assertEqual(len(gs[mn]), 0)
+
+        self.assertEqual(len(gs["HIC2"]), 8)
+        self.assertEqual(len(ms["HIC2"]), 8)
