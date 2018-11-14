@@ -42,6 +42,8 @@ class StatisticsTest(unittest.TestCase):
         self.assertTrue(np.allclose(cor, corrected_pvalues), msg="multiple_test_correction(negcorr) returns wrong"
                                                                  " list of corrected pvalues")
 
+        with self.assertRaises(ValueError):
+            multiple_test_correction(pvalues, method="some_method")
 
     def test_fisher_table(self):
         regions = GenomicRegionSet("regions")
