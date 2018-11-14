@@ -45,6 +45,18 @@ class StatisticsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             multiple_test_correction(pvalues, method="some_method")
 
+    def test_multiple_test_correction_using_R(self):
+        pvalues_list = [[0.001, 0.005, 0.1, 0.5, 0.01], [0.03, 0.8, 0.47,0.1], [0.0003, 0.4, 0.002]]
+        # corrected pvalues calculated by using R function p.adjust
+        corrected_pvalues = [np.array([0.005, 0.0125, 0.125, 0.5, 0.01666667]), np.array([0.12, 0.8, 0.62666667, 0.2]),
+                             np.array([0.0009, 0.4, 0.003])]
+
+        # get corrected pvalues from own function
+        for i in range(0, len(pvalues_list)):
+            res = multiple_test_correction(pvalues_list[i])
+            self.assertTrue(np.allclose(res[1], corrected_pvalues[i]), msg="multiple_test_correction returns wrong list of"
+                                                                        " corrected pvalues")
+
     def test_fisher_table(self):
         regions = GenomicRegionSet("regions")
         regions.read(os.path.join(os.path.dirname(__file__), "target_regions.bed"))
