@@ -10,7 +10,6 @@ import os
 from rgt.GenomicRegion import GenomicRegion
 from rgt.Util import GenomeData
 from rgt.motifanalysis.Match import match_multiple
-from rgt.motifanalysis.Motif import Motif
 from rgt.MotifSet import MotifSet
 
 # External

@@ -71,7 +71,7 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
         cm = sum(1./arange(1, len(pvals_sorted)+1))
         ecdffactor = ecdf(pvals_sorted) / cm
     else:
-        raise ValueError('only indep and necorr implemented')
+        raise ValueError('only indep and negcorr implemented')
     reject = pvals_sorted < ecdffactor*alpha
     if reject.any():
         rejectmax = max(nonzero(reject)[0])
