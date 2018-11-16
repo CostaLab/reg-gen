@@ -800,8 +800,8 @@ class Report(object):
                       ["Alpha level for rejection p value", "-a", str(self.pars.a)],
                       ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(self.pars.ccf)],
                       ["Remove temporary files", "-rt", str(self.pars.rt)],
-                      ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
-                      ["Cut off value for RNA accecibility", "-accf", str(self.pars.accf)],
+                      # ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
+                      # ["Cut off value for RNA accecibility", "-accf", str(self.pars.accf)],
                       ["Output the BED files for DNA binding sites.", "-obed", str(self.pars.obed)],
                       ["Show parallel and antiparallel bindings in the plot separately.", "-showpa",
                        str(self.pars.showpa)],
@@ -1264,22 +1264,24 @@ class Report(object):
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         if self.pars.score:
-            header_list = ["#", "Target region", "Associated Gene", "DBSs Count",
+            header_list = ["#", "Target region", "Associated Gene", "DBSs Count", "Norm. DBSs",
                            "DBS coverage", "Score", "Sum of ranks"]
             header_titles = ["Rank",
                              "Target regions loaded from the given BED file",
                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
                              "Number of DNA Binding Sites within the region",
+                             "Normalized Number of DNA Binding Sites within the region (per 1000 bp)",
                              "The proportion of the region covered by DBS binding",
                              "Scores from BED file",
                              "Sum of all the left-hand-side ranks"]
         else:
-            header_list = ["#", "Target region", "Associated Gene", "DBSs Count",
+            header_list = ["#", "Target region", "Associated Gene", "DBSs Count", "Norm. DBSs",
                            "DBS coverage", "Sum of ranks"]
             header_titles = ["Rank",
                              "Target regions loaded from the given BED file",
                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
                              "Number of DNA Binding Sites within the region",
+                             "Normalized Number of DNA Binding Sites within the region (per 1000 bp)",
                              "The proportion of the region covered by DBS binding",
                              "Sum of all the left-hand-side ranks"]
         html.add_heading("Target Regions")
@@ -1289,13 +1291,14 @@ class Report(object):
 
         # Calculate the ranking
         rank_count = len(self.input.dna.target_regions) - rank_array([len(self.stat.region_dbs[p.toString()]) for p in self.input.dna.target_regions])
+        rank_normcount = len(self.input.dna.target_regions) - rank_array([self.stat.region_normdbs[p.toString()] for p in self.input.dna.target_regions])
         rank_coverage = len(self.input.dna.target_regions) - rank_array([self.stat.region_coverage[p.toString()] for p in self.input.dna.target_regions])
 
         if self.pars.score:
             try:
                 score_list = [float(p.data.split("\t")[0]) for p in self.input.dna.target_regions]
                 rank_score = len(self.input.dna.target_regions) - rank_array([abs(s) for s in score_list])
-                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                rank_sum = [x + y + z for x, y, z in zip(rank_normcount, rank_coverage, rank_score)]
                 # sum_rank = rank_array(rank_sum)  # method='min'
             except ImportError:
                 print("There is no score in BED file, please don't use '-score' argument.")
@@ -1305,6 +1308,7 @@ class Report(object):
 
         for i, region in enumerate(self.input.dna.target_regions):
             dbs_counts = str(len(self.stat.region_dbs[region.toString()]))
+            dbs_norm = "{0:.2f}".format(round(self.stat.region_normdbs[region.toString()],2))
             dbs_cover = value2str(self.stat.region_coverage[region.toString()])
 
             newline = [str(i + 1),
@@ -1314,15 +1318,15 @@ class Report(object):
                        split_gene_name(gene_name=region.name, org=self.pars.organism),
                        '<a href="region_dbs.html#' + region.toString() +
                        '" style="text-align:left">' + dbs_counts + '</a>',
-                       dbs_cover]
+                       dbs_norm, dbs_cover]
 
             if self.pars.score:
                 dbs_score = value2str(score_list[i])
-                region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, str(rank_sum[i])])
+                region.data = "\t".join([dbs_counts, dbs_norm, dbs_cover, dbs_score, str(rank_sum[i])])
                 newline.append(dbs_score)
                 newline.append(str(rank_sum[i]))
             else:
-                region.data = "\t".join([dbs_counts, dbs_cover, str(rank_sum[i])])
+                region.data = "\t".join([dbs_counts, dbs_norm, dbs_cover, str(rank_sum[i])])
                 newline.append(str(rank_sum[i]))
             data_table.append(newline)
 
@@ -1345,6 +1349,7 @@ class Report(object):
 
         stargets = GenomicRegionSet("sig_targets")
         sig_dbs = {}
+        sig_normdbs = {}
         sig_dbs_coverage = {}
         for i, r in enumerate(self.input.dna.target_regions):
             sig_bindings = self.stat.region_dbs[r.toString()].overlap_rbss(rbss=self.stat.data["region"]["sig_region"])
@@ -1353,6 +1358,7 @@ class Report(object):
                 stargets.add(r)
                 m_dbs = dbs.merge(w_return=True)
                 sig_dbs[r] = len(dbs)
+                sig_normdbs[r] = len(dbs) * 1000 / len(r)
                 # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
                 sig_dbs_coverage[r] = float(m_dbs.total_coverage()) / len(r)
 
@@ -1366,15 +1372,16 @@ class Report(object):
             html.add_heading("Target regions bound by significant DBD")
             data_table = []
             # Calculate the ranking
-            rank_count = len(stargets) - rank_array([sig_dbs[p] for p in stargets])
+            # rank_count = len(stargets) - rank_array([sig_dbs[p] for p in stargets])
+            rank_normcount = len(stargets) - rank_array([sig_normdbs[p] for p in stargets])
             rank_coverage = len(stargets) - rank_array([sig_dbs_coverage[p] for p in stargets])
             if self.pars.score:
                 score_list = [float(p.data.split("\t")[0]) for p in stargets]
                 rank_score = len(stargets) - rank_array([abs(s) for s in score_list])
-                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                rank_sum = [x + y + z for x, y, z in zip(rank_normcount, rank_coverage, rank_score)]
                 sum_rank = rank_array(rank_sum)  # method='min'
             else:
-                rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+                rank_sum = [x + y for x, y in zip(rank_normcount, rank_coverage)]
                 sum_rank = rank_array(rank_sum)
 
             for i, region in enumerate(stargets):
@@ -1385,7 +1392,8 @@ class Report(object):
 
                 newline = [str(i + 1), region_link,
                            split_gene_name(gene_name=region.name, org=self.pars.organism),
-                           dbssount, value2str(sig_dbs_coverage[region]) ]
+                           dbssount, "{0:.2f}".format(round(sig_normdbs[region],2)),
+                           value2str(sig_dbs_coverage[region]) ]
                 if self.pars.score:
                     dbs_score = value2str(score_list[i])
                     # region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, str(sum_rank[i])])
@@ -1491,8 +1499,8 @@ class Report(object):
                       ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(self.pars.ccf)],
                       ["Remove temporary files", "-rt", str(self.pars.rt)],
                       ["Input BED file for masking in randomization", "-f", str(self.pars.f)],
-                      ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
-                      ["Cut off value for RNA accecibility", "-accf", str(self.pars.accf)],
+                      # ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
+                      # ["Cut off value for RNA accecibility", "-accf", str(self.pars.accf)],
                       ["Output the BED files for DNA binding sites.", "-obed", str(self.pars.obed)],
                       ["Show parallel and antiparallel bindings in the plot separately.", "-showpa",
                        str(self.pars.showpa)],
