@@ -1,5 +1,6 @@
 # Python Libraries
 from __future__ import print_function
+from __future__ import division
 import os
 import numpy
 import os
@@ -417,7 +418,7 @@ class RNADNABindingSet:
 
 
     def merge_rbs(self, rbss=None, rm_duplicate=False, asgene_organism=None, region_set=None, 
-                  name_replace=None, cutoff=0):
+                  name_replace=None, cutoff=None):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -496,8 +497,11 @@ class RNADNABindingSet:
                 self.merged_dict[r].remove_duplicates()
 
         if cutoff:
+            ccf = int(cutoff / 100 * len(region_set))
+            # print(len(self.sequences))
+            # print(ccf)
             for r in self.merged_dict:
-                if len(self.merged_dict[r]) < cutoff:
+                if len(self.merged_dict[r]) < ccf:
                     n = self.merged_dict.pop(r, None)
         if name_replace:
             for r in self.merged_dict:

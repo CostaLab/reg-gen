@@ -76,11 +76,11 @@ def main():
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_promotertest.add_argument('-ccf', type=int, default=100, metavar='  ', help="Define the cut off value for promoter counts (default: %(default)s)")
+    parser_promotertest.add_argument('-ccf', type=float, default=10, metavar='  ', help="Define the cut off of triplex-forming promoters per DBD in percentage of total triplexes(default: %(default)s)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
-    parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
-    parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
+    # parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
+    # parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     # parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
@@ -119,12 +119,12 @@ def main():
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
     parser_randomtest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_randomtest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for DBS counts (default: %(default)s)")
+    parser_randomtest.add_argument('-ccf', type=float, default=10, metavar='  ', help="Define the cut off of triplex-forming regions per DBD in percentage of total triplexes(default: %(default)s)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
-    parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
-    parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
+    # parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
+    # parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     parser_randomtest.add_argument('-mp', type=int, default=1, metavar='  ', help="Define the number of threads for multiprocessing")
@@ -216,7 +216,7 @@ def main():
             # Project level index file
 
             for item in os.listdir(args.path):
-                print("\t"+item)
+                # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue

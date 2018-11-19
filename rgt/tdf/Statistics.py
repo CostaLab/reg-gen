@@ -258,10 +258,12 @@ class Statistics(object):
         self.stat["autobinding"] = len(triplexes.autobinding)
 
     def output_bed(self, input, tpx):
+        # print(input.rna.regions)
         if len(input.rna.regions) > 0:
             # print(self.rna_regions)
             rna_regionsets = GenomicRegionSet(name=self.pars.rn)
             rna_regionsets.load_from_list(input.rna.regions)
+
             autobinding_loci = tpx.get_overlapping_regions(regionset=rna_regionsets)
             autobinding_loci.write(filename=os.path.join(self.pars.o, self.pars.rn+"_autobinding.bed"))
 
@@ -416,8 +418,8 @@ class Statistics(object):
         self.counts_dbs = OrderedDict()
 
         self.tpxf = tpxf
-        tpxf.merge_rbs(rm_duplicate=True, region_set=target_regions,
-                       asgene_organism=self.pars.organism, cutoff=self.pars.ccf)
+        tpxf.merge_rbs(rm_duplicate=True, region_set=target_regions, rbss=self.rbss,
+                       asgene_organism=self.pars.organism)
 
         for rbs in self.rbss:
             tr = len(tpx.merged_dict[rbs])
@@ -425,6 +427,9 @@ class Statistics(object):
             self.counts_dbs[rbs] = len(tpx.merged_dict[rbs])
         self.region_dbd = tpxf.sort_rbs_by_regions(target_regions)
         self.region_dbs = tpxf.sort_rd_by_regions(regionset=target_regions)
+        self.region_normdbs = {}
+        for t in target_regions:
+            self.region_normdbs[t.toString()] = len(self.region_dbs[t.toString()]) * 1000 / len(t)
         self.region_dbsm = {}
         self.region_coverage = {}
 
