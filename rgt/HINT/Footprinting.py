@@ -244,18 +244,24 @@ def atac_seq(args):
         for region in original_regions:
             input_sequence = list()
 
-            signal_bc_f_max_145, signal_bc_r_max_145 = \
-                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
-                                                            bam=bam, fasta=fasta, bias_table=bias_table,
-                                                            forward_shift=forward_shift,
-                                                            reverse_shift=reverse_shift,
-                                                            min_length=None, max_length=145, strand=True)
-            signal_bc_f_min_145, signal_bc_r_min_145 = \
-                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
-                                                            bam=bam, fasta=fasta, bias_table=bias_table,
-                                                            forward_shift=forward_shift,
-                                                            reverse_shift=reverse_shift,
-                                                            min_length=145, max_length=None, strand=True)
+            try:
+                signal_bc_f_max_145, signal_bc_r_max_145 = \
+                    reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
+                                                                bam=bam, fasta=fasta, bias_table=bias_table,
+                                                                forward_shift=forward_shift,
+                                                                reverse_shift=reverse_shift,
+                                                                min_length=None, max_length=145, strand=True)
+                signal_bc_f_min_145, signal_bc_r_min_145 = \
+                    reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
+                                                                bam=bam, fasta=fasta, bias_table=bias_table,
+                                                                forward_shift=forward_shift,
+                                                                reverse_shift=reverse_shift,
+                                                                min_length=145, max_length=None, strand=True)
+
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
+                    region.final)]) + "). This iteration will be skipped.")
+                continue
 
             signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
             perc = scoreatpercentile(signal_bc_f_max_145, 98)

@@ -332,6 +332,7 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
+
         if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
             # Return raw counts
             nf = [0.0] * (p2 - p1)
@@ -1033,7 +1034,7 @@ class GenomicSignal:
 
         currStr = str(fasta.fetch(ref, p1_wk - 1 + forward_shift, p2_wk - 2 + forward_shift)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + reverse_shift + 2,
-                                                                p2_wk + reverse_shift + 1)).upper())
+                                                                 p2_wk + reverse_shift + 1)).upper())
 
         # Iterating on sequence to create the bias signal
         signal_bias_f = []
@@ -1101,8 +1102,8 @@ class GenomicSignal:
             raw.append(signal_raw_f[i] + signal_raw_r[i])
             raw_f.append(signal_raw_f[i])
             raw_r.append(signal_raw_r[i])
-            #zf = (signal_raw_f[i]) / (signal_bias_f[i])
-            #zr = (signal_raw_r[i]) / (signal_bias_r[i])
+            # zf = (signal_raw_f[i]) / (signal_bias_f[i])
+            # zr = (signal_raw_r[i]) / (signal_bias_r[i])
             bc.append(nhatf + nhatr)
             bc_f.append(nhatf)
             bc_r.append(nhatr)
