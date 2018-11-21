@@ -5,9 +5,9 @@ MA0020	MA0020.1.Dof2	jaspar_plants	1	Dof2	Dof-type	Q41800	SELEX	plants	Zea mays	
 MA0021	MA0021.1.Dof3	jaspar_plants	1	Dof3	Dof-type	Q41801	SELEX	plants	Zea mays	3.039,8.57,8.883,9.29140046034,9.29140046034,9.29140046034
 MA0034	MA0034.1.Gam1	jaspar_plants	1	Gam1	Myb/SANT domain factors	Q96464	SELEX	plants	Hordeum vulgare	4.189,7.422,8.583,10.5015,11.097,12.13
 MA0044	MA0044.1.HMG-1	jaspar_plants	1	HMG-1	.	Q41026	SELEX	plants	Pisum sativum	4.8885,7.4375,8.3245,9.9815,10.4115,11.1035
-MA0045	MA0045.1.HMG-I_Y	jaspar_plants	1	HMG-I/Y	.	Q43877	SELEX	plants	Pisum sativum	4.2515,7.118,8.1705,10.278,11.0615,12.658
+MA0045	MA0045.1.HMG-I_Y	jaspar_plants	1	HMG-I_Y	.	Q43877	SELEX	plants	Pisum sativum	4.2515,7.118,8.1705,10.278,11.0615,12.658
 MA0053	MA0053.1.MNB1A	jaspar_plants	1	MNB1A	Dof-type	P38564	SELEX	plants	Zea mays	3.0015,7.423,8.17789589214,8.17789589214,8.17789589214,8.17789589214
-MA0054	MA0054.1.myb.Ph3	jaspar_plants	1	myb.Ph3	Myb/SANT domain factors	Q02994	SELEX	plants	Petunia x hybrida	4.308,7.2155,8.2815,10.4685,11.236,12.587
+MA0054	MA0054.1.myb.Ph3	jaspar_plants	1	myb	Myb/SANT domain factors	Q02994	SELEX	plants	Petunia x hybrida	4.308,7.2155,8.2815,10.4685,11.236,12.587
 MA0064	MA0064.1.PBF	jaspar_plants	1	PBF	Dof-type	O24463	SELEX	plants	Zea mays	2.84,8.0455,8.45304244007,8.45304244007,8.45304244007,8.45304244007
 MA0082	MA0082.1.squamosa	jaspar_plants	1	squamosa	.	Q38742	SELEX	plants	Antirrhinum majus	2.5375,6.303,7.6855,10.4765,11.497,13.569
 MA0096	MA0096.1.bZIP910	jaspar_plants	1	bZIP910	.	O22676	SELEX	plants	Antirrhinum majus	-1.7005,5.439,5.439,11.8093604845,11.8093604845,11.8093604845
@@ -45,7 +45,7 @@ MA0570	MA0570.1.ABF1	jaspar_plants	1	ABF1	.	Q9M7Q5	SELEX	plants	Arabidopsis thal
 MA0571	MA0571.1.ANT	jaspar_plants	1	ANT	.	Q38914	SELEX	plants	Arabidopsis thaliana	-3.27,1.9015,3.8715,7.9725,9.5625,12.902
 MA0573	MA0573.1.ATHB-9	jaspar_plants	1	ATHB-9	.	O04292	SELEX	plants	Arabidopsis thaliana	-5.0555,0.433,2.508,6.9565,8.6545,12.2665
 MA0574	MA0574.1.MYB15	jaspar_plants	1	MYB15	Myb/SANT domain factors	Q9LTC4	SELEX	plants	Arabidopsis thaliana	-6.189,-0.0185,2.3565,7.19,8.949,12.9485
-MA0575	MA0575.1.F3A4.140	jaspar_plants	1	F3A4.140	Myb/SANT domain factors	Q9SN12	SELEX	plants	Arabidopsis thaliana	0.0795,5.003,6.9475,10.6025,11.7955,13.9965
+MA0575	MA0575.1.F3A4.140	jaspar_plants	1	F3A4	Myb/SANT domain factors	Q9SN12	SELEX	plants	Arabidopsis thaliana	0.0795,5.003,6.9475,10.6025,11.7955,13.9965
 MA0576	MA0576.1.RAX3	jaspar_plants	1	RAX3	Myb/SANT domain factors	Q9M2Y9	SELEX	plants	Arabidopsis thaliana	-6.9155,-0.6215,1.7665,6.941,8.686,12.688
 MA0577	MA0577.1.SPL3	jaspar_plants	1	SPL3	.	P93015	SELEX	plants	Arabidopsis thaliana	2.1415,6.2235,7.7275,10.8615,11.909,13.6055
 MA0578	MA0578.1.SPL8	jaspar_plants	1	SPL8	.	Q8GXL3	SELEX	plants	Arabidopsis thaliana	1.757,5.861,7.407,10.8245,11.909,13.742
@@ -53,7 +53,7 @@ MA0579	MA0579.1.CDC5	jaspar_plants	1	CDC5	Myb/SANT domain factors	P92948	SELEX	p
 MA0580	MA0580.1.DYT1	jaspar_plants	1	DYT1	.	O81900	SELEX	plants	Arabidopsis thaliana	-0.0025,4.2455,5.9335,9.3175,10.69,13.5175
 MA0581	MA0581.1.LEC2	jaspar_plants	1	LEC2	.	Q1PFR7	SELEX	plants	Arabidopsis thaliana	-0.656,4.5485,8.0925,11.316,12.058,13.257
 MA0582	MA0582.1.RAV1	jaspar_plants	1	RAV1	.	Q9ZWM9	SELEX	plants	Arabidopsis thaliana	3.0335,7.193,8.5235,10.773,11.506,12.8465
-MA0583	MA0583.1.RAV1	jaspar_plants	2	RAV1	.	Q9ZWM9	SELEX	plants	Arabidopsis thaliana	3.859,7.4805,8.6095,10.5605,11.219,12.4025
+MA0583	MA0583.1.RAV1	jaspar_plants	1	RAV1	.	Q9ZWM9	SELEX	plants	Arabidopsis thaliana	3.859,7.4805,8.6095,10.5605,11.219,12.4025
 MA0584	MA0584.1.SEP1	jaspar_plants	1	SEP1	.	P29382	SELEX	plants	Arabidopsis thaliana	0.6115,5.13,6.8115,10.1515,11.368,13.779
 MA0585	MA0585.1.AGL1	jaspar_plants	1	AGL1	.	P29381	SELEX	plants	Arabidopsis thaliana	2.5165,6.264,7.64,10.4,11.4295,13.518
 MA0586	MA0586.2.SPL14	jaspar_plants	2	SPL14	.	Q8RY95	DAP-seq	plants	Arabidopsis thaliana	-2.7645,2.5545,5.938,11.1235,12.328,14.017
@@ -67,7 +67,7 @@ MA0932	MA0932.1.AHL12	jaspar_plants	1	AHL12	HMGA factors	Q8LPN5	PBM	plants	Arabi
 MA0933	MA0933.1.AHL20	jaspar_plants	1	AHL20	HMGA factors	Q8GWQ2	PBM	plants	Arabidopsis thaliana	3.701,7.1595,8.3565,10.66,11.4895,12.6968967399
 MA0934	MA0934.1.AHL25	jaspar_plants	1	AHL25	HMGA factors	Q6DBQ1	PBM	plants	Arabidopsis thaliana	3.6445,7.1265,8.3345,10.824,11.3165,12.3894711903
 MA0935	MA0935.1.NAC025	jaspar_plants	1	NAC025	.	Q8GY42	PBM	plants	Arabidopsis thaliana	-1.242,5.9765,8.191,11.18,12.177,13.1942911422
-MA0936	MA0936.1.T11I18.17	jaspar_plants	1	T11I18.17	.	Q9SQQ6	PBM	plants	Arabidopsis thaliana	4.984,7.133,8.116,9.718,10.042,11.2708252504
+MA0936	MA0936.1.T11I18.17	jaspar_plants	1	T11I18	.	Q9SQQ6	PBM	plants	Arabidopsis thaliana	4.984,7.133,8.116,9.718,10.042,11.2708252504
 MA0937	MA0937.1.NAC055	jaspar_plants	1	NAC055	.	Q9LDY8	PBM	plants	Arabidopsis thaliana	2.821,6.391,7.989,10.826,11.7095,13.2570739012
 MA0938	MA0938.1.NAC058	jaspar_plants	1	NAC058	.	Q9LS50	PBM	plants	Arabidopsis thaliana	4.847,7.296,8.2445,10.0745,10.2545,11.5590160261
 MA0939	MA0939.1.NAC080	jaspar_plants	1	NAC080	.	Q9FLR3	PBM	plants	Arabidopsis thaliana	-0.566,3.4685,5.689,11.528,11.8215,13.6916521064
@@ -108,14 +108,14 @@ MA0973	MA0973.1.CDF2	jaspar_plants	1	CDF2	Dof-type	Q93ZL5	PBM	plants	Arabidopsis
 MA0974	MA0974.1.CDF3	jaspar_plants	1	CDF3	Dof-type	Q8LFV3	PBM	plants	Arabidopsis thaliana	4.0745,7.829,8.835,10.3315,10.7785,11.518
 MA0975	MA0975.1.CRF2	jaspar_plants	1	CRF2	.	Q9SUQ2	PBM	plants	Arabidopsis thaliana	-0.8255,5.936,7.797,10.9005,11.358,13.7644519172
 MA0976	MA0976.1.CRF4	jaspar_plants	1	CRF4	.	Q9SUE3	PBM	plants	Arabidopsis thaliana	1.431,6.8395,7.9235,10.8855,11.079,13.5501650569
-MA0977	MA0977.1.DOF2.5	jaspar_plants	1	DOF2.5	Dof-type	Q9ZPY0	PBM	plants	Arabidopsis thaliana	2.534,6.978,8.6695,11.1735,11.503,12.74162627
+MA0977	MA0977.1.DOF2.5	jaspar_plants	1	DOF2	Dof-type	Q9ZPY0	PBM	plants	Arabidopsis thaliana	2.534,6.978,8.6695,11.1735,11.503,12.74162627
 MA0978	MA0978.1.DREB1E	jaspar_plants	1	DREB1E	.	Q9SGJ6	PBM	plants	Arabidopsis thaliana	-2.2965,3.667,5.6295,8.545,11.0475,14.2992355499
 MA0979	MA0979.1.ERF008	jaspar_plants	1	ERF008	.	O22174	PBM	plants	Arabidopsis thaliana	4.526,7.221,8.197,10.606,11.122,11.870475075
 MA0980	MA0980.1.RAP2-10	jaspar_plants	1	RAP2-10	.	Q9SW63	PBM	plants	Arabidopsis thaliana	2.3005,6.171,7.836,11.055,11.4125,13.3167231126
-MA0981	MA0981.1.DOF1.8	jaspar_plants	1	DOF1.8	Dof-type	Q84JQ8	PBM	plants	Arabidopsis thaliana	5.107,7.0675,7.4685,8.015,8.188,8.4625
-MA0982	MA0982.1.DOF2.4	jaspar_plants	1	DOF2.4	Dof-type	O80928	PBM	plants	Arabidopsis thaliana	4.982,6.9005,7.275,8.0825,8.21099217733,8.21099217733
-MA0983	MA0983.1.DOF5.6	jaspar_plants	1	DOF5.6	Dof-type	Q9FM03	PBM	plants	Arabidopsis thaliana	5.367,7.5055,7.971,8.7185,8.763,8.94943650118
-MA0984	MA0984.1.DOF5.7	jaspar_plants	1	DOF5.7	Dof-type	Q9LSL6	PBM	plants	Arabidopsis thaliana	5.427,7.511,8.041,8.9455,9.0405,9.80312166525
+MA0981	MA0981.1.DOF1.8	jaspar_plants	1	DOF1	Dof-type	Q84JQ8	PBM	plants	Arabidopsis thaliana	5.107,7.0675,7.4685,8.015,8.188,8.4625
+MA0982	MA0982.1.DOF2.4	jaspar_plants	1	DOF2	Dof-type	O80928	PBM	plants	Arabidopsis thaliana	4.982,6.9005,7.275,8.0825,8.21099217733,8.21099217733
+MA0983	MA0983.1.DOF5.6	jaspar_plants	1	DOF5	Dof-type	Q9FM03	PBM	plants	Arabidopsis thaliana	5.367,7.5055,7.971,8.7185,8.763,8.94943650118
+MA0984	MA0984.1.DOF5.7	jaspar_plants	1	DOF5	Dof-type	Q9LSL6	PBM	plants	Arabidopsis thaliana	5.427,7.511,8.041,8.9455,9.0405,9.80312166525
 MA0985	MA0985.1.DRE1C	jaspar_plants	1	DRE1C	AP2 MBD_like	Q9SYS6	PBM	plants	Arabidopsis thaliana	-1.6155,0.076,6.636,6.636,8.3275,11.6059919437
 MA0986	MA0986.1.DREB2C	jaspar_plants	1	DREB2C	.	Q8LFR2	PBM	plants	Arabidopsis thaliana	1.479,5.7005,7.4445,10.5045,11.8655,13.444784407
 MA0987	MA0987.1.PHYPADRAFT_140773	jaspar_plants	1	PHYPADRAFT_140773	Dof-type	A9T5V8	PBM	plants	Physcomitrella patens	5.347,7.3515,7.6915,8.142,8.257,8.5175
@@ -148,7 +148,7 @@ MA1015	MA1015.1.GATA12	jaspar_plants	1	GATA12	GATA-type zinc fingers	P69781	PBM	
 MA1016	MA1016.1.GATA15	jaspar_plants	1	GATA15	GATA-type zinc fingers	Q8LG10	PBM	plants	Arabidopsis thaliana	5.525,7.685,8.0885,8.6735,8.848,9.1215
 MA1017	MA1017.1.GATA8	jaspar_plants	1	GATA8	GATA-type zinc fingers	Q9SV30	PBM	plants	Arabidopsis thaliana	5.3415,7.6535,8.27,9.4505,9.709,10.2255
 MA1018	MA1018.1.GATA9	jaspar_plants	1	GATA9	GATA-type zinc fingers	O82632	PBM	plants	Arabidopsis thaliana	-2.2625,5.4295,7.682,11.352,12.228,13.56
-MA1019	MA1019.1.Glyma19g26560.1	jaspar_plants	1	Glyma19g26560.1	TCP domain	I1N7U7	PBM	plants	Glycine max	2.71,6.454,7.9515,10.384,11.5265,13.6305
+MA1019	MA1019.1.Glyma19g26560.1	jaspar_plants	1	Glyma19g26560	TCP domain	I1N7U7	PBM	plants	Glycine max	2.71,6.454,7.9515,10.384,11.5265,13.6305
 MA1020	MA1020.1.GT-1	jaspar_plants	1	GT-1	Trihelix	Q9FX53	PBM	plants	Arabidopsis thaliana	-1.348,5.3535,7.415,10.7715,12.2575,13.519404982
 MA1021	MA1021.1.PHYPADRAFT_48267	jaspar_plants	1	PHYPADRAFT_48267	.	A9TN45	PBM	plants	Physcomitrella patens	-0.656,3.4955,4.5685,10.98,12.5525,13.6342595943
 MA1022	MA1022.1.PHYPADRAFT_38837	jaspar_plants	1	PHYPADRAFT_38837	Dof-type	A9TZG0	PBM	plants	Physcomitrella patens	5.074,7.124,7.6115,8.2985,8.5095,8.8425
@@ -158,10 +158,10 @@ MA1025	MA1025.1.HBI1	jaspar_plants	1	HBI1	.	Q9ZPW3	PBM	plants	Arabidopsis thalia
 MA1026	MA1026.2.ATHB15	jaspar_plants	2	ATHB15	HD-ZIP factors	Q9ZU11	DAP-seq	plants	Arabidopsis thaliana	-5.666,0.997,3.5065,8.738,10.5655,13.8805
 MA1027	MA1027.1.KAN1	jaspar_plants	1	KAN1	Myb/SANT domain factors	Q93WJ9	PBM	plants	Arabidopsis thaliana	5.043,7.3015,8.188,9.368,9.955,10.3053573346
 MA1028	MA1028.1.KAN4	jaspar_plants	1	KAN4	Myb/SANT domain factors	Q9FJV5	PBM	plants	Arabidopsis thaliana	0.4175,5.5375,6.637,9.9315,11.801,13.5323985749
-MA1030	MA1030.1.P0510F09.23	jaspar_plants	1	P0510F09.23	Myb/SANT domain factors	Q5N9C9	PBM	plants	Oryza sativa Japonica Group	4.295,7.3615,8.6775,10.7445,10.9965,11.3095
-MA1031	MA1031.1.OJ1581_H09.2	jaspar_plants	1	OJ1581_H09.2	TCP domain	Q6H878	PBM	plants	Oryza sativa Japonica Group	3.82,7.5265,8.669,10.5505,11.145,12.5655
+MA1030	MA1030.1.P0510F09.23	jaspar_plants	1	P0510F09	Myb/SANT domain factors	Q5N9C9	PBM	plants	Oryza sativa Japonica Group	4.295,7.3615,8.6775,10.7445,10.9965,11.3095
+MA1031	MA1031.1.OJ1581_H09.2	jaspar_plants	1	OJ1581_H09	TCP domain	Q6H878	PBM	plants	Oryza sativa Japonica Group	3.82,7.5265,8.669,10.5505,11.145,12.5655
 MA1032	MA1032.1.DREB1G	jaspar_plants	1	DREB1G	.	Q6EP77	PBM	plants	Oryza sativa Japonica Group	-3.0115,2.499,6.665,11.1395,12.099,14.066
-MA1033	MA1033.1.OJ1058_F05.8	jaspar_plants	1	OJ1058_F05.8	.	Q75HX9	PBM	plants	Oryza sativa Japonica Group	-2.198,5.0605,6.0535,6.752,13.312,13.806779527
+MA1033	MA1033.1.OJ1058_F05.8	jaspar_plants	1	OJ1058_F05	.	Q75HX9	PBM	plants	Oryza sativa Japonica Group	-2.198,5.0605,6.0535,6.752,13.312,13.806779527
 MA1034	MA1034.1.Os05g0497200	jaspar_plants	1	Os05g0497200	.	Q75K84	PBM	plants	Oryza sativa Japonica Group	-2.198,5.0605,6.0535,6.752,13.312,13.806779527
 MA1035	MA1035.1.TCP4	jaspar_plants	1	TCP4	TCP domain	Q8LPR5	PBM	plants	Arabidopsis thaliana	-5.9005,2.902,3.3775,6.054,12.543,14.1740929331
 MA1036	MA1036.1.MYB111	jaspar_plants	1	MYB111	Myb/SANT domain factors	Q9FJ07	PBM	plants	Arabidopsis thaliana	1.947,6.0405,7.5235,10.952,12.2475,13.2939093959
@@ -199,7 +199,7 @@ MA1067	MA1067.1.TCP5	jaspar_plants	1	TCP5	TCP domain	Q9FME3	PBM	plants	Arabidops
 MA1068	MA1068.1.TGA2	jaspar_plants	1	TGA2	.	P43273	PBM	plants	Arabidopsis thaliana	0.004,5.0855,6.605,10.716,12.1,14.0944119507
 MA1069	MA1069.1.TGA6	jaspar_plants	1	TGA6	.	Q39140	PBM	plants	Arabidopsis thaliana	-8.743,0.4955,2.19,11.2925,12.1465,14.334
 MA1070	MA1070.1.TGA7	jaspar_plants	1	TGA7	.	Q93ZE2	PBM	plants	Arabidopsis thaliana	3.6575,7.0815,8.2635,10.645,11.419,13.036
-MA1071	MA1071.1.DOF5.3	jaspar_plants	1	DOF5.3	Dof-type	Q84TE9	PBM	plants	Arabidopsis thaliana	5.4165,6.9105,7.044,7.4475,7.4895045183,7.4895045183
+MA1071	MA1071.1.DOF5.3	jaspar_plants	1	DOF5	Dof-type	Q84TE9	PBM	plants	Arabidopsis thaliana	5.4165,6.9105,7.044,7.4475,7.4895045183,7.4895045183
 MA1073	MA1073.1.TRB2	jaspar_plants	1	TRB2	Myb/SANT domain factors	Q9FJW5	PBM	plants	Arabidopsis thaliana	-0.0485,6.3335,8.8195,11.2955,11.803,12.1445154368
 MA1074	MA1074.1.UNE10	jaspar_plants	1	UNE10	.	Q8GZ38	PBM	plants	Arabidopsis thaliana	-9.8475,0.897,2.1175,11.8655,12.862,13.5830301702
 MA1075	MA1075.1.WRKY12	jaspar_plants	1	WRKY12	.	Q93WY4	PBM	plants	Arabidopsis thaliana	2.7365,6.4805,7.7695,10.7915,11.501,13.3159952991
@@ -338,11 +338,11 @@ MA1265	MA1265.1.AT4G31060	jaspar_plants	1	AT4G31060	.	Q6NLD5	DAP-seq	plants	Arab
 MA1266	MA1266.1.RAP211	jaspar_plants	1	RAP211	.	Q6J9S1	DAP-seq	plants	Arabidopsis thaliana	-0.881,5.45,7.458,10.7945,11.8555,13.7865
 MA1267	MA1267.1.AT5G66940	jaspar_plants	1	AT5G66940	Dof-type	Q9FGD6	DAP-seq	plants	Arabidopsis thaliana	-2.4575,2.941,4.9195,8.8535,10.3135,13.2905
 MA1268	MA1268.1.AT1G69570	jaspar_plants	1	AT1G69570	Dof-type	Q9SEZ3	DAP-seq	plants	Arabidopsis thaliana	-3.455,2.3575,4.4455,8.526,10.0285,13.0955
-MA1269	MA1269.1.dof4.5	jaspar_plants	1	dof4.5	Dof-type	O49550	DAP-seq	plants	Arabidopsis thaliana	-1.722,4.824,6.898,10.3965,11.5715,13.8455
+MA1269	MA1269.1.dof4.5	jaspar_plants	1	dof4	Dof-type	O49550	DAP-seq	plants	Arabidopsis thaliana	-1.722,4.824,6.898,10.3965,11.5715,13.8455
 MA1270	MA1270.1.AT3G45610	jaspar_plants	1	AT3G45610	Dof-type	Q9M1E6	DAP-seq	plants	Arabidopsis thaliana	-2.528,3.958,6.393,10.265,11.5105,13.8795
 MA1271	MA1271.1.DAG2	jaspar_plants	1	DAG2	Dof-type	Q9ZPY0	DAP-seq	plants	Arabidopsis thaliana	-1.5075,4.9695,7.373,10.87,12.031,13.95
 MA1272	MA1272.1.AT2G28810	jaspar_plants	1	AT2G28810	Dof-type	Q9ZV33	DAP-seq	plants	Arabidopsis thaliana	-3.0425,3.4635,5.7805,9.7645,11.1105,13.7395
-MA1273	MA1273.1.dof4.2	jaspar_plants	1	dof4.2	Dof-type	Q9SUB1	DAP-seq	plants	Arabidopsis thaliana	-4.0125,2.214,4.921,9.6745,11.158,13.9075
+MA1273	MA1273.1.dof4.2	jaspar_plants	1	dof4	Dof-type	Q9SUB1	DAP-seq	plants	Arabidopsis thaliana	-4.0125,2.214,4.921,9.6745,11.158,13.9075
 MA1274	MA1274.1.OBP3	jaspar_plants	1	OBP3	Dof-type	Q9M2U1	DAP-seq	plants	Arabidopsis thaliana	-1.44,3.674,5.547,9.2785,10.664,13.4835
 MA1275	MA1275.1.AT1G47655	jaspar_plants	1	AT1G47655	Dof-type	Q9SX97	DAP-seq	plants	Arabidopsis thaliana	-0.419,6.2225,8.2155,11.1525,11.9505,13.4995
 MA1276	MA1276.1.AT3G52440	jaspar_plants	1	AT3G52440	Dof-type	Q9SVC5	DAP-seq	plants	Arabidopsis thaliana	-1.6315,4.0075,7.314,11.2745,12.218,13.7015

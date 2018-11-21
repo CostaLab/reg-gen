@@ -180,7 +180,7 @@ def main(args):
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
 
-            print(">> experimental matrix loaded")
+            print(">>> experimental matrix loaded")
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
@@ -194,7 +194,7 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-        print(">> input regions BED files loaded")
+            print(">>> input file", name, "loaded:", len(regions), "regions")
 
     # we put this here because we don't want to create the output directory unless we
     # are sure the initialisation (including loading input files) worked
@@ -224,7 +224,7 @@ def main(args):
 
         genomic_regions_dict[target_regions.name] = target_regions
 
-        print(">> target promoter file created:", len(target_regions), "regions")
+        print(">>> target promoter file created:", len(target_regions), "regions")
 
     # we make a background in case it's requested, but also in case a list of target genes has not been
     # provided
@@ -249,7 +249,7 @@ def main(args):
 
         genomic_regions_dict[background_regions.name] = background_regions
 
-        print(">> background promoter file created:", len(background_regions), "regions")
+        print(">>> background promoter file created:", len(background_regions), "regions")
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
@@ -282,6 +282,8 @@ def main(args):
             if curr_len > max_region_len:
                 max_region_len = curr_len
                 max_region = curr_genomic_region
+
+    print(">> all files loaded")
 
     ###################################################################################################
     # Creating random regions
@@ -348,10 +350,8 @@ def main(args):
     for motif in motif_list:
         if unique_threshold:
             thresholds.append(0.0)
-            thresholds.append(0.0)
         else:
             thresholds.append(motif.threshold)
-            thresholds.append(motif.threshold_rc)
 
         pssm_list.append(motif.pssm)
         pssm_list.append(motif.pssm_rc)

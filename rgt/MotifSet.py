@@ -151,6 +151,10 @@ class MotifSet:
 
         motif_set = MotifSet(preload_motifs=None)
 
+        if not values:
+            for m in current:
+                motif_set.add(m)
+
         for key_type in values.keys():
 
             motif_set = MotifSet(preload_motifs=None)
@@ -436,7 +440,6 @@ class MotifSet:
 
         for motif_name in self.motifs_map:
             ma = self.motifs_map[motif_name]
-
             motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
 
             # check whether ma provides the motif matching threshold for the given fpr

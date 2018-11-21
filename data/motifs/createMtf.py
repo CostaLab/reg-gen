@@ -131,12 +131,11 @@ if options.jv:
             jaspar_anno[l[0]] = l[1:]
     for inputFileName in glob(inputLocation + "*.pwm"):
         raw_name = inputFileName.split("/")[-1]
-        full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
+        full_name, pwm_name, _, _ = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
         name_fields = pwm_name.split(".")
         matrix_id = name_fields[0]
-        if not version:
-            version = name_fields[1]
-        gene_names = re.sub("\(var\.\d+\)", "", jaspar_anno[full_name][0])
+        version = name_fields[1]
+        gene_names = name_fields[2]
         group = jaspar_anno[full_name][1]
         if not group:
             group = "."
@@ -159,7 +158,7 @@ if options.jv:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+        resultMatrix.append([matrix_id, full_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
                              species, threshold])
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -188,12 +187,11 @@ if options.jp:
             jaspar_anno[l[0]] = l[1:]
     for inputFileName in glob(inputLocation + "*.pwm"):
         raw_name = inputFileName.split("/")[-1]
-        full_name, pwm_name, _, version = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
+        full_name, pwm_name, _, _ = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
         name_fields = pwm_name.split(".")
         matrix_id = name_fields[0]
-        if not version:
-            version = name_fields[1]
-        gene_names = re.sub("\(var\.\d+\)", "", jaspar_anno[full_name][0])
+        version = name_fields[1]
+        gene_names = name_fields[2]
         group = jaspar_anno[full_name][1]
         if not group:
             group = "."
