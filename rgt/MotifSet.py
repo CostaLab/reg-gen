@@ -149,7 +149,7 @@ class MotifSet:
 
         current = self.motifs_map.values()
 
-        motif_set = None
+        motif_set = MotifSet(preload_motifs=None)
 
         for key_type in values.keys():
 

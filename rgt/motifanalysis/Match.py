@@ -127,11 +127,12 @@ def main(args):
     # Converting given filter list to a dictionary that can be used by the filter function
     # dictionary might contain invalid keys which will raise in error when applying the filter function
     filter_values = {}
-    items = args.motif_filter.strip().split(";")
-    for i in range(0, len(items)):
-        cur_item = items[i].strip().split(":")
-        key = cur_item[0].strip()
-        filter_values[key] = cur_item[1].strip().split(",")
+    if args.motif_filter:
+        items = args.motif_filter.strip().split(";")
+        for i in range(0, len(items)):
+            cur_item = items[i].strip().split(":")
+            key = cur_item[0].strip()
+            filter_values[key] = cur_item[1].strip().split(",")
 
     ###################################################################################################
     # Initializations
