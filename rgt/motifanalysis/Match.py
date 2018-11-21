@@ -66,7 +66,7 @@ def options(parser):
                         help="Remove any duplicate region from the input BED files.")
     parser.add_argument("--filter", dest="motif_filter", type=str, default="",
                         help="List of key types with respective keys to filter which TFs should be matched with "
-                             "the genomic region e.g. \"species:sapiens,mus;source:selex\"."
+                             "the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
                              "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
                              "\"data_source\", \"tax_group\", \"species\" and \"database\"")
 
@@ -336,6 +336,8 @@ def main(args):
     # FIXME: --use-only-motifs is completely ignored here
     ms = ms.filter(filter_values, search="inexact")
     motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
+
+    print(">> motifs loaded:", len(motif_list))
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:
