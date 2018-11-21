@@ -352,7 +352,9 @@ def main(args):
     for motif in motif_list:
         if unique_threshold:
             thresholds.append(0.0)
+            thresholds.append(0.0)
         else:
+            thresholds.append(motif.threshold)
             thresholds.append(motif.threshold)
 
         pssm_list.append(motif.pssm)
@@ -377,7 +379,7 @@ def main(args):
     for grs in regions_to_match:
 
         start = time.time()
-        print(">> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
+        print(">> matching [", grs.name, "], ", len(grs), " regions... ", sep="", end='')
         sys.stdout.flush()
 
         # Initializing output bed file
