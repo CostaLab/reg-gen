@@ -35,6 +35,11 @@ class MotifSetTest(unittest.TestCase):
         motif_list = ms.create_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 0)
 
+    def test_create_multiple(self):
+        ms = MotifSet(preload_motifs=["hocomoco", "jaspar_vertebrates"])
+        self.assertEqual(len(ms), 1875, msg="motif dictionary must contain sum of motifs in files from jaspar"
+                                            "_vertebrates and hocomoco")
+
     def test_create_empty(self):
         ms = MotifSet(preload_motifs=None)
         self.assertEqual(len(ms), 0, msg="motif dictionary must be empty")
