@@ -210,8 +210,8 @@ def main():
 
                 print("merging DBDs...")
                 merge_DBD_regions(path=target)
-                # print("merging DBSs...")
-                # merge_DBSs(path=target)
+                print("merging DBSs...")
+                merge_DBSs(path=target)
                 print("merging DNA counts...")
                 merge_DNA_counts(path=target)
                 # stat
