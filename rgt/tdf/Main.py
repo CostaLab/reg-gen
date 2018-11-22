@@ -76,7 +76,7 @@ def main():
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_promotertest.add_argument('-ccf', type=float, default=10, metavar='  ', help="Define the cut off of triplex-forming promoters per DBD in percentage of total triplexes(default: %(default)s)")
+    parser_promotertest.add_argument('-ccf', type=float, default=0.1, metavar='  ', help="Define the cut off of triplex-forming promoters per DBD in percentage of total triplexes (0-1) or an integer. (default: %(default)s)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     # parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
@@ -119,7 +119,7 @@ def main():
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
     parser_randomtest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_randomtest.add_argument('-ccf', type=float, default=10, metavar='  ', help="Define the cut off of triplex-forming regions per DBD in percentage of total triplexes(default: %(default)s)")
+    parser_randomtest.add_argument('-ccf', type=float, default=0.1, metavar='  ', help="Define the cut off of triplex-forming regions per DBD in percentage of total triplexes (0-1) or an integer. (default: %(default)s)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
@@ -207,8 +207,12 @@ def main():
 
             # For each condition
             for target in targets:
+
+                print("merging DBDs...")
                 merge_DBD_regions(path=target)
+                print("merging DBSs...")
                 merge_DBSs(path=target)
+                print("merging DNA counts...")
                 merge_DNA_counts(path=target)
                 # stat
                 integrate_stat(path=target)
@@ -368,13 +372,14 @@ def main():
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "nde.fa"))
-        silentremove(os.path.join(args.o, "de.txp"))
+
         silentremove(os.path.join(args.o, "autobinding.tpx"))
         if args.nofile:
             print("Don't save any files.")
             silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
             silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
             silentremove(os.path.join(args.o, "target_promoters.tpx"))
+            silentremove(os.path.join(args.o, "de.txp"))
         print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 

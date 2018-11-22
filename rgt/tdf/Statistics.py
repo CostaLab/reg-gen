@@ -141,7 +141,7 @@ class Statistics(object):
                 l2 = len(self.tpx_ndef.merged_dict[rbs])
                 self.frequency["hits"]["nde"][rbs] = [l2, numdbs_ndef - l2]
 
-        if self.pars.rm:
+        if self.pars.rt:
             os.remove(file_tpx_de)
         os.remove(file_tpx_nde)
 

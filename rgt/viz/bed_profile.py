@@ -127,8 +127,8 @@ class BedProfile:
     def plot_distribution_length(self):
         dis = []
         for i, bed in enumerate(self.beds):
-            dis.append([numpy.log10(len(r)) for r in bed])
-            # dis.append([len(r) for r in bed])
+            # dis.append([numpy.log10(len(r)) for r in bed])
+            dis.append([len(r) for r in bed])
         max_len = max([max(x) for x in dis])
 
         for i in range(len(self.beds) + 1):
