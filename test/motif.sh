@@ -31,6 +31,25 @@ fi
 cd $DEST
 echo "Running matching.."
 rgt-motifanalysis matching --organism hg19 --input-files input/regions_K562.bed input/background.bed
+mv match/background_mpbs.bed match/background_mpbs_no_filter.bed
+mv match/regions_K562_mpbs.bed match/regions_K562_mpbs_no_filter.bed
+rgt-motifanalysis matching --organism hg19 --filter "database:jaspar_vertebrates" --input-files input/regions_K562.bed input/background.bed
+mv match/background_mpbs.bed match/background_mpbs_filter.bed
+mv match/regions_K562_mpbs.bed match/regions_K562_mpbs_filter.bed
+
+a=$(md5sum match/background_mpbs_no_filter.bed)
+b=$(md5sum match/background_mpbs_filter.bed)
+c=$(md5sum match/regions_K562_mpbs_no_filter.bed)
+d=$(md5sum match/regions_K562_mpbs_filter.bed)
+
+if [ ${a} != ${b} ]
+then
+    echo "filter error in background_mpbs"
+fi
+if [ ${c} != ${d} ]
+then
+    echo "filter error in regions_K562_mpbs"
+fi
 echo "Running enrichment.."
 rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
 
