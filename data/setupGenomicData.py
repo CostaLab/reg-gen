@@ -94,7 +94,7 @@ if platform not in supported_platforms:
 # Genomic Data HG19
 ###################################################################################################
 
-gencode_url = "ftp://ftp.sanger.ac.uk/pub/gencode/"
+gencode_url = "ftp://ftp.ebi.ac.uk/pub/databases/gencode/"
 
 if options.hg19:
 
