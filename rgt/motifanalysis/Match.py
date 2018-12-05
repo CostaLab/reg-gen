@@ -51,8 +51,6 @@ def options(parser):
                              "Then, all thresholds are divided by the length of the motif. The final threshold "
                              "consists of the average between all normalized motif thresholds. This single threshold "
                              "will be applied to all motifs.")
-    parser.add_argument("--use-only-motifs", dest="selected_motifs_filename", type=str, metavar="PATH",
-                        help="Only use the motifs contained within this file (one for each line).")
     parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
                         help="New 'motif DB' folders to use instead of the ones within "
                              "the RGTDATA folder. Each folder must contain PWM files.")
@@ -68,7 +66,8 @@ def options(parser):
                         help="List of key types with respective keys to filter which TFs should be matched with "
                              "the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
                              "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
-                             "\"data_source\", \"tax_group\", \"species\" and \"database\"")
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -124,15 +123,56 @@ def main(args):
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
+    # TODO split filter option into three different options depending on type of search (e_filter, i_filter, r_filter)
     # Converting given filter list to a dictionary that can be used by the filter function
     # dictionary might contain invalid keys which will raise in error when applying the filter function
     filter_values = {}
     if args.motif_filter:
         items = args.motif_filter.strip().split(";")
+
+        names = []
+        gene_names = []
+
+        # iterate over keys passed to filter option
         for i in range(0, len(items)):
-            cur_item = items[i].strip().split(":")
+
+            cur_item = items[i].strip().split(":")  # cur_item=[key,list of values]
             key = cur_item[0].strip()
-            filter_values[key] = cur_item[1].strip().split(",")
+
+            # process name_file and gene_names_file differently
+            if key == "name_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid name_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read TF names specified in file
+                        content = f.readline()
+                        for line in content:
+                            names.append(line.strip())
+
+            elif key == "gene_names_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid gene_names_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read gene names specified in file
+                        content = f.readline()
+                        for line in content:
+                            gene_names.append(line.strip())
+
+            else:
+                filter_values[key] = cur_item[1].strip().split(",")
+
+        # ensure that filter_values["name"] and filter_values["gene_names"] are correct
+        # should now contain the intersection of passed (gene-) names and content of respective file (if both is passed)
+        if "name" in filter_values and names:
+            names = list(set(filter_values["name"]) & set(names))
+            filter_values["name"] = names
+        if "gene_names" in filter_values and gene_names:
+            gene_names = list(set(filter_values["gene_names"]) & set(gene_names))
+            filter_values["gene_names"] = gene_names
 
     ###################################################################################################
     # Initializations
@@ -326,14 +366,15 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    if 'database' in filter_values:  # here filter_values acts the same as filter_values[keys]
+    if 'database' in filter_values:
         ms = MotifSet(preload_motifs=filter_values['database'])
     else:
         ms = MotifSet(preload_motifs="default")
 
+    print(">> used database/s:", ms.motif_data.repositories_list)
+
     # Initialization
     # FIXME: --motif-dbs argument is completely ignored here
-    # FIXME: --use-only-motifs is completely ignored here
     ms = ms.filter(filter_values, search="inexact")
     motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
 
