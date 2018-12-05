@@ -134,7 +134,10 @@ if options.jv:
         full_name, pwm_name, _, _ = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
         name_fields = pwm_name.split(".")
         matrix_id = name_fields[0]
-        version = name_fields[1]
+        if "var" in full_name.split(".")[2]:
+            version = ".".join([name_fields[1], (full_name.split(".")[3]).strip(")")])
+        else:
+            version = name_fields[1]
         gene_names = name_fields[2]
         group = jaspar_anno[full_name][1]
         if not group:
