@@ -371,7 +371,7 @@ def main(args):
     else:
         ms = MotifSet(preload_motifs="default")
 
-    print(">> used database/s:", ms.motif_data.repositories_list)
+    print(">> used database(s):", ",".join([str(db) for db in ms.motif_data.repositories_list]))
 
     # Initialization
     # FIXME: --motif-dbs argument is completely ignored here
