@@ -62,10 +62,22 @@ def options(parser):
                              "overlapping input regions are NOT affected by this.")
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
-    parser.add_argument("--filter", dest="motif_filter", type=str, default="",
-                        help="List of key types with respective keys to filter which TFs should be matched with "
-                             "the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
+    parser.add_argument("--i_filter", dest="motif_filter_i", type=str, default="",
+                        help="List of key types with respective keys to filter which TFs should be matched inexactly "
+                             "with the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
                              "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
+    parser.add_argument("--e_filter", dest="motif_filter_e", type=str, default="",
+                        help="List of key types with respective keys to filter which TFs should be matched exactly "
+                             "with the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
+                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
+    parser.add_argument("--r_filter", dest="motif_filter_r", type=str, default="",
+                        help="List of key types with respective keys to filter which TFs should be matched using "
+                             "regular expressions with the genomic region e.g. \"species:sapiens,mus;data_source:"
+                             "selex\".Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
                              "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
                              "and \"gene_names_file\"")
 
@@ -123,12 +135,14 @@ def main(args):
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
-    # TODO split filter option into three different options depending on type of search (e_filter, i_filter, r_filter)
-    # Converting given filter list to a dictionary that can be used by the filter function
-    # dictionary might contain invalid keys which will raise in error when applying the filter function
-    filter_values = {}
-    if args.motif_filter:
-        items = args.motif_filter.strip().split(";")
+    # Converting given filter lists to a dictionary that can be used by the filter function
+    # dictionaries might contain invalid keys which will raise in error when applying the filter function
+
+    # inexact filter
+
+    i_filter_values = {}
+    if args.motif_filter_i:
+        items = args.motif_filter_i.strip().split(";")
 
         names = []
         gene_names = []
@@ -163,16 +177,131 @@ def main(args):
                             gene_names.append(line.strip())
 
             else:
-                filter_values[key] = cur_item[1].strip().split(",")
+                i_filter_values[key] = cur_item[1].strip().split(",")
 
         # ensure that filter_values["name"] and filter_values["gene_names"] are correct
         # should now contain the intersection of passed (gene-) names and content of respective file (if both is passed)
-        if "name" in filter_values and names:
-            names = list(set(filter_values["name"]) & set(names))
-            filter_values["name"] = names
-        if "gene_names" in filter_values and gene_names:
-            gene_names = list(set(filter_values["gene_names"]) & set(gene_names))
-            filter_values["gene_names"] = gene_names
+        if "name" in i_filter_values and names:
+            names = list(set(i_filter_values["name"]) & set(names))
+            i_filter_values["name"] = names
+        elif names:
+            i_filter_values["name"] = names
+
+        if "gene_names" in i_filter_values and gene_names:
+            gene_names = list(set(i_filter_values["gene_names"]) & set(gene_names))
+            i_filter_values["gene_names"] = gene_names
+        elif gene_names:
+            i_filter_values["gene_names"] = gene_names
+
+    # exact filter
+
+    e_filter_values = {}
+    if args.motif_filter_e:
+        items = args.motif_filter_e.strip().split(";")
+
+        names = []
+        gene_names = []
+
+        # iterate over keys passed to filter option
+        for i in range(0, len(items)):
+
+            cur_item = items[i].strip().split(":")  # cur_item=[key,list of values]
+            key = cur_item[0].strip()
+
+            # process name_file and gene_names_file differently
+            if key == "name_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid name_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read TF names specified in file
+                        content = f.readline()
+                        for line in content:
+                            names.append(line.strip())
+
+            elif key == "gene_names_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid gene_names_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read gene names specified in file
+                        content = f.readline()
+                        for line in content:
+                            gene_names.append(line.strip())
+
+            else:
+                e_filter_values[key] = cur_item[1].strip().split(",")
+
+        # ensure that filter_values["name"] and filter_values["gene_names"] are correct
+        # should now contain the intersection of passed (gene-) names and content of respective file (if both is passed)
+        if "name" in e_filter_values and names:
+            names = list(set(e_filter_values["name"]) & set(names))
+            e_filter_values["name"] = names
+        elif names:
+            e_filter_values["name"] = names
+
+        if "gene_names" in e_filter_values and gene_names:
+            gene_names = list(set(e_filter_values["gene_names"]) & set(gene_names))
+            e_filter_values["gene_names"] = gene_names
+        elif gene_names:
+            e_filter_values["gene_names"] = gene_names
+
+    # regex filter
+
+    r_filter_values = {}
+    if args.motif_filter_r:
+        items = args.motif_filter_r.strip().split(";")
+
+        names = []
+        gene_names = []
+
+        # iterate over keys passed to filter option
+        for i in range(0, len(items)):
+
+            cur_item = items[i].strip().split(":")  # cur_item=[key,list of values]
+            key = cur_item[0].strip()
+
+            # process name_file and gene_names_file differently
+            if key == "name_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid name_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read TF names specified in file
+                        content = f.readline()
+                        for line in content:
+                            names.append(line.strip())
+
+            elif key == "gene_names_file":
+                file_name = cur_item[1].strip()
+                if not os.path.exists(file_name):
+                    print("invalid gene_names_file passed to filter")
+                else:
+                    with open(file_name, "r") as f:
+                        # read gene names specified in file
+                        content = f.readline()
+                        for line in content:
+                            gene_names.append(line.strip())
+
+            else:
+                r_filter_values[key] = cur_item[1].strip().split(",")
+
+        # ensure that filter_values["name"] and filter_values["gene_names"] are correct
+        # should now contain the intersection of passed (gene-) names and content of respective file (if both is passed)
+        if "name" in r_filter_values and names:
+            names = list(set(r_filter_values["name"]) & set(names))
+            r_filter_values["name"] = names
+        elif names:
+            r_filter_values["name"] = names
+
+        if "gene_names" in r_filter_values and gene_names:
+            gene_names = list(set(r_filter_values["gene_names"]) & set(gene_names))
+            r_filter_values["gene_names"] = gene_names
+        elif gene_names:
+            r_filter_values["gene_names"] = gene_names
 
     ###################################################################################################
     # Initializations
@@ -366,16 +495,20 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    if 'database' in filter_values:
-        ms = MotifSet(preload_motifs=filter_values['database'])
+    if args.motif_dbs:
+        ms = MotifSet(preload_motifs=args.motif_dbs)
     else:
-        ms = MotifSet(preload_motifs="default")
+        if 'database' in filter_values:
+            ms = MotifSet(preload_motifs=filter_values['database'])
+        else:
+            ms = MotifSet(preload_motifs="default")
 
     print(">> used database(s):", ",".join([str(db) for db in ms.motif_data.repositories_list]))
 
     # Initialization
-    # FIXME: --motif-dbs argument is completely ignored here
-    ms = ms.filter(filter_values, search="inexact")
+    ms = ms.filter(i_filter_values, search="inexact")
+    ms = ms.filter(e_filter_values, search="exact")
+    ms = ms.filter(r_filter_values, search="regex")
     motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
 
     print(">> motifs loaded:", len(motif_list))
