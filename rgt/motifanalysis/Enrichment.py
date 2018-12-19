@@ -56,6 +56,8 @@ def options(parser):
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
                        help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                             "be considered associated with the latter.")
+    group.add_argument("--exclude-target-genes", action="store_true", help="If set the specified target genes are"
+                                                                           "excluded from backgroundfile")
 
     # Output Options
     group = parser.add_argument_group("Output",
@@ -185,9 +187,9 @@ def main(args):
     if args.motif_dbs:
         # must overwrite the default DBs
         motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", motif_data.repositories_list)
+        print(">> custom motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
     else:
-        print(">> motif repositories:", motif_data.repositories_list)
+        print(">> motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
 
     # Reading motif file
     selected_motifs = []
@@ -370,11 +372,11 @@ def main(args):
     if is_bb(background_mpbs_original_filename):
         os.remove(background_mpbs_filename)
 
-    # scheduling region sets for garbage collection
-    del background.sequences[:]
-    del background
-    del background_mpbs.sequences[:]
-    del background_mpbs
+    # # scheduling region sets for garbage collection
+    # del background.sequences[:]
+    # del background
+    # del background_mpbs.sequences[:]
+    # del background_mpbs
 
     secs = time.time() - start
     print("[", "%02.3f" % secs, " seconds]", sep="")
@@ -651,6 +653,9 @@ def main(args):
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
+
+                # subtract target_genes
+                # fisher dict for new background
 
             ###################################################################################################
             # Final wrap-up

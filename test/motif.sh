@@ -30,30 +30,39 @@ fi
 # Run test script
 cd $DEST
 echo "Running matching.."
-rgt-motifanalysis matching --organism hg19 --input-files input/regions_K562.bed input/background.bed
-mv match/background_mpbs.bed match/background_mpbs_no_filter.bed
-mv match/regions_K562_mpbs.bed match/regions_K562_mpbs_no_filter.bed
-rgt-motifanalysis matching --organism hg19 --filter "database:jaspar_vertebrates" --input-files input/regions_K562.bed input/background.bed
+echo
+echo ".. with filter"
+rgt-motifanalysis matching --organism hg19 --efilter "database:jaspar_vertebrates" --input-files input/regions_K562.bed input/background.bed
 mv match/background_mpbs.bed match/background_mpbs_filter.bed
 mv match/regions_K562_mpbs.bed match/regions_K562_mpbs_filter.bed
+echo
+echo ".. without filter"
+rgt-motifanalysis matching --organism hg19 --input-files input/regions_K562.bed input/background.bed
 
-a=$(md5sum match/background_mpbs_no_filter.bed)
-b=$(md5sum match/background_mpbs_filter.bed)
-c=$(md5sum match/regions_K562_mpbs_no_filter.bed)
-d=$(md5sum match/regions_K562_mpbs_filter.bed)
-
-if [ ${a} != ${b} ]
-then
-    echo "filter error in background_mpbs"
-fi
-if [ ${c} != ${d} ]
-then
-    echo "filter error in regions_K562_mpbs"
-fi
-echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
+a=$(sort match/background_mpbs.bed | md5sum | awk '{ print $1 }')
+b=$(sort match/background_mpbs_filter.bed | md5sum | awk '{ print $1 }')
+c=$(sort match/regions_K562_mpbs.bed | md5sum | awk '{ print $1 }')
+d=$(sort match/regions_K562_mpbs_filter.bed | md5sum | awk '{ print $1 }')
 
 echo
+if [ ${a} != ${b} ]
+then
+    echo "filter error in background_mpbs:"
+    echo ${a}
+    echo ${b}
+fi
+echo
+if [ ${c} != ${d} ]
+then
+    echo "filter error in regions_K562_mpbs:"
+    echo ${c}
+    echo ${d}
+fi
+
+echo
+
+echo "Running enrichment.."
+rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
 
 # Promoter test
 cd $DIR
@@ -74,9 +83,9 @@ fi
 # Run test script
 cd $DEST
 echo "Running matching.."
-rgt-motifanalysis matching --organism hg19 --target-genes input/genes.txt --input-files input/background.bed
+rgt-motifanalysis matching --organism hg19 --make-background --target-genes input/genes.txt --promoters-only
 echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 --logo-copy input/background.bed match/target_regions.bed
+rgt-motifanalysis enrichment --organism hg19 --logo-copy match/background_regions.bed match/target_regions.bed
 
 echo
 

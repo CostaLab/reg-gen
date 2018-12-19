@@ -444,7 +444,7 @@ class MotifSet:
 
             # check whether ma provides the motif matching threshold for the given fpr
             # recalculate (and store) it otherwise
-            if ma.thresholds[fpr]:
+            if fpr in ma.thresholds and ma.thresholds[fpr]:
                 threshold = ma.thresholds[fpr]
             else:
                 pfm = parsers.pfm(motif_file_name)

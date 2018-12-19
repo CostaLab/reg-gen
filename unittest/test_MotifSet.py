@@ -356,10 +356,18 @@ class MotifSetTest(unittest.TestCase):
 
     def test_create_motif_list(self):
         ms2 = self.motif_set.filter({'name': ["PITX"]}, search="inexact")  # 5 Motifs
-        threshold = ms2.__getitem__("PITX2_HUMAN.H11MO.0.D").thresholds[0.0001]
+        threshold = ms2["PITX2_HUMAN.H11MO.0.D"].thresholds[0.0001]
+        # we remove the pre-calculated thresholds so we can test whether the calculation works
         for ma in iter(ms2):
             for fpr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
-                ma.thresholds[fpr] = []  # delete threshold dict to execute the code beyond the else
+                ma.thresholds[fpr] = []
+        # is the new threshold equal to the mtf one?
         ml = ms2.create_motif_list(1.0, 0.0001)
         self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list calculates threshold incorrectly")
-        self.assertEqual(len(ml), 5)
+        self.assertEqual(len(ml), len(ms2))
+        # is the threshold calculated for non-standard fpr?
+        for ma in iter(ms2):
+            ma.thresholds = {}
+        ml = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list doesn't work for empty thresholds")
+        self.assertEqual(len(ml), len(ms2))
