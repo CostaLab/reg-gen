@@ -1151,7 +1151,8 @@ class GenomicRegionSet:
         """
 
         z = GenomicRegionSet(self.name + ' - ' + y.name)
-        if len(self) == 0 or len(y) == 0: return self
+        if len(self) == 0 or len(y) == 0:
+            return self
 
         # If there is overlap within self or y, they should be merged first. 
         if not self.sorted:
@@ -1327,7 +1328,8 @@ class GenomicRegionSet:
             - w_return -- If TRUE, it returns a GenomicRegionSet; if FALSE, it merges the regions in place.
             - namedistinct -- Merge the regions which have the same names only.
         """
-        if not self.sorted: self.sort()
+        if not self.sorted:
+            self.sort()
 
         if len(self.sequences) in [0, 1]:
             if w_return:

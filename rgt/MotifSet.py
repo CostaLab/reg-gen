@@ -30,6 +30,7 @@ class MotifAnnotation:
       - name -- Transcription factor name (symbol).
       - database -- Database/repository in which this motif was obtained from.
       - family -- Class/Family of transcription factor motif (can be any string).
+      - version -- A string representing the version of the motif.
       - gene_names -- List of gene names for this transcription factor (usually only one, sometimes two)
       - uniprot_ids -- List of UniProt accession IDs for this transcription factor (like above)
       - data_source -- A string representing the 'Source' this transcription factor was generated from,
@@ -70,17 +71,29 @@ class MotifSet:
           - preload_motifs -- Must be a list of repositories from which the motifs should be taken
           if preload_motifs == None an empty MotifSet is created
           if preload_motifs == "default" all available(determined in config file) repositories are used to load motifs
+
+          - motif_dbs -- if True, preload motifs is not a list of repositories but a list of paths to pwm files
     """
 
-    def __init__(self, preload_motifs=None):
+    def __init__(self, preload_motifs=None, motif_dbs=False):
         self.motifs_map = {}
         self.networks = {}
         self.motifs_enrichment = {}
         self.conditions = []
 
         if preload_motifs:
-            self.motif_data = MotifData(repositories=preload_motifs)
-            self.read_mtf(self.motif_data.mtf_list)
+            if motif_dbs:
+                # FIXME set attributes correctly
+                # create empty MotifData and set attributes manually
+                self.motif_data = MotifData(repositories="Empty")
+                self.motif_data.repositories_list = []
+                for dir_path in preload_motifs:
+                    self.motif_data.pwm_list.append(dir_path)
+                self.motif_data.logo_list = []
+                self.motif_data.mtf_list = []
+            else:
+                self.motif_data = MotifData(repositories=preload_motifs)
+                self.read_mtf(self.motif_data.mtf_list)
 
     def __len__(self):
         return len(self.motifs_map)

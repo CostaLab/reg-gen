@@ -153,6 +153,8 @@ class MotifData(ConfigurationFile):
         ConfigurationFile.__init__(self)
         if not repositories or repositories == "default":
             self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
+        elif repositories == "Empty":
+            self.repositories_list = []
         else:
             if not isinstance(repositories, list):
                 repositories = [repositories]

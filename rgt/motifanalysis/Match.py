@@ -140,9 +140,6 @@ def main(args):
 
     # Converting given filter lists to a dictionary that can be used by the filter function
     # dictionaries might contain invalid keys which will raise in error when applying the filter function
-
-    # inexact filter
-
     filter_values = {}
     if args.motif_filter_i or args.motif_filter_e or args.motif_filter_r:
         if args.motif_filter_i:
@@ -394,7 +391,8 @@ def main(args):
     ###################################################################################################
 
     if args.motif_dbs:
-        ms = MotifSet(preload_motifs=args.motif_dbs)
+        ms = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
+        # only filter for dbs if --motif_dbs is not set
         if 'database' in filter_values:
             del filter_values['database']
     else:

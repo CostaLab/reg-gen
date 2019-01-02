@@ -155,10 +155,10 @@ def get_fisher_dict(motif_names, regions, mpbs, gene_set=False, mpbs_set=False):
     mpbs_set -- TODO
 
     Return:
-    res1_dict -- TODO
-    res2_dict -- TODO
+    res1_dict -- dictionary containing number of input regions intersecting with mpbs regions. Keys: motif names
+    res2_dict --  dictionary containing number of input regions not intersecting with mpbs regions. Keys: motif names
     geneset_dict -- TODO
-    mpbs_dict -- TODO
+    mpbs_dict -- GenomicRegionSet of mpbs regions intersecting with input regions. Keys: motif names
     """
 
     # Calculating statistics for EV

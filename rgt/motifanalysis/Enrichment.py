@@ -655,7 +655,10 @@ def main(args):
                                                                               gene_set=True, mpbs_set=True)
 
                 # subtract target_genes
+                background_tmp = background.subtract(grs, whole_region=False, merge=False)
+
                 # fisher dict for new background
+                bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
