@@ -84,6 +84,28 @@ def options(parser):
     parser.add_argument('input_files', metavar='input.bed', type=str, nargs='*',
                         help='BED files to be enriched against the background.')
 
+# def subtract_exact(background, target):
+#     """
+#     creates smaller background file where all target regions are excluded
+#     :param background: GenomicRegionSet - original background region set
+#     :param target: GenomicRegionSet - target region set
+#     :return: GenomicRegionSet - smaller background region set only containing regions not included in target regions
+#     """
+#     background.sort()
+#     target.sort()
+#     small_background = GenomicRegionSet("background_tmp")
+#     count_target_regions = 0
+#
+#     for region in background.sequences:
+#        if region.initial == target.sequences[count_target_regions].initial:
+#            if region.final == target.sequences[count_target_regions].final:
+#                 count_target_regions = count_target_regions + 1
+#            elif region.final < target.sequences[count_target_regions].final:
+#
+#        elif region.initial < target.sequences[count_target_regions].initial:
+#            small_background.add(region)
+#         else
+
 
 def main(args):
     """
@@ -650,21 +672,16 @@ def main(args):
                                            promoter_length=args.promoter_length,
                                            thresh_dist=args.maximum_association_length)
 
-                back_wo_target, target_wo_back, inter = background.intersect_count(grs)
-                print("background regions - target regions = " + str(back_wo_target) + "\n")
-                print("target regions - background regions = " + str(target_wo_back) + "\n")
-                print("intersection = " + str(inter) + "\n")
-
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
 
-                # if args.exclude_target_genes:
-                # subtract target_genes
-                # background_tmp = background.subtract(grs, whole_region=False, merge=True)
+                if args.exclude_target_genes:
+                    # subtract target_genes
+                    background_tmp = background.subtract(grs, whole_region=False, merge=False)
 
-                # fisher dict for new (smaller) background
-                # bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
+                    # fisher dict for new (smaller) background
+                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
@@ -679,13 +696,6 @@ def main(args):
                 r.b = b_dict[k]
                 r.c = bg_c_dict[k]
                 r.d = bg_d_dict[k]
-                if args.exclude_target_genes:
-                    r.c = r.c - r.a
-                    r.d = r.d - r.b
-                print(r.a)
-                print(r.b)
-                print(r.c)
-                print(r.d)
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
                 r.genes = ev_genes_dict[k]
