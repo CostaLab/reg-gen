@@ -654,12 +654,12 @@ def main(args):
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
 
-                if args.exclude_target_genes:
+                # if args.exclude_target_genes:
                     # subtract target_genes
-                    background_tmp = background.subtract(grs, whole_region=True, merge=True)
+                    # background_tmp = background.subtract(grs, whole_region=True, merge=True)
 
                     # fisher dict for new (smaller) background
-                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
+                    # bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
@@ -672,8 +672,12 @@ def main(args):
                 r.name = k
                 r.a = a_dict[k]
                 r.b = b_dict[k]
-                r.c = bg_c_dict[k]
-                r.d = bg_d_dict[k]
+                if args.exclude_target_genes:
+                    r.c = bg_c_dict[k] - r.a
+                    r.d = bg_d_dict[k] - r.b
+                else:
+                    r.c = bg_c_dict[k]
+                    r.d = bg_d_dict[k]
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
                 r.genes = ev_genes_dict[k]
