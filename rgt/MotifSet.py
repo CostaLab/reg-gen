@@ -83,14 +83,9 @@ class MotifSet:
 
         if preload_motifs:
             if motif_dbs:
-                # FIXME set attributes correctly
                 # create empty MotifData and set attributes manually
                 self.motif_data = MotifData(repositories="Empty")
-                self.motif_data.repositories_list = []
-                for dir_path in preload_motifs:
-                    self.motif_data.pwm_list.append(dir_path)
-                self.motif_data.logo_list = []
-                self.motif_data.mtf_list = []
+                self.motif_data.set_custom(preload_motifs)
             else:
                 self.motif_data = MotifData(repositories=preload_motifs)
                 self.read_mtf(self.motif_data.mtf_list)
