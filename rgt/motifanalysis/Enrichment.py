@@ -650,16 +650,21 @@ def main(args):
                                            promoter_length=args.promoter_length,
                                            thresh_dist=args.maximum_association_length)
 
+                back_wo_target, target_wo_back, inter = background.intersect_count(grs)
+                print("background regions - target regions = " + str(back_wo_target) + "\n")
+                print("target regions - background regions = " + str(target_wo_back) + "\n")
+                print("intersection = " + str(inter) + "\n")
+
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
 
-                if args.exclude_target_genes:
-                    # subtract target_genes
-                    background_tmp = background.subtract(grs, whole_region=False, merge=True)
+                # if args.exclude_target_genes:
+                # subtract target_genes
+                # background_tmp = background.subtract(grs, whole_region=False, merge=True)
 
-                    # fisher dict for new (smaller) background
-                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
+                # fisher dict for new (smaller) background
+                # bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
@@ -674,6 +679,13 @@ def main(args):
                 r.b = b_dict[k]
                 r.c = bg_c_dict[k]
                 r.d = bg_d_dict[k]
+                if args.exclude_target_genes:
+                    r.c = r.c - r.a
+                    r.d = r.d - r.b
+                print(r.a)
+                print(r.b)
+                print(r.c)
+                print(r.d)
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
                 r.genes = ev_genes_dict[k]

@@ -62,7 +62,7 @@ fi
 echo
 
 echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
+rgt-motifanalysis enrichment --organism hg19 --exclude-target-genes input/background.bed input/regions_K562.bed
 
 echo
 

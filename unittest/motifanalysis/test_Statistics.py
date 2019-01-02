@@ -117,30 +117,27 @@ class StatisticsTest(unittest.TestCase):
         self.assertEqual(len(ms["HIC2"]), 8)
 
         # test whether both approaches lead to the same result:
-        # safe: for each input file subtract target regions(regions)(manually or with GenomicRegionSet.subtract()) from
-        # background regions (regions2) and compute fisher dict for smaller background region (background_tmp)
-        # fast: compute fisher dict for background region and subtract respective counts for each input file (regions)
+        # safe: for each input file subtract target regions(manually or with GenomicRegionSet.subtract()) from
+        # background regions and compute fisher dict for smaller background region (background_tmp)
+        # fast: compute fisher dict for background region and subtract respective counts for each input file
         # from counts inside background fisher dict
 
         motif_names = ["LARGE", "MCAT", "PDXP", "HIC2"]
 
-        for background in [regions2]:
+        for target_regions in [regions2]:
 
-            background_tmp = regions.subtract(background, whole_region=False, merge=False)
+            background_tmp = regions.subtract(target_regions, whole_region=False, merge=False)
 
-            # self.assertEqual(len(regions.sequences)-len(background.sequences), len(background_tmp.sequences),
-            # msg=str(background.name) + ": " + str(len(regions.sequences)-len(background.sequences))
-            # + " != " + str(len(background_tmp.sequences)))
+            self.assertEqual(len(regions.sequences)-len(target_regions.sequences), len(background_tmp.sequences),
+                             msg=str(len(regions.sequences)-len(target_regions.sequences)) + " != " +
+                             str(len(background_tmp.sequences)) + ", " + str(target_regions.name))
 
-            bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, regions, mpbs)  # target regions
-            bg_a_dict, bg_b_dict, _, _ = get_fisher_dict(motif_names, background, mpbs)  # background
+            bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, regions, mpbs)  # regions = background
+            bg_a_dict, bg_b_dict, _, _ = get_fisher_dict(motif_names, target_regions, mpbs)  # target regions
             bg_c_tmp_dict, bg_d_tmp_dict, _, _ = get_fisher_dict(motif_names, background_tmp, mpbs)
-
-            print(bg_c_tmp_dict)
 
             for gene in bg_c_tmp_dict:
                 self.assertEqual(bg_c_tmp_dict[gene], bg_c_dict[gene]-bg_a_dict[gene])
 
-            print(bg_d_tmp_dict)
             for gene in bg_d_tmp_dict:
                 self.assertEqual(bg_d_tmp_dict[gene], bg_d_dict[gene]-bg_b_dict[gene])
