@@ -64,6 +64,8 @@ echo
 echo "Running enrichment.."
 rgt-motifanalysis enrichment --organism hg19 --exclude-target-genes input/background.bed input/regions_K562.bed
 
+echo
+
 # Promoter test
 cd $DIR
 echo "Promoter Test:"
