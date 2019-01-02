@@ -656,7 +656,7 @@ def main(args):
 
                 if args.exclude_target_genes:
                     # subtract target_genes
-                    background_tmp = background.subtract(grs, whole_region=True, merge=False)
+                    background_tmp = background.subtract(grs, whole_region=False, merge=True)
 
                     # fisher dict for new (smaller) background
                     bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
