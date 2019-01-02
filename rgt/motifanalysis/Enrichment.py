@@ -57,7 +57,7 @@ def options(parser):
                        help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                             "be considered associated with the latter.")
     group.add_argument("--exclude-target-genes", action="store_true", help="If set the specified target genes are"
-                                                                           "excluded from backgroundfile")
+                                                                           "excluded from background file")
 
     # Output Options
     group = parser.add_argument_group("Output",
@@ -654,11 +654,12 @@ def main(args):
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
 
-                # subtract target_genes
-                background_tmp = background.subtract(grs, whole_region=False, merge=False)
+                if args.exclude_target_genes:
+                    # subtract target_genes
+                    background_tmp = background.subtract(grs, whole_region=False, merge=False)
 
-                # fisher dict for new background
-                bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
+                    # fisher dict for new (smaller) background
+                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
