@@ -122,22 +122,24 @@ class StatisticsTest(unittest.TestCase):
         # fast: compute fisher dict for background region and subtract respective counts for each input file
         # from counts inside background fisher dict
 
-        motif_names = ["LARGE", "MCAT", "PDXP", "HIC2"]
+        # TODO does not work because there are target regions which are not part of the background regions
 
-        for target_regions in [regions2]:
-
-            background_tmp = regions.subtract(target_regions, whole_region=False, merge=False)
-
-            self.assertEqual(len(regions.sequences)-len(target_regions.sequences), len(background_tmp.sequences),
-                             msg=str(len(regions.sequences)-len(target_regions.sequences)) + " != " +
-                             str(len(background_tmp.sequences)) + ", " + str(target_regions.name))
-
-            bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, regions, mpbs)  # regions = background
-            bg_a_dict, bg_b_dict, _, _ = get_fisher_dict(motif_names, target_regions, mpbs)  # target regions
-            bg_c_tmp_dict, bg_d_tmp_dict, _, _ = get_fisher_dict(motif_names, background_tmp, mpbs)
-
-            for gene in bg_c_tmp_dict:
-                self.assertEqual(bg_c_tmp_dict[gene], bg_c_dict[gene]-bg_a_dict[gene])
-
-            for gene in bg_d_tmp_dict:
-                self.assertEqual(bg_d_tmp_dict[gene], bg_d_dict[gene]-bg_b_dict[gene])
+        # motif_names = ["LARGE", "MCAT", "PDXP", "HIC2"]
+        #
+        # for target_regions in [regions2]:
+        #
+        #     background_tmp = regions.subtract(target_regions, whole_region=False, merge=False)
+        #
+        #     self.assertEqual(len(regions.sequences)-len(target_regions.sequences), len(background_tmp.sequences),
+        #                      msg=str(len(regions.sequences)-len(target_regions.sequences)) + " != " +
+        #                      str(len(background_tmp.sequences)) + ", " + str(target_regions.name))
+        #
+        #     bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, regions, mpbs)  # regions = background
+        #     bg_a_dict, bg_b_dict, _, _ = get_fisher_dict(motif_names, target_regions, mpbs)  # target regions
+        #     bg_c_tmp_dict, bg_d_tmp_dict, _, _ = get_fisher_dict(motif_names, background_tmp, mpbs)
+        #
+        #     for gene in bg_c_tmp_dict:
+        #         self.assertEqual(bg_c_tmp_dict[gene], bg_c_dict[gene]-bg_a_dict[gene])
+        #
+        #     for gene in bg_d_tmp_dict:
+        #         self.assertEqual(bg_d_tmp_dict[gene], bg_d_dict[gene]-bg_b_dict[gene])

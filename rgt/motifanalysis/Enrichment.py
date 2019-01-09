@@ -84,27 +84,109 @@ def options(parser):
     parser.add_argument('input_files', metavar='input.bed', type=str, nargs='*',
                         help='BED files to be enriched against the background.')
 
-# def subtract_exact(background, target):
-#     """
-#     creates smaller background file where all target regions are excluded
-#     :param background: GenomicRegionSet - original background region set
-#     :param target: GenomicRegionSet - target region set
-#     :return: GenomicRegionSet - smaller background region set only containing regions not included in target regions
-#     """
-#     background.sort()
-#     target.sort()
-#     small_background = GenomicRegionSet("background_tmp")
-#     count_target_regions = 0
-#
-#     for region in background.sequences:
-#        if region.initial == target.sequences[count_target_regions].initial:
-#            if region.final == target.sequences[count_target_regions].final:
-#                 count_target_regions = count_target_regions + 1
-#            elif region.final < target.sequences[count_target_regions].final:
-#
-#        elif region.initial < target.sequences[count_target_regions].initial:
-#            small_background.add(region)
-#         else
+
+def subtract_exact(background, target):
+    """
+    creates smaller background file where all target regions are excluded
+    :param background: GenomicRegionSet - original background region set
+    :param target: GenomicRegionSet - target region set
+    :return: GenomicRegionSet - smaller background region set only containing regions not included in target regions
+                                does not contain any duplicates and is sorted
+    """
+    if len(background.sequences) > 1:
+        background.sort()
+        target.sort()
+        small_background = GenomicRegionSet("background_tmp")
+        count_target_regions = 0
+        last_region = background.sequences[-1]  # save the last background region looked at (handling of duplicates)
+
+        for region in background.sequences:
+            if region.__cmp__(last_region) != 0:  # handling of duplicates within background GRS
+                if region.chrom == target.sequences[count_target_regions].chrom:
+                    if region.initial == target.sequences[count_target_regions].initial:
+
+                        if region.final == target.sequences[count_target_regions].final:
+                            # target      |-----|
+                            # background  |-----|
+                            count_target_regions = count_target_regions + 1
+
+                        elif region.final < target.sequences[count_target_regions].final:
+                            # target        |------|
+                            # background    |---|
+                            small_background.add(region)
+
+                        else:
+                            # target        |----|
+                            # background    |------|
+                            loop = 1
+                            while target.sequences[count_target_regions].final < region.final and loop:
+                                if count_target_regions < len(target.sequences) - 1:
+                                    count_target_regions = count_target_regions + 1
+                                    if target.sequences[count_target_regions].chrom > region.chrom:
+                                        small_background.add(region)
+                                        loop = 0
+                                    else:
+                                        if target.sequences[count_target_regions].final == region.final:
+                                            # target      |-----|
+                                            # background  |-----|
+                                            count_target_regions = count_target_regions + 1
+                                        if target.sequences[count_target_regions].final > region.final:
+                                            # target        |----|
+                                            # background    |---|
+                                            small_background.add(region)
+                                else:
+                                    # reached the last region in target GRS and this is not exactly mapping
+                                    small_background.add(region)
+                                    loop = 0
+
+                    elif region.initial < target.sequences[count_target_regions].initial:
+                        # target       |---| |        |----| |     |---|     |    |---|
+                        # background |---|   |  |---|        |   |-----|     |   |------|
+                        small_background.add(region)
+
+                    else:
+                        # target     |---|        |  |---|      | |-----| |   |----|
+                        # background       |---|  |     |---|   |   |--|  |     |--|
+                        loop = 1
+                        while target.sequences[count_target_regions].initial < region.initial and loop:
+                            if count_target_regions < len(target.sequences) - 1:
+                                    count_target_regions = count_target_regions + 1
+                                    if target.sequences[count_target_regions].chrom > region.chrom:
+                                        small_background.add(region)
+                                        loop = 0
+                                    else:
+                                        if target.sequences[count_target_regions].final == region.final:
+                                            # target      |-----|
+                                            # background  |-----|
+                                            count_target_regions = count_target_regions + 1
+                                        elif target.sequences[count_target_regions].initial > region.initial:
+                                            # target       |---| |        |----| |     |---|     |    |---|
+                                            # background |---|   |  |---|        |   |-----|     |   |------|
+                                            small_background.add(region)
+                            else:
+                                # reached the last region in target GRS and this is not exactly mapping
+                                small_background.add(region)
+                                loop = 0
+
+                elif region.chrom > target.sequences[count_target_regions].chrom:
+                    count_target_regions = count_target_regions + 1
+                else:
+                    # region.chrom < target.sequences[count_target_regions].chrom:
+                    small_background.add(region)
+
+            # update last region looked at
+            last_region = region
+
+        return small_background
+
+    elif len(background.sequences) == 1:
+        for target_region in target.sequences:
+            if target_region.__cmp__(background.sequences[0]) == 0:
+                return GenomicRegionSet("background_tmp")  # return empty GRS
+        return background
+    else:
+        # background is empty GRS
+        return background
 
 
 def main(args):
@@ -678,7 +760,7 @@ def main(args):
 
                 if args.exclude_target_genes:
                     # subtract target_genes
-                    background_tmp = background.subtract(grs, whole_region=False, merge=False)
+                    background_tmp = subtract_exact(background, grs)
 
                     # fisher dict for new (smaller) background
                     bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)

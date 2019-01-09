@@ -1,0 +1,13 @@
+chr9    1   2   LARGE   .   -
+chr9	2	16	CABIN1	.	+
+chr9	4	12	DRG1	.	+
+chr9	7	25	LARGE	.	-
+chr9	30	43	PDXP	.	+
+chr9	32	39	ACO2	.	+
+chr9	42	45	DRG1	.	-
+chr9	45	56	CABIN1	.	+
+chr9	53	76	DRG1	.	+
+chr9	70	76	LARGE	.	-
+chr9	70	82	PDXP	.	+
+chr9	71	85	ACO2	.	+
+chr9	86	99	DRG1	.	-
