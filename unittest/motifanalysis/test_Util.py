@@ -6,7 +6,8 @@ import unittest
 import os
 
 # Internal
-from rgt.motifanalysis.Util import Result, is_bed, is_bb, bed_to_bb, bb_to_bed
+from rgt.motifanalysis.Util import Input, Result, is_bed, is_bb, bed_to_bb, bb_to_bed
+from rgt.GeneSet import GeneSet
 
 
 class UtilTest(unittest.TestCase):
@@ -40,4 +41,13 @@ class UtilTest(unittest.TestCase):
         self.assertEqual(res.d, 0)
         self.assertEqual(res.percent, 0.0)
         self.assertEqual(res.back_percent, 0.0)
-        self.assertEqual(res.genes, None)
+        self.assertEqual(res.genes, [])
+        self.assertEqual(str(res), "\t".join(["", "0.0", "0.0", "0", "0", "0", "0", "0.0", "0.0", ""]))
+
+    def test_input(self):
+        gene_set = GeneSet("gene_set")
+        region_list = []
+        test_input = Input(gene_set, region_list)
+
+        self.assertEqual(test_input.gene_set, gene_set)
+        self.assertEqual(test_input.region_list, region_list)

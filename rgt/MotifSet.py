@@ -83,7 +83,7 @@ class MotifSet:
 
         if preload_motifs:
             if motif_dbs:
-                # create empty MotifData and set attributes manually
+                # create empty MotifData and set attributes manually (preload motifs is a list of paths to pwm files)
                 self.motif_data = MotifData(repositories="Empty")
                 self.motif_data.set_custom(preload_motifs)
             else:

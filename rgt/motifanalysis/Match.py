@@ -392,7 +392,7 @@ def main(args):
 
     if args.motif_dbs:
         ms = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
-        # only filter for dbs if --motif_dbs is not set
+        # filter for dbs only if --motif_dbs is not set
         if 'database' in filter_values:
             del filter_values['database']
     else:
