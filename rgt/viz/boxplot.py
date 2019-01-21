@@ -130,15 +130,15 @@ class Boxplot:
 
     def print_plot_table(self, directory, folder):
         for i, bed in enumerate(self.tableDict.keys()):
-            # table = []
-            # header = ["chrom", "initial", "final"]
-            # for rp in self.reads:
-            #     header.append(os.path.basename(rp))
-            # table.append(header)
-            # for j, re in enumerate(self.beds[i]):
-            #     table.append([re.chrom, re.initial, re.final] + self.tableDict[bed][j].tolist())
+            table = []
+            header = ["loci"]
+            for rp in self.reads:
+                header.append(os.path.basename(rp))
+            table.append(header)
+            for j, re in enumerate(self.beds[i]):
+                table.append(["_".join([re.chrom, str(re.initial), str(re.final)])] + self.tableDict[bed][j].tolist())
             # output_array(table, directory, folder, filename="table_" + bed + ".txt")
-            output_array(self.tableDict[bed], directory, folder, filename="table_" + bed + ".txt")
+            output_array(table, directory, folder, filename="table_" + bed + ".txt")
 
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -223,24 +223,24 @@ class Boxplot:
         self.colors = colormap(self.exps, colorby, definedinEM)
 
     def print_table(self, directory, folder):
-
-        # self.printtable = OrderedDict()
-        table = []
-        maxn = 0
-        # table.append(["#group_tag", "sort_tag", "color_tag", "Signals"])
-        for i, g in enumerate(self.group_tags):
-            for k, a in enumerate(self.sort_tags):
-                for j, c in enumerate(self.color_tags):
-                    table.append([g, a, c] + [str(x) for x in self.sortDict[g][a][c]])
-                    c = len(self.sortDict[g][a][c]) + 3
-                    if c > maxn: maxn = c
-        for i, t in enumerate(table):
-            if len(t) < maxn:
-                table[i] = t + ["n.a."] * (maxn - len(t))
+        self.print_plot_table(directory,folder)
+        # # self.printtable = OrderedDict()
+        # table = []
+        # maxn = 0
+        # # table.append(["#group_tag", "sort_tag", "color_tag", "Signals"])
+        # for i, g in enumerate(self.group_tags):
+        #     for k, a in enumerate(self.sort_tags):
+        #         for j, c in enumerate(self.color_tags):
+        #             table.append([g, a, c] + [str(x) for x in self.sortDict[g][a][c]])
+        #             c = len(self.sortDict[g][a][c]) + 3
+        #             if c > maxn: maxn = c
+        # for i, t in enumerate(table):
+        #     if len(t) < maxn:
+        #         table[i] = t + ["n.a."] * (maxn - len(t))
 
         # print
 
-        output_array(numpy.array([list(x) for x in zip(*table)]), directory, folder, filename="output_table.txt")
+        # output_array(numpy.array([list(x) for x in zip(*table)]), directory, folder, filename="output_table.txt")
 
     def plot(self, title, scol, logT=False, ylim=False, pw=3, ph=4):
         """ Return boxplot from the given tables.
@@ -308,7 +308,7 @@ class Boxplot:
                 self.xtickrotation = 70
                 self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
-                    if not self.sortDict[g][a][c]:  # When there is no matching data, skip it
+                    if not numpy.any(self.sortDict[g][a][c]):  # When there is no matching data, skip it
                         continue
                     else:
                         if self.df:

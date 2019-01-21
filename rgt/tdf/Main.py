@@ -210,7 +210,7 @@ def main():
 
                 print("merging DBDs...")
                 merge_DBD_regions(path=target)
-                print("merging DBSs...")
+                print("merging TTSs...")
                 merge_DBSs(path=target)
                 print("merging DNA counts...")
                 merge_DNA_counts(path=target)
@@ -331,7 +331,7 @@ def main():
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
         tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                          prefix="target_promoters", remove_temp=True)
+                                          prefix="target_promoters", remove_temp=True, summary_file=True)
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
@@ -361,8 +361,8 @@ def main():
             no_binding_response(args=args,  stat=stat.stat)
         else:
             reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
-                               linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of TTSs",
+                               linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
             reports.barplot(filename=args.rn+"_barplot.png")
             reports.gen_html_promotertest()
             reports.gen_html_genes()
@@ -408,7 +408,8 @@ def main():
         stat = Statistics(pars=args)
         stat.tpx = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                      target_regions=tdf_input.dna.target_regions,
-                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False)
+                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False,
+                                     summary_file = True)
 
         stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                       target_regions=tdf_input.dna.target_regions,
@@ -451,11 +452,11 @@ def main():
 
             else:
                 reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-                reports.plot_lines(tpx=stat.tpx, ylabel="Number of DBSs",
-                                   linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+                reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
+                                   linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
                 reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
                                 truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
-                                ylabel="Number of DBS on target regions")
+                                ylabel="Number of TTS on target regions")
                 reports.gen_html_regiontest()
 
             t3 = time.time()
