@@ -551,10 +551,10 @@ class Report(object):
                             "Target Promoter", None, "Non-target Promoter", None, "Statistics", None,
                             "Target Promoter", None, "Non-target Promoter", None, "Statistics", None],
                            [" ", " ",
-                            "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>-value",
-                            "No. DBSs", "Other DBSs", "No. DBSs", "Other DBSs", "OR", "<i>p</i>-value"]]
+                            "with TTS", "without TTS", "with TTS", "without TTS", "OR", "<i>p</i>-value",
+                            "No. TTSs", "Other TTSs", "No. TTSs", "Other TTSs", "OR", "<i>p</i>-value"]]
             header_titles = [["", "", "Statistics on promoter level", None, None, None, None, None,
-                              "Statistics on DBS level", None, None, None, None, None],
+                              "Statistics on TTS level", None, None, None, None, None],
                              ["Rank of the talbe",
                               "DNA Binding Domain which is the functional region on RNA.",
                               "Promoters of the differential expression genes.", None,
@@ -562,18 +562,18 @@ class Report(object):
                               "Statistics based on promoters", None,
                               "Promoters of the differential expression genes.", None,
                               "Promoters of the non-differential expression genes.", None,
-                              "Statistics based on DBSs", None],
+                              "Statistics based on TTSs", None],
                              ["",
                               "",
-                              "Number of target promoters which contain DBSs (DNA Binding Sites).",
-                              "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
-                              "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
-                              "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
+                              "Number of target promoters which contain TTSs.",
+                              "Number of target promoters which don't contain TTSs.",
+                              "Number of non-target promoters which contain TTSs.",
+                              "Number of non-target promoters which don't contain TTSs.",
                               "Odds Ratio", "P-value",
-                              "Number of DBSs found in the target promoters.",
-                              "Number of DBSs not found in the target promoters.",
-                              "Number of DBSs found in the non-target promoters.",
-                              "Number of DBSs not found in the non-target promoters.",
+                              "Number of TTSs found in the target promoters.",
+                              "Number of TTSs not found in the target promoters.",
+                              "Number of TTSs found in the non-target promoters.",
+                              "Number of TTSs not found in the non-target promoters.",
                               "Odds Ratio", "P-value"]
                              ]
             border_list = [" style=\"border-right:1pt solid gray\"",
@@ -586,7 +586,7 @@ class Report(object):
                            " style=\"border-right:1pt solid gray\""]
         else:
             header_list = [["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, "Autobinding"],
-                           [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>", "Number"]]
+                           [" ", " ", "with TTS", "without TTS", "with TTS", "without TTS", "OR", "<i>p</i>", "Number"]]
             header_titles = [["Rank of the talbe",
                               "DNA Binding Domain which is the functional region on RNA.",
                               "Promoters of the differential expression genes.", None,
@@ -594,10 +594,10 @@ class Report(object):
                               "Statistics based on promoters", None, "The RNA regions which bind to themselves"],
                              ["",
                               "",
-                              "Number of target promoters which contain DBSs (DNA Binding Sites).",
-                              "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
-                              "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
-                              "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
+                              "Number of target promoters which contain TTSs.",
+                              "Number of target promoters which don't contain TTSs.",
+                              "Number of non-target promoters which contain TTSs.",
+                              "Number of non-target promoters which don't contain TTSs.",
                               "Odds Ratio", "P-value", "Number"]
                              ]
             border_list = ["style=\"border-right:1pt solid gray\"",
@@ -659,8 +659,8 @@ class Report(object):
                              header_titles=header_titles, border_list=border_list, sortable=True)
         html.add_heading("Notes")
         html.add_list(["DBD stands for functional DNA Binding Domain on RNA.",
-                       "RBS stands for RNA Binding Site on RNA.",
-                       "DBS stands for DNA Binding Site on DNA."])
+                       "TFO stands for triplex forming oligonucleotide.",
+                       "TTS stands for triplex target DNA site."])
         ####
         html.add_fixed_rank_sortable()
         html.write(os.path.join(self.pars.o, "index.html"))
@@ -680,7 +680,7 @@ class Report(object):
             else:
                 score_header = ["Fold Change Score"]
 
-            header_list = ["#", "Promoter", "Gene", "DBSs counts", "DBS coverage"]
+            header_list = ["#", "Promoter", "Gene", "TTSs counts", "TTS coverage"]
             header_list += score_header
             header_list += ["Sum of Ranks"]
             header_titles = ["", "Target promoters", "Gene symbol",
@@ -691,7 +691,7 @@ class Report(object):
             header_titles += ["Sum up the ranks from left-hand side columns"]
 
         else:
-            header_list = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Sum of Ranks"]
+            header_list = ["#", "Promoter", "Gene", "TTSs Count", "TTS coverage", "Sum of Ranks"]
 
             header_titles = ["", "Target promoters", "Gene symbol",
                              "Number of DNA Binding sites locating within the promoter",
@@ -798,7 +798,7 @@ class Report(object):
                       ["known_only", "-known_only", str(self.pars.known_only)],
                       ["Promoter length", "-pl", str(self.pars.pl)],
                       ["Alpha level for rejection p value", "-a", str(self.pars.a)],
-                      ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(self.pars.ccf)],
+                      ["Cut off value for filtering out the DBD with low counts of triplexes", "-ccf", str(self.pars.ccf)],
                       ["Remove temporary files", "-rt", str(self.pars.rt)],
                       # ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
                       # ["Cut off value for RNA accecibility", "-accf", str(self.pars.accf)],
@@ -843,7 +843,7 @@ class Report(object):
                 #     score_header = ["Fold_change", "Filtered"]
                 # else:
                 score_header = ["Fold Change Score"]
-            header_listp = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage"]
+            header_listp = ["#", "Promoter", "Gene", "TTSs Count", "TTS coverage"]
             header_listp += score_header
             header_listp += ["Sum of Ranks"]
 
@@ -855,7 +855,7 @@ class Report(object):
             header_titlesp += ["Sum up the ranks from left-hand side columns"]
 
         else:
-            header_listp = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Sum of Ranks"]
+            header_listp = ["#", "Promoter", "Gene", "TTSs Count", "TTS coverage", "Sum of Ranks"]
 
             header_titlesp = ["", "Target promoters", "Gene symbol",
                               "Number of DNA Binding sites locating within the promoter",
@@ -924,16 +924,16 @@ class Report(object):
         html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
         html.add_heading("Notes")
-        html.add_list(["DBS stands for DNA Binding Site on DNA.",
-                       "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
+        html.add_list(["TTS stands for triplex target DNA site.",
+                       "TTS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
         html.add_fixed_rank_sortable()
         html.write(os.path.join(self.pars.o, "promoters.html"))
 
         ############################
         # Subpages for promoter centered page
         # promoters_dbds.html
-        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
-        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
+        header_sub = ["#", "TFO", "TTS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
+        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of TTS on DNA",
                          "Score of binding event", "Motif of binding by triple helix rule",
                          "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel", "Binding Sequence between DNA and RNA"]
         header_list = header_sub
@@ -1040,8 +1040,8 @@ class Report(object):
             html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
                                  header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
-            html.add_list(["DBS stands for DNA Binding Site on DNA.",
-                           "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
+            html.add_list(["TTS stands for triplex target DNA site.",
+                           "TTS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
             html.add_fixed_rank_sortable()
         html.write(os.path.join(self.pars.o, "spromoters.html"))
 
@@ -1128,16 +1128,16 @@ class Report(object):
         if self.pars.showdbs:
             header_list = [["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics",
                             "Target Regions", "Non-target Regions", None, "Statistics"],
-                           ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value",
-                            "NO. DBSs", "NO. DBSs (average)", "s.d.", "<i>p</i>-value"]]
+                           ["", "", "with TTS", "without TTS", "with TTS (average)", "s.d.", "<i>p</i>-value",
+                            "NO. TTSs", "NO. TTSs (average)", "s.d.", "<i>p</i>-value"]]
             header_titles = [["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
                               "Regions from randomization", None, "Statistics based on target regions",
                               "Given target regions on DNA", "Regions from randomization", None,
                               "Statistics based on DNA Binding Sites"],
                              ["", "",
-                              "Number of target regions with DBS binding",
-                              "Number of target regions without DBS binding",
-                              "Average number of regions from randomization with DBS binding",
+                              "Number of target regions with triplex binding",
+                              "Number of target regions without triplex binding",
+                              "Average number of regions from randomization with triplex binding",
                               "Standard deviation", "P value",
                               "Number of related DNA Binding Sites binding to target regions",
                               "Average number of DNA Binding Sites binding to random regions",
@@ -1152,15 +1152,15 @@ class Report(object):
                            " style=\"border-right:1pt solid gray\""]
         else:
             header_list = [["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", None, "Autobinding"],
-                           ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value",
+                           ["", "", "with TTS", "without TTS", "with TTS (average)", "s.d.", "<i>p</i>-value",
                             "z-score", "Number"]]
             header_titles = [["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
                               "Regions from randomization", None, "Statistics based on target regions", None,
                               "Regions bind to themselves"],
                              ["", "",
-                              "Number of target regions with DBS binding",
-                              "Number of target regions without DBS binding",
-                              "Average number of regions from randomization with DBS binding",
+                              "Number of target regions with triplex binding",
+                              "Number of target regions without triplex binding",
+                              "Average number of regions from randomization with triplex binding",
                               "Standard deviation", "P value", "Z-score", ""]]
             border_list = [" style=\"border-right:1pt solid gray\"",
                            " style=\"border-right:1pt solid gray\"", "",
@@ -1212,7 +1212,7 @@ class Report(object):
         html.add_list(["RNA name: " + self.pars.rn,
                        "Randomization is performed for " + str(self.pars.n) + " times.",
                        "DBD stands for DNA Binding Domain on RNA.",
-                       "DBS stands for DNA Binding Site on DNA."])
+                       "TTS stands for triplex target site."])
         html.add_fixed_rank_sortable()
         html.write(os.path.join(self.pars.o, "index.html"))
 
@@ -1222,12 +1222,12 @@ class Report(object):
 
         header_list = ["#", "Target Region",
                        "Associated Gene",
-                       "No. of DBSs",
-                       "DBS coverage"]
+                       "No. of TTSs",
+                       "TTS coverage"]
         header_titles = ["Rank", "Given target regions from BED files",
                          "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
                          "Number of DNA Binding Sites locate within the region",
-                         "The proportion of the region covered by DBS binding"]
+                         "The proportion of the region covered by triplex binding"]
 
         #########################################################
         # dbd_region.html
@@ -1264,25 +1264,25 @@ class Report(object):
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         if self.pars.score:
-            header_list = ["#", "Target region", "Associated Gene", "DBSs Count", "Norm. DBSs",
-                           "DBS coverage", "Score", "Sum of ranks"]
+            header_list = ["#", "Target region", "Associated Gene", "TTSs Count", "Norm. TTSs",
+                           "TTS coverage", "Score", "Sum of ranks"]
             header_titles = ["Rank",
                              "Target regions loaded from the given BED file",
                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
                              "Number of DNA Binding Sites within the region",
                              "Normalized Number of DNA Binding Sites within the region (per 1000 bp)",
-                             "The proportion of the region covered by DBS binding",
+                             "The proportion of the region covered by TTS binding",
                              "Scores from BED file",
                              "Sum of all the left-hand-side ranks"]
         else:
-            header_list = ["#", "Target region", "Associated Gene", "DBSs Count", "Norm. DBSs",
-                           "DBS coverage", "Sum of ranks"]
+            header_list = ["#", "Target region", "Associated Gene", "TTSs Count", "Norm. TTSs",
+                           "TTS coverage", "Sum of ranks"]
             header_titles = ["Rank",
                              "Target regions loaded from the given BED file",
                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
                              "Number of DNA Binding Sites within the region",
                              "Normalized Number of DNA Binding Sites within the region (per 1000 bp)",
-                             "The proportion of the region covered by DBS binding",
+                             "The proportion of the region covered by triplex binding",
                              "Sum of all the left-hand-side ranks"]
         html.add_heading("Target Regions")
         data_table = []
@@ -1414,16 +1414,16 @@ class Report(object):
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                  header_titles=header_titles, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
-            html.add_list(["DBS stands for DNA Binding Site on DNA.",
-                           "DBS coverage is the proportion of the region where has potential to form triple helices with the given RNA."])
+            html.add_list(["TTS stands for triplex target DNA site.",
+                           "TTS coverage is the proportion of the region where has potential to form triple helices with the given RNA."])
             html.add_fixed_rank_sortable()
             html.write(os.path.join(self.pars.o, "starget_regions.html"))
 
         ############################
         # Subpages for targeted region centered page
         # region_dbs.html
-        header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
-        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
+        header_list = ["TFO", "TTS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
+        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of TTS on DNA",
                          "Score of binding event", "Motif of binding by triple helix rule",
                          "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel",
                          "Binding Sequence between DNA and RNA"]
@@ -1496,7 +1496,7 @@ class Report(object):
                       ["Organism", "-organism", self.pars.organism],
                       ["Number of repitetion of andomization", "-n", str(self.pars.n)],
                       ["Alpha level for rejection p value", "-a", str(self.pars.a)],
-                      ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(self.pars.ccf)],
+                      ["Cut off value for filtering out the DBD with low counts of TTSs", "-ccf", str(self.pars.ccf)],
                       ["Remove temporary files", "-rt", str(self.pars.rt)],
                       ["Input BED file for masking in randomization", "-f", str(self.pars.f)],
                       # ["Input file for RNA accecibility", "-ac", str(self.pars.ac)],
