@@ -209,7 +209,7 @@ def atac_seq(args):
         fp_ext = args.fp_ext
 
     if args.tc_ext is None:
-        tc_ext = 25
+        tc_ext = 100
     else:
         tc_ext = args.tc_ext
 

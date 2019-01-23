@@ -113,7 +113,6 @@ def get_bc_tracks(args):
     if len(args.input_files) != 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
 
-    output_fname = os.path.join(args.output_location, "{}.wig".format(args.output_prefix))
     regions = GenomicRegionSet("Interested regions")
     regions.read(args.input_files[1])
     regions.merge()
@@ -135,28 +134,74 @@ def get_bc_tracks(args):
         bias_table = BiasTable().load_table(table_file_name_F=table_F,
                                             table_file_name_R=table_R)
 
-    with open(output_fname, "a") as output_f:
+    if args.strand_specific:
+        fname_forward = os.path.join(args.output_location, "{}_forward.wig".format(args.output_prefix))
+        fname_reverse = os.path.join(args.output_location, "{}_reverse.wig".format(args.output_prefix))
+
+        f_forward = open(fname_forward, "a")
+        f_reverse = open(fname_reverse, "a")
         for region in regions:
-            signal = reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial,
-                                                                    end=region.final,
-                                                                    bam=bam, fasta=fasta, bias_table=bias_table,
-                                                                    forward_shift=args.forward_shift,
-                                                                    reverse_shift=args.reverse_shift,
-                                                                    min_length=None, max_length=None, strand=False)
+            signal_f, signal_r = reads_file.get_bc_signal_by_fragment_length(
+                ref=region.chrom, start=region.initial, end=region.final, bam=bam, fasta=fasta, bias_table=bias_table,
+                forward_shift=args.forward_shift, reverse_shift=args.reverse_shift, min_length=None, max_length=None,
+                strand=True)
 
             if args.norm:
-                signal = reads_file.boyle_norm(signal)
-                perc = scoreatpercentile(signal, 98)
-                std = np.std(signal)
-                signal = reads_file.hon_norm_atac(signal, perc, std)
+                signal_f = reads_file.boyle_norm(signal_f)
+                perc = scoreatpercentile(signal_f, 98)
+                std = np.std(signal_f)
+                signal_f = reads_file.hon_norm_atac(signal_f, perc, std)
 
-            output_f.write("fixedStep chrom=" + region.chrom + " start=" + str(region.initial + 1) + " step=1\n" +
-                           "\n".join([str(e) for e in np.nan_to_num(signal)]) + "\n")
-    output_f.close()
+                signal_r = reads_file.boyle_norm(signal_r)
+                perc = scoreatpercentile(signal_r, 98)
+                std = np.std(signal_r)
+                signal_r = reads_file.hon_norm_atac(signal_r, perc, std)
 
-    if args.bigWig:
-        genome_data = GenomeData(args.organism)
-        chrom_sizes_file = genome_data.get_chromosome_sizes()
-        bw_filename = os.path.join(args.output_location, "{}.bw".format(args.output_prefix))
-        os.system(" ".join(["wigToBigWig", output_fname, chrom_sizes_file, bw_filename, "-verbose=0"]))
-        os.remove(output_fname)
+            f_forward.write("fixedStep chrom=" + region.chrom + " start=" + str(region.initial + 1) + " step=1\n" +
+                            "\n".join([str(e) for e in np.nan_to_num(signal_f)]) + "\n")
+
+            f_reverse.write("fixedStep chrom=" + region.chrom + " start=" + str(region.initial + 1) + " step=1\n" +
+                            "\n".join([str(-e) for e in np.nan_to_num(signal_r)]) + "\n")
+
+        f_forward.close()
+        f_reverse.close()
+
+        if args.bigWig:
+            genome_data = GenomeData(args.organism)
+            chrom_sizes_file = genome_data.get_chromosome_sizes()
+
+            bw_filename = os.path.join(args.output_location, "{}_forward.bw".format(args.output_prefix))
+            os.system(" ".join(["wigToBigWig", fname_forward, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(fname_forward)
+
+            bw_filename = os.path.join(args.output_location, "{}_reverse.bw".format(args.output_prefix))
+            os.system(" ".join(["wigToBigWig", fname_reverse, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(fname_reverse)
+
+    else:
+        output_fname = os.path.join(args.output_location, "{}.wig".format(args.output_prefix))
+        with open(output_fname, "a") as output_f:
+            for region in regions:
+                signal = reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial,
+                                                                     end=region.final,
+                                                                     bam=bam, fasta=fasta, bias_table=bias_table,
+                                                                     forward_shift=args.forward_shift,
+                                                                     reverse_shift=args.reverse_shift,
+                                                                     min_length=None, max_length=None, strand=False)
+
+                if args.norm:
+                    signal = reads_file.boyle_norm(signal)
+                    perc = scoreatpercentile(signal, 98)
+                    std = np.std(signal)
+                    signal = reads_file.hon_norm_atac(signal, perc, std)
+
+                output_f.write("fixedStep chrom=" + region.chrom + " start=" + str(region.initial + 1) + " step=1\n" +
+                               "\n".join([str(e) for e in np.nan_to_num(signal)]) + "\n")
+        output_f.close()
+
+        if args.bigWig:
+            genome_data = GenomeData(args.organism)
+            chrom_sizes_file = genome_data.get_chromosome_sizes()
+            bw_filename = os.path.join(args.output_location, "{}.bw".format(args.output_prefix))
+            os.system(" ".join(["wigToBigWig", output_fname, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(output_fname)
