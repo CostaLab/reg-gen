@@ -6,7 +6,6 @@ import unittest
 import os
 
 # Internal
-from rgt.motifanalysis.Enrichment import subtract_exact
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 
@@ -20,7 +19,7 @@ class EnrichmentTest(unittest.TestCase):
         target = GenomicRegionSet("target")
         target.read(os.path.join(os.path.dirname(__file__), "test_target.bed"))
 
-        background_tmp = subtract_exact(background, target)
+        background_tmp = background.subtract(target, exact=True)
 
         reference.sort()
 

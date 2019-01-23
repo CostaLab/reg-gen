@@ -1174,7 +1174,6 @@ class GenomicRegionSet:
                                     # cur y    |------|
                                     # region   |---|
                                     small_self.add(region)
-
                                 else:
                                     # cur y   |----|
                                     # region  |------|
@@ -1233,7 +1232,6 @@ class GenomicRegionSet:
                         else:
                             # region.chrom < target.sequences[count_target_regions].chrom:
                             small_self.add(region)
-
                     last_region = region
                 return small_self
 
@@ -1246,7 +1244,6 @@ class GenomicRegionSet:
             else:
                 # self is empty GRS
                 return self
-
         else:
             # exact = False
 
