@@ -1139,8 +1139,8 @@ class GenomicRegionSet:
             - y -- the GenomicRegionSet which to subtract by
             - whole_region -- subtract the whole region, not partially
             - exact --  only regions which match exactly with a region within y are subtracted
-                        if set whole_region and merge are completely ignored
-                        if set the returned GRS is sorted and does not contain duplicates
+                        if set, whole_region and merge are completely ignored
+                        if set, the returned GRS is sorted and does not contain duplicates
 
         *Return:*
 

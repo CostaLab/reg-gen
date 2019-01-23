@@ -6,6 +6,7 @@
 # Python 3 compatibility
 from __future__ import print_function
 from __future__ import division
+import time
 
 # Internal
 from ..GeneSet import GeneSet
@@ -97,10 +98,10 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
     mpbs_set -- TODO
 
     Return:
-    a -- TODO
-    b -- TODO
+    a -- number of input regions intersecting with mpbs
+    b -- number of input regions not intersecting with mpbs
     gene_set -- TODO
-    mpbs_set -- TODO
+    mpbs_set -- GenomicRegionSet of mpbs regions intersecting with input regions
     """
 
     # Fetching motif

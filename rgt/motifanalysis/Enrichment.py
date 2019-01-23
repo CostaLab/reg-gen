@@ -357,7 +357,6 @@ def main(args):
     start = time.time()
     print(">> collecting background statistics...", sep="", end="")
     sys.stdout.flush()
-
     background = GenomicRegionSet("background")
     background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
