@@ -12,7 +12,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import pyx
-from scipy.stats.mvn import mvnun
 from scipy.stats import zscore
 from scipy.stats import norm
 from argparse import SUPPRESS
@@ -524,8 +523,8 @@ def line_plot(arguments):
 
     plt.close('all')
     fig, ax = plt.subplots()
-    ax.plot(x, mean_signal_1, color='red', label=condition1)
-    ax.plot(x, mean_signal_2, color='blue', label=condition2)
+    ax.plot(x, mean_signal_2, color='red', label=condition2)
+    ax.plot(x, mean_signal_1, color='blue', label=condition1)
     ax.text(0.15, 0.9, 'n = {}'.format(num_fp), verticalalignment='bottom', horizontalalignment='right',
             transform=ax.transAxes, fontweight='bold')
 
@@ -595,9 +594,7 @@ def scatter_plot(args, ps_tc_results_by_tf):
         else:
             ax.scatter(x_axis[i], tf_activity_score[i], c="black", alpha=0.6)
     ax.margins(0.05)
-
-    #ax.axvline(x=tc_diff_mean, linewidth=2, linestyle='dashed')
-    #ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
+    ax.set_xticks([])
 
     ax.set_ylabel("Activity Score \n {} $\longleftrightarrow$ {}".format(args.condition1, args.condition2),
                   rotation=90, fontsize=20)
@@ -650,48 +647,6 @@ def output_mu(args, median_diff_prot, median_diff_tc):
     f.write("median_diff_prot: " + str(median_diff_prot) + "\n")
     f.write("median_diff_tc: " + str(median_diff_tc) + "\n")
     f.close()
-
-#################################################################################
-# def get_stat_results(ps_tc_results_by_tf):
-#     ps_diff = list()
-#     tc_diff = list()
-#     mpbs_name_list = ps_tc_results_by_tf.keys()
-#     for mpbs_name in mpbs_name_list:
-#         ps_diff.append(ps_tc_results_by_tf[mpbs_name][2])
-#         tc_diff.append(ps_tc_results_by_tf[mpbs_name][-1])
-#
-#     ps_tc_diff = np.array([ps_diff, tc_diff]).T
-#     mu = np.mean(ps_tc_diff, axis=0)
-#     cov_ps_tc_diff = np.cov(ps_tc_diff.T)
-#
-#     low = np.zeros(2)
-#     upp = np.zeros(2)
-#     p_values = list()
-#     for idx, mpbs_name in enumerate(mpbs_name_list):
-#         if ps_diff[idx] >= mu[0]:
-#             low[0] = ps_diff[idx]
-#             upp[0] = float('inf')
-#         else:
-#             low[0] = -float('inf')
-#             upp[0] = ps_diff[idx]
-#
-#         if tc_diff[idx] >= mu[1]:
-#             low[1] = tc_diff[idx]
-#             upp[1] = float('inf')
-#         else:
-#             low[1] = -float('inf')
-#             upp[1] = tc_diff[idx]
-#
-#         p_value, i = mvnun(low, upp, mu, cov_ps_tc_diff)
-#         ps_tc_results_by_tf[mpbs_name].append(p_value)
-#         p_values.append(p_value)
-#
-#     adjusted_p_values = adjust_p_values(p_values)
-#     for idx, mpbs_name in enumerate(mpbs_name_list):
-#         ps_tc_results_by_tf[mpbs_name].append(adjusted_p_values[idx])
-#
-#     return ps_tc_results_by_tf
-########################################################################################
 
 
 def standard(vector1, vector2):
