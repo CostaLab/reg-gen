@@ -80,11 +80,11 @@ class GenomicRegion:
         return s
 
     def __hash__(self):
-        return hash(tuple([self.chrom, self.initial, self.final, self.orientation]))
+        return hash((self.chrom, self.initial, self.final, self.orientation))
 
     def __eq__(self, other):
-        return (self.chrom, self.initial, self.final, self.orientation) == (
-        other.chrom, other.initial, other.final, other.orientation)
+        return (self.chrom, self.initial, self.final, self.orientation) == \
+               (other.chrom, other.initial, other.final, other.orientation)
 
     def toString(self, space=False, underline=False, strand=False):
         """Return a string of GenomicRegion by its position.
@@ -143,7 +143,7 @@ class GenomicRegion:
             self.initial = initial
             self.final = final
 
-    def overlap(self, region):
+    def overlap(self, region, strandness=False):
         """Return True, if GenomicRegion overlaps with region, else False.
 
         *Keyword arguments:*
@@ -153,12 +153,20 @@ class GenomicRegion:
         if region.chrom == self.chrom:
             if self.initial <= region.initial:
                 if self.final > region.initial:
-                    return True
+                    if not strandness:
+                        return True
+                    else:
+                        if self.orientation == region.orientation:
+                            return True
                 # elif self.initial == self.final:
                 #    raise Exception(self.chrom+","+str(self.initial)+","+str(self.final)+"\tThe region length shouldn't be zero. Please extend the region.")
             else:
                 if self.initial < region.final:
-                    return True
+                    if not strandness:
+                        return True
+                    else:
+                        if self.orientation == region.orientation:
+                            return True
         return False
 
     def __repr__(self):

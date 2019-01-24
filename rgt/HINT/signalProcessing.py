@@ -213,7 +213,7 @@ class GenomicSignal:
         # Hon normalization (between-dataset normalization)
         slope_signal = self.boyle_norm(slope_signal)
 
-        perc = scoreatpercentile(slope_signal, per_norm)
+        perc = scoreatpercentile(slope_signal, per_slope)
         std = np.std(slope_signal)
         slope_signal = self.hon_norm_atac(slope_signal, perc, std)
 
@@ -332,6 +332,7 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
+
         if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
             # Return raw counts
             nf = [0.0] * (p2 - p1)
@@ -1031,18 +1032,16 @@ class GenomicSignal:
 
             return signal
 
-        currStr = str(fasta.fetch(ref, p1_wk + forward_shift - 1, p2_wk - 2 + forward_shift)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + forward_shift,
-                                                                 p2_wk - 1 + forward_shift)).upper())
+        currStr = str(fasta.fetch(ref, p1_wk - 1 + forward_shift, p2_wk - 2 + forward_shift)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + reverse_shift + 2,
+                                                                 p2_wk + reverse_shift + 1)).upper())
 
         # Iterating on sequence to create the bias signal
         signal_bias_f = []
         signal_bias_r = []
         for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
             fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
-            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:
-                               len(currStr) + int(k_nb / 2.) - i]
-
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
             try:
                 signal_bias_f.append(fBiasDict[fseq])
             except Exception:
@@ -1061,7 +1060,7 @@ class GenomicSignal:
                 if p1_w <= cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
             else:
-                cut_site = read.aend + reverse_shift + 1
+                cut_site = read.aend + reverse_shift - 1
                 if p1_w <= cut_site < p2_w:
                     signal_raw_r[cut_site - p1_w] += 1.0
 
@@ -1096,24 +1095,48 @@ class GenomicSignal:
         bc_f = []
         bc_r = []
         for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            #nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            #nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
             raw.append(signal_raw_f[i] + signal_raw_r[i])
             raw_f.append(signal_raw_f[i])
             raw_r.append(signal_raw_r[i])
-            zf = (signal_raw_f[i]) / (signal_bias_f[i])
-            zr = (signal_raw_r[i]) / (signal_bias_r[i])
-            bc.append(zf + zr)
-            bc_f.append(zf)
-            bc_r.append(zr)
+            # zf = (signal_raw_f[i]) / (signal_bias_f[i])
+            # zr = (signal_raw_r[i]) / (signal_bias_r[i])
+            bc.append(nhatf + nhatr)
+            bc_f.append(nhatf)
+            bc_r.append(nhatr)
             fSum -= fLast
             fSum += signal_bias_f[i + (window / 2)]
             fLast = signal_bias_f[i - (window / 2) + 1]
             rSum -= rLast
             rSum += signal_bias_r[i + (window / 2)]
             rLast = signal_bias_r[i - (window / 2) + 1]
+
+        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+        # Iterating on sequence to create the bias signal
+        signal_bias_f = []
+        signal_bias_r = []
+        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+            try:
+                signal_bias_f.append(fBiasDict[fseq])
+            except Exception:
+                signal_bias_f.append(defaultKmerValue)
+            try:
+                signal_bias_r.append(rBiasDict[rseq])
+            except Exception:
+                signal_bias_r.append(defaultKmerValue)
+
+        bias_f = []
+        bias_r = []
+        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+            bias_f.append(signal_bias_f[i])
+            bias_r.append(signal_bias_r[i])
 
         if strand:
             return bias_f, bias_r, raw, raw_f, raw_r, bc, bc_f, bc_r

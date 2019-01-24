@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 ###################################################################################################
 # Libraries
 ###################################################################################################
@@ -68,18 +70,28 @@ def plotting_args(parser):
 def plotting_run(args):
     if args.seq_logo:
         seq_logo(args)
+
     if args.bias_raw_bc_line:
         bias_raw_bc_strand_line(args)
+
     if args.strand_line:
         strand_line(args)
+
+    if args.unstrand_line:
+        unstrand_line(args)
+
     if args.raw_bc_line:
         raw_bc_line(args)
+
     if args.bias_raw_bc_strand_line2:
         bias_raw_bc_strand_line2(args)
+
     if args.fragment_raw_size_line:
         fragment_size_raw_line(args)
+
     if args.fragment_bc_size_line:
         fragment_size_bc_line(args)
+
 
 def seq_logo(args):
     logo_fname = os.path.join(args.output_location, "{}.logo.eps".format(args.output_prefix))
@@ -753,8 +765,8 @@ def bias_raw_bc_strand_line2(args):
     mean_signal_bc_f = mean_signal_bc_f / num_sites
     mean_signal_bc_r = mean_signal_bc_r / num_sites
 
-    mean_signal_raw = rescaling(mean_signal_raw)
-    mean_signal_bc = rescaling(mean_signal_bc)
+    # mean_signal_raw = rescaling(mean_signal_raw)
+    # mean_signal_bc = rescaling(mean_signal_bc)
 
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
@@ -784,8 +796,8 @@ def bias_raw_bc_strand_line2(args):
                 show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                 show_fineprint=False, show_ends=False)
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(8, 8))
-
+    # fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, figsize=(8, 8))
+    fig, (ax1, ax4) = plt.subplots(2, figsize=(8, 4))
     start = -(args.window_size / 2)
     end = (args.window_size / 2) - 1
     x = np.linspace(start, end, num=args.window_size)
@@ -805,8 +817,8 @@ def bias_raw_bc_strand_line2(args):
     ax1.spines['left'].set_position(('outward', 15))
     ax1.spines['bottom'].set_position(('outward', 5))
     ax1.tick_params(direction='out')
-    ax1.set_xticks([start, -1, 0, 1, end])
-    ax1.set_xticklabels([str(start), -1, 0,1, str(end)])
+    ax1.set_xticks([start, 0, end])
+    ax1.set_xticklabels([str(start), 0, str(end)])
     ax1.set_yticks([min_, max_])
     ax1.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
     ax1.set_title(args.output_prefix, fontweight='bold')
@@ -817,43 +829,43 @@ def bias_raw_bc_strand_line2(args):
 
     #####################################################################
     # Bias corrected, non-bias corrected (not strand specific)
-    min_ = min(min(mean_signal_raw_f), min(mean_signal_raw_r))
-    max_ = max(max(mean_signal_raw_f), max(mean_signal_raw_r))
-    ax2.plot(x, mean_signal_raw_f, color='red', label='Forward')
-    ax2.plot(x, mean_signal_raw_r, color='green', label='Reverse')
-    ax2.xaxis.set_ticks_position('bottom')
-    ax2.yaxis.set_ticks_position('left')
-    ax2.spines['top'].set_visible(False)
-    ax2.spines['right'].set_visible(False)
-    ax2.spines['left'].set_position(('outward', 15))
-    ax2.tick_params(direction='out')
-    ax2.set_xticks([start, -1, 0, 1, end])
-    ax2.set_xticklabels([str(start), -1, 0,1, str(end)])
-    ax2.set_yticks([min_, max_])
-    ax2.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
-    ax2.set_xlim(start, end)
-    ax2.set_ylim([min_, max_])
-    ax2.legend(loc="upper right", frameon=False)
+    # min_ = min(min(mean_signal_raw_f), min(mean_signal_raw_r))
+    # max_ = max(max(mean_signal_raw_f), max(mean_signal_raw_r))
+    # ax2.plot(x, mean_signal_raw_f, color='red', label='Forward')
+    # ax2.plot(x, mean_signal_raw_r, color='green', label='Reverse')
+    # ax2.xaxis.set_ticks_position('bottom')
+    # ax2.yaxis.set_ticks_position('left')
+    # ax2.spines['top'].set_visible(False)
+    # ax2.spines['right'].set_visible(False)
+    # ax2.spines['left'].set_position(('outward', 15))
+    # ax2.tick_params(direction='out')
+    # ax2.set_xticks([start, -1, 0, 1, end])
+    # ax2.set_xticklabels([str(start), -1, 0,1, str(end)])
+    # ax2.set_yticks([min_, max_])
+    # ax2.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
+    # ax2.set_xlim(start, end)
+    # ax2.set_ylim([min_, max_])
+    # ax2.legend(loc="upper right", frameon=False)
 
     #####################################################################
     # Bias corrected and strand specific
-    min_ = min(min(mean_signal_bc_f), min(mean_signal_bc_r))
-    max_ = max(max(mean_signal_bc_f), max(mean_signal_bc_r))
-    ax3.plot(x, mean_signal_bc_f, color='red', label='Forward')
-    ax3.plot(x, mean_signal_bc_r, color='green', label='Reverse')
-    ax3.xaxis.set_ticks_position('bottom')
-    ax3.yaxis.set_ticks_position('left')
-    ax3.spines['top'].set_visible(False)
-    ax3.spines['right'].set_visible(False)
-    ax3.spines['left'].set_position(('outward', 15))
-    ax3.tick_params(direction='out')
-    ax3.set_xticks([start, 0, end])
-    ax3.set_xticklabels([str(start), 0, str(end)])
-    ax3.set_yticks([min_, max_])
-    ax3.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
-    ax3.set_xlim(start, end)
-    ax3.set_ylim([min_, max_])
-    ax3.legend(loc="upper right", frameon=False)
+    # min_ = min(min(mean_signal_bc_f), min(mean_signal_bc_r))
+    # max_ = max(max(mean_signal_bc_f), max(mean_signal_bc_r))
+    # ax3.plot(x, mean_signal_bc_f, color='red', label='Forward')
+    # ax3.plot(x, mean_signal_bc_r, color='green', label='Reverse')
+    # ax3.xaxis.set_ticks_position('bottom')
+    # ax3.yaxis.set_ticks_position('left')
+    # ax3.spines['top'].set_visible(False)
+    # ax3.spines['right'].set_visible(False)
+    # ax3.spines['left'].set_position(('outward', 15))
+    # ax3.tick_params(direction='out')
+    # ax3.set_xticks([start, 0, end])
+    # ax3.set_xticklabels([str(start), 0, str(end)])
+    # ax3.set_yticks([min_, max_])
+    # ax3.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
+    # ax3.set_xlim(start, end)
+    # ax3.set_ylim([min_, max_])
+    # ax3.legend(loc="upper right", frameon=False)
 
     #####################################################################
     # Bias corrected, non-bias corrected (not strand specific)
@@ -1057,6 +1069,154 @@ def strand_line(args):
     os.remove(os.path.join(args.output_location, "{}.eps".format(args.output_prefix)))
 
 
+def unstrand_line(args):
+    genomic_signal = GenomicSignal(args.reads_file)
+    genomic_signal.load_sg_coefs(slope_window_size=9)
+
+    table = None
+    if args.bias_table is not None:
+        bias_table = BiasTable()
+        bias_table_list = args.bias_table.split(",")
+        table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                      table_file_name_R=bias_table_list[1])
+
+    genome_data = GenomeData(args.organism)
+    fasta = Fastafile(genome_data.get_genome())
+
+    num_sites = 0
+    mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+    mpbs_regions.read(args.motif_file)
+    bam = Samfile(args.reads_file, "rb")
+
+    mean_signal = np.zeros(args.window_size)
+
+    pwm_dict = None
+    for region in mpbs_regions:
+        if str(region.name).split(":")[-1] == "Y":
+            # Extend by 50 bp
+            mid = (region.initial + region.final) / 2
+            p1 = mid - (args.window_size / 2)
+            p2 = mid + (args.window_size / 2)
+
+            if args.bias_table is not None:
+                signal = genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                         bam=bam, fasta=fasta,
+                                                                         bias_table=table,
+                                                                         forward_shift=args.forward_shift,
+                                                                         reverse_shift=args.reverse_shift,
+                                                                         strand=False)
+            else:
+                signal = genomic_signal.get_raw_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                          bam=bam,
+                                                                          forward_shift=args.forward_shift,
+                                                                          reverse_shift=args.reverse_shift,
+                                                                          strand=False)
+
+            num_sites += 1
+
+            mean_signal = np.add(mean_signal, signal)
+
+            # Update pwm
+
+            if pwm_dict is None:
+                pwm_dict = dict([("A", [0.0] * (p2 - p1)), ("C", [0.0] * (p2 - p1)),
+                                 ("G", [0.0] * (p2 - p1)), ("T", [0.0] * (p2 - p1)),
+                                 ("N", [0.0] * (p2 - p1))])
+
+            aux_plus = 1
+            dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
+            if (region.final - region.initial) % 2 == 0:
+                aux_plus = 0
+            dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
+                                                                     p1 + aux_plus, p2 + aux_plus)).upper())
+            if region.orientation == "+":
+                for i in range(0, len(dna_seq)):
+                    pwm_dict[dna_seq[i]][i] += 1
+            elif region.orientation == "-":
+                for i in range(0, len(dna_seq_rev)):
+                    pwm_dict[dna_seq_rev[i]][i] += 1
+
+    mean_signal = mean_signal / num_sites
+
+    mean_norm_signal = genomic_signal.boyle_norm(mean_signal)
+    perc = scoreatpercentile(mean_norm_signal, 98)
+    std = np.std(mean_norm_signal)
+    mean_norm_signal = genomic_signal.hon_norm_atac(mean_norm_signal, perc, std)
+
+    mean_slope_signal = genomic_signal.slope(mean_norm_signal, genomic_signal.sg_coefs)
+
+    # Output the norm and slope signal
+    output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
+    f = open(output_fname, "w")
+    f.write("\t".join((map(str, mean_norm_signal))) + "\n")
+    f.write("\t".join((map(str, mean_slope_signal))) + "\n")
+    f.close()
+
+    # Output PWM and create logo
+    pwm_fname = os.path.join(args.output_location, "{}.pwm".format(args.output_prefix))
+    pwm_file = open(pwm_fname, "w")
+    for e in ["A", "C", "G", "T"]:
+        pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
+    pwm_file.close()
+
+    logo_fname = os.path.join(args.output_location, "{}.logo.eps".format(args.output_prefix))
+    pwm = motifs.read(open(pwm_fname), "pfm")
+    pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
+                color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
+                show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
+                show_fineprint=False, show_ends=False)
+
+    start = -(args.window_size / 2)
+    end = (args.window_size / 2) - 1
+    x = np.linspace(start, end, num=args.window_size)
+
+    fig = plt.figure(figsize=(8, 4))
+    ax2 = fig.add_subplot(111)
+
+    min_signal = min(mean_signal)
+    max_signal = max(mean_signal)
+    ax2.plot(x, mean_signal, color='red')
+    ax2.set_title(args.output_prefix, fontweight='bold')
+
+    ax2.xaxis.set_ticks_position('bottom')
+    ax2.yaxis.set_ticks_position('left')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.spines['left'].set_position(('outward', 15))
+    ax2.tick_params(direction='out')
+    ax2.set_xticks([start, 0, end])
+    ax2.set_xticklabels([str(start), 0, str(end)])
+    ax2.set_yticks([min_signal, max_signal])
+    ax2.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+    ax2.set_xlim(start, end)
+    ax2.set_ylim([min_signal, max_signal])
+    ax2.legend(loc="upper right", frameon=False)
+
+    ax2.spines['bottom'].set_position(('outward', 40))
+
+    figure_name = os.path.join(args.output_location, "{}.line.eps".format(args.output_prefix))
+    fig.subplots_adjust(bottom=.2, hspace=.5)
+    fig.tight_layout()
+    fig.savefig(figure_name, format="eps", dpi=300)
+
+    # Creating canvas and printing eps / pdf with merged results
+    output_fname = os.path.join(args.output_location, "{}.eps".format(args.output_prefix))
+    c = pyx.canvas.canvas()
+    c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
+    c.insert(pyx.epsfile.epsfile(1.31, 0.89, logo_fname, width=18.5, height=1.75))
+    c.writeEPSfile(output_fname)
+    os.system("epstopdf " + figure_name)
+    os.system("epstopdf " + logo_fname)
+    os.system("epstopdf " + output_fname)
+
+    # os.remove(pwm_fname)
+    os.remove(os.path.join(args.output_location, "{}.line.eps".format(args.output_prefix)))
+    os.remove(os.path.join(args.output_location, "{}.logo.eps".format(args.output_prefix)))
+    os.remove(os.path.join(args.output_location, "{}.line.pdf".format(args.output_prefix)))
+    os.remove(os.path.join(args.output_location, "{}.logo.pdf".format(args.output_prefix)))
+    os.remove(os.path.join(args.output_location, "{}.eps".format(args.output_prefix)))
+
+
 def fragment_size_raw_line(args):
     mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
     mpbs_regions.read(args.motif_file)
@@ -1141,9 +1301,9 @@ def fragment_size_raw_line(args):
 
     # find out the linker position
     pos_f_1, pos_r_1, pos_f_2, pos_r_2 = get_linkers_position(signal_f_146_307,
-                                                                   signal_r_146_307,
-                                                                   signal_f_min_307,
-                                                                   signal_r_min_307)
+                                                              signal_r_146_307,
+                                                              signal_f_min_307,
+                                                              signal_r_min_307)
     p1 = (pos_f_1 - pos_f_2) / 2 + pos_f_2
     p2 = p1 + 180
     p3 = args.window_size - p2
@@ -1157,13 +1317,13 @@ def fragment_size_raw_line(args):
     x_ticks = [start, p1 - 500, p2 - 500, 0, p3 - 500, p4 - 500, end]
 
     update_axes_for_fragment_size_line(ax1, x, x_ticks, start, end, signal_f, signal_r, p1, p2,
-                                            p3, p4)
+                                       p3, p4)
     update_axes_for_fragment_size_line(ax2, x, x_ticks, start, end, signal_f_max_145, signal_r_max_145, p1, p2,
-                                            p3, p4)
+                                       p3, p4)
     update_axes_for_fragment_size_line(ax3, x, x_ticks, start, end, signal_f_146_307, signal_r_146_307, p1, p2,
-                                            p3, p4)
+                                       p3, p4)
     update_axes_for_fragment_size_line(ax4, x, x_ticks, start, end, signal_f_min_307, signal_r_min_307, p1, p2,
-                                            p3, p4)
+                                       p3, p4)
 
     figure_name = os.path.join(args.output_location, "{}.pdf".format(args.output_prefix))
     fig.subplots_adjust(bottom=.2, hspace=.5)

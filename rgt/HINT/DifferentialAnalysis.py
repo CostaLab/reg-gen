@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import numpy as np
 from pysam import Samfile, Fastafile
@@ -10,10 +12,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import pyx
-from scipy.stats.mvn import mvnun
+from scipy.stats import zscore
+from scipy.stats import norm
 from argparse import SUPPRESS
 
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 
 # Internal
 from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData, HmmData
@@ -63,7 +66,7 @@ def diff_analysis_args(parser):
                         help="The false discovery rate. DEFAULT: 0.05")
     parser.add_argument("--bc", action="store_true", default=False,
                         help="If set, all analysis will be based on bias corrected signal. DEFAULT: False")
-    parser.add_argument("--nc", type=int, metavar="INT", default=cpu_count(),
+    parser.add_argument("--nc", type=int, metavar="INT", default=1,
                         help="The number of cores. DEFAULT: 1")
 
     # Output Options
@@ -195,6 +198,7 @@ def get_bc_signal(arguments):
         if len(signal1) != len(signal_1) or len(signal2) != len(signal_2):
             continue
 
+        # smooth the signal
         signal_1 = np.add(signal_1, np.array(signal1))
         signal_2 = np.add(signal_2, np.array(signal2))
 
@@ -222,6 +226,7 @@ def diff_analysis_run(args):
 
     mpbs = mpbs1.combine(mpbs2, output=True)
     mpbs.sort()
+    mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signal_dict_by_tf_1 = dict()
@@ -294,9 +299,9 @@ def diff_analysis_run(args):
         #     if res[0] > 0 and res[1] < 0:
         ps_tc_results_by_tf[mpbs_name] = res
     #
-    stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    scatter_plot(args, stat_results_by_tf)
-    output_stat_results(args, stat_results_by_tf, motif_num_dict)
+    # stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+    ps_tc_results_by_tf = scatter_plot(args, ps_tc_results_by_tf)
+    output_stat_results(args, ps_tc_results_by_tf, motif_num_dict)
 
 
 def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -315,7 +320,7 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     p2_w = p2 + (window / 2)
     p1_wk = p1_w - int(floor(k_nb / 2.))
     p2_wk = p2_w + int(ceil(k_nb / 2.))
-    if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
+    if p1 <= 0 or p1_w <= 0 or p2_wk <= 0:
         # Return raw counts
         bc_signal = [0.0] * (p2 - p1)
         for read in bam.fetch(chrom, p1, p2):
@@ -518,8 +523,8 @@ def line_plot(arguments):
 
     plt.close('all')
     fig, ax = plt.subplots()
-    ax.plot(x, mean_signal_1, color='red', label=condition1)
-    ax.plot(x, mean_signal_2, color='blue', label=condition2)
+    ax.plot(x, mean_signal_2, color='red', label=condition2)
+    ax.plot(x, mean_signal_1, color='blue', label=condition1)
     ax.text(0.15, 0.9, 'n = {}'.format(num_fp), verticalalignment='bottom', horizontalalignment='right',
             transform=ax.transAxes, fontweight='bold')
 
@@ -561,37 +566,43 @@ def line_plot(arguments):
     os.remove(pwm_fname)
 
 
-def scatter_plot(args, stat_results_by_tf):
-    tc_diff = list()
-    ps_diff = list()
-    mpbs_name_list = stat_results_by_tf.keys()
-    P_values = list()
+def scatter_plot(args, ps_tc_results_by_tf):
+    tf_activity_score = list()
+    mpbs_name_list = ps_tc_results_by_tf.keys()
+
     for mpbs_name in mpbs_name_list:
-        ps_diff.append(float(stat_results_by_tf[mpbs_name][2]))
-        tc_diff.append(float(stat_results_by_tf[mpbs_name][-3]))
-        P_values.append(np.log10(float(stat_results_by_tf[mpbs_name][-1])))
+        tf_activity_score.append(float(ps_tc_results_by_tf[mpbs_name][2]) + float(ps_tc_results_by_tf[mpbs_name][-1]))
 
-    fig, ax = plt.subplots(figsize=(12, 12))
+    tf_activity_score = np.array(tf_activity_score)
+    z_score = zscore(tf_activity_score)
+    p_values = norm.sf(abs(z_score)) * 2
+
+    # add TF activity score, z score and p values to the result dictionary
     for i, mpbs_name in enumerate(mpbs_name_list):
-        if stat_results_by_tf[mpbs_name][-1] < args.fdr:
-            ax.scatter(tc_diff[i], ps_diff[i], c="red")
-            ax.annotate(mpbs_name, (tc_diff[i], ps_diff[i]), alpha=0.6)
+        ps_tc_results_by_tf[mpbs_name].append(tf_activity_score[i])
+        ps_tc_results_by_tf[mpbs_name].append(z_score[i])
+        ps_tc_results_by_tf[mpbs_name].append(p_values[i])
+
+    # plot TF activity score
+    x_axis = np.random.uniform(low=-0.1, high=0.1, size=len(p_values))
+
+    fig, ax = plt.subplots(figsize=(10, 12))
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        if p_values[i] < args.fdr:
+            ax.scatter(x_axis[i], tf_activity_score[i], c="red")
+            ax.annotate(mpbs_name, (x_axis[i], tf_activity_score[i]), alpha=0.6)
         else:
-            ax.scatter(tc_diff[i], ps_diff[i], c="black", alpha=0.6)
+            ax.scatter(x_axis[i], tf_activity_score[i], c="black", alpha=0.6)
     ax.margins(0.05)
+    ax.set_xticks([])
 
-    tc_diff_mean = np.mean(tc_diff)
-    ps_diff_mean = np.mean(ps_diff)
-    ax.axvline(x=tc_diff_mean, linewidth=2, linestyle='dashed')
-    ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
-
-    ax.set_xlabel("{} $\longrightarrow$ {} \n $\Delta$ Open Chromatin Score".format(args.condition1, args.condition2),
-                  fontweight='bold', fontsize=20)
-    ax.set_ylabel("$\Delta$ Protection Score \n {} $\longrightarrow$ {}".format(args.condition1, args.condition2),
-                  fontweight='bold', rotation=90, fontsize=20)
+    ax.set_ylabel("Activity Score \n {} $\longleftrightarrow$ {}".format(args.condition1, args.condition2),
+                  rotation=90, fontsize=20)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
     fig.savefig(figure_name, format="pdf", dpi=300)
+
+    return ps_tc_results_by_tf
 
 
 def output_results(args, ps_tc_results_by_tf):
@@ -614,11 +625,11 @@ def output_stat_results(args, stat_results_by_tf, motif_num_dict):
               "Protection_Score_{}".format(args.condition1), "Protection_Score_{}".format(args.condition2),
               "Protection_Diff_{}_{}".format(args.condition1, args.condition2),
               "TC_{}".format(args.condition1), "TC_{}".format(args.condition2),
-              "TC_Diff_{}_{}".format(args.condition1, args.condition2), "P_values", "Adjust_p_values"]
+              "TC_Diff_{}_{}".format(args.condition1, args.condition2), "TF_Activity", "Z_score", "P_values"]
     with open(output_fname, "w") as f:
         f.write("\t".join(header) + "\n")
         for mpbs_name in stat_results_by_tf.keys():
-            f.write(mpbs_name + "\t" + str(motif_num_dict[mpbs_name])  + "\t" +
+            f.write(mpbs_name + "\t" + str(motif_num_dict[mpbs_name]) + "\t" +
                     "\t".join(map(str, stat_results_by_tf[mpbs_name])) + "\n")
 
 
@@ -636,47 +647,6 @@ def output_mu(args, median_diff_prot, median_diff_tc):
     f.write("median_diff_prot: " + str(median_diff_prot) + "\n")
     f.write("median_diff_tc: " + str(median_diff_tc) + "\n")
     f.close()
-
-
-def get_stat_results(ps_tc_results_by_tf):
-    ps_diff = list()
-    tc_diff = list()
-    mpbs_name_list = ps_tc_results_by_tf.keys()
-    for mpbs_name in mpbs_name_list:
-        ps_diff.append(ps_tc_results_by_tf[mpbs_name][2])
-        tc_diff.append(ps_tc_results_by_tf[mpbs_name][-1])
-
-    ps_tc_diff = np.array([ps_diff, tc_diff]).T
-    mu = np.mean(ps_tc_diff, axis=0)
-    cov_ps_tc_diff = np.cov(ps_tc_diff.T)
-
-    low = np.zeros(2)
-    upp = np.zeros(2)
-    p_values = list()
-    for idx, mpbs_name in enumerate(mpbs_name_list):
-        if ps_diff[idx] >= mu[0]:
-            low[0] = ps_diff[idx]
-            upp[0] = float('inf')
-        else:
-            low[0] = -float('inf')
-            upp[0] = ps_diff[idx]
-
-        if tc_diff[idx] >= mu[1]:
-            low[1] = tc_diff[idx]
-            upp[1] = float('inf')
-        else:
-            low[1] = -float('inf')
-            upp[1] = tc_diff[idx]
-
-        p_value, i = mvnun(low, upp, mu, cov_ps_tc_diff)
-        ps_tc_results_by_tf[mpbs_name].append(p_value)
-        p_values.append(p_value)
-
-    adjusted_p_values = adjust_p_values(p_values)
-    for idx, mpbs_name in enumerate(mpbs_name_list):
-        ps_tc_results_by_tf[mpbs_name].append(adjusted_p_values[idx])
-
-    return ps_tc_results_by_tf
 
 
 def standard(vector1, vector2):

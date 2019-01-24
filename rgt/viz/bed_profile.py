@@ -108,6 +108,7 @@ class BedProfile:
             self.stats[self.bednames[i]] = {}
             self.stats[self.bednames[i]]["Number of regions"] = len(bed)
             self.stats[self.bednames[i]]["Average length"] = bed.average_size()
+            self.stats[self.bednames[i]]["Median length"] = bed.median_size()
             self.stats[self.bednames[i]]["s.d. of length"] = bed.size_variance()
             self.stats[self.bednames[i]]["max"] = bed.max_size()
             self.stats[self.bednames[i]]["min"] = bed.min_size()
@@ -126,7 +127,8 @@ class BedProfile:
     def plot_distribution_length(self):
         dis = []
         for i, bed in enumerate(self.beds):
-            dis.append([numpy.log10(len(r)) for r in bed])
+            # dis.append([numpy.log10(len(r)) for r in bed])
+            dis.append([len(r) for r in bed])
         max_len = max([max(x) for x in dis])
 
         for i in range(len(self.beds) + 1):
@@ -478,13 +480,14 @@ class BedProfile:
         col_size_list = [10] * 10
 
         data_table = []
-        header_list = ["No", "BED File", "Number", "Length Ave.", "Length s.d.", "Min", "Max", "Internal overlap"]
+        header_list = ["No", "BED File", "Number", "Length Ave.", "Length Median", "Length s.d.", "Min", "Max", "Internal overlap"]
         c = 0
         for bed in self.bednames:
             c += 1
             data_table.append([str(c), bed,
                                str(self.stats[bed]["Number of regions"]),
                                "{0:.2f}".format(self.stats[bed]["Average length"]),
+                               "{0:.2f}".format(self.stats[bed]["Median length"]),
                                "{0:.2f}".format(self.stats[bed]["s.d. of length"]),
                                str(self.stats[bed]["min"]),
                                str(self.stats[bed]["max"]),

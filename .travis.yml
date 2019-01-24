@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+install:
+  - pip install cython
+  - pip install numpy scipy
+  - pip install https://github.com/fabioticconi/MOODS/tarball/pypi-ready
+  - pip install coveralls
+  - pip install .
+# command to run tests
+script:
+  - coverage run --source ./ -m unittest discover unittest/ -p "*" -v
+after_success:
+  - coveralls

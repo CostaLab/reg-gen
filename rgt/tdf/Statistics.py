@@ -42,7 +42,9 @@ class Statistics(object):
                       "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0,
                       "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
                       "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
-                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
+                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0,
+                      "target_in_trans": 0, "traget_in_cis": 0, "target_local": 0,
+                      "background_in_trans": 0, "background_in_cis": 0, "background_local": 0}
 
     def count_frequency_promoters(self, target_regions, background, file_tpx_de, file_tpx_nde):
         # count_frequency(self, temp, remove_temp, cutoff, l, obedp=False):
@@ -139,7 +141,7 @@ class Statistics(object):
                 l2 = len(self.tpx_ndef.merged_dict[rbs])
                 self.frequency["hits"]["nde"][rbs] = [l2, numdbs_ndef - l2]
 
-        if self.pars.rm:
+        if self.pars.rt:
             os.remove(file_tpx_de)
         os.remove(file_tpx_nde)
 
@@ -234,6 +236,7 @@ class Statistics(object):
                 self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
 
 
+
         if input.rna.regions:
             r_genes = rna_associated_gene(rna_regions=input.rna.regions,
                                           name=self.pars.rn, organism=self.pars.organism)
@@ -255,10 +258,12 @@ class Statistics(object):
         self.stat["autobinding"] = len(triplexes.autobinding)
 
     def output_bed(self, input, tpx):
+        # print(input.rna.regions)
         if len(input.rna.regions) > 0:
             # print(self.rna_regions)
             rna_regionsets = GenomicRegionSet(name=self.pars.rn)
             rna_regionsets.load_from_list(input.rna.regions)
+
             autobinding_loci = tpx.get_overlapping_regions(regionset=rna_regionsets)
             autobinding_loci.write(filename=os.path.join(self.pars.o, self.pars.rn+"_autobinding.bed"))
 
@@ -278,7 +283,9 @@ class Statistics(object):
                       "associated_gene", "expression", "loci", "autobinding",
                       "MA_G", "MA_T", "MP_G", "MP_T", "RA_A", "RA_G", "YP_C", "YP_T",
                       "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T",
-                      "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+                      "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T",
+                      "target_in_trans", "traget_in_cis", "target_local",
+                      "background_in_trans", "background_in_cis", "background_local"]
 
         with open(filename, "w") as f:
             for k in order_stat:
@@ -312,7 +319,7 @@ class Statistics(object):
             mp_input.append([str(i), os.path.join(self.pars.o, "rna_temp.fa"), target_regions,
                              self.pars.o, self.pars.organism, self.rbss, str(marks.count(i)),
                              str(self.pars.l), str(self.pars.e), str(self.pars.c), str(self.pars.fr),
-                             str(self.pars.fm), str(self.pars.of), str(self.pars.mf), str(self.pars.rm),
+                             str(self.pars.fm), str(self.pars.of), str(self.pars.mf), 0,
                              filter_bed, genome_fasta, self.pars.par])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
@@ -397,6 +404,11 @@ class Statistics(object):
         with open(os.path.join(self.pars.o, "counts_dbs.txt"), "w") as f:
             print("\t".join([str(x) for x in self.counts_dbs.values()]), file=f)
 
+        # Integarte distances
+        self.stat["background_in_trans"] = float(sum([v[2]["in_trans"] for v in mp_output])) / len(mp_output)
+        self.stat["background_in_cis"] = float(sum([v[2]["in_cis"] for v in mp_output])) / len(mp_output)
+        self.stat["background_local"] = float(sum([v[2]["local"] for v in mp_output])) / len(mp_output)
+
     def target_stat(self, target_regions, tpx, tpxf):
         # self.stat["DBSs_target_all"] = str(len(self.txpf))
         tpx.merge_rbs(rm_duplicate=True, region_set=target_regions,
@@ -406,8 +418,8 @@ class Statistics(object):
         self.counts_dbs = OrderedDict()
 
         self.tpxf = tpxf
-        tpxf.merge_rbs(rm_duplicate=True, region_set=target_regions,
-                       asgene_organism=self.pars.organism, cutoff=self.pars.ccf)
+        tpxf.merge_rbs(rm_duplicate=True, region_set=target_regions, rbss=self.rbss,
+                       asgene_organism=self.pars.organism)
 
         for rbs in self.rbss:
             tr = len(tpx.merged_dict[rbs])
@@ -415,6 +427,9 @@ class Statistics(object):
             self.counts_dbs[rbs] = len(tpx.merged_dict[rbs])
         self.region_dbd = tpxf.sort_rbs_by_regions(target_regions)
         self.region_dbs = tpxf.sort_rd_by_regions(regionset=target_regions)
+        self.region_normdbs = {}
+        for t in target_regions:
+            self.region_normdbs[t.toString()] = len(self.region_dbs[t.toString()]) * 1000 / len(t)
         self.region_dbsm = {}
         self.region_coverage = {}
 
@@ -422,3 +437,9 @@ class Statistics(object):
             self.region_dbsm[region.toString()] = self.region_dbs[region.toString()].get_dbs().merge(w_return=True)
             self.region_coverage[region.toString()] = float(self.region_dbsm[region.toString()].total_coverage()) / len(region)
         # self.stat["target_regions"] = str(len(target_regions))
+
+    def distance_distribution(self, tpx):
+        dis_count = tpx.distance_distribution()
+        self.stat["target_in_trans"] = dis_count["in_trans"]
+        self.stat["traget_in_cis"] = dis_count["in_cis"]
+        self.stat["target_local"] = dis_count["local"]

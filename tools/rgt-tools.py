@@ -395,6 +395,8 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-m', metavar='merge', type=int, default=0, help="Define the maximum distance for merging the nearby regions")
     parser_thorsf.add_argument('-b', metavar='bin', type=int, help="Define the bin size")
     parser_thorsf.add_argument('-s', metavar='step', type=int, help="Define the step size")
+    parser_thorsf.add_argument('-dnc', metavar='dnc', type=int, default=0, help="Define the cutoff of the difference of norm. read counts")
+    parser_thorsf.add_argument('-snc', metavar='snc', type=int, default=0, help="Define the cutoff of the sum of norm. read counts")
 
 
     ############### GENOME get sequence ####################################################
@@ -1303,7 +1305,8 @@ if __name__ == "__main__":
                 d = s.distance(a)
                 if d != None:
                     dis.append(s.distance(a))
-            res_dis.append([ s.name, str(min(dis)) ])
+            if dis:
+                res_dis.append([ s.name, str(min(dis)) ])
 
         # res_dis = bed.get_distance(target, ignore_overlap=False)
         with open(args.o, "w") as f:
@@ -1632,8 +1635,11 @@ if __name__ == "__main__":
                         nbins = 1
                     ns1 = float(s1) / nbins
                     ns2 = float(s2) / nbins
-                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
-                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                    if abs(ns2 - ns1) > args.dnc and abs(ns1 + ns2) > args.snc:
+                        data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
+                                          str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                    else:
+                        continue
                 else:
                     # print(region)
                     data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
@@ -1677,8 +1683,8 @@ if __name__ == "__main__":
                     lose_peaks.add(region)
         gain_peaks.sort()
         lose_peaks.sort()
-        print("Number of gain peaks:\t" + str(len(gain_peaks)))
-        print("Number of lost peaks:\t" + str(len(lose_peaks)))
+        # print("Number of gain peaks:\t" + str(len(gain_peaks)))
+        # print("Number of lost peaks:\t" + str(len(lose_peaks)))
         # Merging the close peaks
         m_gain_peaks = merging_peaks(gain_peaks, args.m)
         m_lost_peaks = merging_peaks(lose_peaks, args.m)
@@ -1689,20 +1695,23 @@ if __name__ == "__main__":
             m_gain_peaks = m_gain_peaks.gene_association(organism=args.g, strand_specific=False)
             m_lost_peaks = m_lost_peaks.gene_association(organism=args.g, strand_specific=False)
 
-        print("Number of gain peaks:\t" + str(len(m_gain_peaks)))
-        print("Number of lost peaks:\t" + str(len(m_lost_peaks)))
+
         #
         gain_table = output_table(m_gain_peaks, args)
         lose_table = output_table(m_lost_peaks, args)
+
+        print("Number of gain peaks:\t" + str(len(gain_table)))
+        print("Number of lost peaks:\t" + str(len(lose_table)))
         # sort table
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         gain_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
         lose_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
-        m_gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
-        m_lost_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
+
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))
         lose_table.write(os.path.join(args.o, name + tag + "_lost.table"))
+        gain_table.write(os.path.join(args.o, name + tag + "_gain.bed"))
+        lose_table.write(os.path.join(args.o, name + tag + "_lost.bed"))
         #
         #
         

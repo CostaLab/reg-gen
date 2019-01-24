@@ -495,10 +495,13 @@ def compute_coverage(inputs):
                 print("** Warning: Cannot open " + read_file)
             else:
                 for i, car in enumerate(cov.coverage):
+
                     if i == 0:
                         avearr = numpy.array(car, ndmin=2)
                     else:
-                        avearr = numpy.vstack((avearr, numpy.array(car, ndmin=2)))
+
+                        if avearr.shape[1] == len(car):
+                            avearr = numpy.vstack((avearr, numpy.array(car, ndmin=2)))
                 if logt:
                     avearr = numpy.log10(avearr + 1)
 

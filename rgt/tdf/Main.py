@@ -18,7 +18,7 @@ from .. import __version__
 # from rgt.Util import Html
 from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
-                         merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs, purge
+                         merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs, merge_DNA_counts
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
@@ -76,11 +76,11 @@ def main():
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_promotertest.add_argument('-ccf', type=int, default=100, metavar='  ', help="Define the cut off value for promoter counts (default: %(default)s)")
+    parser_promotertest.add_argument('-ccf', type=float, default=0.1, metavar='  ', help="Define the cut off of triplex-forming promoters per DBD in percentage of total triplexes (0-1) or an integer. (default: %(default)s)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
-    parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
-    parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
+    # parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
+    # parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     # parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
@@ -98,7 +98,7 @@ def main():
     parser_promotertest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
     parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
-    parser_promotertest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
+    parser_promotertest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
     parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexator")
     
     ################### Genomic Region Test ##########################################
@@ -119,12 +119,12 @@ def main():
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
     parser_randomtest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
-    parser_randomtest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for DBS counts (default: %(default)s)")
+    parser_randomtest.add_argument('-ccf', type=float, default=0.1, metavar='  ', help="Define the cut off of triplex-forming regions per DBD in percentage of total triplexes (0-1) or an integer. (default: %(default)s)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
-    parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
-    parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
+    # parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
+    # parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     parser_randomtest.add_argument('-mp', type=int, default=1, metavar='  ', help="Define the number of threads for multiprocessing")
@@ -137,7 +137,7 @@ def main():
     parser_randomtest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
     parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
-    parser_randomtest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
+    parser_randomtest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
     parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexator")
 
     ##########################################################################
@@ -207,15 +207,20 @@ def main():
 
             # For each condition
             for target in targets:
+
+                print("merging DBDs...")
                 merge_DBD_regions(path=target)
+                print("merging DBSs...")
                 merge_DBSs(path=target)
+                print("merging DNA counts...")
+                merge_DNA_counts(path=target)
                 # stat
                 integrate_stat(path=target)
                 summerize_stat(target=target, link_d=link_d, score=args.exp)
             # Project level index file
 
             for item in os.listdir(args.path):
-                print("\t"+item)
+                # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue
@@ -367,13 +372,14 @@ def main():
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "nde.fa"))
-        silentremove(os.path.join(args.o, "de.txp"))
+
         silentremove(os.path.join(args.o, "autobinding.tpx"))
         if args.nofile:
             print("Don't save any files.")
             silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
             silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
             silentremove(os.path.join(args.o, "target_promoters.tpx"))
+            silentremove(os.path.join(args.o, "de.txp"))
         print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 
@@ -407,6 +413,8 @@ def main():
         stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                       target_regions=tdf_input.dna.target_regions,
                                       prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
+        stat.tpxf.get_RNA_DNA_counts(DNA_regions=tdf_input.dna.target_regions, filename=os.path.join(args.o,"DNA_cov.txt"))
+        stat.distance_distribution(tpx=stat.tpxf)
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
 
@@ -429,6 +437,7 @@ def main():
             stat.dbd_regions(rna_exons=tdf_input.rna.regions)
             if not args.nofile:
                 stat.output_bed(input=tdf_input, tpx=stat.tpxf)
+
             stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
             stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
             t2 = time.time()

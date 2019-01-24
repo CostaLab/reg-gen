@@ -18,6 +18,7 @@ from ctypes import *
 from scipy import stats
 from copy import deepcopy
 from collections import OrderedDict
+import numpy
 
 # Internal
 from .SequenceSet import *
@@ -558,21 +559,23 @@ class GenomicRegionSet:
                 if asso_names["overlap"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(asso_names["overlap"]),
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=0))
                 elif asso_names["close_l"] and asso_names["close_r"]:
                     ss = [asso_names["close_l"][1],
                           asso_names["close_r"][1]]
+                    dd = [str(asso_names["close_l"][0]),
+                          str(asso_names["close_r"][0])]
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(ss),
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=":".join(dd)))
                 elif asso_names["close_l"] and not asso_names["close_r"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=asso_names["close_l"][1],
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=str(asso_names["close_l"][0])))
                 elif not asso_names["close_l"] and asso_names["close_r"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=asso_names["close_r"][1],
-                                        data=s.data, proximity=s.proximity))
+                                        data=s.data, proximity=str(asso_names["close_r"][0])))
                     # ss = []
                     # try: ss.append(asso_names["close_l"][1])
                     # except: pass
@@ -1097,20 +1100,16 @@ class GenomicRegionSet:
             else:
                 return res_dict
 
-    def remove_duplicates(self):
-        """Remove the duplicate regions and remain the unique regions. (No return)"""
-        if not self.sorted: self.sort()
-        # for i in range(len(self.sequences) - 1):
-        i = 0
-        loop = True
-        while loop:
-            try:
-                if self.sequences[i].toString() == self.sequences[i + 1].toString():
-                    del self.sequences[i + 1]
-                else:
-                    i += 1
-            except:
-                loop = False
+    def remove_duplicates(self, sort=True):
+        """
+        Remove any duplicate regions, and also returns the sequence list (sorted, by default).
+        """
+        self.sequences = list(set(self.sequences))
+
+        if sort:
+            self.sort()
+
+        return self.sequences
 
     def window(self, y, adding_length=1000):
         """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs
@@ -1134,7 +1133,7 @@ class GenomicRegionSet:
         # Find their intersections
         return extended_self.intersect(y)
 
-    def subtract(self, y, whole_region=False):
+    def subtract(self, y, whole_region=False, merge=True):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
         *Keyword arguments:*
@@ -1159,8 +1158,13 @@ class GenomicRegionSet:
         # If there is overlap within self or y, they should be merged first. 
         if not self.sorted:
             self.sort()
-        a = self.merge(w_return=True)
-        b = y.merge(w_return=True)
+
+        if merge:
+            a = self.merge(w_return=True)
+            b = y.merge(w_return=True)
+        else:
+            a = self
+            b = y
 
         iter_a = iter(a)
         s = iter_a.next()
@@ -2414,6 +2418,11 @@ class GenomicRegionSet:
         size = [len(r) for r in self.sequences]
         return sum(size) / len(size)
 
+    def median_size(self):
+        """Return the average size of the regions"""
+        size = [len(r) for r in self.sequences]
+        return numpy.median(size)
+
     def max_size(self):
         """Return the maximum size of the regions"""
         size = [len(r) for r in self.sequences]
@@ -2710,3 +2719,61 @@ class GenomicRegionSet:
                                       final=ff, name=r.name, orientation=r.orientation)
                     z.add(g)
         return z
+
+    def intersect_merge_pvalue(self, y, strandness=False):
+        z = GenomicRegionSet(self.name)
+        new_z = GenomicRegionSet(self.name)
+        if len(self) == 0 or len(y) == 0:
+            return z
+
+        else:
+            pull_regions = []
+            for i, s in enumerate(self):
+                # pull_regions.append([s])
+                # print(s.data)
+                for ss in y:
+                    if s.overlap(ss, strandness=strandness):
+                        # pull_regions[i].append(ss)
+                        # print(ss.data)
+                        pull_regions.append([s, ss])
+
+            # print(len(pull_regions))
+            for cc in pull_regions:
+                # print(cc)
+                # ps = [float(x.data) for x in cc]
+                ps = [float(cc[0].data), float(cc[1].data)]
+                ps.sort(reverse=True)
+                # print(ps)
+                # print(len(ps))
+
+                p = - min([numpy.log10(len(ps)) - x - numpy.log10(j + 1) for j, x in enumerate(ps)])
+                # print(p)
+                z.add(GenomicRegion(chrom=cc[0].chrom,
+                                    initial=max(cc[0].initial, cc[0].initial),
+                                    final=min(cc[0].final, cc[0].final),
+                                    orientation=cc[0].orientation,
+                                    name=cc[0].name+":"+cc[1].name,
+                                    data=str(p)))
+            z.sort()
+            # print(z.sequences[1:10])
+            for i, zz in enumerate(z):
+                if i == 0:
+                    previous_z = zz
+                    continue
+                else:
+                    if zz.overlap(previous_z, strandness=True):
+                        ps = [float(previous_z.data), float(zz.data)]
+                        ps.sort(reverse=True)
+                        p = - min([numpy.log10(len(ps)) - x - numpy.log10(j + 1) for j, x in enumerate(ps)])
+                        previous_z = GenomicRegion(chrom=zz.chrom,
+                                                   initial=min(previous_z.initial, zz.initial),
+                                                   final=max(previous_z.final, zz.final),
+                                                   orientation=previous_z.orientation,
+                                                   name=previous_z.name,
+                                                   data=str(p))
+
+                    else:
+                        new_z.add(previous_z)
+                        previous_z = zz
+            new_z.add(previous_z)
+            return new_z

@@ -643,7 +643,6 @@ def main(args):
                 html.write(npath(output_file_name_html))
 
             else:
-
                 # Association still needs to be done with all genes in order to print gene list
                 grs = grs.gene_association(organism=args.organism, gene_set=None,
                                            promoter_length=args.promoter_length,
