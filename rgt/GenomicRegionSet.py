@@ -1158,27 +1158,64 @@ class GenomicRegionSet:
                 y.sort()
                 small_self = GenomicRegionSet("small_self")
                 count_target_regions = 0
+                finished = 0
                 last_region = self.sequences[-1]
 
                 for region in self.sequences:
-                    if region.__cmp__(last_region) != 0:  # handling of duplicates within self
-                        if region.chrom == y.sequences[count_target_regions].chrom:
-                            if region.initial == y.sequences[count_target_regions].initial:
+                    if not finished:
+                        if region != last_region:  # handling of duplicates within self
+                            if region.chrom == y.sequences[count_target_regions].chrom:
+                                if region.initial == y.sequences[count_target_regions].initial:
 
-                                if region.final == y.sequences[count_target_regions].final:
-                                    # cur y  |-----|
-                                    # region |-----|
-                                    count_target_regions = count_target_regions + 1
+                                    if region.final == y.sequences[count_target_regions].final:
+                                        # cur y  |-----|
+                                        # region |-----|
+                                        count_target_regions = count_target_regions + 1
+                                        if count_target_regions == len(y.sequences):
+                                            finished = 1
 
-                                elif region.final < y.sequences[count_target_regions].final:
-                                    # cur y    |------|
-                                    # region   |---|
+                                    elif region.final < y.sequences[count_target_regions].final:
+                                        # cur y    |------|
+                                        # region   |---|
+                                        small_self.add(region)
+                                    else:
+                                        # cur y   |----|
+                                        # region  |------|
+                                        loop = 1
+                                        while y.sequences[count_target_regions].final < region.final and loop:
+                                            if count_target_regions < len(y.sequences) - 1:
+                                                count_target_regions = count_target_regions + 1
+                                                if y.sequences[count_target_regions].chrom > region.chrom:
+                                                    small_self.add(region)
+                                                    loop = 0
+                                                else:
+                                                    # still the same chromosome as current region from self
+                                                    if y.sequences[count_target_regions].final == region.final:
+                                                        # cur y  |-----|
+                                                        # region |-----|
+                                                        count_target_regions = count_target_regions + 1
+                                                        if count_target_regions == len(y.sequences):
+                                                            loop = 0
+                                                            finished = 1
+                                                    elif y.sequences[count_target_regions].final > region.final:
+                                                        # cur y   |----|
+                                                        # region  |---|
+                                                        small_self.add(region)
+                                            else:
+                                                # reached the last region in y and this is not exactly mapping
+                                                small_self.add(region)
+                                                loop = 0
+
+                                elif region.initial < y.sequences[count_target_regions].initial:
+                                    # cur y       |---| |        |----| |     |---|     |    |---|
+                                    # region    |---|   |  |---|        |   |-----|     |   |------|
                                     small_self.add(region)
+
                                 else:
-                                    # cur y   |----|
-                                    # region  |------|
+                                    # cur y     |---|        |  |---|      | |-----| |   |----|
+                                    # region          |---|  |     |---|   |   |--|  |     |--|
                                     loop = 1
-                                    while y.sequences[count_target_regions].final < region.final and loop:
+                                    while y.sequences[count_target_regions].initial < region.initial and loop:
                                         if count_target_regions < len(y.sequences) - 1:
                                             count_target_regions = count_target_regions + 1
                                             if y.sequences[count_target_regions].chrom > region.chrom:
@@ -1186,51 +1223,33 @@ class GenomicRegionSet:
                                                 loop = 0
                                             else:
                                                 if y.sequences[count_target_regions].final == region.final:
-                                                    # cur y  |-----|
-                                                    # region |-----|
+                                                    # cur y    |-----|
+                                                    # region   |-----|
                                                     count_target_regions = count_target_regions + 1
-                                                if y.sequences[count_target_regions].final > region.final:
-                                                    # cur y   |----|
-                                                    # region  |---|
+                                                    if count_target_regions == len(y.sequences):
+                                                        loop = 0
+                                                        finished = 1
+                                                elif y.sequences[count_target_regions].initial > region.initial:
+                                                    # cur y      |---| |        |----| |     |---|     |    |---|
+                                                    # region   |---|   |  |---|        |   |-----|     |   |------|
                                                     small_self.add(region)
                                         else:
                                             # reached the last region in y and this is not exactly mapping
                                             small_self.add(region)
                                             loop = 0
+                                            finished = 1
 
-                            elif region.initial < y.sequences[count_target_regions].initial:
-                                # cur y       |---| |        |----| |     |---|     |    |---|
-                                # region    |---|   |  |---|        |   |-----|     |   |------|
-                                small_self.add(region)
-
+                            elif region.chrom > y.sequences[count_target_regions].chrom:
+                                count_target_regions = count_target_regions + 1
+                                if count_target_regions == len(y.sequences):
+                                    finished = 1
                             else:
-                                # cur y     |---|        |  |---|      | |-----| |   |----|
-                                # region          |---|  |     |---|   |   |--|  |     |--|
-                                loop = 1
-                                while y.sequences[count_target_regions].initial < region.initial and loop:
-                                    if count_target_regions < len(y.sequences) - 1:
-                                        count_target_regions = count_target_regions + 1
-                                        if y.sequences[count_target_regions].chrom > region.chrom:
-                                            small_self.add(region)
-                                            loop = 0
-                                        else:
-                                            if y.sequences[count_target_regions].final == region.final:
-                                                # cur y    |-----|
-                                                # region   |-----|
-                                                count_target_regions = count_target_regions + 1
-                                            elif y.sequences[count_target_regions].initial > region.initial:
-                                                # cur y      |---| |        |----| |     |---|     |    |---|
-                                                # region   |---|   |  |---|        |   |-----|     |   |------|
-                                                small_self.add(region)
-                                    else:
-                                        # reached the last region in y and this is not exactly mapping
-                                        small_self.add(region)
-                                        loop = 0
-
-                        elif region.chrom > y.sequences[count_target_regions].chrom:
-                            count_target_regions = count_target_regions + 1
-                        else:
-                            # region.chrom < target.sequences[count_target_regions].chrom:
+                                # region.chrom < target.sequences[count_target_regions].chrom:
+                                small_self.add(region)
+                    else:
+                        # finished -> reached end of y, simply add all remaining regions of self that are not equal
+                        # to the last subtracted or a region that has already been added
+                        if region != last_region:
                             small_self.add(region)
                     last_region = region
                 return small_self
