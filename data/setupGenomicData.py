@@ -242,6 +242,7 @@ if options.mm9:
         system("ln -s " + options.mm9_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
+
         gtf_url = gencode_url + "Gencode_mouse/release_M1/gencode.vM1.annotation.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location, "gencode.vM1.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
@@ -285,14 +286,14 @@ if options.mm10:
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location, "gencode.vM11.annotation.gtf")
+    gtf_output_file_name = path.join(output_location, "gencode.vM20.annotation.gtf")
     if options.mm10_gtf_path:
         print("Creating symbolic link to MM10 GTF")
         system("ln -s " + options.mm10_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
-        gtf_url = gencode_url + "Gencode_mouse/release_M11/gencode.vM11.annotation.gtf.gz"
-        gtf_output_file_name_gz = path.join(output_location, "gencode.vM11.annotation.gtf.gz")
+        gtf_url = gencode_url + "Gencode_mouse/release_M20/gencode.vM20.annotation.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "gencode.vM20.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM10 GTF (gene annotation)")
         download(gtf_url, output_location)

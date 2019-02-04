@@ -18,20 +18,19 @@ then
 echo "$file found."
 else
 echo "$file not found."
-wget -qO- -O TDF_examples.zip http://costalab.org/files/tdf/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
+curl -k -O https://costalab.ukaachen.de/open_data/TDF/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
 fi
+
 
 # Run test script
 cd ${DIR}/TDF_examples/FENDRR_mm9/
-rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/ -l 15
-rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/ -l 15
+#rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/ -l 15
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/ -l 20
 rgt-TDF integrate -path promoter_test
 
-cd ${DIR}/TDF_examples/TERC_hg19/
-
-rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10 -mp 5
+cd ${DIR}/TDF_examples/MEG3_hg38/
+rgt-TDF regiontest -r MEG3_sequence.fa -bed MEG3_hg38_CHOP.bed -rn MEG3 -o genomic_region_test -n 100 -organism hg38 -l 14 -mp 5 -ccf 100
 rgt-TDF integrate -path genomic_region_test
 
-# rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 8 -o genomic_region_test/ -n 10 -mp 5
 
 echo "********* TDF test completed ****************"
