@@ -46,7 +46,7 @@ order_stat = ["title", "name", "genome", "exons", "seq_length",
               "associated_gene", "expression", "loci", "autobinding",
               "MA_G","MA_T","MP_G","MP_T","RA_A","RA_G","YP_C","YP_T",
               "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T",
-              "target_in_trans", "traget_in_cis", "target_local",
+              "target_in_trans", "target_in_cis", "target_local",
               "background_in_trans", "background_in_cis", "background_local"]
 
               # "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
@@ -577,7 +577,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     return txp
 
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=None):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=None, summary_file=False):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
@@ -600,7 +600,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if of: arguments += "-of "+str(of)+" "
     if mf: arguments += "-mf "
     if rm: arguments += "-rm "+str(rm)+" "
-    # arguments += "--bit-parallel "
+    arguments += "--bit-parallel -g 0 "
     if par != "":
         par = par.replace('_'," ")
         par = "-" + par
@@ -617,7 +617,8 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         arg_ptr[i + 1] = s
     # print(arg_strings)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
-    silentremove(os.path.join(output + ".summary"))
+    if not summary_file:
+        silentremove(os.path.join(output + ".summary"))
     silentremove(os.path.join(output + ".log"))
 
 

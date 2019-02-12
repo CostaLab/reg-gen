@@ -77,7 +77,7 @@ class Triplexes(object):
         self.pars = pars
         self.outdir = pars.o
 
-    def search_triplex(self, target_regions, prefix, remove_temp=False):
+    def search_triplex(self, target_regions, prefix, summary_file=False, remove_temp=False):
         # print("    \tRunning Triplexator...")
         rna_fasta = os.path.join(self.outdir, "rna_temp.fa")
         dna_fasta = os.path.join(self.outdir, prefix+".fa")
@@ -88,7 +88,7 @@ class Triplexes(object):
 
         run_triplexator(ss=rna_fasta, ds=dna_fasta, output=tpx_file,
                         l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm,
-                        of=self.of, mf=self.mf, rm=self.rm, par=self.pars.par)
+                        of=self.of, mf=self.mf, rm=self.rm, par=self.pars.par, summary_file=summary_file)
 
         if remove_temp:
             os.remove(dna_fasta)
@@ -107,7 +107,7 @@ class Triplexes(object):
         self.autobinding.merge_rbs(rbss=rbss, rm_duplicate=False)
 
     def get_tpx(self, rna_fasta_file, target_regions, dna_fine_posi, prefix="", remove_temp=False,
-                autobinding=False):
+                autobinding=False, summary_file=False):
         """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
         # Generate FASTA
         save_sequence(dir=self.outdir, filename="targets_" + prefix + ".fa",
@@ -116,13 +116,13 @@ class Triplexes(object):
         run_triplexator(ss=rna_fasta_file, ds=os.path.join(self.outdir, "targets_" + prefix + ".fa"),
                         output=os.path.join(self.outdir, "targets_" + prefix + ".tpx"),
                         l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm, of=self.of,
-                        mf=self.mf, rm=self.rm, par=self.pars.par)
+                        mf=self.mf, rm=self.rm, par=self.pars.par, summary_file=summary_file)
         # Autobinding
         if autobinding:
             run_triplexator(ss=rna_fasta_file, ds=os.path.join(self.outdir, "targets_" + prefix + ".fa"),
                             output=os.path.join(self.outdir, "autobinding_" + prefix + ".txp"),
                             l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm, of=self.of,
-                            mf=self.mf, rm=self.rm, par=self.pars.par + "_auto-binding-file")
+                            mf=self.mf, rm=self.rm, par=self.pars.par + "_auto-binding-file", summary_file=False)
         # Read txp
         tpx = RNADNABindingSet("targets")
         tpx.read_tpx(os.path.join(self.outdir, "targets_" + prefix + ".tpx"), dna_fine_posi=dna_fine_posi, seq=True)

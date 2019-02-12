@@ -723,7 +723,7 @@ def main():
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
             boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim, pw=args.pw, ph=args.ph)
             if args.table:
-                boxplot.print_table(directory=args.o, folder=args.t)
+                boxplot.print_plot_table(directory=args.o, folder=args.t)
             output(f=boxplot.fig, directory=args.o, folder=args.t, filename="boxplot", extra=matplotlib.pyplot.gci(),
                    pdf=True,
                    show=args.show)

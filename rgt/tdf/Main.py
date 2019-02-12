@@ -36,8 +36,8 @@ triplex binding site analysis
 
 Author: Joseph C.C. Kuo
 
-Triplexator
-https://github.com/zbarni/triplexator
+Triplexes
+https://github.com/CostaLab/Triplexes
 Author: Barna Zajzon
 """
 
@@ -65,7 +65,7 @@ def main():
     parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of target genes")
     parser_promotertest.add_argument('-bg', default=False, metavar='  ', help="Input BED file of the promoter regions of background genes")
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results")
-    parser_promotertest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default: %(default)s)")
+    parser_promotertest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default is RNA name)")
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism')
     parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
@@ -87,7 +87,7 @@ def main():
     parser_promotertest.add_argument('-filter_havana', type=str, default="F", metavar='  ', help="Apply filtering to remove HAVANA entries.")
     parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
     parser_promotertest.add_argument('-known_only', type=str, default="F", metavar='  ', help="Apply filtering to get only known genes.")
-    parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the experimental file and leave the program.")
+    parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the preprocessed file and leave the program.")
     parser_promotertest.add_argument('-rnaexp', type=str, default=None, metavar='  ', help="Given a file with RNA name and the expression value")
     parser_promotertest.add_argument('-nofile', action="store_true", default=False, help="Don't save any files in the output folder, except the statistics.")
 
@@ -96,10 +96,10 @@ def main():
     parser_promotertest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
     parser_promotertest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexes] Activates the filtering of low complexity regions and repeats in the sequence data (default: %(default)s)")
     parser_promotertest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
-    parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
+    parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexes (default: %(default)s)")
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
     parser_promotertest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
-    parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexator")
+    parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexes")
     
     ################### Genomic Region Test ##########################################
     h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
@@ -109,7 +109,7 @@ def main():
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
     parser_randomtest.add_argument('-bed', metavar='  ', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
-    parser_randomtest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default: %(default)s)")
+    parser_randomtest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default is RNA name)")
     
     parser_randomtest.add_argument('-n', type=int, default=10000, metavar='  ', 
                                    help="Number of times for randomization (default: %(default)s)")
@@ -135,16 +135,16 @@ def main():
     parser_randomtest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
     parser_randomtest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexes] Activates the filtering of low complexity regions and repeats in the sequence data (default: %(default)s)")
     parser_randomtest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
-    parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
+    parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexes (default: %(default)s)")
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
     parser_randomtest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
-    parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexator")
+    parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexes")
 
     ##########################################################################
-    parser_bed2bed = subparsers.add_parser('get_dbss', help="Get DBSs in BED format from the single BED file")
+    parser_bed2bed = subparsers.add_parser('get_ttss', help="Get TTSs in BED format from the single BED file")
     parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
-    parser_bed2bed.add_argument('-dbs',type=str, metavar='  ', help='Output BED file of the DBSs')
-    parser_bed2bed.add_argument('-rbs',type=str, metavar='  ', help='Output BED file of the RBSs')
+    parser_bed2bed.add_argument('-tts',type=str, metavar='  ', help='Output BED file of the TTSs')
+    parser_bed2bed.add_argument('-tfo',type=str, metavar='  ', help='Output BED file of the TFOs')
     parser_bed2bed.add_argument('-r',type=str, metavar='  ', help='Input FASTA file of the RNA')
     parser_bed2bed.add_argument('-organism', metavar='  ', help='Define the organism')
     parser_bed2bed.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexes] Define the minimum length of triplex (default: %(default)s)")
@@ -152,7 +152,7 @@ def main():
     parser_bed2bed.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
     parser_bed2bed.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexes] Activates the filtering of low complexity regions and repeats in the sequence data (default: %(default)s)")
     parser_bed2bed.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
-    parser_bed2bed.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexator (default: %(default)s)")
+    parser_bed2bed.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexes (default: %(default)s)")
     parser_bed2bed.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
     parser_bed2bed.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
     
@@ -162,9 +162,9 @@ def main():
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     parser_integrate.add_argument('-exp', action="store_true", default=False, help='Include expression score for ranking.')
     ##########################################################################
-    parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
-    parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
-    parser_updatehtml.add_argument('-exp', type=str, metavar='  ', help='Define file with expression data.')
+    # parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
+    # parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
+    # parser_updatehtml.add_argument('-exp', type=str, metavar='  ', help='Define file with expression data.')
 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
@@ -210,7 +210,7 @@ def main():
 
                 print("merging DBDs...")
                 merge_DBD_regions(path=target)
-                print("merging DBSs...")
+                print("merging TTSs...")
                 merge_DBSs(path=target)
                 print("merging DNA counts...")
                 merge_DNA_counts(path=target)
@@ -244,14 +244,14 @@ def main():
 
         ####################################################################################
         ######### updatehtml
-        elif args.mode == "updatehtml":
-            for item in os.listdir(args.path):
-                pro = os.path.join(args.path, item, "profile.txt")
-                if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item),
-                                                       expression=args.exp)
-            revise_index(root=args.path)
-            generate_rna_exp_pv_table(root=args.path, multi_corr=True)
-            sys.exit(0)
+        # elif args.mode == "updatehtml":
+        #     for item in os.listdir(args.path):
+        #         pro = os.path.join(args.path, item, "profile.txt")
+        #         if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item),
+        #                                                expression=args.exp)
+        #     revise_index(root=args.path)
+        #     generate_rna_exp_pv_table(root=args.path, multi_corr=True)
+        #     sys.exit(0)
         
         ####################################################################################
         ######### get_dbss
@@ -331,7 +331,7 @@ def main():
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
         tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                          prefix="target_promoters", remove_temp=True)
+                                          prefix="target_promoters", remove_temp=True, summary_file=True)
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
@@ -361,8 +361,8 @@ def main():
             no_binding_response(args=args,  stat=stat.stat)
         else:
             reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
-                               linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of TTSs",
+                               linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
             reports.barplot(filename=args.rn+"_barplot.png")
             reports.gen_html_promotertest()
             reports.gen_html_genes()
@@ -408,7 +408,8 @@ def main():
         stat = Statistics(pars=args)
         stat.tpx = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                      target_regions=tdf_input.dna.target_regions,
-                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False)
+                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False,
+                                     summary_file = True)
 
         stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                       target_regions=tdf_input.dna.target_regions,
@@ -451,11 +452,11 @@ def main():
 
             else:
                 reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-                reports.plot_lines(tpx=stat.tpx, ylabel="Number of DBSs",
-                                   linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+                reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
+                                   linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
                 reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
                                 truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
-                                ylabel="Number of DBS on target regions")
+                                ylabel="Number of TTS on target regions")
                 reports.gen_html_regiontest()
 
             t3 = time.time()

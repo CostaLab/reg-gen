@@ -497,10 +497,10 @@ class RNADNABindingSet:
                 self.merged_dict[r].remove_duplicates()
 
         if cutoff:
-            if cutoff > 1:
+            if cutoff >= 1:
                 ccf = int(cutoff)
             else:
-                ccf = int(cutoff / 100 * len(region_set))
+                ccf = int(cutoff * len(region_set))
             # print(len(self.sequences))
             # print(ccf)
             for r in self.merged_dict:

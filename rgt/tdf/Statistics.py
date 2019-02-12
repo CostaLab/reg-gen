@@ -43,7 +43,7 @@ class Statistics(object):
                       "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
                       "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
                       "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0,
-                      "target_in_trans": 0, "traget_in_cis": 0, "target_local": 0,
+                      "target_in_trans": 0, "target_in_cis": 0, "target_local": 0,
                       "background_in_trans": 0, "background_in_cis": 0, "background_local": 0}
 
     def count_frequency_promoters(self, target_regions, background, file_tpx_de, file_tpx_nde):
@@ -284,7 +284,7 @@ class Statistics(object):
                       "MA_G", "MA_T", "MP_G", "MP_T", "RA_A", "RA_G", "YP_C", "YP_T",
                       "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T",
                       "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T",
-                      "target_in_trans", "traget_in_cis", "target_local",
+                      "target_in_trans", "target_in_cis", "target_local",
                       "background_in_trans", "background_in_cis", "background_local"]
 
         with open(filename, "w") as f:
@@ -441,5 +441,5 @@ class Statistics(object):
     def distance_distribution(self, tpx):
         dis_count = tpx.distance_distribution()
         self.stat["target_in_trans"] = dis_count["in_trans"]
-        self.stat["traget_in_cis"] = dis_count["in_cis"]
+        self.stat["target_in_cis"] = dis_count["in_cis"]
         self.stat["target_local"] = dis_count["local"]
