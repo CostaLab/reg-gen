@@ -137,7 +137,7 @@ tools_dictionary = {
     "TDF": (
         "rgt-TDF",
         "rgt.tdf.Main:main",
-        ["matplotlib>=1.1.0", "natsort"],
+        ["matplotlib>=1.1.0", "natsort", "pyBigWig==0.3.12"],
         []
     )
 }
