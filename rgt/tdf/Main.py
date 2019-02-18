@@ -16,7 +16,7 @@ from collections import OrderedDict
 # Distal Libraries
 from .. import __version__
 # from rgt.Util import Html
-from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
+from triplexTools import get_dbss, check_dir,run_triplexator, run_triplexes, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
                          merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs, merge_DNA_counts
 
@@ -141,21 +141,30 @@ def main():
     parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexes")
 
     ##########################################################################
-    parser_bed2bed = subparsers.add_parser('get_ttss', help="Get TTSs in BED format from the single BED file")
-    parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
-    parser_bed2bed.add_argument('-tts',type=str, metavar='  ', help='Output BED file of the TTSs')
-    parser_bed2bed.add_argument('-tfo',type=str, metavar='  ', help='Output BED file of the TFOs')
-    parser_bed2bed.add_argument('-r',type=str, metavar='  ', help='Input FASTA file of the RNA')
-    parser_bed2bed.add_argument('-organism', metavar='  ', help='Define the organism')
-    parser_bed2bed.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexes] Define the minimum length of triplex (default: %(default)s)")
-    parser_bed2bed.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexes] Set the maximal error-rate in %% tolerated (default: %(default)s)")
-    parser_bed2bed.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
-    parser_bed2bed.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexes] Activates the filtering of low complexity regions and repeats in the sequence data (default: %(default)s)")
-    parser_bed2bed.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
-    parser_bed2bed.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexes (default: %(default)s)")
-    parser_bed2bed.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
-    parser_bed2bed.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
-    
+    parser_get_TTS = subparsers.add_parser('get_TTS', help="Get TTSs in BED format from the single BED file")
+    parser_get_TTS.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
+    parser_get_TTS.add_argument('-tts',type=str, metavar='  ', help='Output BED file of the TTSs')
+    parser_get_TTS.add_argument('-r',type=str, metavar='  ', help='Input FASTA file of the RNA')
+    parser_get_TTS.add_argument('-organism', metavar='  ', help='Define the organism')
+    parser_get_TTS.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexes] Define the minimum length of triplex (default: %(default)s)")
+    parser_get_TTS.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexes] Set the maximal error-rate in %% tolerated (default: %(default)s)")
+    parser_get_TTS.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
+    parser_get_TTS.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexes] Activates the filtering of low complexity regions and repeats in the sequence data (default: %(default)s)")
+    parser_get_TTS.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexes] Method to quickly discard non-hits (default: %(default)s).'0' = greedy approach; '1' = q-gram filtering.")
+    parser_get_TTS.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexes] Define output formats of Triplexes (default: %(default)s)")
+    parser_get_TTS.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
+    parser_get_TTS.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexes] Set the multiprocessing")
+
+    ##########################################################################
+    parser_autobinding = subparsers.add_parser('autobinding', help="Detect autobinding triplexes in the genome.")
+    parser_autobinding.add_argument('-i', type=str, metavar='  ', help='Input FASTA file of the whole genome')
+    parser_autobinding.add_argument('-l', type=int, default=20, metavar='  ',
+                                    help="[Triplexes] Define the minimum length of triplex (default: %(default)s)")
+    parser_autobinding.add_argument('-e', type=int, default=20, metavar='  ',
+                                    help="[Triplexes] Set the maximal error-rate in %% tolerated (default: %(default)s)")
+    parser_autobinding.add_argument('-abo', type=int, default=5, metavar='  ',
+                                    help="[Triplexes] Autobinding offset. Maximum offset between autobinding regions (must be positive, >= 0), e.g., 1 for regions to be at least adjacent, 2 if there can be 1 bp space between segments, etc. (default: %(default)s)")
+
     ##########################################################################
     # rgt-TDF integrate -path 
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
@@ -186,7 +195,8 @@ def main():
                         print("\nSubparser '{}'".format(choice))
                         subparser.print_help()
             sys.exit(1)
-    else:   
+    else:
+
         args = parser.parse_args()
 
         ####################################################################################
@@ -242,236 +252,237 @@ def main():
 
             sys.exit(0)
 
-        ####################################################################################
-        ######### updatehtml
-        # elif args.mode == "updatehtml":
-        #     for item in os.listdir(args.path):
-        #         pro = os.path.join(args.path, item, "profile.txt")
-        #         if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item),
-        #                                                expression=args.exp)
-        #     revise_index(root=args.path)
-        #     generate_rna_exp_pv_table(root=args.path, multi_corr=True)
-        #     sys.exit(0)
-        
-        ####################################################################################
-        ######### get_dbss
-        elif args.mode == "get_dbss":
 
-            get_dbss(input_BED=args.i,output_BED=args.dbs,rna_fasta=args.r,output_rbss=args.rbs,
+        ####################################################################################
+        ######### get_TTS
+        elif args.mode == "get_TTS":
+
+            get_dbss(input_BED=args.i,output_BED=args.tts,rna_fasta=args.r,output_rbss="none",
                      organism=args.organism,l=args.l,e=args.e,c=args.c,
                      fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=dir)
+
             os.remove("dna_targeted_region.fa")
             os.remove("dna_targeted_region.txp")
             os.remove("rna_temp.fa")
             sys.exit(0)
 
+        ####################################################################################
+        ######### autobinding
+        elif args.mode == "autobinding":
+            run_triplexator(ss=None, ds=None, output=dir, l=args.l, e=args.e,
+                            par="", autobinding=args.i, summary_file=False)
 
-        #######################################################################
-        #### Checking arguments
-        if not args.o: 
-            print("Please define the output directory name. \n")
-            sys.exit(1)
-        if not args.organism: 
-            print("Please define the organism. (hg19 or mm9)")
-            sys.exit(1)
-        if not args.rn:
-            print("Please define RNA sequence name.")
-            sys.exit(1)
+            sys.exit(0)
 
-        t0 = time.time()
-        # Normalised output path
-        if not args.t: args.t = args.rn
-        # else: title = args.t
-        args.r = os.path.normpath(os.path.join(dir, args.r))
-        args.o = os.path.normpath(os.path.join(dir, args.o, args.t))
-        check_dir(os.path.dirname(os.path.dirname(args.o)))
-        check_dir(os.path.dirname(args.o))
-        check_dir(args.o)
-        # Input parameters dictionary
-        summary = []
-        summary.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        summary.append("User: " + getpass.getuser())
-        summary.append("\nCommand:\n\t$ " + " ".join(sys.argv))
-           
-    ################################################################################
-    ##### Promoter Test ############################################################
-    ################################################################################
-    if args.mode == 'promotertest':
-        # Checking all arguments
-        if args.bed and not args.bg:
-            print("Please add background promoters in BED format. (-bg)")
-            sys.exit(1)
-        if args.scoreh and not args.score:
-            print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
-            print("Please add '-score'.")
-            sys.exit(1)
-        if args.de: args.de = os.path.normpath(os.path.join(dir, args.de))
-        if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
-        if args.bg: args.bg = os.path.normpath(os.path.join(dir, args.bg))
 
-        if args.filter_havana == "T": args.filter_havana = True
-        else: args.filter_havana = False
-        if args.protein_coding == "T": args.protein_coding = True
-        else: args.protein_coding = False
-        if args.known_only == "T": args.known_only = True
-        else: args.known_only = False
 
-        print("\n*************** Promoter Test ****************")
-        print("*** Input RNA sequence: " + args.r)
-        print("*** Output directory: " + shorten_dir(args.o))
-        print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        #######################################
-        # Input
-        tdf_input = Input(pars=args)
-        if args.de:
-            tdf_input.dna.degenes()
-        elif args.bed:
-            tdf_input.dna.de_bed_input()
-        #######################################
-        # Triplexes
-        triplexes = Triplexes(organism=args.organism, pars=args)
-        tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                          prefix="target_promoters", remove_temp=True, summary_file=True)
-        tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
-                                           prefix="nontarget_promoters", remove_temp=True)
-        t1 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
-        #######################################
-        # Statistics
-        print("Step 2: Calculate the frequency of DNA binding sites within the promoters.")
-        stat = Statistics(pars=args)
-        stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
-                                       background=tdf_input.dna.nontarget_regions,
-                                       file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
-        triplexes.find_autobinding(rbss=stat.rbss)
-        stat.fisher_exact_de()
-        stat.dbs_motif(tpx=stat.tpx_def)
-        stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
-        stat.dbd_regions(rna_exons=tdf_input.rna.regions)
-        if not args.nofile:
-            stat.output_bed(input=tdf_input, tpx=stat.tpx_def)
-        stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="promotertest")
-        stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
-        t2 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
-        #######################################
-        # Reports
-        print("Step 3: Generate plot and output html files.")
-        if len(stat.rbss) == 0:
-            no_binding_response(args=args,  stat=stat.stat)
         else:
-            reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of TTSs",
-                               linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
-            reports.barplot(filename=args.rn+"_barplot.png")
-            reports.gen_html_promotertest()
-            reports.gen_html_genes()
-        t3 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
-        silentremove(os.path.join(args.o, "rna_temp.fa"))
-        silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
-        silentremove(os.path.join(args.o, "de.fa"))
-        silentremove(os.path.join(args.o, "nde.fa"))
+            #######################################################################
+            #### Checking arguments
+            if not args.o:
+                print("Please define the output directory name. \n")
+                sys.exit(1)
+            if not args.organism:
+                print("Please define the organism. (hg19 or mm9)")
+                sys.exit(1)
+            if not args.rn:
+                print("Please define RNA sequence name.")
+                sys.exit(1)
 
-        silentremove(os.path.join(args.o, "autobinding.tpx"))
-        if args.nofile:
-            print("Don't save any files.")
-            silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
-            silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
-            silentremove(os.path.join(args.o, "target_promoters.tpx"))
-            silentremove(os.path.join(args.o, "de.txp"))
-        print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+            t0 = time.time()
+            # Normalised output path
+            if not args.t: args.t = args.rn
+            # else: title = args.t
+            args.r = os.path.normpath(os.path.join(dir, args.r))
+            args.o = os.path.normpath(os.path.join(dir, args.o, args.t))
+            check_dir(os.path.dirname(os.path.dirname(args.o)))
+            check_dir(os.path.dirname(args.o))
+            check_dir(args.o)
+            # Input parameters dictionary
+            summary = []
+            summary.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            summary.append("User: " + getpass.getuser())
+            summary.append("\nCommand:\n\t$ " + " ".join(sys.argv))
+
+            ################################################################################
+            ##### Promoter Test ############################################################
+            ################################################################################
+            if args.mode == 'promotertest':
+                # Checking all arguments
+                if args.bed and not args.bg:
+                    print("Please add background promoters in BED format. (-bg)")
+                    sys.exit(1)
+                if args.scoreh and not args.score:
+                    print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
+                    print("Please add '-score'.")
+                    sys.exit(1)
+                if args.de: args.de = os.path.normpath(os.path.join(dir, args.de))
+                if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
+                if args.bg: args.bg = os.path.normpath(os.path.join(dir, args.bg))
+
+                if args.filter_havana == "T": args.filter_havana = True
+                else: args.filter_havana = False
+                if args.protein_coding == "T": args.protein_coding = True
+                else: args.protein_coding = False
+                if args.known_only == "T": args.known_only = True
+                else: args.known_only = False
+
+                print("\n*************** Promoter Test ****************")
+                print("*** Input RNA sequence: " + args.r)
+                print("*** Output directory: " + shorten_dir(args.o))
+                print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
+                #######################################
+                # Input
+                tdf_input = Input(pars=args)
+                if args.de:
+                    tdf_input.dna.degenes()
+                elif args.bed:
+                    tdf_input.dna.de_bed_input()
+                #######################################
+                # Triplexes
+                triplexes = Triplexes(organism=args.organism, pars=args)
+                tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
+                                                  prefix="target_promoters", remove_temp=True, summary_file=True)
+                tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
+                                                   prefix="nontarget_promoters", remove_temp=True)
+                t1 = time.time()
+                print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
+                #######################################
+                # Statistics
+                print("Step 2: Calculate the frequency of DNA binding sites within the promoters.")
+                stat = Statistics(pars=args)
+                stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
+                                               background=tdf_input.dna.nontarget_regions,
+                                               file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
+                triplexes.find_autobinding(rbss=stat.rbss)
+                stat.fisher_exact_de()
+                stat.dbs_motif(tpx=stat.tpx_def)
+                stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
+                stat.dbd_regions(rna_exons=tdf_input.rna.regions)
+                if not args.nofile:
+                    stat.output_bed(input=tdf_input, tpx=stat.tpx_def)
+                stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="promotertest")
+                stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
+                t2 = time.time()
+                print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+                #######################################
+                # Reports
+                print("Step 3: Generate plot and output html files.")
+                if len(stat.rbss) == 0:
+                    no_binding_response(args=args,  stat=stat.stat)
+                else:
+                    reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+                    reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of TTSs",
+                                       linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
+                    reports.barplot(filename=args.rn+"_barplot.png")
+                    reports.gen_html_promotertest()
+                    reports.gen_html_genes()
+                t3 = time.time()
+                print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+                silentremove(os.path.join(args.o, "rna_temp.fa"))
+                silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+                silentremove(os.path.join(args.o, "de.fa"))
+                silentremove(os.path.join(args.o, "nde.fa"))
+
+                silentremove(os.path.join(args.o, "autobinding.tpx"))
+                if args.nofile:
+                    print("Don't save any files.")
+                    silentremove(os.path.join(args.o, args.rn + "_target_promoters_dbs.bed"))
+                    silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
+                    silentremove(os.path.join(args.o, "target_promoters.tpx"))
+                    silentremove(os.path.join(args.o, "de.txp"))
+                print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 
-    ################################################################################
-    ##### Genomic Region Test ######################################################
-    ################################################################################
-    if args.mode == 'regiontest':
-        if args.bed:
-            args.bed = os.path.normpath(os.path.join(dir, args.bed))
+            ################################################################################
+            ##### Genomic Region Test ######################################################
+            ################################################################################
+            if args.mode == 'regiontest':
+                if args.bed:
+                    args.bed = os.path.normpath(os.path.join(dir, args.bed))
 
-        print("\n"+"*************** Genomic Region Test ***************")
-        print("*** Input RNA sequence: " + args.r)
-        print("*** Input regions in BED: " + os.path.basename(args.bed))
-        print("*** Number of randomization: " + str(args.n))
-        print("*** Output directory: " + os.path.basename(args.o))
-        print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
+                print("\n"+"*************** Genomic Region Test ***************")
+                print("*** Input RNA sequence: " + args.r)
+                print("*** Input regions in BED: " + os.path.basename(args.bed))
+                print("*** Number of randomization: " + str(args.n))
+                print("*** Output directory: " + os.path.basename(args.o))
+                print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
 
-        #######################################
-        # Input
-        tdf_input = Input(pars=args)
-        tdf_input.dna.bed_input(bed=args.bed)
+                #######################################
+                # Input
+                tdf_input = Input(pars=args)
+                tdf_input.dna.bed_input(bed=args.bed)
 
-        #######################################
-        # Triplexes
-        triplexes = Triplexes(organism=args.organism, pars=args)
-        stat = Statistics(pars=args)
-        stat.tpx = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
-                                     target_regions=tdf_input.dna.target_regions,
-                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False,
-                                     summary_file = True)
+                #######################################
+                # Triplexes
+                triplexes = Triplexes(organism=args.organism, pars=args)
+                stat = Statistics(pars=args)
+                stat.tpx = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
+                                             target_regions=tdf_input.dna.target_regions,
+                                             prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False,
+                                             summary_file = True)
 
-        stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
-                                      target_regions=tdf_input.dna.target_regions,
-                                      prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
-        stat.tpxf.get_RNA_DNA_counts(DNA_regions=tdf_input.dna.target_regions, filename=os.path.join(args.o,"DNA_cov.txt"))
-        stat.distance_distribution(tpx=stat.tpxf)
-        t1 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
-
-
-        #######################################
-        # Statistics
-        print("Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
-        stat.target_stat(target_regions=tdf_input.dna.target_regions, tpx=stat.tpx, tpxf=stat.tpxf)
-        triplexes.find_autobinding(rbss=stat.rbss)
-
-        if len(stat.rbss) == 0:
-            stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest", no_binding=True)
-            no_binding_response(args=args,  stat=stat.stat)
-        else:
-            stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
-                             filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
-
-            stat.dbs_motif(tpx=stat.tpxf)
-            stat.uniq_motif(tpx=stat.tpxf, rnalen=tdf_input.rna.seq_length)
-            stat.dbd_regions(rna_exons=tdf_input.rna.regions)
-            if not args.nofile:
-                stat.output_bed(input=tdf_input, tpx=stat.tpxf)
-
-            stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
-            stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
-            t2 = time.time()
-            print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
-            #######################################
-            # Reports
-            print("Step 3: Generate plot and output html files.")
-            if len(stat.rbss) == 0:
-                no_binding_response(args=args, stat=stat.stat)
+                stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
+                                              target_regions=tdf_input.dna.target_regions,
+                                              prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
+                stat.tpxf.get_RNA_DNA_counts(DNA_regions=tdf_input.dna.target_regions, filename=os.path.join(args.o,"DNA_cov.txt"))
+                stat.distance_distribution(tpx=stat.tpxf)
+                t1 = time.time()
+                print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
 
 
-            else:
-                reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-                reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
-                                   linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
-                reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
-                                truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
-                                ylabel="Number of TTS on target regions")
-                reports.gen_html_regiontest()
+                #######################################
+                # Statistics
+                print("Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
+                stat.target_stat(target_regions=tdf_input.dna.target_regions, tpx=stat.tpx, tpxf=stat.tpxf)
+                triplexes.find_autobinding(rbss=stat.rbss)
 
-            t3 = time.time()
-            print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
-            silentremove(os.path.join(args.o, "rna_temp.fa"))
-            silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
-            silentremove(os.path.join(args.o, "de.fa"))
-            # silentremove(os.path.join(args.o, "de.tpx"))
-            silentremove(os.path.join(args.o, "autobinding.tpx"))
-            if args.nofile:
-                silentremove(os.path.join(args.o, "targets_target_regions.fa"))
-                silentremove(os.path.join(args.o, "targets_target_regions.tpx"))
-                silentremove(os.path.join(args.o, "targets_target_regions_fine.fa"))
-                silentremove(os.path.join(args.o, "targets_target_regions_fine.tpx"))
-                silentremove(os.path.join(args.o, "counts_dbs.txt"))
-                silentremove(os.path.join(args.o, "counts_random_matrix.txt"))
-                silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
-            print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+                if len(stat.rbss) == 0:
+                    stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest", no_binding=True)
+                    no_binding_response(args=args,  stat=stat.stat)
+                else:
+                    stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
+                                     filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
+
+                    stat.dbs_motif(tpx=stat.tpxf)
+                    stat.uniq_motif(tpx=stat.tpxf, rnalen=tdf_input.rna.seq_length)
+                    stat.dbd_regions(rna_exons=tdf_input.rna.regions)
+                    if not args.nofile:
+                        stat.output_bed(input=tdf_input, tpx=stat.tpxf)
+
+                    stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
+                    stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
+                    t2 = time.time()
+                    print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+                    #######################################
+                    # Reports
+                    print("Step 3: Generate plot and output html files.")
+                    if len(stat.rbss) == 0:
+                        no_binding_response(args=args, stat=stat.stat)
+
+
+                    else:
+                        reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+                        reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
+                                           linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
+                        reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
+                                        truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
+                                        ylabel="Number of TTS on target regions")
+                        reports.gen_html_regiontest()
+
+                    t3 = time.time()
+                    print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+                    silentremove(os.path.join(args.o, "rna_temp.fa"))
+                    silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+                    silentremove(os.path.join(args.o, "de.fa"))
+                    # silentremove(os.path.join(args.o, "de.tpx"))
+                    silentremove(os.path.join(args.o, "autobinding.tpx"))
+                    if args.nofile:
+                        silentremove(os.path.join(args.o, "targets_target_regions.fa"))
+                        silentremove(os.path.join(args.o, "targets_target_regions.tpx"))
+                        silentremove(os.path.join(args.o, "targets_target_regions_fine.fa"))
+                        silentremove(os.path.join(args.o, "targets_target_regions_fine.tpx"))
+                        silentremove(os.path.join(args.o, "counts_dbs.txt"))
+                        silentremove(os.path.join(args.o, "counts_random_matrix.txt"))
+                        silentremove(os.path.join(args.o, args.rn + "_DBDs.fa"))
+                    print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
