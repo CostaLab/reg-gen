@@ -164,9 +164,7 @@ def main():
                                     help="[Triplexes] Set the maximal error-rate in %% tolerated (default: %(default)s)")
     parser_autobinding.add_argument('-abo', type=int, default=5, metavar='  ',
                                     help="[Triplexes] Autobinding offset. Maximum offset between autobinding regions (must be positive, >= 0), e.g., 1 for regions to be at least adjacent, 2 if there can be 1 bp space between segments, etc. (default: %(default)s)")
-    ##########################################################################
-    # parser_triplexes = subparsers.add_parser('triplexes', help="Execute TRIPLEXES")
-    # parser_triplexes.add_argument('arguments', metavar='arg', type=str, nargs='+', help = 'Add the arguments according to the manual of TRIPLEXES.')
+
     ##########################################################################
     # rgt-TDF integrate -path 
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
@@ -198,14 +196,6 @@ def main():
                         subparser.print_help()
             sys.exit(1)
     else:
-
-        ####################################################################################
-        ######### triplexes
-        # if sys.argv[1] == "triplexes":
-        #     run_triplexes(sys.argv)
-        #     sys.exit(0)
-        #
-        # else:
 
         args = parser.parse_args()
 
