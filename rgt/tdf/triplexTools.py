@@ -621,7 +621,18 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         silentremove(os.path.join(output + ".summary"))
     silentremove(os.path.join(output + ".log"))
 
+def run_triplexes(arguments):
+    triclass = LibraryPath()
+    triplex_lib_path = triclass.get_triplexator()
+    triplex_lib = cdll.LoadLibrary(triplex_lib_path)
+    arg_strings = arguments
+    # print(arg_strings)
+    arg_ptr = (c_char_p * (len(arg_strings) + 1))()
 
+    arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
+    for i, s in enumerate(arg_strings):
+        arg_ptr[i + 1] = s
+    triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
 
 def region_link_internet(organism, region):
     ani = None
