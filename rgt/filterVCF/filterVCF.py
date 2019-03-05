@@ -70,8 +70,8 @@ def get_max_density(GenomicVariantSets, lowerBound=20, upperBound=50, max_it=5):
     
     for i in range(max_it):
         den, coord = AlgGoldwasser(density_seq, lowerBound, upperBound)
-	s = sum(map(lambda x: x[0], density_seq[coord[0]:coord[1]]))
-	print("%s. It.: density %s at %s - %s with %s SNPs" %(i+1, round(den, 5), coord[0], coord[1], s), file=sys.stderr)
+        s = sum(map(lambda x: x[0], density_seq[coord[0]:coord[1]]))
+        print("%s. It.: density %s at %s - %s with %s SNPs" %(i+1, round(den, 5), coord[0], coord[1], s), file=sys.stderr)
         density_seq[coord[0]:coord[1]] = [(0,1)] * (coord[1] - coord[0])
         
 
