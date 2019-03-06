@@ -15,11 +15,12 @@ from shutil import copy
 import time
 
 # Internal
-from ..Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from ..Util import ErrorHandler, GenomeData, ImageData, Html, npath
 from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GeneSet import GeneSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
+from ..MotifSet import MotifSet
 from .Statistics import multiple_test_correction, get_fisher_dict
 from .Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
 
@@ -182,14 +183,13 @@ def main(args):
 
     print(">> genome:", genome_data.organism)
 
-    # Default motif data
-    motif_data = MotifData(repositorie="default")
+    # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
-        # must overwrite the default DBs
-        motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
+        motif_set = MotifSet(preload_motifs=True, motif_dbs=args.motif_dbs)
+        print(">> custom motif repositories:", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
     else:
-        print(">> motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
+        motif_set = MotifSet(preload_motifs="default")
+        print(">> motif repositories:", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
 
     # Reading motif file
     selected_motifs = []
@@ -331,7 +331,7 @@ def main(args):
 
     # Fetching list with all motif names
     motif_names = []
-    for motif_repository in motif_data.get_pwm_list():
+    for motif_repository in motif_set.motif_data.get_pwm_list():
         for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
             motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
             # if the user has given a list of motifs to use, we only
@@ -607,7 +607,7 @@ def main(args):
                 data_table = []
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
-                    for rep in motif_data.get_logo_list():
+                    for rep in motif_set.motif_data.get_logo_list():
                         logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
@@ -758,7 +758,7 @@ def main(args):
             data_table = []
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
-                for rep in motif_data.get_logo_list():
+                for rep in motif_set.motif_data.get_logo_list():
                     logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
