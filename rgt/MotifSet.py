@@ -84,11 +84,13 @@ class MotifSet:
         if preload_motifs:
             if motif_dbs:
                 # create empty MotifData and set attributes manually (preload motifs is a list of paths to pwm files)
-                self.motif_data = MotifData(repositories="Empty")
+                self.motif_data = MotifData()
                 self.motif_data.set_custom(preload_motifs)
             else:
                 self.motif_data = MotifData(repositories=preload_motifs)
                 self.read_mtf(self.motif_data.mtf_list)
+        else:
+            self.motif_data = MotifData()
 
     def __len__(self):
         return len(self.motifs_map)

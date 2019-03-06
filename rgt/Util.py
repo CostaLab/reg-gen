@@ -150,23 +150,12 @@ class MotifData(ConfigurationFile):
     """Represent motif (PWM) data. Inherits ConfigurationFile."""
 
     def __init__(self, repositories=None):
-        ConfigurationFile.__init__(self)
-        if not repositories or repositories == "default":
-            self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
-        elif repositories == "Empty":
-            self.repositories_list = []
-        else:
-            if not isinstance(repositories, list):
-                repositories = [repositories]
-            self.repositories_list = repositories
-
+        self.repositories_list = []
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
-        for current_repository in self.repositories_list:
-            self.pwm_list.append(self.get_pwm_path(current_repository))
-            self.logo_list.append(self.get_logo_file(current_repository))
-            self.mtf_list.append(self.get_mtf_path(current_repository))
+
+        self.reload(repositories)
 
     def get_repositories_list(self):
         """Returns the current repository list."""
@@ -215,6 +204,25 @@ class MotifData(ConfigurationFile):
             self.pwm_list.append(npath(current_repository))
             self.logo_list.append("")
             self.mtf_list.append("")
+
+    def reload(self, repositories=None):
+        ConfigurationFile.__init__(self)
+        if repositories == "default":
+            self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
+        elif not repositories:
+            self.repositories_list = []
+        else:
+            if not isinstance(repositories, list):
+                repositories = [repositories]
+            self.repositories_list = repositories
+
+        self.pwm_list = []
+        self.logo_list = []
+        self.mtf_list = []
+        for current_repository in self.repositories_list:
+            self.pwm_list.append(self.get_pwm_path(current_repository))
+            self.logo_list.append(self.get_logo_file(current_repository))
+            self.mtf_list.append(self.get_mtf_path(current_repository))
 
 
 class HmmData(ConfigurationFile):
