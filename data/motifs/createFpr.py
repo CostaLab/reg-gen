@@ -1,23 +1,27 @@
 # Import
-import sys
 from glob import glob
 from os.path import basename
 
 from MOODS import tools, parsers
+import argparse
+
+parser = argparse.ArgumentParser()
 
 # Input
-inFolder = sys.argv[1]
-outFileName = sys.argv[2]
+parser.add_argument('-i', '--input-folder', type=str, required=True, help='name of the input folder')
+parser.add_argument('-o', '--output-file', type=str, required=True, help='name of the output file')
+
+args = parser.parse_args()
 
 # Parameters
 fprList = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 pseudocounts = 1.0
 
-outFile = open(outFileName, "w")
+outFile = open(args.output_file, "w")
 outFile.write("\t".join(["MOTIF"] + [str(e) for e in fprList]) + "\n")
 
-# Iterating on all PWMs
-for pwmFileName in sorted(glob(inFolder + "*.pwm")):
+# Iterating on all PWMs in the given input folder
+for pwmFileName in sorted(glob(args.input_folder + "/*.pwm")):
     # Creating PSSM
     name = ".".join(basename(pwmFileName).split(".")[:-1])
 

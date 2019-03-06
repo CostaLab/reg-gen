@@ -56,6 +56,8 @@ def options(parser):
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
                        help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                             "be considered associated with the latter.")
+    group.add_argument("--exclude-target-genes", action="store_true", help="If set the specified target genes are"
+                                                                           "excluded from background file")
 
     # Output Options
     group = parser.add_argument_group("Output",
@@ -181,13 +183,13 @@ def main(args):
     print(">> genome:", genome_data.organism)
 
     # Default motif data
-    motif_data = MotifData()
+    motif_data = MotifData(repositorie="default")
     if args.motif_dbs:
         # must overwrite the default DBs
         motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", motif_data.repositories_list)
+        print(">> custom motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
     else:
-        print(">> motif repositories:", motif_data.repositories_list)
+        print(">> motif repositories:", ",".join([str(db) for db in motif_data.repositories_list]))
 
     # Reading motif file
     selected_motifs = []
@@ -355,7 +357,6 @@ def main(args):
     start = time.time()
     print(">> collecting background statistics...", sep="", end="")
     sys.stdout.flush()
-
     background = GenomicRegionSet("background")
     background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
@@ -370,11 +371,11 @@ def main(args):
     if is_bb(background_mpbs_original_filename):
         os.remove(background_mpbs_filename)
 
-    # scheduling region sets for garbage collection
-    del background.sequences[:]
-    del background
-    del background_mpbs.sequences[:]
-    del background_mpbs
+    # # scheduling region sets for garbage collection
+    # del background.sequences[:]
+    # del background
+    # del background_mpbs.sequences[:]
+    # del background_mpbs
 
     secs = time.time() - start
     print("[", "%02.3f" % secs, " seconds]", sep="")
@@ -651,6 +652,13 @@ def main(args):
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
+
+                if args.exclude_target_genes:
+                    # subtract target_genes
+                    background_tmp = background.subtract(grs, exact=True)
+
+                    # fisher dict for new (smaller) background
+                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up

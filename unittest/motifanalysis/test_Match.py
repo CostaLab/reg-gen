@@ -10,7 +10,7 @@ import os
 from rgt.GenomicRegion import GenomicRegion
 from rgt.Util import GenomeData
 from rgt.motifanalysis.Match import match_multiple
-from rgt.motifanalysis.Motif import Motif
+from rgt.MotifSet import MotifSet
 
 # External
 from MOODS import tools, scan
@@ -26,18 +26,20 @@ class MatchTest(unittest.TestCase):
         self.genome_file = Fastafile(self.genome_data.get_genome())
 
     def test_match_multiple(self):
-        dirname = os.path.dirname(__file__)
-        jasp_dir = "../../data/motifs/jaspar_vertebrates/"
+
+        ms = MotifSet(preload_motifs="default")
+        ms = ms.filter({'database': ["jaspar_vertebrates"], 'name': ["MA0139.1.CTCF"]}, search="inexact")
+
+        self.assertEqual(len(ms), 1)
+
+        motif = ms.create_motif_list(1, 0.0001)[0]
 
         scanner = scan.Scanner(7)
 
-        pssm_list = []
-        thresholds = []
-
-        motif = Motif(os.path.join(dirname, jasp_dir, "MA0139.1.CTCF.pwm"), 1, 0.0001, None)
+        pssm_list, thresholds = [], []
 
         thresholds.append(motif.threshold)
-        thresholds.append(motif.threshold_rc)
+        thresholds.append(motif.threshold)
         pssm_list.append(motif.pssm)
         pssm_list.append(motif.pssm_rc)
 
