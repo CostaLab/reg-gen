@@ -30,6 +30,8 @@ class MatchTest(unittest.TestCase):
         ms = MotifSet(preload_motifs="default")
         ms = ms.filter({'database': ["jaspar_vertebrates"], 'name': ["MA0139.1.CTCF"]}, search="inexact")
 
+        self.assertEqual(len(ms), 1)
+
         motif = ms.create_motif_list(1, 0.0001)[0]
 
         scanner = scan.Scanner(7)

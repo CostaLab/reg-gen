@@ -363,8 +363,8 @@ class MotifSetTest(unittest.TestCase):
                 ma.thresholds[fpr] = []
         # is the new threshold equal to the mtf one?
         ml = ms2.create_motif_list(1.0, 0.0001)
-        self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list calculates threshold incorrectly")
         self.assertEqual(len(ml), len(ms2))
+        self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list calculates threshold incorrectly")
         # is the threshold calculated for non-standard fpr?
         for ma in iter(ms2):
             ma.thresholds = {}

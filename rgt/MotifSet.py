@@ -13,7 +13,7 @@ import glob
 import os
 
 # Internal
-from rgt.Util import npath, MotifData, strmatch, get_rgtdata_path
+from rgt.Util import npath, MotifData, strmatch
 from rgt.motifanalysis.Motif import Motif
 
 from MOODS import tools, parsers
@@ -448,21 +448,24 @@ class MotifSet:
 
         motif_list = []
 
-        for motif_name in self.motifs_map:
-            ma = self.motifs_map[motif_name]
-            motif_file_name = os.path.join(get_rgtdata_path(), "motifs", ma.database, motif_name + ".pwm")
+        # iterate over file names, extract motif name, continue if motif-name not in motifs_map
+        for motif_dir_path in self.motif_data.pwm_list:
 
-            # check whether ma provides the motif matching threshold for the given fpr
-            # recalculate (and store) it otherwise
-            if fpr in ma.thresholds and ma.thresholds[fpr]:
-                threshold = ma.thresholds[fpr]
-            else:
-                pfm = parsers.pfm(motif_file_name)
-                bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
-                pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
-                threshold = tools.threshold_from_p(pssm, bg, fpr)
-                ma.thresholds[fpr] = threshold
+            for motif_name, ma in self.motifs_map.items():
+                motif_file_name = os.path.join(motif_dir_path, motif_name + ".pwm")
 
-            motif_list.append(Motif(motif_file_name, pseudocounts, threshold))
+                if os.path.isfile(motif_file_name):
+                    # check whether ma provides the motif matching threshold for the given fpr
+                    # recalculate (and store) it otherwise
+                    if fpr in ma.thresholds and ma.thresholds[fpr]:
+                        threshold = ma.thresholds[fpr]
+                    else:
+                        pfm = parsers.pfm(str(motif_file_name))
+                        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+                        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+                        threshold = tools.threshold_from_p(pssm, bg, fpr)
+                        ma.thresholds[fpr] = threshold
+
+                    motif_list.append(Motif(motif_file_name, pseudocounts, threshold))
 
         return motif_list
