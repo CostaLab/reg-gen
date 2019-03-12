@@ -4,7 +4,6 @@ python:
 install:
   - pip install cython
   - pip install numpy scipy
-  - pip install https://github.com/fabioticconi/MOODS/tarball/pypi-ready
   - pip install coveralls
   - pip install .
 # command to run tests
