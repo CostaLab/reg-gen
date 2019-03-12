@@ -106,7 +106,7 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.5"],
+        ["Biopython>=1.64", "fisher>=0.1.5", "moods-python @ https://github.com/fabio-t/MOODS/archive/pypi-ready.zip"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (
