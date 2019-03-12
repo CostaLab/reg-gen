@@ -183,7 +183,7 @@ def main(args):
     print(">> genome:", genome_data.organism)
 
     # Default motif data
-    motif_data = MotifData(repositorie="default")
+    motif_data = MotifData(repositories="default")
     if args.motif_dbs:
         # must overwrite the default DBs
         motif_data.set_custom(args.motif_dbs)
