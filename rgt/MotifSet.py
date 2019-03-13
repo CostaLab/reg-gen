@@ -86,7 +86,7 @@ class MotifSet:
                 self.motif_data = MotifData()
                 self.motif_data.set_custom(preload_motifs)
                 # add motifs to self.motifs_map (repositories_list = preload motifs)
-                self.load_directory(self.motif_data.repositories_list)
+                self.load_directory(self.motif_data.pwm_list)
             else:
                 self.motif_data = MotifData(repositories=preload_motifs)
                 # add motifs to self.motifs_map
@@ -286,11 +286,11 @@ class MotifSet:
 
     def load_directory(self, db_list):
 
-        for dir in db_list:
-            for file in os.listdir(dir):
-                tf_id = os.path.splitext(os.path.basename(file))[0]
-                name = os.path.splitext(os.path.basename(file))[0]
-                database = os.path.basename(dir)
+        for directory in db_list:
+            for file_name in glob.glob(directory + "/*.pwm"):
+                tf_id = os.path.splitext(os.path.basename(file_name))[0]
+                name = tf_id
+                database = os.path.basename(directory)
                 version = "0"
                 gene_names = None
                 tf_class = None
@@ -301,7 +301,7 @@ class MotifSet:
                 thresholds = {}
 
                 self.add(MotifAnnotation(tf_id, name, database, version, gene_names, tf_class, uniprot_ids, data_source,
-                                     tax_group, species, thresholds))
+                                         tax_group, species, thresholds))
 
     def read_enrichment(self, enrichment_files, threshold=1):
         """
@@ -478,21 +478,14 @@ class MotifSet:
                 if os.path.isfile(motif_file_name):
                     # check whether ma provides the motif matching threshold for the given fpr
                     # recalculate (and store) it otherwise
-                    if len(ma.thresholds) == 0:
+                    if fpr in ma.thresholds and ma.thresholds[fpr]:
+                        threshold = ma.thresholds[fpr]
+                    else:
                         pfm = parsers.pfm(str(motif_file_name))
                         bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
                         pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
                         threshold = tools.threshold_from_p(pssm, bg, fpr)
                         ma.thresholds[fpr] = threshold
-                    else:
-                        if fpr in ma.thresholds and ma.thresholds[fpr]:
-                            threshold = ma.thresholds[fpr]
-                        else:
-                            pfm = parsers.pfm(str(motif_file_name))
-                            bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
-                            pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
-                            threshold = tools.threshold_from_p(pssm, bg, fpr)
-                            ma.thresholds[fpr] = threshold
 
                     motif_list.append(Motif(motif_file_name, pseudocounts, threshold))
 

@@ -377,23 +377,19 @@ class MotifSetTest(unittest.TestCase):
 class CustomDBTest(unittest.TestCase):
     def setUp(self):
         # use CustomDB
-        self.motif_set = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
+        self.motif_set = MotifSet(preload_motifs=[os.path.join(os.path.dirname(__file__), "TestCustomDB")],
                                   motif_dbs=True)
 
     def test_loading(self):
-        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
-                      motif_dbs=True)
-        self.assertEqual(len(ms.motifs_map), 3, msg="loaded wrong number of motifs")
-        self.assertIsNone(ms.motifs_map["firstMotif_5.0.B"].gene_names, msg="gene_names not None")
-        self.assertIsNone(ms.motifs_map["secondMotif_5.0.B"].data_source, msg="data_source not None")
-        self.assertEqual(len(ms.motifs_map["thirdMotif_5.0.B"].thresholds), 0, msg="thresholds is not an empty dict")
+        self.assertEqual(len(self.motif_set.motifs_map), 3, msg="loaded wrong number of motifs")
+        self.assertIsNone(self.motif_set.motifs_map["firstMotif_5.0.B"].gene_names, msg="gene_names not None")
+        self.assertIsNone(self.motif_set.motifs_map["secondMotif_5.0.B"].data_source, msg="data_source not None")
+        self.assertEqual(len(self.motif_set.motifs_map["thirdMotif_5.0.B"].thresholds), 0, msg="thresholds is not an empty dict")
 
     def test_built_in_functions(self):
-        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
-                      motif_dbs=True)
-        self.assertTrue(str(ms).startswith("MotifSet:{"), msg="str(ms): wrong format")
-        self.assertTrue(repr(ms) == str(ms), msg="MotifSet: repr does not equal str")
-        ms2 = ms.filter({'name': ['firstMotif_5.0.B']}, search="exact")
+        self.assertTrue(str(self.motif_set).startswith("MotifSet:{"), msg="str(ms): wrong format")
+        self.assertTrue(repr(self.motif_set) == str(self.motif_set), msg="MotifSet: repr does not equal str")
+        ms2 = self.motif_set.filter({'name': ['firstMotif_5.0.B']}, search="exact")
         self.assertTrue("'name': 'firstMotif_5.0.B'" in str(ms2), msg="str(ms2): wrong MotifMap")
         self.assertTrue(str(ms2).startswith("MotifSet:{"), msg="str(ms2): wrong format")
         ma = ms2.__getitem__("firstMotif_5.0.B")

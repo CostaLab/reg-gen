@@ -196,11 +196,11 @@ class MotifData(ConfigurationFile):
         return self.mtf_list
 
     def set_custom(self, repositories):
-        self.repositories_list = repositories
+        self.repositories_list = [os.path.basename(r) for r in repositories]
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
-        for current_repository in self.repositories_list:
+        for current_repository in repositories:
             self.pwm_list.append(npath(current_repository))
             self.logo_list.append("")
             self.mtf_list.append("")
