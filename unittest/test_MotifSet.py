@@ -377,17 +377,11 @@ class MotifSetTest(unittest.TestCase):
 class CustomDBTest(unittest.TestCase):
     def setUp(self):
         # use CustomDB
-        self.motif_set = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5"
-                                                  ".0.B.pwm", "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/"
-                                                              "secondMotif_5.0.B.pwm", "/home/julia/reg-gen/unittest/"
-                                                                                       "motifanalysis/TestCustomDB/"
-                                                                                       "thirdMotif_5.0.B.pwm"],
+        self.motif_set = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
                                   motif_dbs=True)
 
     def test_loading(self):
-        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5.0.B.pwm",
-                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/secondMotif_5.0.B.pwm",
-                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/thirdMotif_5.0.B.pwm"],
+        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
                       motif_dbs=True)
         self.assertEqual(len(ms.motifs_map), 3, msg="loaded wrong number of motifs")
         self.assertIsNone(ms.motifs_map["firstMotif_5.0.B"].gene_names, msg="gene_names not None")
@@ -395,9 +389,7 @@ class CustomDBTest(unittest.TestCase):
         self.assertEqual(len(ms.motifs_map["thirdMotif_5.0.B"].thresholds), 0, msg="thresholds is not an empty dict")
 
     def test_built_in_functions(self):
-        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5.0.B.pwm",
-                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/secondMotif_5.0.B.pwm",
-                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/thirdMotif_5.0.B.pwm"],
+        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB"],
                       motif_dbs=True)
         self.assertTrue(str(ms).startswith("MotifSet:{"), msg="str(ms): wrong format")
         self.assertTrue(repr(ms) == str(ms), msg="MotifSet: repr does not equal str")
@@ -444,7 +436,7 @@ class CustomDBTest(unittest.TestCase):
         ms2 = self.motif_set.filter({'database': ["TestCustomDB"]}, search="exact")
         self.assertEqual(len(ms2), 3)
 
-        ms2 = self.motif_set.filter({'database': ["TestCustom"]}, search="inexact")
+        ms2 = self.motif_set.filter({'database': ["TestCustomDB"]}, search="inexact")
         self.assertEqual(len(ms2), 3)
 
         ms2 = self.motif_set.filter({'database': ["TestCustomDB"]}, search="regex")
