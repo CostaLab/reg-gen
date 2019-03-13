@@ -185,7 +185,8 @@ def main(args):
 
     # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
-        motif_set = MotifSet(preload_motifs=True, motif_dbs=args.motif_dbs)
+        # args.motif_dbs is a list of paths to pwm files
+        motif_set = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
         print(">> custom motif repositories:", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
     else:
         motif_set = MotifSet(preload_motifs="default")

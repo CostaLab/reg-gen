@@ -371,3 +371,85 @@ class MotifSetTest(unittest.TestCase):
         ml = ms2.create_motif_list(1.0, 0.0001)
         self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list doesn't work for empty thresholds")
         self.assertEqual(len(ml), len(ms2))
+
+
+# Test is based on Custom DB
+class CustomDBTest(unittest.TestCase):
+    def setUp(self):
+        # use CustomDB
+        self.motif_set = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5"
+                                                  ".0.B.pwm", "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/"
+                                                              "secondMotif_5.0.B.pwm", "/home/julia/reg-gen/unittest/"
+                                                                                       "motifanalysis/TestCustomDB/"
+                                                                                       "thirdMotif_5.0.B.pwm"],
+                                  motif_dbs=True)
+
+    def test_loading(self):
+        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5.0.B.pwm",
+                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/secondMotif_5.0.B.pwm",
+                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/thirdMotif_5.0.B.pwm"],
+                      motif_dbs=True)
+        self.assertEqual(len(ms.motifs_map), 3, msg="loaded wrong number of motifs")
+        self.assertIsNone(ms.motifs_map["firstMotif_5.0.B"].gene_names, msg="gene_names not None")
+        self.assertIsNone(ms.motifs_map["secondMotif_5.0.B"].data_source, msg="data_source not None")
+        self.assertEqual(len(ms.motifs_map["thirdMotif_5.0.B"].thresholds), 0, msg="thresholds is not an empty dict")
+
+    def test_built_in_functions(self):
+        ms = MotifSet(preload_motifs=["/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/firstMotif_5.0.B.pwm",
+                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/secondMotif_5.0.B.pwm",
+                                      "/home/julia/reg-gen/unittest/motifanalysis/TestCustomDB/thirdMotif_5.0.B.pwm"],
+                      motif_dbs=True)
+        self.assertTrue(str(ms).startswith("MotifSet:{"), msg="str(ms): wrong format")
+        self.assertTrue(repr(ms) == str(ms), msg="MotifSet: repr does not equal str")
+        ms2 = ms.filter({'name': ['firstMotif_5.0.B']}, search="exact")
+        self.assertTrue("'name': 'firstMotif_5.0.B'" in str(ms2), msg="str(ms2): wrong MotifMap")
+        self.assertTrue(str(ms2).startswith("MotifSet:{"), msg="str(ms2): wrong format")
+        ma = ms2.__getitem__("firstMotif_5.0.B")
+        self.assertTrue("'name': 'firstMotif_5.0.B'" in str(ma), msg="str(ma): wrong Motif")
+        self.assertTrue(repr(ma) == str(ma), msg="MotifAnnotation: repr does not equal str")
+
+    def test_filter_values_not_dict(self):
+        with self.assertRaises(ValueError):
+            self.motif_set.filter("test")
+
+    def test_filter_wrong_key_type(self):
+        with self.assertRaises(ValueError):
+            self.motif_set.filter({'test': []})
+
+    def test_get_mappings_wrong_key_type(self):
+        ms = MotifSet()
+        with self.assertRaises(ValueError):
+            ms.get_mappings("test")
+
+    def test_filter_names(self):
+        ms2 = self.motif_set.filter({'name': ["firstMotif_5.0.B"]}, search="exact")
+        self.assertEqual(len(ms2), 1)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 1)
+
+        ms2 = self.motif_set.filter({'name': ["secondMotif_5.0.B"]}, search="inexact")
+        self.assertEqual(len(ms2), 1)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 1)
+
+        ms2 = self.motif_set.filter({'name': ["thirdMotif_5.0.B"]}, search="regex")
+        self.assertEqual(len(ms2), 1)
+        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        self.assertEqual(len(motif_list), 1)
+
+    def test_filter_database(self):
+        ms2 = self.motif_set.filter({'database': ["hocomoco"]}, search="exact")
+        self.assertEqual(len(ms2), 0)
+
+        ms2 = self.motif_set.filter({'database': ["TestCustomDB"]}, search="exact")
+        self.assertEqual(len(ms2), 3)
+
+        ms2 = self.motif_set.filter({'database': ["TestCustom"]}, search="inexact")
+        self.assertEqual(len(ms2), 3)
+
+        ms2 = self.motif_set.filter({'database': ["TestCustomDB"]}, search="regex")
+        self.assertEqual(len(ms2), 3)
+
+    def test_filter_with_empty_dict(self):
+        ms2 = self.motif_set.filter({}, search="exact")
+        self.assertEqual(len(ms2), 3)
