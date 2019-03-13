@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import numpy as np
+import pysam
 from pysam import Samfile, Fastafile
 from math import ceil, floor
 from Bio import motifs
@@ -217,6 +218,15 @@ def diff_analysis_run(args):
             os.makedirs(output_location)
     except Exception:
         err.throw_error("MM_OUT_FOLDER_CREATION")
+
+    # Check if the index file exists
+    base_name1 = "{}.bai".format(args.reads_file1)
+    if not os.path.exists(base_name1):
+        pysam.index(args.reads_file1)
+
+    base_name2 = "{}.bai".format(args.reads_file2)
+    if not os.path.exists(base_name2):
+        pysam.index(args.reads_file1)
 
     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
     mpbs1.read(args.mpbs_file1)

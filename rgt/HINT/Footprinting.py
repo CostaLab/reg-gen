@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 from copy import deepcopy
 from argparse import SUPPRESS
@@ -117,6 +119,12 @@ def atac_seq(args):
 
     if len(args.input_files) != 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
+
+    # Check if the index file exists
+    base_name = "{}.bai".format(args.input_files[0])
+    if not os.path.exists(base_name):
+        print("The index file of {} doesn't exist, generating with Pysam".format(args.input_files[0]))
+        pysam.index(args.input_files[0])
 
     ########################################################################################################
     # Global class initialization
