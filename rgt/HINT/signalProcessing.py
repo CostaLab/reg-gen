@@ -245,6 +245,10 @@ class GenomicSignal:
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1_w <= cut_site < p2_w:
@@ -338,6 +342,10 @@ class GenomicSignal:
             nf = [0.0] * (p2 - p1)
             nr = [0.0] * (p2 - p1)
             for read in self.bam.fetch(chrName, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1 <= cut_site < p2:
@@ -353,6 +361,10 @@ class GenomicSignal:
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1_w <= cut_site < p2_w:
@@ -444,6 +456,10 @@ class GenomicSignal:
             # Return raw counts
             signal = [0.0] * (p2 - p1)
             for read in self.bam.fetch(chrName, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1 <= cut_site < p2:
@@ -459,6 +475,10 @@ class GenomicSignal:
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1_w <= cut_site < p2_w:
@@ -814,6 +834,10 @@ class GenomicSignal:
 
         if min_length is None and max_length is None:
             for read in bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1 <= cut_site < p2:
@@ -824,6 +848,10 @@ class GenomicSignal:
                         raw_r[cut_site - p1] += 1.0
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
@@ -835,6 +863,10 @@ class GenomicSignal:
                             raw_r[cut_site - p1] += 1.0
         elif min_length is not None and max_length is None:
             for read in bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if abs(read.template_length) > min_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
@@ -846,6 +878,10 @@ class GenomicSignal:
                             raw_r[cut_site - p1] += 1.0
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if min_length <= abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
@@ -882,6 +918,10 @@ class GenomicSignal:
             # Return raw counts
             signal = [0.0] * (p2 - p1)
             for read in self.bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1 <= cut_site < p2:
@@ -917,6 +957,10 @@ class GenomicSignal:
 
         if min_length is None and max_length is None:
             for read in bam.fetch(ref, p1_w, p2_w):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1_w <= cut_site < p2_w:
@@ -927,6 +971,10 @@ class GenomicSignal:
                         raw_r[cut_site - p1_w] += 1.0
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
@@ -949,6 +997,10 @@ class GenomicSignal:
                             raw_r[cut_site - p1_w] += 1.0
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if min_length < abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
@@ -1021,6 +1073,10 @@ class GenomicSignal:
             # Return raw counts
             signal = [0.0] * (p2 - p1)
             for read in self.bam.fetch(ref, p1, p2):
+                # check if the read is unmapped, according to issue #112
+                if read.is_unmapped:
+                    continue
+
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if p1 <= cut_site < p2:
@@ -1055,6 +1111,10 @@ class GenomicSignal:
         signal_raw_f = [0.0] * (p2_w - p1_w)
         signal_raw_r = [0.0] * (p2_w - p1_w)
         for read in bam.fetch(ref, p1_w, p2_w):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1_w <= cut_site < p2_w:

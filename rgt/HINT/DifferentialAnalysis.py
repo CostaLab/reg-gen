@@ -124,6 +124,10 @@ def get_raw_signal(arguments):
 
         # Fetch raw signal
         for read in bam1.fetch(region.chrom, p1, p2):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1 <= cut_site < p2:
@@ -134,6 +138,10 @@ def get_raw_signal(arguments):
                     signal_1[cut_site - p1] += 1.0
 
         for read in bam2.fetch(region.chrom, p1, p2):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1 <= cut_site < p2:
@@ -142,6 +150,7 @@ def get_raw_signal(arguments):
                 cut_site = read.aend + reverse_shift - 1
                 if p1 <= cut_site < p2:
                     signal_2[cut_site - p1] += 1.0
+
         update_pwm(pwm, fasta, region, p1, p2)
 
     return signal_1, signal_2, motif_len, pwm, num_motif
@@ -334,6 +343,10 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
         # Return raw counts
         bc_signal = [0.0] * (p2 - p1)
         for read in bam.fetch(chrom, p1, p2):
+            # check if the read is unmapped, according to issue #112
+            if read.is_unmapped:
+                continue
+
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if p1 <= cut_site < p2:
@@ -349,6 +362,10 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     nf = [0.0] * (p2_w - p1_w)
     nr = [0.0] * (p2_w - p1_w)
     for read in bam.fetch(chrom, p1_w, p2_w):
+        # check if the read is unmapped, according to issue #112
+        if read.is_unmapped:
+            continue
+
         if not read.is_reverse:
             cut_site = read.pos + forward_shift
             if p1_w <= cut_site < p2_w:
@@ -447,13 +464,16 @@ def update_pwm(pwm, fasta, region, p1, p2):
     # Update pwm
     aux_plus = 1
     dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
+
     if (region.final - region.initial) % 2 == 0:
         aux_plus = 0
+
     dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
                                                              p1 + aux_plus, p2 + aux_plus)).upper())
     if region.orientation == "+":
         for i in range(0, len(dna_seq)):
             pwm[dna_seq[i]][i] += 1
+
     elif region.orientation == "-":
         for i in range(0, len(dna_seq_rev)):
             pwm[dna_seq_rev[i]][i] += 1
