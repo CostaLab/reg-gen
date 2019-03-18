@@ -1,12 +1,14 @@
 git:
   depth: 1
 matrix:
+  fast_finish: true
   include:
     - os: linux
       dist: xenial
       language: python
       python:
         - "2.7"
+        - "3.7"
     - os: osx
       language: generic
       addons:
@@ -15,11 +17,7 @@ matrix:
             - llvm
             - boost
   allow_failures:
-    - os: linux
-      dist: xenial
-      language: python
-      python:
-        - "3.7"
+    - python: "3.7"
 before_install:
   - pip install --upgrade pip
 install:
