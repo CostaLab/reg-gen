@@ -1,8 +1,14 @@
 matrix:
   include:
-    - os: linux
-      dist: xenial
+#    - os: linux
+#      dist: xenial
     - os: osx
+      addons:
+        homebrew:
+          packages:
+            - python@2
+            - llvm
+            - boost
 language: python
 python:
   - "2.7"
