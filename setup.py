@@ -258,7 +258,7 @@ data_config_file.write("genome: " + path.join(genome, "genome_mm10.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm10\n"))
 data_config_file.write("genes_Gencode: " + path.join(genome, "genes_Gencode_mm10.bed\n"))
 data_config_file.write("genes_RefSeq: " + path.join(genome, "genes_RefSeq_mm10.bed\n"))
-data_config_file.write("annotation: " + path.join(genome, "gencode.vM11.annotation.gtf\n"))
+data_config_file.write("annotation: " + path.join(genome, "gencode.vM20.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
