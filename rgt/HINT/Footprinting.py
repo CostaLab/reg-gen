@@ -36,6 +36,17 @@ def footprinting_args(parser):
                         help=("List of files with all possible k-mers (for any k) and their bias estimates. "
                               "Each line should contain a kmer and the bias estimate separated by tab."))
 
+    parser.add_argument("--paired-end", action="store_true", default=False,
+                        help="Set it if your ATAC-seq data is paired-end sequenced. "
+                             "Note that this option is only applied to ATAC-seq data. DEFAULT: False")
+    parser.add_argument("--bias-correction", action="store_true", default=False,
+                        help="If set, footprint calling will based on bias corrected DNase-seq signal. "
+                             "This option is only applied to DNase-seq. DEFAULT: False")
+    parser.add_argument("--bias-type", dest="bias_type", type=str, metavar="STRING", default="SH",
+                        help=("Type of protocol used to generate the DNase-seq. "
+                              "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
+                              "(DNase-seq double-hit protocol). DEFAULT: SH"))
+
     #Hidden Options
     parser.add_argument("--initial-clip", type=int, metavar="INT", default=None, help=SUPPRESS)
     parser.add_argument("--sg-window-size", type=int, metavar="INT", default=None, help=SUPPRESS)
@@ -81,14 +92,6 @@ def footprinting_args(parser):
                         help="Path where the output bias table files will be written. DEFAULT: current directory")
     parser.add_argument("--output-prefix", type=str, metavar="STRING", default="footprints",
                         help="The prefix for results files. DEFAULT: footprints")
-
-    parser.add_argument("--paired-end", action="store_true", default=False, help=SUPPRESS)
-    parser.add_argument("--bias-correction", action="store_true", default=False,
-                        help="If set, footprint calling will based on bias corrected DNase-seq signal. DEFAULT: False")
-    parser.add_argument("--bias-type", dest="bias_type", type=str, metavar="STRING", default="SH",
-                        help=("Type of protocol used to generate the DNase-seq. "
-                              "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
-                              "(DNase-seq double-hit protocol). DEFAULT: SH"))
 
     parser.add_argument("--atac-seq", default=False, action='store_true',
                         help="If set, footprint calling will based on ATAC-seq model. DEFAULT: False")
