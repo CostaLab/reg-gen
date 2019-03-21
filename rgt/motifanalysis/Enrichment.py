@@ -22,7 +22,7 @@ from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
 from ..MotifSet import MotifSet
 from .Statistics import multiple_test_correction, get_fisher_dict
-from .Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
+from .Util import *
 
 # External
 from fisher import pvalue
@@ -48,6 +48,18 @@ def options(parser):
     parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
                         help="New 'motif DB' folders to use instead of the ones within "
                              "the RGTDATA folder. Each folder must contain PWM files.")
+    parser.add_argument("--filter", type=str, default="", metavar="KEY_VALUE_PATTERN",
+                        help="List of key-value patterns to select a subset of TFs using the metadata (MTF files), "
+                             "e.g. for Mouse and Human on Selex data use: \"species:sapiens,mus;data_source:selex\". "
+                             "NB: the DATABASE values must be written in full - exact matching is always performed."
+                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
+    parser.add_argument("--filter-type", choices=("inexact", "exact", "regex"), default="inexact",
+                        help="Only useful together with the --filter argument."
+                             "Exact will only match perfect matching of the value for each key. "
+                             "Inexact will match in case the value pattern is contained within the motif. "
+                             "Regex allows for a more complex pattern use.")
 
     group = parser.add_argument_group("Promoter-regions enrichment",
                                       "Used both for gene set via experimental matrix (see documentation), "
@@ -120,6 +132,8 @@ def main(args):
         gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
     html_col_size = [300, logo_width, 100, 100, 50, 50, 50, 50, 100, 100, 50]
 
+    filter_values = parse_filter(args.filter)
+
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -187,22 +201,25 @@ def main(args):
     if args.motif_dbs:
         # args.motif_dbs is a list of paths to pwm files
         motif_set = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
-        print(">> custom motif repositories:", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
+
+        # filter for dbs only if --motif_dbs is not set
+        if 'database' in filter_values:
+            del filter_values['database']
     else:
-        motif_set = MotifSet(preload_motifs="default")
-        print(">> motif repositories:", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
+        if 'database' in filter_values:
+            motif_set = MotifSet(preload_motifs=filter_values['database'])
+        else:
+            motif_set = MotifSet(preload_motifs="default")
 
-    # Reading motif file
-    selected_motifs = []
+    print(">> used database(s):", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
 
-    if args.selected_motifs_filename:
-        try:
-            with open(args.selected_motifs_filename) as f:
-                selected_motifs = f.read().splitlines()
-                selected_motifs = filter(None, selected_motifs)
-                print(">> motif file loaded:", len(selected_motifs), "motifs")
-        except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
+    # applying filtering pattern, taking a subset of the motif set
+    if args.filter:
+        motif_set = motif_set.filter(filter_values, search=args.filter_type)
+
+    motif_names = motif_set.motifs_map.keys()
+
+    print(">> motifs loaded:", len(motif_names))
 
     # Default image data
     image_data = ImageData()
@@ -325,21 +342,6 @@ def main(args):
 
         # Updating input list with single input (only full site analysis will be performed)
         input_list = [single_input]
-
-    ###################################################################################################
-    # Fetching Motif List
-    ###################################################################################################
-
-    # Fetching list with all motif names
-    motif_names = []
-    for motif_repository in motif_set.motif_data.get_pwm_list():
-        for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
-            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
-            # if the user has given a list of motifs to use, we only
-            # add those to our list
-            if not selected_motifs or motif_name in selected_motifs:
-                motif_names.append(motif_name)
-    motif_names.sort()
 
     ###################################################################################################
     # Background Statistics

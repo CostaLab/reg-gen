@@ -32,7 +32,7 @@ class MatchTest(unittest.TestCase):
 
         self.assertEqual(len(ms), 1)
 
-        motif = ms.create_motif_list(1, 0.0001)[0]
+        motif = ms.get_motif_list(1, 0.0001)[0]
 
         scanner = scan.Scanner(7)
 

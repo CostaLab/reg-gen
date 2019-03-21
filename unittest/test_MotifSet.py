@@ -32,7 +32,7 @@ class MotifSetTest(unittest.TestCase):
     def test_create_default(self):
         ms = MotifSet()
         self.assertEqual(len(ms), 0, msg="motif dictionary must be empty by default (no preload)")
-        motif_list = ms.create_motif_list(1.0, 0.0001)
+        motif_list = ms.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 0)
 
     def test_create_multiple(self):
@@ -43,7 +43,7 @@ class MotifSetTest(unittest.TestCase):
     def test_create_empty(self):
         ms = MotifSet(preload_motifs=None)
         self.assertEqual(len(ms), 0, msg="motif dictionary must be empty")
-        motif_list = ms.create_motif_list(1.0, 0.0001)
+        motif_list = ms.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 0)
 
     def test_create_non_empty(self):
@@ -66,12 +66,12 @@ class MotifSetTest(unittest.TestCase):
     def test_filter_names(self):
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2), 1)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 1)
 
         ms2 = self.motif_set.filter({'name': ["ALX1"], 'species': ["Homo sapiens"]}, search="exact")
         self.assertEqual(len(ms2), 0)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 0)
 
         ms2 = self.motif_set.filter({'name': ["ALX1_HUMAN.H11MO.0.B"], 'species': ["Homo sapiens"]}, search="inexact")
@@ -340,7 +340,7 @@ class MotifSetTest(unittest.TestCase):
         m2k, k2m = ms2.get_mappings(key_type="family")
         self.assertEqual(len(m2k), 587)
         self.assertEqual(len(k2m), 36)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 587)
 
         ms2 = self.motif_set.filter({'data_source': ["(chip|integr)"], 'family': ["multiple"],
@@ -362,13 +362,13 @@ class MotifSetTest(unittest.TestCase):
             for fpr in [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]:
                 ma.thresholds[fpr] = []
         # is the new threshold equal to the mtf one?
-        ml = ms2.create_motif_list(1.0, 0.0001)
+        ml = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(ml), len(ms2))
         self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list calculates threshold incorrectly")
         # is the threshold calculated for non-standard fpr?
         for ma in iter(ms2):
             ma.thresholds = {}
-        ml = ms2.create_motif_list(1.0, 0.0001)
+        ml = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(ml[2].threshold, threshold, msg="create_motif_list doesn't work for empty thresholds")
         self.assertEqual(len(ml), len(ms2))
 
@@ -412,17 +412,17 @@ class CustomDBTest(unittest.TestCase):
     def test_filter_names(self):
         ms2 = self.motif_set.filter({'name': ["firstMotif_5.0.B"]}, search="exact")
         self.assertEqual(len(ms2), 1)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 1)
 
         ms2 = self.motif_set.filter({'name': ["secondMotif_5.0.B"]}, search="inexact")
         self.assertEqual(len(ms2), 1)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 1)
 
         ms2 = self.motif_set.filter({'name': ["thirdMotif_5.0.B"]}, search="regex")
         self.assertEqual(len(ms2), 1)
-        motif_list = ms2.create_motif_list(1.0, 0.0001)
+        motif_list = ms2.get_motif_list(1.0, 0.0001)
         self.assertEqual(len(motif_list), 1)
 
     def test_filter_database(self):

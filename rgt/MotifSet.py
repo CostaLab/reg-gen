@@ -466,16 +466,18 @@ class MotifSet:
 
             f.close()
 
-    def create_motif_list(self, pseudocounts=1.0, fpr=0.0001):
+    def get_motif_list(self, pseudocounts=1.0, fpr=0.0001):
 
         motif_list = []
 
-        # iterate over file names, extract motif name, continue if motif-name not in motifs_map
+        # iterate over all available PWM files
         for motif_dir_path in self.motif_data.pwm_list:
 
+            # iterate over all motif elements in this set
             for motif_name, ma in self.motifs_map.items():
                 motif_file_name = os.path.join(motif_dir_path, motif_name + ".pwm")
 
+                # if the motif annotation has a corresponding PWM file, add to return list
                 if os.path.isfile(motif_file_name):
                     # check whether ma provides the motif matching threshold for the given fpr
                     # recalculate (and store) it otherwise
