@@ -62,27 +62,18 @@ def options(parser):
                              "overlapping input regions are NOT affected by this.")
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
-
-    # Filter
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--ifilter", dest="motif_filter_i", type=str, default="",
-                        help="List of key types with respective keys to filter which TFs should be matched inexactly "
-                             "with the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
+    parser.add_argument("--filter", type=str, default="", metavar="KEY_VALUE_PATTERN",
+                        help="List of key-value patterns to select a subset of TFs using the metadata (MTF files), "
+                             "e.g. for Mouse and Human on Selex data use: \"species:sapiens,mus;data_source:selex\". "
+                             "NB: the DATABASE values must be written in full - exact matching is always performed."
                              "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
                              "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
                              "and \"gene_names_file\"")
-    group.add_argument("--efilter", dest="motif_filter_e", type=str, default="",
-                        help="List of key types with respective keys to filter which TFs should be matched exactly "
-                             "with the genomic region e.g. \"species:sapiens,mus;data_source:selex\"."
-                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
-                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
-                             "and \"gene_names_file\"")
-    group.add_argument("--rfilter", dest="motif_filter_r", type=str, default="",
-                        help="List of key types with respective keys to filter which TFs should be matched using "
-                             "regular expressions with the genomic region e.g. \"species:sapiens,mus;data_source:"
-                             "selex\".Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
-                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
-                             "and \"gene_names_file\"")
+    parser.add_argument("--filter-type", choices=("inexact", "exact", "regex"), default="inexact",
+                        help="Only useful together with the --filter argument."
+                             "Exact will only match perfect matching of the value for each key. "
+                             "Inexact will match in case the value pattern is contained within the motif. "
+                             "Regex allows for a more complex pattern use.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -141,13 +132,8 @@ def main(args):
     # Converting given filter lists to a dictionary that can be used by the filter function
     # dictionaries might contain invalid keys which will raise in error when applying the filter function
     filter_values = {}
-    if args.motif_filter_i or args.motif_filter_e or args.motif_filter_r:
-        if args.motif_filter_i:
-            items = args.motif_filter_i.strip().split(";")
-        elif args.motif_filter_e:
-            items = args.motif_filter_e.strip().split(";")
-        else:
-            items = args.motif_filter_r.strip().split(";")
+    if args.filter:
+        items = args.filter.strip().split(";")
 
         names = []
         gene_names = []
@@ -215,19 +201,6 @@ def main(args):
     print(">> genome:", genome_data.organism)
     print(">> pseudocounts:", args.pseudocounts)
     print(">> fpr threshold:", args.fpr)
-
-    # Reading motif file
-
-    # selected_motifs = []
-    #
-    # if args.selected_motifs_filename:
-    #     try:
-    #         with open(args.selected_motifs_filename) as f:
-    #             selected_motifs = f.read().splitlines()
-    #             selected_motifs = filter(None, selected_motifs)
-    #             print(">> motif file loaded:", len(selected_motifs), "motifs")
-    #     except Exception:
-    #         err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Regions
@@ -404,12 +377,9 @@ def main(args):
     print(">> used database(s):", ",".join([str(db) for db in ms.motif_data.repositories_list]))
 
     # Initialization
-    if args.motif_filter_i:
-        ms = ms.filter(filter_values, search="inexact")
-    elif args.motif_filter_e:
-        ms = ms.filter(filter_values, search="exact")
-    elif args.motif_filter_r:
-        ms = ms.filter(filter_values, search="regex")
+    if args.filter:
+        ms = ms.filter(filter_values, search=args.filter_type)
+
     motif_list = ms.create_motif_list(args.pseudocounts, args.fpr)
 
     print(">> motifs loaded:", len(motif_list))

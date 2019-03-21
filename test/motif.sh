@@ -32,7 +32,7 @@ cd $DEST
 echo "Running matching.."
 echo
 echo ".. with filter"
-rgt-motifanalysis matching --organism hg19 --efilter "database:jaspar_vertebrates" --input-files input/regions_K562.bed input/background.bed
+rgt-motifanalysis matching --organism hg19 --filter "database:jaspar_vertebrates" --input-files input/regions_K562.bed input/background.bed
 mv match/background_mpbs.bed match/background_mpbs_filter.bed
 mv match/regions_K562_mpbs.bed match/regions_K562_mpbs_filter.bed
 echo

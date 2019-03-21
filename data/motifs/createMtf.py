@@ -101,7 +101,7 @@ if options.hoc:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, group, uniprot, data_source, taxGroup,
                              species, threshold])
 
     # Sorting results by ID
@@ -161,7 +161,7 @@ if options.jv:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, full_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+        resultMatrix.append([matrix_id, full_name, version, gene_names, group, uniprot, data_source, taxGroup,
                              species, threshold])
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -217,7 +217,7 @@ if options.jp:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, group, uniprot, data_source, taxGroup,
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, group, uniprot, data_source, taxGroup,
                              species, threshold])
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -258,7 +258,7 @@ if options.t:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -299,7 +299,7 @@ if options.up:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
@@ -340,7 +340,7 @@ if options.us:
             threshold_list.append(str(threshold))
         threshold = ",".join(threshold_list)
 
-        resultMatrix.append([matrix_id, pwm_name, source, version, gene_names, ".", ".", ".", ".", ".", threshold])
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, ".", ".", ".", ".", ".", threshold])
 
     # Sorting results by ID and version
     resultMatrix = sorted(resultMatrix, key=lambda x: x[0])

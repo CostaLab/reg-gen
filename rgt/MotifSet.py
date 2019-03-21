@@ -247,13 +247,15 @@ class MotifSet:
           - mtf_filenames -- A string, or a list of strings, representing .mtf file paths.
         """
 
-        if isinstance(mtf_filenames, list):
-            file_list = [filename for pattern in mtf_filenames for filename in glob.glob(npath(pattern))]
-        else:
-            file_list = glob.glob(npath(mtf_filenames))
+        if not isinstance(mtf_filenames, list):
+            mtf_filenames = [mtf_filenames]
+
+        file_list = [filename for pattern in mtf_filenames for filename in glob.glob(npath(pattern))]
 
         # Iterating over the file name list
         for filename in file_list:
+
+            database = os.path.splitext(os.path.basename(filename))[0]
 
             # Opening MTF file
             mtf_file = open(filename, "r")
@@ -264,15 +266,14 @@ class MotifSet:
                 line_list = line.strip().split("\t")
                 tf_id = line_list[0].strip()
                 name = line_list[1].strip()
-                database = line_list[2].strip()
-                version = line_list[3].strip()
-                gene_names = line_list[4].strip().split("+")
-                tf_class = line_list[5].strip()
-                uniprot_ids = line_list[6].strip().split(";")
-                data_source = line_list[7].strip()
-                tax_group = line_list[8].strip()
-                species = line_list[9].strip()
-                threshold_list = line_list[10].strip().split(",")
+                version = line_list[2].strip()
+                gene_names = line_list[3].strip().split("+")
+                tf_class = line_list[4].strip()
+                uniprot_ids = line_list[5].strip().split(";")
+                data_source = line_list[6].strip()
+                tax_group = line_list[7].strip()
+                species = line_list[8].strip()
+                threshold_list = line_list[9].strip().split(",")
                 fpr_list = [0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]
                 thresholds = {}
                 for i in range(0, 6):
