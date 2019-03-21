@@ -106,7 +106,7 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.5"],
+        ["Biopython>=1.64", "fisher>=0.1.5", "moods-python @ https://github.com/fabio-t/MOODS/archive/pypi-ready.zip"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (
@@ -258,7 +258,7 @@ data_config_file.write("genome: " + path.join(genome, "genome_mm10.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm10\n"))
 data_config_file.write("genes_Gencode: " + path.join(genome, "genes_Gencode_mm10.bed\n"))
 data_config_file.write("genes_RefSeq: " + path.join(genome, "genes_RefSeq_mm10.bed\n"))
-data_config_file.write("annotation: " + path.join(genome, "gencode.vM11.annotation.gtf\n"))
+data_config_file.write("annotation: " + path.join(genome, "gencode.vM20.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
@@ -362,7 +362,8 @@ copy_files_dictionary = {
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
                 "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
                 "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
-    "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
+    "motifs": ["createMtf.py", "createPwm.py", "createFpr.py",
+               "jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
                "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr", "hocomoco.fpr",
                "jaspar_vertebrates.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
