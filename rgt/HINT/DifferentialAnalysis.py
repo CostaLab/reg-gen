@@ -235,7 +235,7 @@ def diff_analysis_run(args):
 
     base_name2 = "{}.bai".format(args.reads_file2)
     if not os.path.exists(base_name2):
-        pysam.index(args.reads_file1)
+        pysam.index(args.reads_file2)
 
     mpbs1 = GenomicRegionSet("Motif Predicted Binding Sites of Condition1")
     mpbs1.read(args.mpbs_file1)
