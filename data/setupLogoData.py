@@ -52,7 +52,7 @@ output_logos_dir = path.join(curr_dir, "logos")
 if not path.exists(output_logos_dir):
     mkdir(output_logos_dir)
 
-repositories = listdir("motifs")
+repositories = [r for r in listdir("motifs") if path.isdir(path.join(curr_dir, "motifs", r))]
 
 if not repositories:
     print("ERROR: the motifs directory is empty")
@@ -68,6 +68,8 @@ if not args.all:
 
     repositories = args.folders
 
+print(">>> CREATING logos for", repositories)
+
 for repo in repositories:
     dir_name = path.join(curr_dir, "motifs", repo)
     for _, _, file_list in walk(dir_name):
@@ -76,7 +78,7 @@ for repo in repositories:
         if not path.exists(output_dir):
             mkdir(output_dir)
 
-        print("Creating logos for " + repo)
+        print(">>", repo)
 
         for pwm_file_name in file_list:
             pwm_full_file_name = path.join(dir_name, pwm_file_name)
@@ -87,5 +89,3 @@ for repo in repositories:
             pwm = motifs.read(pwm_file, "pfm")
             pwm.weblogo(logo_file_name, format="png_print", stack_width="medium", color_scheme="color_classic")
             pwm_file.close()
-
-        print("OK")
