@@ -9,35 +9,25 @@
 # Import
 from __future__ import print_function
 
-from optparse import OptionParser
-from os import path, walk, mkdir
-from sys import platform
+import argparse
+from os import path, mkdir, listdir, walk
+from sys import platform, exit
 
 from Bio import motifs
 
-# Optional Input
-usage_message = "python setupLogoData.py [options]"
-
 # Initializing Option Parser
-parser = OptionParser(usage=usage_message)
+parser = argparse.ArgumentParser(prog='setupLogoData')
 
-# Parameter: RGT Data Location
-parser.add_option("--all", dest="all", action="store_true", default=False,
-                  help="Fetch all data sets.")
-parser.add_option("--hocomoco", dest="hocomoco", action="store_true", default=False,
-                  help="Creates logos only for HOCOMOCO repository.")
-parser.add_option("--jaspar-vertebrates", dest="jaspar_vertebrates", action="store_true", default=False,
-                  help="Creates logos only for Jaspar Vertebrates repository.")
-parser.add_option("--uniprobe-primary", dest="uniprobe_primary", action="store_true", default=False,
-                  help="Creates logos only for Uniprobe (primary motifs) repository.")
-parser.add_option("--uniprobe-secondary", dest="uniprobe_secondary", action="store_true", default=False,
-                  help="Creates logos only for Uniprobe (secondary motifs) repository.")
-options, arguments = parser.parse_args()
-if options.all:
-    options.hocomoco = True
-    options.jaspar_vertebrates = True
-    options.uniprobe_primary = True
-    options.uniprobe_secondary = True
+g = parser.add_mutually_exclusive_group()
+
+g.add_argument("-a", "--all", dest="all", action="store_true", default=False, help="Fetch all data sets.")
+g.add_argument('folders', metavar="repository_folder", nargs='*', default=[])
+
+args = parser.parse_args()
+
+if not args.all and not args.folders:
+    parser.print_help()
+    exit(1)
 
 ###################################################################################################
 # Parameters
@@ -58,20 +48,36 @@ if platform not in supported_platforms:
 
 # Creating logos
 output_logos_dir = path.join(curr_dir, "logos")
+
 if not path.exists(output_logos_dir):
     mkdir(output_logos_dir)
-for dir_name, subdir_list, file_list in walk(path.join(curr_dir, "motifs")):
-    base_name = path.basename(dir_name)
-    if ((options.hocomoco and base_name == "hocomoco") or
-            (options.jaspar_vertebrates and base_name == "jaspar_vertebrates") or
-            (options.uniprobe_primary and base_name == "uniprobe_primary") or
-            (options.uniprobe_secondary and base_name == "uniprobe_secondary")):
-        output_dir = path.join(curr_dir, "logos", base_name)
+
+repositories = listdir("motifs")
+
+if not repositories:
+    print("ERROR: the motifs directory is empty")
+    exit(1)
+
+if not args.all:
+    repositories = set(repositories)
+    query = set(args.folders)
+
+    if not repositories.issuperset(query):
+        print("ERROR: query repositories %s do not exist" % str(list(query.difference(repositories))))
+        exit(1)
+
+    repositories = args.folders
+
+for repo in repositories:
+    dir_name = path.join(curr_dir, "motifs", repo)
+    for _, _, file_list in walk(dir_name):
+        output_dir = path.join(curr_dir, "logos", repo)
+
         if not path.exists(output_dir):
             mkdir(output_dir)
-        else:
-            continue
-        print("Creating logos for " + base_name)
+
+        print("Creating logos for " + repo)
+
         for pwm_file_name in file_list:
             pwm_full_file_name = path.join(dir_name, pwm_file_name)
             if pwm_file_name.split(".")[-1] != "pwm":
@@ -81,4 +87,5 @@ for dir_name, subdir_list, file_list in walk(path.join(curr_dir, "motifs")):
             pwm = motifs.read(pwm_file, "pfm")
             pwm.weblogo(logo_file_name, format="png_print", stack_width="medium", color_scheme="color_classic")
             pwm_file.close()
+
         print("OK")
