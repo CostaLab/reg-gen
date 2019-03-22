@@ -149,18 +149,13 @@ class GenomeData(ConfigurationFile):
 class MotifData(ConfigurationFile):
     """Represent motif (PWM) data. Inherits ConfigurationFile."""
 
-    def __init__(self):
-        ConfigurationFile.__init__(self)
-        self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
+    def __init__(self, repositories=None):
+        self.repositories_list = []
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
-        self.fpr_list = []
-        for current_repository in self.repositories_list:
-            self.pwm_list.append(self.get_pwm_path(current_repository))
-            self.logo_list.append(self.get_logo_file(current_repository))
-            self.mtf_list.append(self.get_mtf_path(current_repository))
-            self.fpr_list.append(self.get_fpr_path(current_repository))
+
+        self.reload(repositories)
 
     def get_repositories_list(self):
         """Returns the current repository list."""
@@ -200,24 +195,34 @@ class MotifData(ConfigurationFile):
         """Returns the list of current paths to the mtf files."""
         return self.mtf_list
 
-    def get_fpr_path(self, current_repository):
-        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository + ".fpr")
-
-    def get_fpr_list(self):
-        """Returns the list of current paths to the fpr files."""
-        return self.fpr_list
-
     def set_custom(self, repositories):
-        self.repositories_list = repositories
+        self.repositories_list = [os.path.basename(r) for r in repositories]
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
-        self.fpr_list = []
-        for current_repository in self.repositories_list:
+        for current_repository in repositories:
             self.pwm_list.append(npath(current_repository))
             self.logo_list.append("")
             self.mtf_list.append("")
-            self.fpr_list.append("")
+
+    def reload(self, repositories=None):
+        ConfigurationFile.__init__(self)
+        if repositories == "default":
+            self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
+        elif not repositories:
+            self.repositories_list = []
+        else:
+            if not isinstance(repositories, list):
+                repositories = [repositories]
+            self.repositories_list = repositories
+
+        self.pwm_list = []
+        self.logo_list = []
+        self.mtf_list = []
+        for current_repository in self.repositories_list:
+            self.pwm_list.append(self.get_pwm_path(current_repository))
+            self.logo_list.append(self.get_logo_file(current_repository))
+            self.mtf_list.append(self.get_mtf_path(current_repository))
 
 
 class HmmData(ConfigurationFile):

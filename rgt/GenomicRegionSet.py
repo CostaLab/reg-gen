@@ -1133,13 +1133,16 @@ class GenomicRegionSet:
         # Find their intersections
         return extended_self.intersect(y)
 
-    def subtract(self, y, whole_region=False, merge=True):
+    def subtract(self, y, whole_region=False, merge=True, exact=False):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to subtract by
             - whole_region -- subtract the whole region, not partially
+            - exact --  only regions which match exactly with a region within y are subtracted
+                        if set, whole_region and merge are completely ignored
+                        if set, the returned GRS is sorted and does not contain duplicates
 
         *Return:*
 
@@ -1151,67 +1154,153 @@ class GenomicRegionSet:
             y               ----------                    ----
             Result   -------                 ------
         """
+        if exact:
+            if len(self.sequences) > 1:
+                self.sort()
+                y.sort()
+                small_self = GenomicRegionSet("small_self")
+                count_target_regions = 0
+                finished = 0
+                last_region = self.sequences[-1]
 
-        z = GenomicRegionSet(self.name + ' - ' + y.name)
-        if len(self) == 0 or len(y) == 0: return self
+                for region in self.sequences:
+                    if not finished:
+                        if region != last_region:  # handling of duplicates within self
+                            if region.chrom == y.sequences[count_target_regions].chrom:
+                                if region.initial == y.sequences[count_target_regions].initial:
 
-        # If there is overlap within self or y, they should be merged first. 
-        if not self.sorted:
-            self.sort()
+                                    if region.final == y.sequences[count_target_regions].final:
+                                        # cur y  |-----|
+                                        # region |-----|
+                                        count_target_regions = count_target_regions + 1
+                                        if count_target_regions == len(y.sequences):
+                                            finished = 1
 
-        if merge:
-            a = self.merge(w_return=True)
-            b = y.merge(w_return=True)
-        else:
-            a = self
-            b = y
+                                    elif region.final < y.sequences[count_target_regions].final:
+                                        # cur y    |------|
+                                        # region   |---|
+                                        small_self.add(region)
+                                    else:
+                                        # cur y   |----|
+                                        # region  |------|
+                                        loop = 1
+                                        while y.sequences[count_target_regions].final < region.final and loop:
+                                            if count_target_regions < len(y.sequences) - 1:
+                                                count_target_regions = count_target_regions + 1
+                                                if y.sequences[count_target_regions].chrom > region.chrom:
+                                                    small_self.add(region)
+                                                    loop = 0
+                                                else:
+                                                    # still the same chromosome as current region from self
+                                                    if y.sequences[count_target_regions].final == region.final:
+                                                        # cur y  |-----|
+                                                        # region |-----|
+                                                        count_target_regions = count_target_regions + 1
+                                                        if count_target_regions == len(y.sequences):
+                                                            loop = 0
+                                                            finished = 1
+                                                    elif y.sequences[count_target_regions].final > region.final:
+                                                        # cur y   |----|
+                                                        # region  |---|
+                                                        small_self.add(region)
+                                            else:
+                                                # reached the last region in y and this is not exactly mapping
+                                                small_self.add(region)
+                                                loop = 0
 
-        iter_a = iter(a)
-        s = iter_a.next()
-        last_j = len(b) - 1
-        j = 0
-        cont_loop = True
-        pre_inter = 0
-        cont_overlap = False
+                                elif region.initial < y.sequences[count_target_regions].initial:
+                                    # cur y       |---| |        |----| |     |---|     |    |---|
+                                    # region    |---|   |  |---|        |   |-----|     |   |------|
+                                    small_self.add(region)
 
-        while cont_loop:
-            # print("Compare: "+s.__repr__()+"\t"+b[j].__repr__())
+                                else:
+                                    # cur y     |---|        |  |---|      | |-----| |   |----|
+                                    # region          |---|  |     |---|   |   |--|  |     |--|
+                                    loop = 1
+                                    while y.sequences[count_target_regions].initial < region.initial and loop:
+                                        if count_target_regions < len(y.sequences) - 1:
+                                            count_target_regions = count_target_regions + 1
+                                            if y.sequences[count_target_regions].chrom > region.chrom:
+                                                small_self.add(region)
+                                                loop = 0
+                                            else:
+                                                if y.sequences[count_target_regions].final == region.final:
+                                                    # cur y    |-----|
+                                                    # region   |-----|
+                                                    count_target_regions = count_target_regions + 1
+                                                    if count_target_regions == len(y.sequences):
+                                                        loop = 0
+                                                        finished = 1
+                                                elif y.sequences[count_target_regions].initial > region.initial:
+                                                    # cur y      |---| |        |----| |     |---|     |    |---|
+                                                    # region   |---|   |  |---|        |   |-----|     |   |------|
+                                                    small_self.add(region)
+                                        else:
+                                            # reached the last region in y and this is not exactly mapping
+                                            small_self.add(region)
+                                            loop = 0
+                                            finished = 1
 
-            # ----------------------
-            # -----  --    ----    -----  ----
-
-            # When the regions overlap
-            if s.overlap(b[j]):
-                if not cont_overlap: pre_inter = j
-                if whole_region:  # Simply jump to next region
-                    try:
-                        s = iter_a.next()
-                        j = pre_inter
-                        cont_overlap = False
-                        continue
-                    except:
-                        cont_loop = False
-
-                # ------        -----      -------       ---        ------    -----  --
-                #   ------        --        ---       --------  ------       -----  -----
-                if s.initial < b[j].initial:
-
-                    # ------        -----      -------
-                    #   ------        --        ---
-                    if s.final > b[j].final:
-                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
-                        s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
-                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
-                        z.add(s1)
-                        s = s2
-                        if j < last_j: j = j + 1
-                        cont_overlap = True
-                        continue
+                            elif region.chrom > y.sequences[count_target_regions].chrom:
+                                count_target_regions = count_target_regions + 1
+                                if count_target_regions == len(y.sequences):
+                                    finished = 1
+                            else:
+                                # region.chrom < target.sequences[count_target_regions].chrom:
+                                small_self.add(region)
                     else:
-                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
-                        z.add(s1)
+                        # finished -> reached end of y, simply add all remaining regions of self that are not equal
+                        # to the last subtracted or a region that has already been added
+                        if region != last_region:
+                            small_self.add(region)
+                    last_region = region
+                return small_self
+
+            elif len(self.sequences) == 1:
+                # GRS only contains 1 region, only check if this matches exactly with any region within y
+                for target_region in y.sequences:
+                    if target_region.__cmp__(self.sequences[0]) == 0:
+                        return GenomicRegionSet("small_self")  # return empty GRS
+                return self
+            else:
+                # self is empty GRS
+                return self
+        else:
+            # exact = False
+
+            z = GenomicRegionSet(self.name + ' - ' + y.name)
+            if len(self) == 0 or len(y) == 0:
+                return self
+
+            # If there is overlap within self or y, they should be merged first.
+            if not self.sorted:
+                self.sort()
+
+            if merge:
+                a = self.merge(w_return=True)
+                b = y.merge(w_return=True)
+            else:
+                a = self
+                b = y
+
+            iter_a = iter(a)
+            s = iter_a.next()
+            last_j = len(b) - 1
+            j = 0
+            cont_loop = True
+            pre_inter = 0
+            cont_overlap = False
+
+            while cont_loop:
+                # print("Compare: "+s.__repr__()+"\t"+b[j].__repr__())
+
+                # ----------------------
+                # -----  --    ----    -----  ----
+
+                # When the regions overlap
+                if s.overlap(b[j]):
+                    if not cont_overlap: pre_inter = j
+                    if whole_region:  # Simply jump to next region
                         try:
                             s = iter_a.next()
                             j = pre_inter
@@ -1220,57 +1309,85 @@ class GenomicRegionSet:
                         except:
                             cont_loop = False
 
-                elif s.final > b[j].final:
+                    # ------        -----      -------       ---        ------    -----  --
+                    #   ------        --        ---       --------  ------       -----  -----
+                    if s.initial < b[j].initial:
 
-                    #     ------  
-                    # ------
-                    s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
-                                       name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
-                    s = s2
-                    if j < last_j: j = j + 1
+                        # ------        -----      -------
+                        #   ------        --        ---
+                        if s.final > b[j].final:
+                            s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
+                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                            s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
+                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                            z.add(s1)
+                            s = s2
+                            if j < last_j: j = j + 1
+                            cont_overlap = True
+                            continue
+                        else:
+                            s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
+                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                            z.add(s1)
+                            try:
+                                s = iter_a.next()
+                                j = pre_inter
+                                cont_overlap = False
+                                continue
+                            except:
+                                cont_loop = False
+
+                    elif s.final > b[j].final:
+
+                        #     ------
+                        # ------
+                        s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
+                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                        s = s2
+                        if j < last_j: j = j + 1
+                        cont_overlap = True
+                        continue
+                    else:
+
+                        #     ---       -----  --
+                        #   --------    -----  -----
+                        try:
+                            s = iter_a.next()
+                            j = pre_inter
+                        except:
+                            cont_loop = False
+
+                    if j == last_j:
+                        try:
+                            s = iter_a.next()
+                            j = pre_inter
+                        except:
+                            cont_loop = False
+                    else:
+                        j = j + 1
                     cont_overlap = True
-                    continue
-                else:
 
-                    #     ---       -----  --
-                    #   --------    -----  -----
-                    try:
-                        s = iter_a.next()
-                        j = pre_inter
-                    except:
-                        cont_loop = False
-
-                if j == last_j:
-                    try:
-                        s = iter_a.next()
-                        j = pre_inter
-                    except:
-                        cont_loop = False
-                else:
-                    j = j + 1
-                cont_overlap = True
-
-            elif s < b[j]:
-                z.add(s)
-                try:
-                    s = iter_a.next()
-                    j = pre_inter
-                    cont_overlap = False
-                except:
-                    cont_loop = False
-
-            elif s > b[j]:
-                if j == last_j:
+                elif s < b[j]:
                     z.add(s)
                     try:
                         s = iter_a.next()
+                        j = pre_inter
+                        cont_overlap = False
                     except:
                         cont_loop = False
-                else:
-                    j = j + 1
-                    cont_overlap = False
 
-        return z
+                elif s > b[j]:
+                    if j == last_j:
+                        z.add(s)
+                        try:
+                            s = iter_a.next()
+                        except:
+                            cont_loop = False
+                    else:
+                        j = j + 1
+                        cont_overlap = False
+
+            return z
 
     def subtract_aregion(self, y):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
@@ -1329,7 +1446,8 @@ class GenomicRegionSet:
             - w_return -- If TRUE, it returns a GenomicRegionSet; if FALSE, it merges the regions in place.
             - namedistinct -- Merge the regions which have the same names only.
         """
-        if not self.sorted: self.sort()
+        if not self.sorted:
+            self.sort()
 
         if len(self.sequences) in [0, 1]:
             if w_return:

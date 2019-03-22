@@ -6,6 +6,7 @@
 # Python 3 compatibility
 from __future__ import print_function
 from __future__ import division
+import time
 
 # Internal
 from ..GeneSet import GeneSet
@@ -71,7 +72,7 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
         cm = sum(1./arange(1, len(pvals_sorted)+1))
         ecdffactor = ecdf(pvals_sorted) / cm
     else:
-        raise ValueError('only indep and necorr implemented')
+        raise ValueError('only indep and negcorr implemented')
     reject = pvals_sorted < ecdffactor*alpha
     if reject.any():
         rejectmax = max(nonzero(reject)[0])
@@ -97,10 +98,10 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
     mpbs_set -- TODO
 
     Return:
-    a -- TODO
-    b -- TODO
+    a -- number of input regions intersecting with mpbs
+    b -- number of input regions not intersecting with mpbs
     gene_set -- TODO
-    mpbs_set -- TODO
+    mpbs_set -- GenomicRegionSet of mpbs regions intersecting with input regions
     """
 
     # Fetching motif
@@ -155,10 +156,10 @@ def get_fisher_dict(motif_names, regions, mpbs, gene_set=False, mpbs_set=False):
     mpbs_set -- TODO
 
     Return:
-    res1_dict -- TODO
-    res2_dict -- TODO
+    res1_dict -- dictionary containing number of input regions intersecting with mpbs regions. Keys: motif names
+    res2_dict --  dictionary containing number of input regions not intersecting with mpbs regions. Keys: motif names
     geneset_dict -- TODO
-    mpbs_dict -- TODO
+    mpbs_dict -- GenomicRegionSet of mpbs regions intersecting with input regions. Keys: motif names
     """
 
     # Calculating statistics for EV

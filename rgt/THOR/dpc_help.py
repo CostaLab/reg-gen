@@ -223,7 +223,8 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g.close()
 
 
-def _compute_pvalue((x, y, side, distr)):
+def _compute_pvalue(tuple_arg):
+    (x, y, side, distr) = tuple_arg
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
 

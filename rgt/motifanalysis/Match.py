@@ -8,19 +8,18 @@ from __future__ import division
 
 # Python
 import os
-from glob import glob
 import time
 import sys
 
 # Internal
-from ..Util import ErrorHandler, MotifData, GenomeData, npath
+from ..Util import ErrorHandler, GenomeData, npath
 from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GeneSet import GeneSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
 from ..AnnotationSet import AnnotationSet
-from .Motif import Motif, ThresholdTable
-from .Util import bed_to_bb
+from ..MotifSet import MotifSet
+from .Util import bed_to_bb, parse_filter
 
 # External
 from pysam import Fastafile
@@ -50,8 +49,6 @@ def options(parser):
                              "Then, all thresholds are divided by the length of the motif. The final threshold "
                              "consists of the average between all normalized motif thresholds. This single threshold "
                              "will be applied to all motifs.")
-    parser.add_argument("--use-only-motifs", dest="selected_motifs_filename", type=str, metavar="PATH",
-                        help="Only use the motifs contained within this file (one for each line).")
     parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
                         help="New 'motif DB' folders to use instead of the ones within "
                              "the RGTDATA folder. Each folder must contain PWM files.")
@@ -63,6 +60,18 @@ def options(parser):
                              "overlapping input regions are NOT affected by this.")
     parser.add_argument("--rmdup", action="store_true", default=False,
                         help="Remove any duplicate region from the input BED files.")
+    parser.add_argument("--filter", type=str, default="", metavar="KEY_VALUE_PATTERN",
+                        help="List of key-value patterns to select a subset of TFs using the metadata (MTF files), "
+                             "e.g. for Mouse and Human on Selex data use: \"species:sapiens,mus;data_source:selex\". "
+                             "NB: the DATABASE values must be written in full - exact matching is always performed."
+                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
+    parser.add_argument("--filter-type", choices=("inexact", "exact", "regex"), default="inexact",
+                        help="Only useful together with the --filter argument."
+                             "Exact will only match perfect matching of the value for each key. "
+                             "Inexact will match in case the value pattern is contained within the motif. "
+                             "Regex allows for a more complex pattern use.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
@@ -118,6 +127,8 @@ def main(args):
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
+    filter_values = parse_filter(args.filter)
+
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -136,18 +147,6 @@ def main(args):
     print(">> pseudocounts:", args.pseudocounts)
     print(">> fpr threshold:", args.fpr)
 
-    # Reading motif file
-    selected_motifs = []
-
-    if args.selected_motifs_filename:
-        try:
-            with open(args.selected_motifs_filename) as f:
-                selected_motifs = f.read().splitlines()
-                selected_motifs = filter(None, selected_motifs)
-                print(">> motif file loaded:", len(selected_motifs), "motifs")
-        except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
-
     ###################################################################################################
     # Reading Input Regions
     ###################################################################################################
@@ -163,7 +162,7 @@ def main(args):
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
 
-            print(">> experimental matrix loaded")
+            print(">>> experimental matrix loaded")
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
@@ -177,7 +176,7 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-        print(">> input regions BED files loaded")
+            print(">>> input file", name, "loaded:", len(regions), "regions")
 
     # we put this here because we don't want to create the output directory unless we
     # are sure the initialisation (including loading input files) worked
@@ -198,7 +197,7 @@ def main(args):
         target_genes = GeneSet("target_genes")
         target_genes.read(args.target_genes_filename)
 
-        # TODO what do we do with unmapped genes? maybe just print them out
+        # TODO: what do we do with unmapped genes? maybe just print them out
         target_regions = annotation.get_promoters(gene_set=target_genes, promoter_length=args.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
@@ -207,7 +206,7 @@ def main(args):
 
         genomic_regions_dict[target_regions.name] = target_regions
 
-        print(">> target promoter file created:", len(target_regions), "regions")
+        print(">>> target promoter file created:", len(target_regions), "regions")
 
     # we make a background in case it's requested, but also in case a list of target genes has not been
     # provided
@@ -232,7 +231,7 @@ def main(args):
 
         genomic_regions_dict[background_regions.name] = background_regions
 
-        print(">> background promoter file created:", len(background_regions), "regions")
+        print(">>> background promoter file created:", len(background_regions), "regions")
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
@@ -265,6 +264,8 @@ def main(args):
             if curr_len > max_region_len:
                 max_region_len = curr_len
                 max_region = curr_genomic_region
+
+    print(">> all files loaded")
 
     ###################################################################################################
     # Creating random regions
@@ -307,35 +308,26 @@ def main(args):
     # Creating PWMs
     ###################################################################################################
 
-    # Initialization
-    motif_list = []
-
-    # Default motif data
-    motif_data = MotifData()
     if args.motif_dbs:
-        # must overwrite the default DBs
-        motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", motif_data.repositories_list)
+        ms = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
+        # filter for dbs only if --motif_dbs is not set
+        if 'database' in filter_values:
+            del filter_values['database']
     else:
-        print(">> motif repositories:", motif_data.repositories_list)
+        if 'database' in filter_values:
+            ms = MotifSet(preload_motifs=filter_values['database'])
+        else:
+            ms = MotifSet(preload_motifs="default")
 
-    # Creating thresholds object
-    threshold_table = ThresholdTable(motif_data)
+    print(">> used database(s):", ",".join([str(db) for db in ms.motif_data.repositories_list]))
 
-    # Fetching list with all motif file names
-    motif_file_names = []
-    for motif_repository in motif_data.get_pwm_list():
-        for motif_file_name in glob(npath(os.path.join(motif_repository, "*.pwm"))):
-            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
-            # if the user has given a list of motifs to use, we only
-            # add those to our list
-            if not selected_motifs or motif_name in selected_motifs:
-                motif_file_names.append(motif_file_name)
+    # applying filtering pattern, taking a subset of the motif set
+    if args.filter:
+        ms = ms.filter(filter_values, search=args.filter_type)
 
-    # Iterating on grouped file name list
-    for motif_file_name in motif_file_names:
-        # Append motif motif_list
-        motif_list.append(Motif(motif_file_name, args.pseudocounts, args.fpr, threshold_table))
+    motif_list = ms.get_motif_list(args.pseudocounts, args.fpr)
+
+    print(">> motifs loaded:", len(motif_list))
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:
@@ -353,7 +345,7 @@ def main(args):
             thresholds.append(0.0)
         else:
             thresholds.append(motif.threshold)
-            thresholds.append(motif.threshold_rc)
+            thresholds.append(motif.threshold)
 
         pssm_list.append(motif.pssm)
         pssm_list.append(motif.pssm_rc)
@@ -377,7 +369,7 @@ def main(args):
     for grs in regions_to_match:
 
         start = time.time()
-        print(">> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
+        print(">> matching [", grs.name, "], ", len(grs), " regions... ", sep="", end='')
         sys.stdout.flush()
 
         # Initializing output bed file
@@ -489,7 +481,7 @@ def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=N
             threshold = unique_threshold
         else:
             motif_max = motif.max
-            threshold = motif.threshold_rc if rc else motif.threshold
+            threshold = motif.threshold
 
         for r in search_result:
             position = r.pos

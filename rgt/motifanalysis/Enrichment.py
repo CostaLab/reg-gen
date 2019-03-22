@@ -15,13 +15,14 @@ from shutil import copy
 import time
 
 # Internal
-from ..Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from ..Util import ErrorHandler, GenomeData, ImageData, Html, npath
 from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GeneSet import GeneSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..GenomicRegion import GenomicRegion
+from ..MotifSet import MotifSet
 from .Statistics import multiple_test_correction, get_fisher_dict
-from .Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
+from .Util import *
 
 # External
 from fisher import pvalue
@@ -47,6 +48,18 @@ def options(parser):
     parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
                         help="New 'motif DB' folders to use instead of the ones within "
                              "the RGTDATA folder. Each folder must contain PWM files.")
+    parser.add_argument("--filter", type=str, default="", metavar="KEY_VALUE_PATTERN",
+                        help="List of key-value patterns to select a subset of TFs using the metadata (MTF files), "
+                             "e.g. for Mouse and Human on Selex data use: \"species:sapiens,mus;data_source:selex\". "
+                             "NB: the DATABASE values must be written in full - exact matching is always performed."
+                             "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
+                             "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
+                             "and \"gene_names_file\"")
+    parser.add_argument("--filter-type", choices=("inexact", "exact", "regex"), default="inexact",
+                        help="Only useful together with the --filter argument."
+                             "Exact will only match perfect matching of the value for each key. "
+                             "Inexact will match in case the value pattern is contained within the motif. "
+                             "Regex allows for a more complex pattern use.")
 
     group = parser.add_argument_group("Promoter-regions enrichment",
                                       "Used both for gene set via experimental matrix (see documentation), "
@@ -56,6 +69,8 @@ def options(parser):
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
                        help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                             "be considered associated with the latter.")
+    group.add_argument("--exclude-target-genes", action="store_true", help="If set the specified target genes are"
+                                                                           "excluded from background file")
 
     # Output Options
     group = parser.add_argument_group("Output",
@@ -116,6 +131,8 @@ def main(args):
     else:
         gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
     html_col_size = [300, logo_width, 100, 100, 50, 50, 50, 50, 100, 100, 50]
+
+    filter_values = parse_filter(args.filter)
 
     ###################################################################################################
     # Initializations
@@ -180,26 +197,29 @@ def main(args):
 
     print(">> genome:", genome_data.organism)
 
-    # Default motif data
-    motif_data = MotifData()
+    # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
-        # must overwrite the default DBs
-        motif_data.set_custom(args.motif_dbs)
-        print(">> custom motif repositories:", motif_data.repositories_list)
+        # args.motif_dbs is a list of paths to pwm files
+        motif_set = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
+
+        # filter for dbs only if --motif_dbs is not set
+        if 'database' in filter_values:
+            del filter_values['database']
     else:
-        print(">> motif repositories:", motif_data.repositories_list)
+        if 'database' in filter_values:
+            motif_set = MotifSet(preload_motifs=filter_values['database'])
+        else:
+            motif_set = MotifSet(preload_motifs="default")
 
-    # Reading motif file
-    selected_motifs = []
+    print(">> used database(s):", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
 
-    if args.selected_motifs_filename:
-        try:
-            with open(args.selected_motifs_filename) as f:
-                selected_motifs = f.read().splitlines()
-                selected_motifs = filter(None, selected_motifs)
-                print(">> motif file loaded:", len(selected_motifs), "motifs")
-        except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
+    # applying filtering pattern, taking a subset of the motif set
+    if args.filter:
+        motif_set = motif_set.filter(filter_values, search=args.filter_type)
+
+    motif_names = motif_set.motifs_map.keys()
+
+    print(">> motifs loaded:", len(motif_names))
 
     # Default image data
     image_data = ImageData()
@@ -324,21 +344,6 @@ def main(args):
         input_list = [single_input]
 
     ###################################################################################################
-    # Fetching Motif List
-    ###################################################################################################
-
-    # Fetching list with all motif names
-    motif_names = []
-    for motif_repository in motif_data.get_pwm_list():
-        for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
-            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
-            # if the user has given a list of motifs to use, we only
-            # add those to our list
-            if not selected_motifs or motif_name in selected_motifs:
-                motif_names.append(motif_name)
-    motif_names.sort()
-
-    ###################################################################################################
     # Background Statistics
     ###################################################################################################
 
@@ -355,7 +360,6 @@ def main(args):
     start = time.time()
     print(">> collecting background statistics...", sep="", end="")
     sys.stdout.flush()
-
     background = GenomicRegionSet("background")
     background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
@@ -370,11 +374,11 @@ def main(args):
     if is_bb(background_mpbs_original_filename):
         os.remove(background_mpbs_filename)
 
-    # scheduling region sets for garbage collection
-    del background.sequences[:]
-    del background
-    del background_mpbs.sequences[:]
-    del background_mpbs
+    # # scheduling region sets for garbage collection
+    # del background.sequences[:]
+    # del background
+    # del background_mpbs.sequences[:]
+    # del background_mpbs
 
     secs = time.time() - start
     print("[", "%02.3f" % secs, " seconds]", sep="")
@@ -606,7 +610,7 @@ def main(args):
                 data_table = []
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
-                    for rep in motif_data.get_logo_list():
+                    for rep in motif_set.motif_data.get_logo_list():
                         logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
@@ -651,6 +655,13 @@ def main(args):
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
                                                                               gene_set=True, mpbs_set=True)
+
+                if args.exclude_target_genes:
+                    # subtract target_genes
+                    background_tmp = background.subtract(grs, exact=True)
+
+                    # fisher dict for new (smaller) background
+                    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background_tmp, background_mpbs)
 
             ###################################################################################################
             # Final wrap-up
@@ -750,7 +761,7 @@ def main(args):
             data_table = []
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
-                for rep in motif_data.get_logo_list():
+                for rep in motif_set.motif_data.get_logo_list():
                     logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):

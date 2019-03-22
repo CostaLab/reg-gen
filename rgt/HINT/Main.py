@@ -15,7 +15,6 @@ from rgt.HINT.Evaluation import evaluation_args, evaluation_run
 from rgt.HINT.Evidence import evidence_args, evidence_run
 from rgt.HINT.Tracks import tracks_args, tracks_run
 
-
 """
 HINT - HMM-based Identification of TF Footprints.
 Finds transcription factor footprints given open chromatin data.
@@ -51,7 +50,8 @@ def main():
     footprinting_parser.set_defaults(func=footprinting_run)
 
     diff_analysis_parser = subparsers.add_parser('differential',
-                                                 help='perform differential analysis based on footprints of two conditions')
+                                                 help='perform differential analysis based on footprints of two '
+                                                      'conditions')
     diff_analysis_args(diff_analysis_parser)
     diff_analysis_parser.set_defaults(func=diff_analysis_run)
 
@@ -73,7 +73,8 @@ def main():
     evaluation_parser.set_defaults(func=evaluation_run)
 
     evidence_parser = subparsers.add_parser('evidence',
-                                              help='create evidence file based on motif matching results and ChIP-seq data')
+                                            help='create evidence file based on motif matching results and '
+                                                 'ChIP-seq data')
     evidence_args(evidence_parser)
     evidence_parser.set_defaults(func=evidence_run)
 
