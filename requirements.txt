@@ -13,3 +13,4 @@ configparser
 matplotlib
 pyx
 natsort
+moods-python
