@@ -336,7 +336,7 @@ def main(args):
     else:
         unique_threshold = None
 
-    scanner = scan.Scanner(7)
+    scanner = scan.Scanner(7, motif_list[0].alphabet)
     pssm_list = []
     thresholds = []
     for motif in motif_list:
