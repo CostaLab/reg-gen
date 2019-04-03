@@ -127,9 +127,17 @@ def main(args):
     html_type_list = "sissssssssl"
     logo_width = 200
     if "hg" in args.organism:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
+        gprofiler_prefix = "https://biit.cs.ut.ee/gprofiler/gost?organism=hsapiens&query="
+        gprofiler_suffix = "&ordered=false&all_results=false&no_iea=false&combined=false&" \
+                           "measure_underrepresentation=false&domain_scope=annotated&significance_threshold_method=" \
+                           "g_SCS&user_threshold=0.05&numeric_namespace=ENTREZGENE_ACC&" \
+                           "sources=GO:MF,GO:CC,GO:BP,KEGG,TF,REAC,MIRNA,HPA,CORUM,HP,WP"
     else:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
+        gprofiler_prefix = "https://biit.cs.ut.ee/gprofiler/gost?organism=mmusculus&query="
+        gprofiler_suffix = "&ordered=false&all_results=false&no_iea=false&combined=false&" \
+                           "measure_underrepresentation=false&domain_scope=annotated&significance_threshold_method=" \
+                           "g_SCS&user_threshold=0.05&numeric_namespace=ENTREZGENE_ACC&" \
+                           "sources=GO:MF,GO:CC,GO:BP,KEGG,TF,REAC,MIRNA,HPA,CORUM,HP,WP"
     html_col_size = [300, logo_width, 100, 100, 50, 50, 50, 50, 100, 100, 50]
 
     filter_values = parse_filter(args.filter)
@@ -627,7 +635,8 @@ def main(args):
 
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
+                    gprofiler_link = gprofiler_prefix + "+".join(r.genes.genes) + gprofiler_suffix
+                    curr_gene_tuple = ["View", gprofiler_link]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                          str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
@@ -778,7 +787,8 @@ def main(args):
 
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
+                gprofiler_link = gprofiler_prefix + "+".join(r.genes.genes) + gprofiler_suffix
+                curr_gene_tuple = ["View", gprofiler_link]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
