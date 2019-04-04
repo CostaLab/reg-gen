@@ -69,8 +69,8 @@ def options(parser):
     group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
                        help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                             "be considered associated with the latter.")
-    group.add_argument("--exclude-target-genes", action="store_true", help="If set the specified target genes are"
-                                                                           "excluded from background file")
+    group.add_argument("--exclude-target-genes", action="store_true", help="If set, the specified target genes are "
+                                                                           "excluded from the background input file.")
 
     # Output Options
     group = parser.add_argument_group("Output",
@@ -86,6 +86,8 @@ def options(parser):
 
     # Logo mutually exclusive:
     group = parser.add_mutually_exclusive_group(required=False)
+    # TODO use choice approach here "default"(rgt-data), "copy", "embed", improve help
+    # TODO example for approach can be found above (--filter-type)
     group.add_argument("--logo-copy", action="store_true", default=False,
                        help="The logos are copied to a local directory. The HTML report will contain relative "
                             "paths to this directory.")

@@ -72,6 +72,9 @@ def options(parser):
                              "Exact will only match perfect matching of the value for each key. "
                              "Inexact will match in case the value pattern is contained within the motif. "
                              "Regex allows for a more complex pattern use.")
+    # parser.add_argument("--verbose", action="store_true", default=False,
+                        # help="If this option is used, warnings will be provided in the case that a gene, which a motif"
+                             # " is matched with, has more than one ID.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",

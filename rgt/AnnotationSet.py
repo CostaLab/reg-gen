@@ -402,7 +402,8 @@ class AnnotationSet:
         pass  # TODO
 
     def fix_gene_names(self, gene_set, output_dict=False, mute_warn=False):
-        """Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set
+        """Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be
+        converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set
         
         *Keyword arguments:*
 
