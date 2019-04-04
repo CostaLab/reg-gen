@@ -527,7 +527,8 @@ def main(args):
                     r.d = d_dict[k]
                     r.percent = float(r.a) / float(r.a + r.b)
                     r.back_percent = float(r.c) / float(r.c + r.d)
-                    r.genes = ev_genes_dict[k]
+                    # remove strand information for each gene inside the list ev_genes_dict[k]
+                    r.genes = map(lambda x: x.split("(")[0] if "(" in x else x, ev_genes_dict[k])
                     try:
                         p = pvalue(r.a, r.b, r.c, r.d)
                         r.p_value = p.right_tail
@@ -635,7 +636,7 @@ def main(args):
 
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    gprofiler_link = gprofiler_prefix + "+".join(r.genes.genes) + gprofiler_suffix
+                    gprofiler_link = gprofiler_prefix + "+".join(r.genes) + gprofiler_suffix
                     curr_gene_tuple = ["View", gprofiler_link]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
@@ -687,7 +688,7 @@ def main(args):
                 r.d = bg_d_dict[k]
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
-                r.genes = ev_genes_dict[k]
+                r.genes =  map(lambda x: x.split("(")[0] if "(" in x else x, ev_genes_dict[k])
                 try:
                     p = pvalue(r.a, r.b, r.c, r.d)
                     r.p_value = p.right_tail
@@ -787,7 +788,7 @@ def main(args):
 
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                gprofiler_link = gprofiler_prefix + "+".join(r.genes.genes) + gprofiler_suffix
+                gprofiler_link = gprofiler_prefix + "+".join(r.genes) + gprofiler_suffix
                 curr_gene_tuple = ["View", gprofiler_link]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
