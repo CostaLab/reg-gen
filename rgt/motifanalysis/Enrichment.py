@@ -85,14 +85,12 @@ def options(parser):
                        help="If this option is used, all bed files will be written as bigbed.")
 
     # Logo mutually exclusive:
-    group = parser.add_mutually_exclusive_group(required=False)
-    # TODO use choice approach here "default"(rgt-data), "copy", "embed", improve help
-    # TODO example for approach can be found above (--filter-type)
-    group.add_argument("--logo-copy", action="store_true", default=False,
-                       help="The logos are copied to a local directory. The HTML report will contain relative "
-                            "paths to this directory.")
-    group.add_argument("--logo-embed", action="store_true", default=False,
-                       help="The logos are embedded directly into the HTML report.")
+    parser.add_argument("--logo-output", choices=("rgt-data", "copy", "embed"), default="rgt-data",
+                        help="rgt-data (default): The logos are copied to the rgt-data directory. The HTML report will "
+                             "contain relative paths to this directory."
+                             "copy: The logos are copied to a local directory. The HTML report will contain relative "
+                             "paths to this directory."
+                             "embed: The logos are embedded directly into the HTML report.")
 
     parser.add_argument('background_file', metavar='background.bed', type=str,
                         help='BED file containing background regions.')
