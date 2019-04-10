@@ -72,6 +72,8 @@ def options(parser):
                              "Exact will only match perfect matching of the value for each key. "
                              "Inexact will match in case the value pattern is contained within the motif. "
                              "Regex allows for a more complex pattern use.")
+    parser.add_argument("--methylate-regions", action="store_true", default=False,
+                        help="if set the CpG located in the middle of the sequence is methylated")
     # parser.add_argument("--verbose", action="store_true", default=False,
                         # help="If this option is used, warnings will be provided in the case that a gene, which a motif"
                              # " is matched with, has more than one ID.")
@@ -387,6 +389,19 @@ def main(args):
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
+
+            # here we assume that the length of the sequence is odd and the CpG is right in the middle of it
+            if args.methylate_regions:
+                tmp = list(sequence)
+                offset = int(len(sequence)/2)
+                if tmp[offset] == "C":
+                    tmp[offset] = "m"
+                elif tmp[offset] == "G":
+                    tmp[offset] = "1"
+                else:
+                    raise Exception(
+                        "Position " + str(offset) + "-" + tmp[offset] + " from " + sequence + " can not be methylated")
+                sequence = "".join(tmp)
 
             grs_tmp = match_multiple(scanner, motif_list, sequence, genomic_region)
 

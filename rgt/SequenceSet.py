@@ -18,7 +18,7 @@ class Sequence:
     def __init__(self, seq, strand, name=None):
         """*Keyword arguments:*
 
-            - seq -- The sequence composef of A, T, C, G, or U.
+            - seq -- The sequence composed of A, T, C, G, or U.
             - strand -- Orientation of the sequence, '+' or '-'.
         """
         self.name = name  # Extra information about the sequence
