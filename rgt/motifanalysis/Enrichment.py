@@ -608,7 +608,7 @@ def main(args):
                 output_file.close()
 
                 # we copy the logo images locally
-                if args.logo_copy:
+                if args.logo_output == "copy":
                     logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
@@ -623,13 +623,13 @@ def main(args):
                         logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
-                            if args.logo_copy:
+                            if args.logo_output == "copy":
                                 copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                                 # use relative paths in the html
                                 # FIXME can we do it in a better way? (inside the Html class)
                                 logo_file_name = os.path.join("..", "logos", r.name + ".png")
-                            elif args.logo_embed:
+                            elif args.logo_output == "embed":
                                 # encoding image with Base64 and adding HTML special URI to embed it
                                 data_uri = base64.b64encode(open(logo_file_name, 'rb').read()).decode('utf-8')
                                 logo_file_name = "data:image/png;base64,{0}".format(data_uri)
@@ -760,7 +760,7 @@ def main(args):
             output_file.close()
 
             # we copy the logo images locally
-            if args.logo_copy:
+            if args.logo_output == "copy":
                 logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
@@ -775,13 +775,13 @@ def main(args):
                     logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
-                        if args.logo_copy:
+                        if args.logo_output == "copy":
                             copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                             # use relative paths in the html
                             # FIXME can we do it in a better way? (inside the Html class)
                             logo_file_name = os.path.join("..", "logos", r.name + ".png")
-                        elif args.logo_embed:
+                        elif args.logo_output == "embed":
                             # encoding image with Base64 and adding HTML special URI to embed it
                             data_uri = base64.b64encode(open(logo_file_name, 'rb').read()).decode('utf-8')
                             logo_file_name = "data:image/png;base64,{0}".format(data_uri)

@@ -87,7 +87,7 @@ cd $DEST
 echo "Running matching.."
 rgt-motifanalysis matching --organism hg19 --make-background --target-genes input/genes.txt --promoters-only
 echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 --logo-copy match/background_regions.bed match/target_regions.bed
+rgt-motifanalysis enrichment --organism hg19 --logo-output copy match/background_regions.bed match/target_regions.bed
 
 echo
 
@@ -112,7 +112,7 @@ cd $DEST
 echo "Running matching.."
 rgt-motifanalysis matching --organism hg19 --input-matrix input_matrix.txt --rand-proportion 10
 echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 --logo-embed --input-matrix input_matrix.txt match/random_regions.bed
+rgt-motifanalysis enrichment --organism hg19 --logo-output embed --input-matrix input_matrix.txt match/random_regions.bed
 
 echo
 
