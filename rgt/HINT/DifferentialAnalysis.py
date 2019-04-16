@@ -196,6 +196,7 @@ def get_bc_signal(arguments):
 
         if p1 <= 0:
             continue
+
         # Fetch raw signal
         signal1 = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam1,
                                   bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
@@ -254,7 +255,6 @@ def diff_analysis_run(args):
     motif_num_dict = dict()
     pwm_dict_by_tf = dict()
 
-    pool = Pool(processes=args.nc)
     # differential analysis using bias corrected signal
     if args.bc:
         hmm_data = HmmData()
@@ -263,26 +263,54 @@ def diff_analysis_run(args):
         bias_table1 = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
         bias_table2 = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
 
-        mpbs_list = list()
-        for mpbs_name in mpbs_name_list:
-            mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
-                              args.organism, args.window_size, args.forward_shift, args.reverse_shift,
-                              bias_table1, bias_table2))
-        try:
-            res = pool.map(get_bc_signal, mpbs_list)
-        except Exception:
-            logging.exception("get bias corrected signal failed")
+        # do not use multi-processing
+        res = dict()
+        if args.nc == 1:
+            for mpbs_name in mpbs_name_list:
+                arguments = (mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                             args.organism, args.window_size, args.forward_shift, args.reverse_shift,
+                             bias_table1, bias_table2)
+
+                try:
+                    res[mpbs_name] = get_bc_signal(arguments)
+                except Exception:
+                    logging.exception("get bias corrected signal failed")
+
+        else:
+            pool = Pool(processes=args.nc)
+            mpbs_list = list()
+            for mpbs_name in mpbs_name_list:
+                mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                                  args.organism, args.window_size, args.forward_shift, args.reverse_shift,
+                                  bias_table1, bias_table2))
+            try:
+                res = pool.map(get_bc_signal, mpbs_list)
+            except Exception:
+                logging.exception("get bias corrected signal failed")
 
     # differential analysis using raw signal
     else:
-        mpbs_list = list()
-        for mpbs_name in mpbs_name_list:
-            mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
-                              args.organism, args.window_size, args.forward_shift, args.reverse_shift))
-        try:
-            res = pool.map(get_raw_signal, mpbs_list)
-        except Exception:
-            logging.exception("get raw signal failed")
+        # do not use multi-processing
+        res = dict()
+        if args.nc == 1:
+            for mpbs_name in mpbs_name_list:
+                arguments = (mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                             args.organism, args.window_size, args.forward_shift, args.reverse_shift)
+
+                try:
+                    res[mpbs_name] = get_raw_signal(arguments)
+                except Exception:
+                    logging.exception("get raw signal failed")
+        else:
+            pool = Pool(processes=args.nc)
+            mpbs_list = list()
+            for mpbs_name in mpbs_name_list:
+                mpbs_list.append((mpbs_name, args.mpbs_file1, args.mpbs_file2, args.reads_file1, args.reads_file2,
+                                  args.organism, args.window_size, args.forward_shift, args.reverse_shift))
+            try:
+                res = pool.map(get_raw_signal, mpbs_list)
+            except Exception:
+                logging.exception("get raw signal failed")
 
     for idx, mpbs_name in enumerate(mpbs_name_list):
         signal_dict_by_tf_1[mpbs_name] = res[idx][0]
@@ -301,24 +329,29 @@ def diff_analysis_run(args):
 
     ps_tc_results_by_tf = dict()
 
-    plots_list = list()
-    for mpbs_name in mpbs_name_list:
-        plots_list.append((mpbs_name, motif_num_dict[mpbs_name], signal_dict_by_tf_1[mpbs_name],
-                           signal_dict_by_tf_2[mpbs_name], args.factor1, args.factor2, args.condition1,
-                           args.condition2, pwm_dict_by_tf[mpbs_name], output_location, args.window_size,
-                           args.standardize))
+    if args.nc == 1:
+        for mpbs_name in mpbs_name_list:
+            line_plot((mpbs_name, motif_num_dict[mpbs_name], signal_dict_by_tf_1[mpbs_name],
+                       signal_dict_by_tf_2[mpbs_name], args.factor1, args.factor2, args.condition1,
+                       args.condition2, pwm_dict_by_tf[mpbs_name], output_location, args.window_size,
+                       args.standardize))
+    else:
+        pool = Pool(processes=args.nc)
+        plots_list = list()
+        for mpbs_name in mpbs_name_list:
+            plots_list.append((mpbs_name, motif_num_dict[mpbs_name], signal_dict_by_tf_1[mpbs_name],
+                               signal_dict_by_tf_2[mpbs_name], args.factor1, args.factor2, args.condition1,
+                               args.condition2, pwm_dict_by_tf[mpbs_name], output_location, args.window_size,
+                               args.standardize))
 
-    pool.map(line_plot, plots_list)
+        pool.map(line_plot, plots_list)
 
     for mpbs_name in mpbs_name_list:
         res = get_ps_tc_results(signal_dict_by_tf_1[mpbs_name], signal_dict_by_tf_2[mpbs_name],
                                 args.factor1, args.factor2, motif_num_dict[mpbs_name], motif_len_dict[mpbs_name])
-        #
-        #     # only use the factors whose protection scores are greater than 0
-        #     if res[0] > 0 and res[1] < 0:
+
         ps_tc_results_by_tf[mpbs_name] = res
-    #
-    # stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
+
     ps_tc_results_by_tf = scatter_plot(args, ps_tc_results_by_tf)
     output_stat_results(args, ps_tc_results_by_tf, motif_num_dict)
 
@@ -339,7 +372,7 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     p2_w = p2 + (window / 2)
     p1_wk = p1_w - int(floor(k_nb / 2.))
     p2_wk = p2_w + int(ceil(k_nb / 2.))
-    if p1 <= 0 or p1_w <= 0 or p2_wk <= 0:
+    if p1 <= 0 or p1_w <= 0 or p1_wk <= 0 or p2_wk <= 0:
         # Return raw counts
         bc_signal = [0.0] * (p2 - p1)
         for read in bam.fetch(chrom, p1, p2):
