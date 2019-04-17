@@ -73,7 +73,7 @@ def options(parser):
                              "Inexact will match in case the value pattern is contained within the motif. "
                              "Regex allows for a more complex pattern use.")
     parser.add_argument("--methylate-regions", action="store_true", default=False,
-                        help="if set the CpG located in the middle of the sequence is methylated")
+                        help="if set the CpG located in the middle of each sequence is methylated")
     # parser.add_argument("--verbose", action="store_true", default=False,
                         # help="If this option is used, warnings will be provided in the case that a gene, which a motif"
                              # " is matched with, has more than one ID.")

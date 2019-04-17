@@ -5,7 +5,8 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-i', '--input-file', type=str, required=True, help='name of the input file')
-parser.add_argument('-f', '--input-format', choices=['jaspar-2014', 'jaspar-2016', 'hocomoco-pcm'], type=str, required=True, help='format of the input file')
+parser.add_argument('-f', '--input-format', choices=['jaspar-2014', 'jaspar-2016', 'hocomoco-pcm', 'meme'], type=str,
+                    required=True, help='format of the input file')
 parser.add_argument('-o', '--output-folder', type=str, required=True, help='name of output Folder')
 
 args = parser.parse_args()
@@ -104,3 +105,26 @@ elif args.input_format == "hocomoco-pcm":
                         f.write(count_g + "\n")
                         f.write(count_t + "\n")
 
+###################################################################################################
+# MEME
+###################################################################################################
+
+elif args.input_format == "meme":
+
+    # skip all lines before PSSM
+    var = 0
+    count = [[] for _ in range(6)]
+    for i, cur_line in enumerate(content):
+        line = cur_line.strip().split(" ")
+        if var == 0 and len(line) == 6 and " ".join(line[3:]) == "position-specific scoring matrix":
+            var = 1
+        elif 0 < var < 3:
+            var = var+1
+        elif var == 3:
+            # reached PSSM that is to be processed
+            i = 0
+            for element in line:
+                if not element == " ":
+                    count[i].append(str(int(float(element))))
+                    i = i + 1
+    # TODO finish
