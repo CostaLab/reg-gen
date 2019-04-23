@@ -384,6 +384,8 @@ def main(args):
         if os.path.isfile(output_bed_file):
             os.remove(output_bed_file)
 
+        unmethylated_regions = 0
+
         # Iterating on genomic region set
         for genomic_region in grs:
 
@@ -393,14 +395,18 @@ def main(args):
             # here we assume that the length of the sequence is odd and the CpG is right in the middle of it
             if args.methylate_regions:
                 tmp = list(sequence)
-                offset = int(len(sequence)/2)
-                if tmp[offset] == "C":
-                    tmp[offset] = "m"
-                elif tmp[offset] == "G":
-                    tmp[offset] = "1"
-                else:
-                    raise Exception(
-                        "Position " + str(offset) + "-" + tmp[offset] + " from " + sequence + " can not be methylated")
+                # skip empty regions
+                if len(tmp) > 0:
+                    offset = int(len(sequence)/2)
+                    if tmp[offset] == "C":
+                        tmp[offset] = "m"
+                    elif tmp[offset] == "G":
+                        tmp[offset] = "1"
+                    else:
+                        unmethylated_regions = unmethylated_regions + 1
+                    # TODO how to handle this??
+                    # print("Position " + str(offset) + " from " + sequence + " is a(n) " + tmp[offset] +
+                          #" and can not be methylated")
                 sequence = "".join(tmp)
 
             grs_tmp = match_multiple(scanner, motif_list, sequence, genomic_region)
@@ -458,6 +464,8 @@ def main(args):
 
         secs = time.time() - start
         print("[", "%02.3f" % secs, " seconds]", sep="")
+        if args.methylate_regions:
+            print(str(unmethylated_regions) + " stayed unmethylated before matching")
 
 
 # TODO must double-check/fix the normalisation.
