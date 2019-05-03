@@ -47,6 +47,7 @@ def plotting_args(parser):
     parser.add_argument("--forward-shift", type=int, metavar="INT", default=5, help=SUPPRESS)
     parser.add_argument("--reverse-shift", type=int, metavar="INT", default=-5, help=SUPPRESS)
     parser.add_argument("--k-nb", type=int, metavar="INT", default=6, help=SUPPRESS)
+    parser.add_argument("--y-lim", type=float, metavar="FLOAT", default=0.3, help=SUPPRESS)
 
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
@@ -130,7 +131,7 @@ def seq_logo(args):
     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(args.window_size),
                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
                 show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
-                show_fineprint=False, show_ends=False, yaxis_scale=0.3)
+                show_fineprint=False, show_ends=False, yaxis_scale=args.y_lim)
 
     start = -(args.window_size / 2)
     end = (args.window_size / 2) - 1
@@ -151,9 +152,9 @@ def seq_logo(args):
     ax.set_xticklabels(map(str, x1), rotation=90)
     ax.set_xlabel("Coordinates from Read Start", fontweight='bold')
 
-    ax.set_ylim([0, 0.3])
-    ax.yaxis.set_ticks([0, 0.3])
-    ax.set_yticklabels([str(0), str(0.3)], rotation=90)
+    ax.set_ylim([0, args.y_lim])
+    ax.yaxis.set_ticks([0, args.y_lim])
+    ax.set_yticklabels([str(0), str(args.y_lim)], rotation=90)
     ax.set_ylabel("bits", rotation=90)
 
     figure_name = os.path.join(args.output_location, "{}.line.eps".format(args.output_prefix))
@@ -164,7 +165,7 @@ def seq_logo(args):
     output_fname = os.path.join(args.output_location, "{}.eps".format(args.output_prefix))
     c = pyx.canvas.canvas()
     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-    c.insert(pyx.epsfile.epsfile(1.68, 1.5, logo_fname, width=18.8, height=3.5))
+    c.insert(pyx.epsfile.epsfile(1.5, 1.5, logo_fname, width=18.8, height=3.5))
     c.writeEPSfile(output_fname)
     os.system("epstopdf " + output_fname)
 
@@ -1092,49 +1093,48 @@ def unstrand_line(args):
 
     pwm_dict = None
     for region in mpbs_regions:
-        if str(region.name).split(":")[-1] == "Y":
-            # Extend by 50 bp
-            mid = (region.initial + region.final) / 2
-            p1 = mid - (args.window_size / 2)
-            p2 = mid + (args.window_size / 2)
+        # if str(region.name).split(":")[-1] == "Y":
+        # Extend by 50 bp
+        mid = (region.initial + region.final) / 2
+        p1 = mid - (args.window_size / 2)
+        p2 = mid + (args.window_size / 2)
 
-            if args.bias_table is not None:
-                signal = genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
-                                                                         bam=bam, fasta=fasta,
-                                                                         bias_table=table,
-                                                                         forward_shift=args.forward_shift,
-                                                                         reverse_shift=args.reverse_shift,
-                                                                         strand=False)
-            else:
-                signal = genomic_signal.get_raw_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
-                                                                          bam=bam,
-                                                                          forward_shift=args.forward_shift,
-                                                                          reverse_shift=args.reverse_shift,
-                                                                          strand=False)
+        if args.bias_table is not None:
+            signal = genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                     bam=bam, fasta=fasta,
+                                                                     bias_table=table,
+                                                                     forward_shift=args.forward_shift,
+                                                                     reverse_shift=args.reverse_shift,
+                                                                     strand=False)
+        else:
+            signal = genomic_signal.get_raw_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                      bam=bam,
+                                                                      forward_shift=args.forward_shift,
+                                                                      reverse_shift=args.reverse_shift,
+                                                                      strand=False)
 
-            num_sites += 1
+        num_sites += 1
 
-            mean_signal = np.add(mean_signal, signal)
+        mean_signal = np.add(mean_signal, signal)
 
-            # Update pwm
+        # Update pwm
+        if pwm_dict is None:
+            pwm_dict = dict([("A", [0.0] * (p2 - p1)), ("C", [0.0] * (p2 - p1)),
+                             ("G", [0.0] * (p2 - p1)), ("T", [0.0] * (p2 - p1)),
+                             ("N", [0.0] * (p2 - p1))])
 
-            if pwm_dict is None:
-                pwm_dict = dict([("A", [0.0] * (p2 - p1)), ("C", [0.0] * (p2 - p1)),
-                                 ("G", [0.0] * (p2 - p1)), ("T", [0.0] * (p2 - p1)),
-                                 ("N", [0.0] * (p2 - p1))])
-
-            aux_plus = 1
-            dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
-            if (region.final - region.initial) % 2 == 0:
-                aux_plus = 0
-            dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
-                                                                     p1 + aux_plus, p2 + aux_plus)).upper())
-            if region.orientation == "+":
-                for i in range(0, len(dna_seq)):
-                    pwm_dict[dna_seq[i]][i] += 1
-            elif region.orientation == "-":
-                for i in range(0, len(dna_seq_rev)):
-                    pwm_dict[dna_seq_rev[i]][i] += 1
+        aux_plus = 1
+        dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
+        if (region.final - region.initial) % 2 == 0:
+            aux_plus = 0
+        dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
+                                                                 p1 + aux_plus, p2 + aux_plus)).upper())
+        if region.orientation == "+":
+            for i in range(0, len(dna_seq)):
+                pwm_dict[dna_seq[i]][i] += 1
+        elif region.orientation == "-":
+            for i in range(0, len(dna_seq_rev)):
+                pwm_dict[dna_seq_rev[i]][i] += 1
 
     mean_signal = mean_signal / num_sites
 
@@ -1171,28 +1171,28 @@ def unstrand_line(args):
     x = np.linspace(start, end, num=args.window_size)
 
     fig = plt.figure(figsize=(8, 4))
-    ax2 = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
 
     min_signal = min(mean_signal)
     max_signal = max(mean_signal)
-    ax2.plot(x, mean_signal, color='red')
-    ax2.set_title(args.output_prefix, fontweight='bold')
+    ax.plot(x, mean_signal, color='red')
+    ax.set_title(args.output_prefix, fontweight='bold')
 
-    ax2.xaxis.set_ticks_position('bottom')
-    ax2.yaxis.set_ticks_position('left')
-    ax2.spines['top'].set_visible(False)
-    ax2.spines['right'].set_visible(False)
-    ax2.spines['left'].set_position(('outward', 15))
-    ax2.tick_params(direction='out')
-    ax2.set_xticks([start, 0, end])
-    ax2.set_xticklabels([str(start), 0, str(end)])
-    ax2.set_yticks([min_signal, max_signal])
-    ax2.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-    ax2.set_xlim(start, end)
-    ax2.set_ylim([min_signal, max_signal])
-    ax2.legend(loc="upper right", frameon=False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_position(('outward', 15))
+    ax.tick_params(direction='out')
+    ax.set_xticks([start, 0, end])
+    ax.set_xticklabels([str(start), 0, str(end)])
+    ax.set_yticks([min_signal, max_signal])
+    ax.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+    ax.set_xlim(start, end)
+    ax.set_ylim([min_signal, max_signal])
+    ax.legend(loc="upper right", frameon=False)
 
-    ax2.spines['bottom'].set_position(('outward', 40))
+    ax.spines['bottom'].set_position(('outward', 40))
 
     figure_name = os.path.join(args.output_location, "{}.line.eps".format(args.output_prefix))
     fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -1209,7 +1209,7 @@ def unstrand_line(args):
     os.system("epstopdf " + logo_fname)
     os.system("epstopdf " + output_fname)
 
-    # os.remove(pwm_fname)
+    os.remove(pwm_fname)
     os.remove(os.path.join(args.output_location, "{}.line.eps".format(args.output_prefix)))
     os.remove(os.path.join(args.output_location, "{}.logo.eps".format(args.output_prefix)))
     os.remove(os.path.join(args.output_location, "{}.line.pdf".format(args.output_prefix)))
