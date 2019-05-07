@@ -404,9 +404,6 @@ def main(args):
                         tmp[offset] = "1"
                     else:
                         unmethylated_regions = unmethylated_regions + 1
-                    # TODO how to handle this??
-                    # print("Position " + str(offset) + " from " + sequence + " is a(n) " + tmp[offset] +
-                          #" and can not be methylated")
                 sequence = "".join(tmp)
 
             grs_tmp = match_multiple(scanner, motif_list, sequence, genomic_region)

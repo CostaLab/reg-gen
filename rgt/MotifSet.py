@@ -477,7 +477,7 @@ class MotifSet:
             for motif_name, ma in self.motifs_map.items():
                 motif_file_name = os.path.join(motif_dir_path, motif_name + ".pwm")
 
-                # if the motif annotation has a corresponding PWM file, add to return list
+                # if the motif annotation has a corresponding PWM file, add it to return list
                 if os.path.isfile(motif_file_name):
                     # check whether ma provides the motif matching threshold for the given fpr
                     # recalculate (and store) it otherwise
