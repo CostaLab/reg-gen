@@ -462,7 +462,7 @@ def main(args):
         secs = time.time() - start
         print("[", "%02.3f" % secs, " seconds]", sep="")
         if args.methylate_regions:
-            print(str(unmethylated_regions) + " stayed unmethylated before matching")
+            print(str(unmethylated_regions) + " regions remained unmethylated before matching")
 
 
 # TODO must double-check/fix the normalisation.
