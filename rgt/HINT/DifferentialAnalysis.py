@@ -39,14 +39,14 @@ def diff_analysis_args(parser):
     parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19, hg38. mm9, and mm10. DEFAULT: hg19")
-    parser.add_argument("--mpbs-files", metavar='condition1.bed,condition2.bed...', type=str,
+    parser.add_argument("--mpbs-files", metavar='FILE1,FILE2...', type=str,
                         help='Predicted motif binding sites for each condition.'
-                             'The files should be separated with whitespace.')
-    parser.add_argument("--reads-files", metavar='condition1.bam,condition2.bam...', type=str,
-                        help='Reads for each condition. The files should be separated with comma.')
-    parser.add_argument("--conditions", metavar='condition1,condition2...', type=str,
-                        help='Name for each condition. DEFAULT: condition1, condition2, ...')
-    parser.add_argument("--colors", metavar='color1,color2...', type=str,
+                             'Files should be separated with comma.')
+    parser.add_argument("--reads-files", metavar='FILE1,FILE2...', type=str,
+                        help='Reads for each condition. Files should be separated with comma.')
+    parser.add_argument("--conditions", metavar='STRING', type=str,
+                        help='Name for each condition. DEFAULT: condition1,condition2, ...')
+    parser.add_argument("--colors", metavar='STRING', type=str,
                         help='Set color in line plot. DEFAULT: None, ...')
     parser.add_argument("--window-size", type=int, metavar="INT", default=200,
                         help="The window size for differential analysis. DEFAULT: 200")
@@ -92,7 +92,7 @@ def diff_analysis_run(args):
     if args.colors is not None:
         colors = args.colors.strip().split(",")
     else:
-        colors = ["red", "blue", "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33",
+        colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33",
                   "#a65628", "#f781bf", "#999999"]
 
     assert len(mpbs_files) == len(reads_files) == len(conditions), \
