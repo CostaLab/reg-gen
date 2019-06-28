@@ -483,7 +483,7 @@ def output_line_plot(arguments):
             for j, condition in enumerate(conditions):
                 res.append(signals[j][i])
 
-        f.write("\t".join(map(str, res)) + "\n")
+            f.write("\t".join(map(str, res)) + "\n")
 
     # Output PWM and create logo
     pwm_filename = os.path.join(output_location, "{}.pwm".format(mpbs_name))
