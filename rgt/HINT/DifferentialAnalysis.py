@@ -544,10 +544,10 @@ def output_line_plot(arguments):
     c.writeEPSfile(output_filename)
     os.system(" ".join(["epstopdf", output_filename]))
 
-    os.remove(figure_name)
-    os.remove(logo_filename)
-    os.remove(output_filename)
-    os.remove(pwm_filename)
+    #os.remove(figure_name)
+    #os.remove(logo_filename)
+    #os.remove(output_filename)
+    #os.remove(pwm_filename)
 
 
 def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
