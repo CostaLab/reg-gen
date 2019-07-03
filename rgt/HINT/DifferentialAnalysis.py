@@ -297,8 +297,9 @@ def get_bc_signal(arguments):
         _signal = bias_correction(chrom=region.chrom, start=p1, end=p2, bam=bam,
                                   bias_table=bias_table, genome_file_name=genome_data.get_genome(),
                                   forward_shift=forward_shift, reverse_shift=reverse_shift)
-        if len(signal) != window_size:
+        if len(_signal) != window_size:
             continue
+
         # smooth the signal
         signal = np.add(signal, np.array(_signal))
 
