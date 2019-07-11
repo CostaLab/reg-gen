@@ -224,18 +224,21 @@ def diff_analysis_run(args):
         output_profiles(mpbs_name_list, signals, conditions, args.output_location)
 
     print("generating line plot for each motif...\n")
-    if args.nc == 1:
-        for i, mpbs_name in enumerate(mpbs_name_list):
-            output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-                              args.window_size, colors))
-    else:
-        pool = Pool(processes=args.nc)
-        arguments_list = list()
-        for i, mpbs_name in enumerate(mpbs_name_list):
-            arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-                                   args.window_size, colors))
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+                          args.window_size, colors))
 
-        pool.map(output_line_plot, arguments_list)
+    # if args.nc == 1:
+    #    for i, mpbs_name in enumerate(mpbs_name_list):
+    #        output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+    #                          args.window_size, colors))
+    # else:
+    #    pool = Pool(processes=args.nc)
+    #    arguments_list = list()
+    #    for i, mpbs_name in enumerate(mpbs_name_list):
+    #        arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+    #                               args.window_size, colors))
+    #    pool.map(output_line_plot, arguments_list)
 
     ps_tc_results = list()
     for i, mpbs_name in enumerate(mpbs_name_list):
