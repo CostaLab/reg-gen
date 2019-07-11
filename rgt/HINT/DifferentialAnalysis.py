@@ -1,18 +1,13 @@
 from __future__ import print_function
 
-import matplotlib
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import os
 import numpy as np
+import pandas as pd
 import pysam
+import logomaker
 from pysam import Samfile, Fastafile
 from math import ceil, floor
-from Bio import motifs
 import logging
-import pyx
 
 from scipy.stats import zscore
 from scipy.stats import norm
@@ -24,6 +19,10 @@ from multiprocessing import Pool
 from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData, HmmData
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
+
+import matplotlib.pyplot as plt
+
+plt.switch_backend('Agg')
 
 """
 Perform differential footprints analysis based on the prediction of transcription factor binding sites.
@@ -224,21 +223,17 @@ def diff_analysis_run(args):
         output_profiles(mpbs_name_list, signals, conditions, args.output_location)
 
     print("generating line plot for each motif...\n")
-    for i, mpbs_name in enumerate(mpbs_name_list):
-        output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-                          args.window_size, colors))
-
-    # if args.nc == 1:
-    #    for i, mpbs_name in enumerate(mpbs_name_list):
-    #        output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-    #                          args.window_size, colors))
-    # else:
-    #    pool = Pool(processes=args.nc)
-    #    arguments_list = list()
-    #    for i, mpbs_name in enumerate(mpbs_name_list):
-    #        arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-    #                               args.window_size, colors))
-    #    pool.map(output_line_plot, arguments_list)
+    if args.nc == 1:
+        for i, mpbs_name in enumerate(mpbs_name_list):
+            output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+                              args.window_size, colors))
+    else:
+        pool = Pool(processes=args.nc)
+        arguments_list = list()
+        for i, mpbs_name in enumerate(mpbs_name_list):
+            arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+                                   args.window_size, colors))
+        pool.map(output_line_plot, arguments_list)
 
     ps_tc_results = list()
     for i, mpbs_name in enumerate(mpbs_name_list):
@@ -454,11 +449,11 @@ def get_pwm(fasta, regions, window_size):
         dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
                                                                  p1 + aux_plus, p2 + aux_plus)).upper())
         if region.orientation == "+":
-            for i in range(0, len(dna_seq)):
+            for i in range(len(dna_seq)):
                 pwm[dna_seq[i]][i] += 1
 
         elif region.orientation == "-":
-            for i in range(0, len(dna_seq_rev)):
+            for i in range(len(dna_seq_rev)):
                 pwm[dna_seq_rev[i]][i] += 1
 
     return pwm
@@ -489,19 +484,15 @@ def output_line_plot(arguments):
 
             f.write("\t".join(map(str, res)) + "\n")
 
-    # Output PWM and create logo
-    pwm_filename = os.path.join(output_location, "{}.pwm".format(mpbs_name))
-    pwm_file = open(pwm_filename, "w")
-    for e in ["A", "C", "G", "T"]:
-        pwm_file.write(" ".join([str(int(f)) for f in pwm[e]]) + "\n")
-    pwm_file.close()
-
-    logo_filename = os.path.join(output_location, "{}.logo.eps".format(mpbs_name))
-    pwm = motifs.read(open(pwm_filename), "pfm")
-    pwm.weblogo(logo_filename, format="eps", stack_width="large", stacks_per_line=str(window_size),
-                color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
-                show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
-                show_fineprint=False, show_ends=False)
+    # to create a motif loge, we only use A, C, G, T
+    pwm = {k: pwm[k] for k in ('A', 'C', 'G', 'T')}
+    pwm = pd.DataFrame(data=pwm)
+    pwm = pwm.add(1)
+    pwm_prob = (pwm.T / pwm.T.sum()).T
+    pwm_prob_log = np.log2(pwm_prob)
+    pwm_prob_log = pwm_prob_log.mul(pwm_prob)
+    info_content = pwm_prob_log.T.sum() + 2
+    icm = pwm_prob.mul(info_content, axis=0)
 
     start = -(window_size / 2)
     end = (window_size / 2) - 1
@@ -534,23 +525,32 @@ def output_line_plot(arguments):
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 70))
 
-    figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
+    ax = plt.axes([0.12, 0.085, 0.85, .2])
+    logo = logomaker.Logo(icm, ax=ax, show_spines=False, baseline_width=0)
+    ax.set_xticks([])
+    ax.set_yticks([])
     fig.tight_layout()
-    fig.savefig(figure_name, format="eps", dpi=300)
 
-    # Creating canvas and printing eps / pdf with merged results
-    output_filename = os.path.join(output_location, "{}.eps".format(mpbs_name))
+    output_filename = os.path.join(output_location, "{}.pdf".format(mpbs_name))
+    plt.savefig(output_filename)
 
-    c = pyx.canvas.canvas()
-    c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-    c.insert(pyx.epsfile.epsfile(0.45, 0.8, logo_filename, width=16.5, height=3))
-    c.writeEPSfile(output_filename)
-    os.system(" ".join(["epstopdf", output_filename]))
-
-    os.remove(figure_name)
-    os.remove(logo_filename)
-    os.remove(output_filename)
-    os.remove(pwm_filename)
+    # figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
+    # fig.tight_layout()
+    # fig.savefig(figure_name, format="eps", dpi=300)
+    #
+    # # Creating canvas and printing eps / pdf with merged results
+    # output_filename = os.path.join(output_location, "{}.eps".format(mpbs_name))
+    #
+    # c = pyx.canvas.canvas()
+    # c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
+    # c.insert(pyx.epsfile.epsfile(0.45, 0.8, logo_filename, width=16.5, height=3))
+    # c.writeEPSfile(output_filename)
+    # os.system(" ".join(["epstopdf", output_filename]))
+    #
+    # os.remove(figure_name)
+    # os.remove(logo_filename)
+    # os.remove(output_filename)
+    # os.remove(pwm_filename)
 
 
 def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
