@@ -534,24 +534,6 @@ def output_line_plot(arguments):
     output_filename = os.path.join(output_location, "{}.pdf".format(mpbs_name))
     plt.savefig(output_filename)
 
-    # figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
-    # fig.tight_layout()
-    # fig.savefig(figure_name, format="eps", dpi=300)
-    #
-    # # Creating canvas and printing eps / pdf with merged results
-    # output_filename = os.path.join(output_location, "{}.eps".format(mpbs_name))
-    #
-    # c = pyx.canvas.canvas()
-    # c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-    # c.insert(pyx.epsfile.epsfile(0.45, 0.8, logo_filename, width=16.5, height=3))
-    # c.writeEPSfile(output_filename)
-    # os.system(" ".join(["epstopdf", output_filename]))
-    #
-    # os.remove(figure_name)
-    # os.remove(logo_filename)
-    # os.remove(output_filename)
-    # os.remove(pwm_filename)
-
 
 def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
     tf_activity_score1 = np.zeros(len(mpbs_name_list))
