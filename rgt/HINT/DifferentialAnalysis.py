@@ -525,7 +525,7 @@ def output_line_plot(arguments):
     ax.legend(loc="upper right", frameon=False)
     ax.spines['bottom'].set_position(('outward', 70))
 
-    ax = plt.axes([0.12, 0.085, 0.85, .2])
+    ax = plt.axes([0.105, 0.085, 0.85, .2])
     logo = logomaker.Logo(icm, ax=ax, show_spines=False, baseline_width=0)
     ax.set_xticks([])
     ax.set_yticks([])
