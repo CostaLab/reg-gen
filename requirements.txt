@@ -11,6 +11,7 @@ HTSeq
 hmmlearn
 configparser
 matplotlib
-pyx
 natsort
 moods-python
+pandas
+logomaker

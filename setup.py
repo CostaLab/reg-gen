@@ -106,13 +106,13 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.5", "moods-python>=1.9.3.1"],
+        ["Biopython>=1.64", "fisher>=0.1.5", "moods-python>=1.9.4.1"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx" if p3_supported else "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pandas", "logomaker"],
         []
     ),
     "THOR": (
