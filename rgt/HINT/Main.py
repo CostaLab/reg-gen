@@ -4,6 +4,11 @@ import time
 from random import seed
 from argparse import ArgumentParser
 
+import warnings
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
 # Internal
 from rgt import __version__
 from rgt.HINT.Training import training_args, training_run

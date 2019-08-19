@@ -1,9 +1,9 @@
 from __future__ import print_function
-
 import os
 import numpy as np
 import pandas as pd
 import pysam
+
 import logomaker
 from pysam import Samfile, Fastafile
 from math import ceil, floor
@@ -21,8 +21,6 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
 
 import matplotlib.pyplot as plt
-
-plt.switch_backend('Agg')
 
 """
 Perform differential footprints analysis based on the prediction of transcription factor binding sites.
