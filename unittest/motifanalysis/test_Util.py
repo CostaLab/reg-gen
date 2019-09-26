@@ -21,12 +21,16 @@ class UtilTest(unittest.TestCase):
         self.assertFalse(is_bb(os.path.join(os.path.dirname(__file__), "target_regions_mpbs.bed")))
 
     def test_bed_to_bb(self):
-        self.assertEqual("test.bb", bed_to_bb("test.bb", "chrom_sizes.csv"))
+        # 1. input is already bigBed, 2. input is bed, 3. input is neither bed nor bigBed (Error)
+        self.assertEqual("test.bb", bed_to_bb("test.bb", "chrom.sizes.hg19"))
+        self.assertEqual("test.bb", bed_to_bb("test.bed", "chrom.sizes.hg19"))
         with self.assertRaises(ValueError):
             bed_to_bb("test.txt", "chrom_sizes.csv")
 
     def test_bb_to_bed(self):
+        # 1. input is already bed, 2. input is bigBed, 3. input is neither bed nor bigBed (Error)
         self.assertEqual("target_regions_mpbs.bed", bb_to_bed("target_regions_mpbs.bed"))
+        self.assertEqual("test.bed", bb_to_bed("test.bb"))
         with self.assertRaises(ValueError):
             bb_to_bed("test.txt")
 
