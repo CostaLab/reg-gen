@@ -34,7 +34,7 @@ class UtilTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             bb_to_bed("test.txt")
 
-    def parse_filter(self):
+    def test_parse_filter(self):
         # 1. empty filter, 2. normal case, 3. invalid key, 4. invalid format, 5. gene names, 6. names
         self.assertEqual({}, parse_filter(""))
         self.assertEqual({'data_source': ['selex'], 'species': ['mus', 'human'], 'name': ['ERF1', 'CEBPB', 'REST'],

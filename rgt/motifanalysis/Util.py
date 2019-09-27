@@ -84,11 +84,11 @@ def parse_filter(pattern):
     if pattern:
         items = pattern.strip().split(";")
         for i, item in enumerate(items):
-            items[i] = item.strip().split(":")
-            if len(items[i]) == 1:
+            if len(item.strip().split(":")) == 1:
                 raise ValueError("Could not process given filter. Please use this format: "
                                  "\"species:human,mus;data_source=selex\". Separate key and possible values by \":\", "
                                  "the values by \",\" and put a \";\" in front of a new key.")
+            items[i] = item.strip().split(":")
             if not items[i][0] in valid_keys:
                 raise ValueError(items[i][0] + " is not a valid key for the filter function")
 
