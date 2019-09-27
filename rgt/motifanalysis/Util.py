@@ -77,44 +77,53 @@ def write_bed_color(region_set, filename, color):
 def parse_filter(pattern):
     # Converting given filter lists to a dictionary that can be used by the filter function
     # dictionaries might contain invalid keys which will raise in error when applying the filter function
+    valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database",
+                  "name_file", "gene_names_file"]
     filter_values = {}
+    print("correct version")
     if pattern:
         items = pattern.strip().split(";")
+        for i, item in enumerate(items):
+            items[i] = item.strip().split(":")
+            if len(items[i]) == 1:
+                raise ValueError("Could not process given filter. Please use this format: "
+                                 "\"species:human,mus;data_source=selex\". Separate key and possible values by \":\", "
+                                 "the values by \",\" and put a \";\" in front of a new key.")
+            if not items[i][0] in valid_keys:
+                raise ValueError(items[i][0] + " is not a valid key for the filter function")
 
         names = []
         gene_names = []
 
         # iterate over keys passed to filter option
-        for i in range(0, len(items)):
-
-            cur_item = items[i].strip().split(":")  # cur_item=[key,list of values]
-            key = cur_item[0].strip()
+        for item in items:
+            key = item[0]
+            values = item[1].strip().split(",")
+            # key is a string, values is either a string or a list of strings
 
             # process name_file and gene_names_file differently
             if key == "name_file":
-                file_name = cur_item[1].strip()
-                if not os.path.exists(file_name):
+                if not os.path.exists(values):
                     print("invalid name_file passed to filter")
                 else:
-                    with open(file_name, "r") as f:
+                    with open(values, "r") as f:
                         # read TF names specified in file
                         content = f.readline()
                         for line in content:
                             names.append(line.strip())
 
             elif key == "gene_names_file":
-                file_name = cur_item[1].strip()
-                if not os.path.exists(file_name):
+                if not os.path.exists(values):
                     print("invalid gene_names_file passed to filter")
                 else:
-                    with open(file_name, "r") as f:
+                    with open(values, "r") as f:
                         # read gene names specified in file
                         content = f.readline()
                         for line in content:
                             gene_names.append(line.strip())
 
             else:
-                filter_values[key] = cur_item[1].strip().split(",")
+                filter_values[key] = values
 
         # ensure that filter_values["name"] and filter_values["gene_names"] are correct
         # should now contain the intersection of passed (gene-) names and content of respective file (if both is passed)

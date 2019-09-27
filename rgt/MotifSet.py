@@ -153,11 +153,10 @@ class MotifSet:
 
         valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database"]
 
+        # invalid key names should not appear since they are checked when parsing the filter argument in Match.py
         for key_type in values.keys():
             if not key_type in valid_keys:
                 raise ValueError("wrong key-type: key_type must be one of {}".format(valid_keys))
-
-        # TODO: maybe just ignore invalid keys instead of raising an error
 
         current = self.motifs_map.values()
 

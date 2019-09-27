@@ -6,7 +6,7 @@ import unittest
 import os
 
 # Internal
-from rgt.motifanalysis.Util import Input, Result, is_bed, is_bb, bed_to_bb, bb_to_bed
+from rgt.motifanalysis.Util import Input, Result, is_bed, is_bb, bed_to_bb, bb_to_bed, parse_filter
 from rgt.GeneSet import GeneSet
 
 
@@ -33,6 +33,22 @@ class UtilTest(unittest.TestCase):
         self.assertEqual("test.bed", bb_to_bed("test.bb"))
         with self.assertRaises(ValueError):
             bb_to_bed("test.txt")
+
+    def parse_filter(self):
+        # 1. empty filter, 2. normal case, 3. invalid key, 4. invalid format, 5. gene names, 6. names
+        self.assertEqual({}, parse_filter(""))
+        self.assertEqual({'data_source': ['selex'], 'species': ['mus', 'human'], 'name': ['ERF1', 'CEBPB', 'REST'],
+                          'database': ['meme']},
+                         parse_filter("species:mus,human;database:meme;name:ERF1,CEBPB,REST;data_source:selex"))
+        with self.assertRaises(ValueError):
+            parse_filter("wrong_key:test")
+        with self.assertRaises(ValueError):
+            parse_filter("species:mus,human;database:meme;name:ERF1;CEBPB,REST;data_source:selex")
+        self.assertEqual({'gene_names': ['FOXC1', 'HINFP']}, parse_filter("gene_names:FOXC1,HINFP,ZNF282;"
+                                                                          "gene_names_file=genes.txt"))
+        self.assertEqual({'name': ['MA0014.3.PAX5', 'MA0075.2.Prrx2']}, parse_filter("name:MA0014.3.PAX5,"
+                                                                                     "MA0075.2.Prrx2,MA1154.1.ZNF282;"
+                                                                                     "name_file=names.txt"))
 
     def test_result(self):
         res = Result()

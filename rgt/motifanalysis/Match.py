@@ -66,7 +66,9 @@ def options(parser):
                              "NB: the DATABASE values must be written in full - exact matching is always performed."
                              "Valid key types are \"name\", \"gene_names\", \"family\", \"uniprot_ids\", "
                              "\"data_source\", \"tax_group\", \"species\", \"database\", \"name_file\" "
-                             "and \"gene_names_file\"")
+                             "and \"gene_names_file\". If \"name\" and \"name_file\" are used as keys the "
+                             "intersection of the TF motifs specified by them is used. The same holds for "
+                             "\"gene_names\" and \"gene_names_file\"")
     parser.add_argument("--filter-type", choices=("inexact", "exact", "regex"), default="inexact",
                         help="Only useful together with the --filter argument."
                              "Exact will only match perfect matching of the value for each key. "
