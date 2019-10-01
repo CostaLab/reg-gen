@@ -41,6 +41,7 @@ class UtilTest(unittest.TestCase):
 
     def test_parse_filter(self):
         # 1. empty filter, 2. normal case, 3. invalid key, 4. invalid format, 5. gene names, 6. names
+        cur_dir = os.path.dirname(__file__)
         self.assertEqual({}, parse_filter(""))
         self.assertEqual({'data_source': ['selex'], 'species': ['mus', 'human'], 'name': ['ERF1', 'CEBPB', 'REST'],
                           'database': ['meme']},
@@ -50,11 +51,11 @@ class UtilTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_filter("species:mus,human;database:meme;name:ERF1;CEBPB,REST;data_source:selex")
         self.assertEqual({'gene_names': ['FOXC1', 'HINFP']},
-                         parse_filter("gene_names:FOXC1,HINFP,ZNF282;gene_names_file:/home/julia/reg-gen/unittest/"
-                                      "motifanalysis/genes.txt"))
+                         parse_filter("gene_names:FOXC1,HINFP,ZNF282;gene_names_file:" + os.path.join(cur_dir,
+                                                                                                      "genes.txt")))
         self.assertEqual({'name': ['MA0075.2.Prrx2', 'MA0014.3.PAX5']},
-                         parse_filter("name:MA0014.3.PAX5,MA0075.2.Prrx2,MA1154.1.ZNF282;name_file:/home/julia/reg-gen/"
-                                      "unittest/motifanalysis/names.txt"))
+                         parse_filter("name:MA0014.3.PAX5,MA0075.2.Prrx2,MA1154.1.ZNF282;name_file:" +
+                                      os.path.join(cur_dir, "names.txt")))
 
     def test_result(self):
         res = Result()
