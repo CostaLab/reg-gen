@@ -80,7 +80,6 @@ def parse_filter(pattern):
     valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database",
                   "name_file", "gene_names_file"]
     filter_values = {}
-    print("correct version")
     if pattern:
         items = pattern.strip().split(";")
         for i, item in enumerate(items):
@@ -93,7 +92,7 @@ def parse_filter(pattern):
                 raise ValueError(items[i][0] + " is not a valid key for the filter function")
 
         names = []
-        gene_names = []
+        genes = []
 
         # iterate over keys passed to filter option
         for item in items:
@@ -103,24 +102,24 @@ def parse_filter(pattern):
 
             # process name_file and gene_names_file differently
             if key == "name_file":
-                if not os.path.exists(values):
+                if not os.path.exists(values[0]):
                     print("invalid name_file passed to filter")
                 else:
-                    with open(values, "r") as f:
+                    with open(values[0], "r") as f:
                         # read TF names specified in file
-                        content = f.readline()
+                        content = f.readlines()
                         for line in content:
                             names.append(line.strip())
 
             elif key == "gene_names_file":
-                if not os.path.exists(values):
+                if not os.path.exists(values[0]):
                     print("invalid gene_names_file passed to filter")
                 else:
-                    with open(values, "r") as f:
+                    with open(values[0], "r") as f:
                         # read gene names specified in file
-                        content = f.readline()
+                        content = f.readlines()
                         for line in content:
-                            gene_names.append(line.strip())
+                            genes.append(line.strip())
 
             else:
                 filter_values[key] = values
@@ -133,11 +132,11 @@ def parse_filter(pattern):
         elif names:
             filter_values["name"] = names
 
-        if "gene_names" in filter_values and gene_names:
-            gene_names = list(set(filter_values["gene_names"]) & set(gene_names))
-            filter_values["gene_names"] = gene_names
-        elif gene_names:
-            filter_values["gene_names"] = gene_names
+        if "gene_names" in filter_values and genes:
+            genes = list(set(filter_values["gene_names"]) & set(genes))
+            filter_values["gene_names"] = genes
+        elif genes:
+            filter_values["gene_names"] = genes
 
     return filter_values
 

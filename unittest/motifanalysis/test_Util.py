@@ -17,22 +17,27 @@ class UtilTest(unittest.TestCase):
         self.assertFalse(is_bed(os.path.join(os.path.dirname(__file__), "test.bb")))
 
     def test_is_bb(self):
-        self.assertTrue(is_bb("test.bb"))
+        self.assertTrue(is_bb(os.path.join(os.path.dirname(__file__), "test.bb")))
         self.assertFalse(is_bb(os.path.join(os.path.dirname(__file__), "target_regions_mpbs.bed")))
 
     def test_bed_to_bb(self):
         # 1. input is already bigBed, 2. input is bed, 3. input is neither bed nor bigBed (Error)
-        self.assertEqual("test.bb", bed_to_bb("test.bb", "chrom.sizes.hg19"))
-        self.assertEqual("test.bb", bed_to_bb("test.bed", "chrom.sizes.hg19"))
+        cur_dir = os.path.dirname(__file__)
+        self.assertEqual(os.path.join(cur_dir, "test.bb"), bed_to_bb(os.path.join(cur_dir, "test.bb"),
+                                                                     os.path.join(cur_dir, "chrom.sizes.hg19")))
+        self.assertEqual(os.path.join(cur_dir, "test.bb"),
+                         bed_to_bb(os.path.join(cur_dir, "test.bed"), os.path.join(cur_dir, "chrom.sizes.hg19")))
         with self.assertRaises(ValueError):
-            bed_to_bb("test.txt", "chrom_sizes.csv")
+            bed_to_bb(os.path.join(cur_dir, "test.txt"), os.path.join(cur_dir, "chrom.sizes.hg19"))
 
     def test_bb_to_bed(self):
         # 1. input is already bed, 2. input is bigBed, 3. input is neither bed nor bigBed (Error)
-        self.assertEqual("target_regions_mpbs.bed", bb_to_bed("target_regions_mpbs.bed"))
-        self.assertEqual("test.bed", bb_to_bed("test.bb"))
+        cur_dir = os.path.dirname(__file__)
+        self.assertEqual(os.path.join(cur_dir, "target_regions_mpbs.bed"),
+                         bb_to_bed(os.path.join(cur_dir, "target_regions_mpbs.bed")))
+        self.assertEqual(os.path.join(cur_dir, "test.bed"), bb_to_bed(os.path.join(cur_dir, "test.bb")))
         with self.assertRaises(ValueError):
-            bb_to_bed("test.txt")
+            bb_to_bed(os.path.join(cur_dir, "test.txt"))
 
     def test_parse_filter(self):
         # 1. empty filter, 2. normal case, 3. invalid key, 4. invalid format, 5. gene names, 6. names
@@ -44,11 +49,12 @@ class UtilTest(unittest.TestCase):
             parse_filter("wrong_key:test")
         with self.assertRaises(ValueError):
             parse_filter("species:mus,human;database:meme;name:ERF1;CEBPB,REST;data_source:selex")
-        self.assertEqual({'gene_names': ['FOXC1', 'HINFP']}, parse_filter("gene_names:FOXC1,HINFP,ZNF282;"
-                                                                          "gene_names_file=genes.txt"))
-        self.assertEqual({'name': ['MA0014.3.PAX5', 'MA0075.2.Prrx2']}, parse_filter("name:MA0014.3.PAX5,"
-                                                                                     "MA0075.2.Prrx2,MA1154.1.ZNF282;"
-                                                                                     "name_file=names.txt"))
+        self.assertEqual({'gene_names': ['FOXC1', 'HINFP']},
+                         parse_filter("gene_names:FOXC1,HINFP,ZNF282;gene_names_file:/home/julia/reg-gen/unittest/"
+                                      "motifanalysis/genes.txt"))
+        self.assertEqual({'name': ['MA0075.2.Prrx2', 'MA0014.3.PAX5']},
+                         parse_filter("name:MA0014.3.PAX5,MA0075.2.Prrx2,MA1154.1.ZNF282;name_file:/home/julia/reg-gen/"
+                                      "unittest/motifanalysis/names.txt"))
 
     def test_result(self):
         res = Result()
