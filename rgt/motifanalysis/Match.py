@@ -343,10 +343,15 @@ def main(args):
     else:
         unique_threshold = None
 
-    scanner = scan.Scanner(7, motif_list[0].alphabet)
+    alphabet = motif_list[0].alphabet
+    print("Use alphabet of first motif for matching: " + alphabet)
+
+    scanner = scan.Scanner(7, alphabet)
     pssm_list = []
     thresholds = []
     for motif in motif_list:
+        if not motif.alphabet == alphabet:
+            print("Exclude " + motif.name + " because this motif was created based on the alphabet: " + motif.alphabet)
         if unique_threshold:
             thresholds.append(0.0)
             thresholds.append(0.0)
