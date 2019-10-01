@@ -350,17 +350,21 @@ def main(args):
     pssm_list = []
     thresholds = []
     for motif in motif_list:
-        if not motif.alphabet == alphabet:
-            print("Exclude " + motif.name + " because this motif was created based on the alphabet: " + motif.alphabet)
-        if unique_threshold:
-            thresholds.append(0.0)
-            thresholds.append(0.0)
-        else:
-            thresholds.append(motif.threshold)
-            thresholds.append(motif.threshold)
+        if motif.alphabet == alphabet:
+            if unique_threshold:
+                thresholds.append(0.0)
+                thresholds.append(0.0)
+            else:
+                thresholds.append(motif.threshold)
+                thresholds.append(motif.threshold)
 
-        pssm_list.append(motif.pssm)
-        pssm_list.append(motif.pssm_rc)
+            pssm_list.append(motif.pssm)
+            pssm_list.append(motif.pssm_rc)
+        else:
+            # exclude all motifs whose alphabet differs from that of the first motif that has been loaded before
+            # matching
+            motif_list.remove(motif)
+            print("Exclude " + motif.name + " because this motif was created based on the alphabet: " + motif.alphabet)
 
     # Performing motif matching
     # TODO: we can expand this to use bg from sequence, for example,
