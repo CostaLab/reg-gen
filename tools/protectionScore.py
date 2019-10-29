@@ -33,7 +33,7 @@ from pysam import Fastafile
 from numpy import array
 from rgt.HINT.pileupRegion import PileupRegion
 if(len(sys.argv) != 6): 
-    for e in params: print e
+    for e in params: print(e)
     sys.exit(0)
 
 #################################################################################################
@@ -69,7 +69,7 @@ def bias_correction(bam, signal, fBiasDict, rBiasDict, genome_file_name, chrName
 
   # Initialization
   fastaFile = Fastafile(genome_file_name)
-  k_nb = len(fBiasDict.keys()[0])
+  k_nb = len(list(fBiasDict.keys())[0])
   p1 = start; p2 = end
   p1_w = p1 - (window/2); p2_w = p2 + (window/2)
   p1_wk = p1_w - (k_nb/2); p2_wk = p2_w + (k_nb/2)

@@ -6,8 +6,8 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 """
 
 # Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
+
+
 
 # Python
 from functools import reduce
@@ -568,14 +568,14 @@ class CoverageSet:
         """
         r = regions
         iter = r.__iter__()
-        r = iter.next()
+        r = next(iter)
         sum = r.final
         last = 0
         i = 0
         while sum <= index * self.stepsize:
             last += len(self.coverage[i])
             try:
-                r = iter.next()
+                r = next(iter)
             except StopIteration:
                 sum += r.final
                 i += 1
@@ -706,7 +706,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
     # get first chromosome, typically chr1
     # for s in FastaReader(genome_path):
     #    chromosomes.append(s.name)
-    tmp = chrom_sizes_dict.keys()
+    tmp = list(chrom_sizes_dict.keys())
     # tmp = map(lambda x: x.replace('chr',''), chromosomes)
     tmp.sort()
     genome_fasta = pysam.Fastafile(genome_path)
@@ -739,7 +739,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
     content._compute()
     r = []
     for l in gc_content_cov:
-        tmp = map(content._map, l)
+        tmp = list(map(content._map, l))
         r.append(tmp)
 
     return r, content.g, content.g_gc

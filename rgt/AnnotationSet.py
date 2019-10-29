@@ -8,7 +8,7 @@ AnnotationSet represent genomic annotation from genes.
 """
 
 # Python 3 compatibility
-from __future__ import print_function
+
 
 # Python
 import os
@@ -231,13 +231,13 @@ class AnnotationSet:
                 pass
 
             addt_list = line_list[8].split(";")
-            addt_list = filter(None, addt_list)
+            addt_list = [_f for _f in addt_list if _f]
 
             # Processing additional list of options
             addt_dict = dict()
             for addt_element in addt_list:
                 addt_element_list = addt_element.split(" ")
-                addt_element_list = filter(None, addt_element_list)
+                addt_element_list = [_f for _f in addt_element_list if _f]
                 # Removing " symbol from string options
                 addt_element_list[1] = addt_element_list[1].replace("\"", "")
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
@@ -487,11 +487,11 @@ class AnnotationSet:
         if isinstance(query, dict):
 
             # Iterating over query elements
-            for query_key in query.keys():
+            for query_key in list(query.keys()):
 
                 # O(n) operation if a single value is being queried.
                 if not isinstance(query[query_key], list):
-                    current_list = filter(lambda k: k[query_key] == query[query_key], current_list)
+                    current_list = [k for k in current_list if k[query_key] == query[query_key]]
 
                 # O(n log n) operation if multiple values are being queried.
                 else:

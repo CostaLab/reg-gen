@@ -6,7 +6,7 @@
 ###################################################################################################
 
 # Import
-from __future__ import print_function
+
 import gzip
 from optparse import OptionParser
 from os import system, path, remove, mkdir
@@ -110,7 +110,7 @@ if options.hg19:
         print("OK")
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/"
-        chr_list = ["chr" + str(e) for e in range(1, 23) + ["X", "Y", "M"]]
+        chr_list = ["chr" + str(e) for e in list(range(1, 23)) + ["X", "Y", "M"]]
         output_genome_file = open(output_genome_file_name, "w")
         to_remove = []
         for chr_name in chr_list:
@@ -219,7 +219,7 @@ if options.mm9:
         print("OK")
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/mm9/chromosomes/"
-        chr_list = ["chr" + str(e) for e in range(1, 20) + ["X", "Y", "M"]]
+        chr_list = ["chr" + str(e) for e in list(range(1, 20)) + ["X", "Y", "M"]]
         output_genome_file = open(output_genome_file_name, "w")
         to_remove = []
         for chr_name in chr_list:

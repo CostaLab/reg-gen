@@ -24,7 +24,7 @@ value y follows h2.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 from scipy.stats import binom
 from math import log
 from scipy.special import logsumexp
@@ -37,7 +37,7 @@ lookup_pvalue = {}
 
 def get_value(x, distr):
     if distr['distr_name'] == 'binomial':
-        if lookup_pmf.has_key(x):
+        if x in lookup_pmf:
             return lookup_pmf[x]
         else:
             v = binom.pmf(x, distr['n'], distr['p'])
@@ -47,7 +47,7 @@ def get_value(x, distr):
 
 def get_log_value(x, distr):
     if distr['distr_name'] == 'binomial':
-        if lookup_pmf.has_key(x):
+        if x in lookup_pmf:
             return lookup_pmf[x]
         else:
             v = binom.logpmf(x, distr['n'], distr['p'])
@@ -71,7 +71,7 @@ def compute_pvalue(distr, N, side, current_p, x):
     """Compute log2 pvalue"""
     sum_num = []
     sum_denum = []
-    it = range(N / 2 + 1) if side == 'r' else range(N + 1, -1, -1)
+    it = list(range(N / 2 + 1)) if side == 'r' else list(range(N + 1, -1, -1))
 
     for i in it:
         p1 = get_log_value(i, distr)
@@ -84,8 +84,8 @@ def compute_pvalue(distr, N, side, current_p, x):
         sum_denum.append(p)
 
     if distr['distr_name'] == 'nb':
-        sum_num = map(lambda x: float(x), sum_num)
-        sum_denum = map(lambda x: float(x), sum_denum)
+        sum_num = [float(x) for x in sum_num]
+        sum_denum = [float(x) for x in sum_denum]
 
     return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
 
@@ -97,7 +97,7 @@ def get_log_pvalue_new(x, y, side, distr):
         x, y = y, x
         side = 'r'
 
-    if lookup_pvalue.has_key((x, y, 'r')):
+    if (x, y, 'r') in lookup_pvalue:
         return lookup_pvalue[(x, y, 'r')]
     else:
         current_p = get_log_value(x, distr) + get_log_value(y, distr)

@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import itertools
 import multiprocessing.pool
 import matplotlib.ticker as mtick
@@ -18,7 +18,7 @@ from .shared_function import *
 
 
 def posi2set(regions, p):
-    alln = range(len(regions))
+    alln = list(range(len(regions)))
     inter_r = copy.deepcopy(regions[p[0]])
 
     for i in alln:
@@ -78,7 +78,7 @@ class Intersect:
             bg = GenomicRegionSet("background")
             bg.read(path)
             self.background = bg
-            for ty in self.groupedreference.keys():
+            for ty in list(self.groupedreference.keys()):
                 # self.background[ty] = bg
                 rlist = [r.trim_by(background=bg) for r in self.groupedreference[ty]]
                 self.groupedreference[ty] = rlist
@@ -97,13 +97,13 @@ class Intersect:
         """color_list is a Dict [query] : color """
         if ref_que == "que":
             self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "":
+            if list(self.groupedquery.keys())[0] == "":
                 self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
         elif ref_que == "ref":
             self.color_list = color_groupded_region(self.rEM, self.groupedreference, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "":
+            if list(self.groupedquery.keys())[0] == "":
                 self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
@@ -111,12 +111,12 @@ class Intersect:
     def colors_comb(self):
         """color_list is a list : color """
 
-        if self.groupedquery.keys()[0] == "":
+        if list(self.groupedquery.keys())[0] == "":
             self.color_tags = self.referencenames
         else:
             tags = []
-            for t in [n.name for n in self.groupedreference.values()[0]]:
-                nt = t.replace(self.groupedreference.keys()[0], "")
+            for t in [n.name for n in list(self.groupedreference.values())[0]]:
+                nt = t.replace(list(self.groupedreference.keys())[0], "")
                 nt = nt.replace("_", "")
                 tags.append(nt)
             self.color_tags = tags
@@ -143,7 +143,7 @@ class Intersect:
         # elif self.mode_count == "count":
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             self.counts[ty] = OrderedDict()
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
             if frequency:
@@ -197,7 +197,7 @@ class Intersect:
                                 # sys.stdout.flush()
 
     def barplot(self, logt=False, percentage=False):
-        f, axs = plt.subplots(len(self.counts.keys()), 1)
+        f, axs = plt.subplots(len(list(self.counts.keys())), 1)
         f.subplots_adjust(left=0.3)
         self.xtickrotation, self.xtickalign = 0, "center"
         # if len(axs) == 1: axs = [axs]
@@ -214,10 +214,10 @@ class Intersect:
                 ax.locator_params(axis='y', nbins=4)
                 plus = 0
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-            ax.set_title(self.counts.keys()[ai], y=1)
+            ax.set_title(list(self.counts.keys())[ai], y=1)
 
             r_label = []
-            for ind_r, r in enumerate(self.counts.values()[ai].keys()):
+            for ind_r, r in enumerate(list(self.counts.values())[ai].keys()):
                 for l in self.references:
                     if l.name == r:
                         lr = len(l)
@@ -229,17 +229,17 @@ class Intersect:
                         r_label.append(self.rEM.get_type(r, "factor"))
                     except:
                         r_label.append(r)
-                if len(r_label[-1]) > 15 or len(self.counts.values()[ai][r].keys()) * len(
-                        self.counts.values()[ai].keys()) > 8:
+                if len(r_label[-1]) > 15 or len(list(self.counts.values())[ai][r].keys()) * len(
+                        list(self.counts.values())[ai].keys()) > 8:
                     self.xtickrotation, self.xtickalign = 50, "right"
-                width = 0.8 / (len(self.counts.values()[ai][r].keys()) + 1)  # Plus one background
-                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                width = 0.8 / (len(list(self.counts.values())[ai][r].keys()) + 1)  # Plus one background
+                for ind_q, q in enumerate(list(self.counts.values())[ai][r].keys()):
                     x = ind_r + ind_q * width + 0.1
                     if percentage:
                         # print(lr)
-                        y = 100 * (self.counts.values()[ai][r][q][2] + plus) / lr
+                        y = 100 * (list(self.counts.values())[ai][r][q][2] + plus) / lr
                     else:
-                        y = self.counts.values()[ai][r][q][2] + plus  # intersect number
+                        y = list(self.counts.values())[ai][r][q][2] + plus  # intersect number
 
                     ax.bar(x, y, width=width, color=self.color_list[q], edgecolor="none", align='edge', log=logt)
 
@@ -247,7 +247,7 @@ class Intersect:
             ax.set_xticks([i + 0.5 - 0.5 * width for i in range(len(r_label))])
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
-            ax.set_xlim([0, len(self.counts.values()[ai].keys()) - 0.1])
+            ax.set_xlim([0, len(list(self.counts.values())[ai].keys()) - 0.1])
 
             ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1,
                       columnspacing=2, borderaxespad=0., prop={'size': 10}, bbox_to_anchor=(1.05, 0.5))
@@ -270,7 +270,7 @@ class Intersect:
         self.bar = f
 
     def stackedbar(self):
-        f, axs = plt.subplots(len(self.counts.keys()), 1)
+        f, axs = plt.subplots(len(list(self.counts.keys())), 1)
         f.subplots_adjust(left=0.3)
         # if len(axs) == 1: axs = [axs]
         try:
@@ -281,10 +281,10 @@ class Intersect:
         for ai, ax in enumerate(axs):
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
             ax.locator_params(axis='y', nbins=2)
-            ax.set_title(self.counts.keys()[ai], y=1)
+            ax.set_title(list(self.counts.keys())[ai], y=1)
             r_label = []
 
-            for ind_r, r in enumerate(self.counts.values()[ai].keys()):
+            for ind_r, r in enumerate(list(self.counts.values())[ai].keys()):
                 if len(axs) == 1:
                     r_label.append(r)
                 else:
@@ -294,17 +294,17 @@ class Intersect:
                         r_label.append(r)
                 width = 0.6
                 bottom = 0
-                reverse_q = self.counts.values()[ai][r].keys()[::-1]
+                reverse_q = list(self.counts.values())[ai][r].keys()[::-1]
                 # ql = len(reverse_q) - 1
                 rc = self.color_tags[::-1]
                 for ind_q, q in enumerate(reverse_q):
                     x = ind_r
-                    y = self.counts.values()[ai][r][q][2]  # intersect number
+                    y = list(self.counts.values())[ai][r][q][2]  # intersect number
                     ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q],
                            edgecolor="none", align='center', label=rc[ind_q])
                     bottom = bottom + y
             ax.yaxis.tick_left()
-            ax.set_xticks(range(len(r_label)))
+            ax.set_xticks(list(range(len(r_label))))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, ind_r + 0.5])
@@ -315,8 +315,8 @@ class Intersect:
             #    nhandles.append( handles[labels.index(t)] )
             # print(self.color_tags)
             handles, labels = ax.get_legend_handles_labels()
-            by_label = OrderedDict(reversed(zip(labels, handles)))
-            ax.legend(by_label.values(), by_label.keys(), loc='center left', handlelength=1, handletextpad=1,
+            by_label = OrderedDict(reversed(list(zip(labels, handles))))
+            ax.legend(list(by_label.values()), list(by_label.keys()), loc='center left', handlelength=1, handletextpad=1,
                       columnspacing=2, borderaxespad=0., prop={'size': 10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
@@ -331,7 +331,7 @@ class Intersect:
 
     def percentagebar(self):
         self.color_list["No intersection"] = "0.7"
-        f, axs = plt.subplots(len(self.counts.keys()), 1)
+        f, axs = plt.subplots(len(list(self.counts.keys())), 1)
         f.subplots_adjust(left=0.3)
         # if len(axs) == 1: axs = [axs]
         try:
@@ -343,10 +343,10 @@ class Intersect:
         for ai, ax in enumerate(axs):
             # ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis='y', nbins=2)
-            ax.set_title(self.counts.keys()[ai], y=1.05)
+            ax.set_title(list(self.counts.keys())[ai], y=1.05)
             r_label = []
             self.percentage.append({})
-            for ind_r, r in enumerate(self.counts.values()[ai].keys()):
+            for ind_r, r in enumerate(list(self.counts.values())[ai].keys()):
                 if len(axs) == 1:
                     r_label.append(r)
                 else:
@@ -363,12 +363,12 @@ class Intersect:
                 self.percentage[ai][r] = {}
 
                 if sumlength == 0:
-                    for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    for ind_q, q in enumerate(list(self.counts.values())[ai][r].keys()):
                         self.percentage[ai][r][q] = "ref is empty"
                 else:
-                    for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    for ind_q, q in enumerate(list(self.counts.values())[ai][r].keys()):
                         x = ind_r
-                        y = 100 * float(self.counts.values()[ai][r][q][2]) / sumlength  # percentage
+                        y = 100 * float(list(self.counts.values())[ai][r][q][2]) / sumlength  # percentage
                         ax.bar(x, y, width=width, bottom=bottom,
                                color=self.color_list[q], edgecolor="none", align='center')
                         bottom = bottom + y
@@ -379,7 +379,7 @@ class Intersect:
 
             ax.yaxis.tick_left()
 
-            ax.set_xticks(range(len(r_label)))
+            ax.set_xticks(list(range(len(r_label))))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, ind_r + 0.5])
@@ -568,22 +568,22 @@ class Intersect:
             for ind_q, q in enumerate(self.frequency[ty].keys()):
                 html.add_figure("venn_" + ty + "_" + q + ".png", align="center", width="600")
                 data_table.append([q, str(self.qlen[ty][q]),
-                                   ",".join([str(v).rjust(7, " ") for v in self.frequency[ty][q].values()])])
+                                   ",".join([str(v).rjust(7, " ") for v in list(self.frequency[ty][q].values())])])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align)
 
             header_list = ["Query 1", "Query 2", "Chi square", "p value"]
             data_table = []
-            n = len(self.frequency[ty].keys())
-            for q in itertools.combinations(range(n), 2):
+            n = len(list(self.frequency[ty].keys()))
+            for q in itertools.combinations(list(range(n)), 2):
                 # print(q)
-                q1 = self.frequency[ty].keys()[q[0]]
-                q2 = self.frequency[ty].keys()[q[1]]
+                q1 = list(self.frequency[ty].keys())[q[0]]
+                q2 = list(self.frequency[ty].keys())[q[1]]
 
-                sumqf = [x + y for x, y in zip(self.frequency[ty][q1].values(), self.frequency[ty][q2].values())]
+                sumqf = [x + y for x, y in zip(list(self.frequency[ty][q1].values()), list(self.frequency[ty][q2].values()))]
                 nonzero = [i for i, e in enumerate(sumqf) if e != 0]
-                qf1 = [self.frequency[ty][q1].values()[i] for i in nonzero]
-                qf2 = [self.frequency[ty][q2].values()[i] for i in nonzero]
+                qf1 = [list(self.frequency[ty][q1].values())[i] for i in nonzero]
+                qf2 = [list(self.frequency[ty][q2].values())[i] for i in nonzero]
 
                 chisq, p, dof, expected = stats.chi2_contingency([qf1, qf2])
                 if p < 0.05:
@@ -642,13 +642,13 @@ class Intersect:
         ref_names = []
         self.comb_ref_infor = {}
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
 
             for i in range(1, n):
-                new_refsp[ty].append(itertools.combinations(range(n), i))
+                new_refsp[ty].append(itertools.combinations(list(range(n)), i))
             for posi in new_refsp[ty]:
                 # print(posi)
                 posi = [list(i) for i in posi]
@@ -659,10 +659,10 @@ class Intersect:
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
                     self.comb_ref_infor[pr.name] = p2sign(p, n)
-            all_int = posi2set(self.groupedreference[ty], range(n))
+            all_int = posi2set(self.groupedreference[ty], list(range(n)))
             new_refs[ty].append(all_int)
             ref_names.append(all_int.name)
-            self.comb_ref_infor[all_int.name] = p2sign(range(n), n)
+            self.comb_ref_infor[all_int.name] = p2sign(list(range(n)), n)
             """
             # Background
             unions = GenomicRegionSet(name="")
@@ -685,12 +685,12 @@ class Intersect:
         new_refs = OrderedDict()
         ref_names = []
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
             for i in range(1, n):
-                new_refsp[ty].append(itertools.combinations(range(n), i))
+                new_refsp[ty].append(itertools.combinations(list(range(n)), i))
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
                 for p in posi:
@@ -701,7 +701,7 @@ class Intersect:
 
     def comb_stacked_plot(self):
         self.xtickrotation, self.xtickalign = 0, "center"
-        f, axs = plt.subplots(1, len(self.frequency.keys()), sharey=True)
+        f, axs = plt.subplots(1, len(list(self.frequency.keys())), sharey=True)
         f.subplots_adjust(left=0.3)
         # f.set_size_inches(18.5,15)
         # if len(axs) == 1: axs = [axs]
@@ -712,9 +712,9 @@ class Intersect:
 
         for ai, ax in enumerate(axs):
             # ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            ty = self.frequency.keys()[ai]
+            ty = list(self.frequency.keys())[ai]
             ax.locator_params(axis='y', nbins=4)
-            ax.set_title(self.frequency.keys()[ai], y=1)
+            ax.set_title(list(self.frequency.keys())[ai], y=1)
             r_label = []
             q_label = []
             legends = []
@@ -743,7 +743,7 @@ class Intersect:
                     if ind_q == 0:
                         legends.append(bar)
             ax.yaxis.tick_left()
-            ax.set_xticks(range(len(q_label)))
+            ax.set_xticks(list(range(len(q_label))))
             ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top=False, bottom=False, labelbottom=True)
             ax.set_xlim([-0.5, len(q_label) + 0.5])
@@ -796,7 +796,7 @@ class Intersect:
         self.test_d = {}
         plist = OrderedDict()
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             self.test_d[ty] = {}
             plist[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
@@ -852,8 +852,8 @@ class Intersect:
             multiple_correction(plist)
 
             # c_p = 0
-            for r in self.test_d[ty].keys():
+            for r in list(self.test_d[ty].keys()):
                 if r in self.nalist:
                     continue
-                for q in self.test_d[ty][r].keys():
+                for q in list(self.test_d[ty][r].keys()):
                     self.test_d[ty][r][q][2] = plist[ty][r][q]

@@ -1,5 +1,5 @@
 # Python Libraries
-from __future__ import print_function
+
 import os
 import re
 import pysam
@@ -96,7 +96,7 @@ def try_int(s):
 def natsort_key(s):
     "Used internally to get a tuple by which s is sorted."
     import re
-    return map(try_int, re.findall(r'(\d+|\D+)', s))
+    return list(map(try_int, re.findall(r'(\d+|\D+)', s)))
 
 
 def natcmp(a, b):
@@ -222,7 +222,7 @@ def revise_index(root):
             plist[os.path.basename(item)] = h
     dir_list = OrderedDict(sorted(dir_list.items()))
     # print(dir_list)
-    for d, p in plist.iteritems():
+    for d, p in plist.items():
         list_all_index(path=os.path.dirname(p),
                        link_d=dir_list)
 
@@ -338,7 +338,7 @@ def gen_heatmap(path):
 
     # Convert into array
     ar = []
-    exps = natsorted(matrix.keys())
+    exps = natsorted(list(matrix.keys()))
     rnas = natsorted(rnas)
     # print(exps)
     for exp in exps:
@@ -386,13 +386,13 @@ def gen_heatmap(path):
     # data = data[:,idx2]
     im = axmatrix.matshow(data, aspect='auto', origin='lower', cmap=plt.cm.YlOrRd_r, norm=norm)
 
-    axmatrix.set_xticks(range(data.shape[1]))
+    axmatrix.set_xticks(list(range(data.shape[1])))
     axmatrix.set_xticklabels(exps, minor=False, ha="left")
     axmatrix.xaxis.set_label_position('top')
     axmatrix.xaxis.tick_top()
     plt.xticks(rotation=40, fontsize=10)
 
-    axmatrix.set_yticks(range(data.shape[0]))
+    axmatrix.set_yticks(list(range(data.shape[0])))
     axmatrix.set_yticklabels(rnas, minor=False)
     # axmatrix.set_yticklabels( [ rnas[i] for i in idx1 ], minor=False)
     axmatrix.yaxis.set_label_position('right')
@@ -533,7 +533,7 @@ def random_each(input):
     sys.stdout.flush()
     print("".join(["="]*int(input[6])), end="")
 
-    return [ [len(tr) for tr in txp.merged_dict.values() ], [len(dbss) for dbss in txpf.merged_dict.values()] ]
+    return [ [len(tr) for tr in list(txp.merged_dict.values()) ], [len(dbss) for dbss in list(txpf.merged_dict.values())] ]
 
 
 def save_sequence(dir, filename, regions, genome_path):

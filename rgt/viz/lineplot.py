@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import time
 import numpy
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from scipy.interpolate import spline
 from rgt.Util import Html
 from rgt.CoverageSet import CoverageSet
 from rgt.ExperimentalMatrix import ExperimentalMatrix
-from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
+from .shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
 
 
 # Local test
@@ -191,11 +191,11 @@ class Lineplot:
                             elif self.dft == "reads":
                                 dfs = self.exps.get_readsnames()
                             else:
-                                dfs = self.exps.fieldsDict[self.dft].keys()
+                                dfs = list(self.exps.fieldsDict[self.dft].keys())
 
                         for d in dfs:
                             data[g][r][c][cc][d] = defaultdict(list)
-                            for bed in self.cuebed.keys():
+                            for bed in list(self.cuebed.keys()):
 
                                 # print(self.cuebed[bed])
                                 # print(set([s,g,c,d]))
@@ -203,7 +203,7 @@ class Lineplot:
                                 if len(self.cuebed[bed].intersection({g, r, c, cc, d})) > 2 or \
                                         self.cuebed[bed].issubset({g, r, c, cc, d}):
                                     # if self.cuebed[bed] <= set([s,g,c]):
-                                    for bam in self.cuebam.keys():
+                                    for bam in list(self.cuebam.keys()):
 
                                         # print(self.cuebam[bam])
                                         # print(set([s,g,c]))
@@ -232,11 +232,11 @@ class Lineplot:
             mp_output = pool.map(compute_coverage, mp_input)
             pool.close()
             pool.join()
-            for g in data.keys():
-                for r in data[g].keys():
-                    for c in data[g][r].keys():
-                        for cc in data[g][r][c].keys():
-                            for d in data[g][r][c][cc].keys():
+            for g in list(data.keys()):
+                for r in list(data[g].keys()):
+                    for c in list(data[g][r].keys()):
+                        for cc in list(data[g][r][c].keys()):
+                            for d in list(data[g][r][c][cc].keys()):
                                 for out in mp_output:
                                     if out[0:5] == [g, r, c, cc, d]:
                                         if data[g][r][c][cc][d]:
@@ -245,22 +245,22 @@ class Lineplot:
                                             data[g][r][c][cc][d] = out[-1]
 
         if average:
-            for g in data.keys():
-                for r in data[g].keys():
-                    for c in data[g][r].keys():
-                        for cc in data[g][r][c].keys():
-                            for d in data[g][r][c][cc].keys():
+            for g in list(data.keys()):
+                for r in list(data[g].keys()):
+                    for c in list(data[g][r].keys()):
+                        for cc in list(data[g][r][c].keys()):
+                            for d in list(data[g][r][c][cc].keys()):
                                 if isinstance(data[g][r][c][cc][d]["all"], list) and len(
                                         data[g][r][c][cc][d]["all"]) > 1:
                                     a = numpy.array(data[g][r][c][cc][d]["all"])
                                     averaged_array = numpy.array(numpy.average(a, axis=0))
                                     data[g][r][c][cc][d]["all"] = [averaged_array]
         if self.df:
-            for g in data.keys():
-                for r in data[g].keys():
-                    for c in data[g][r].keys():
-                        for cc in data[g][r][c].keys():
-                            for d in data[g][r][c][cc].keys():
+            for g in list(data.keys()):
+                for r in list(data[g].keys()):
+                    for c in list(data[g][r].keys()):
+                        for cc in list(data[g][r][c].keys()):
+                            for d in list(data[g][r][c][cc].keys()):
                                 if isinstance(data[g][r][c][cc][d]["all"], list) and \
                                         len(data[g][r][c][cc][d]["all"]) > 1:
                                     diff = numpy.subtract(data[g][r][c][cc][d]["all"][0],
@@ -283,38 +283,38 @@ class Lineplot:
         self.fig = []
 
         rot = 30
-        if len(self.data.values()[0].keys()) < 2:
+        if len(list(self.data.values())[0].keys()) < 2:
             ticklabelsize = w * 1.5
         else:
             ticklabelsize = w * 3
-        tw = len(self.data.values()[0].values()[0].keys()) * w
-        th = len(self.data.values()[0].keys()) * (h * 0.8)
+        tw = len(list(self.data.values())[0].values()[0].keys()) * w
+        th = len(list(self.data.values())[0].keys()) * (h * 0.8)
 
         for g in self.group_tags:
 
-            f, axs = plt.subplots(len(self.data[g].keys()), len(self.data[g].values()[0].keys()), dpi=300,
+            f, axs = plt.subplots(len(list(self.data[g].keys())), len(list(self.data[g].values())[0].keys()), dpi=300,
                                   figsize=(tw, th))
 
-            yaxmax = [0] * len(self.data[g].values()[0])
-            sx_ymax = [0] * len(self.data[g].keys())
+            yaxmax = [0] * len(list(self.data[g].values())[0])
+            sx_ymax = [0] * len(list(self.data[g].keys()))
             if self.df:
-                yaxmin = [0] * len(self.data[g].values()[0])
-                sx_ymin = [0] * len(self.data[g].keys())
+                yaxmin = [0] * len(list(self.data[g].values())[0])
+                sx_ymin = [0] * len(list(self.data[g].keys()))
 
             if printtable:
                 bott = self.extend + int(0.5 * self.ss)
                 pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in
                                                                           range(-bott, bott + 10, self.ss)]]  # Header
-            nit = len(self.data[g].keys())
+            nit = len(list(self.data[g].keys()))
             for ir, r in enumerate(self.data[g].keys()):
 
                 for ic, c in enumerate(self.data[g][r].keys()):
                     try:
                         ax = axs[ir, ic]
                     except:
-                        if len(self.data[g].keys()) == 1 and len(self.data[g][r].keys()) == 1:
+                        if len(list(self.data[g].keys())) == 1 and len(list(self.data[g][r].keys())) == 1:
                             ax = axs
-                        elif len(self.data[g].keys()) == 1 and len(self.data[g][r].keys()) > 1:
+                        elif len(list(self.data[g].keys())) == 1 and len(list(self.data[g][r].keys())) > 1:
                             ax = axs[ic]
                         else:
                             ax = axs[ir]
@@ -443,7 +443,7 @@ class Lineplot:
                         axx = axs[ir, ic]
                     except:
                         try:
-                            if len(self.data[g].keys()) == 1:
+                            if len(list(self.data[g].keys())) == 1:
                                 axx = axs[ic]
                             else:
                                 axx = axs[ir]
@@ -539,12 +539,12 @@ class Lineplot:
         if not sort:
             pass
         elif sort == 0:
-            for t in self.data.keys():
+            for t in list(self.data.keys()):
                 for i, g in enumerate(self.data[t].keys()):
                     # print(numpy.sum(data[t][bed].values()[0], axis=1))
                     # print(len(numpy.sum(data[t][bed].values()[0], axis=1)))
 
-                    sumarr = numpy.sum([numpy.sum(d, axis=1) for d in self.data[t][g].values()], axis=0)
+                    sumarr = numpy.sum([numpy.sum(d, axis=1) for d in list(self.data[t][g].values())], axis=0)
                     # print(sumarr)
                     # sumarr = numpy.sum(sumarr, axis=1)
                     ind = stats.rankdata(sumarr, method='ordinal')  # The index for further sorting
@@ -556,9 +556,9 @@ class Lineplot:
                             d[-ranki, :] = self.data[t][g][c][k, :]
                         self.data[t][g][c] = d
         else:
-            for t in self.data.keys():
+            for t in list(self.data.keys()):
                 for i, g in enumerate(self.data[t].keys()):
-                    sumarr = numpy.sum(self.data[t][g].values()[sort - 1], axis=1)
+                    sumarr = numpy.sum(list(self.data[t][g].values())[sort - 1], axis=1)
                     # print(sumarr)
                     # sumarr = numpy.sum(sumarr, axis=1)
                     ind = stats.rankdata(sumarr, method='ordinal')  # The index for further sorting
@@ -583,12 +583,12 @@ class Lineplot:
         for ti, t in enumerate(self.data.keys()):
             # fig.append(plt.figure())
             # rows = len(data[t].keys())
-            columns = len(self.data[t].values()[0].keys())
+            columns = len(list(self.data[t].values())[0].keys())
             # fig, axs = plt.subplots(rows,columns, sharey=True, dpi=300)
             # matplotlib.pyplot.subplots_adjust(left=1, right=2, top=2, bottom=1)
             fig = plt.figure(t)
             plt.suptitle("Heatmap: " + t, y=1.05)
-            rows = len(self.data[t].keys())
+            rows = len(list(self.data[t].keys()))
 
             # gs = gridspec.GridSpec(rows*ratio,columns)
             axs = numpy.empty(shape=(rows + 1, columns), dtype=object)

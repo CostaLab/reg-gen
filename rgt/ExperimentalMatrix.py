@@ -6,7 +6,7 @@ ExperimentalMatrix describes an experiment.
 """
 
 # Python
-from __future__ import print_function
+
 
 import os
 
@@ -179,7 +179,7 @@ class ExperimentalMatrix:
         if add_region_len:
             for i, bed in enumerate(self.get_regionsnames()):
                 l = str(len(self.get_regionsets()[i]))
-                for k in self.fieldsDict["factor"].keys():
+                for k in list(self.fieldsDict["factor"].keys()):
                     if bed in self.fieldsDict["factor"][k]:
                         self.fieldsDict["factor"][k + "(" + l + ")"] = self.fieldsDict["factor"][k]
                         del self.fieldsDict["factor"][k]
@@ -315,7 +315,7 @@ class ExperimentalMatrix:
         """
 
         # check regions or reads have empty tag
-        altypes = self.fieldsDict[field].keys()
+        altypes = list(self.fieldsDict[field].keys())
         if "ALL" in altypes:
             altypes.remove("ALL")
             for name in self.fieldsDict[field]["ALL"]:
@@ -364,14 +364,14 @@ class ExperimentalMatrix:
 
     def load_bed_url(self, temp_dir):
         """Load the BED files which contains url as file path to temporary directory."""
-        import urllib
-        for key, value in self.files.items():
+        import urllib.request, urllib.parse, urllib.error
+        for key, value in list(self.files.items()):
             if self.types[self.names.index(key)] == "regions" and "http" in value:
                 tmpfile = os.path.join(temp_dir, value.split('/')[-1])
                 dest_name = tmpfile.partition(".gz")[0]
                 if not os.path.isfile(dest_name):
                     if not os.path.isfile(tmpfile):
-                        urllib.urlretrieve(value, tmpfile)
+                        urllib.request.urlretrieve(value, tmpfile)
                     if value.endswith(".gz"):
                         import gzip
                         with gzip.open(tmpfile, 'rb') as infile:

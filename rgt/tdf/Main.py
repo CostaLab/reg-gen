@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import sys
 import time
@@ -16,7 +16,7 @@ from collections import OrderedDict
 # Distal Libraries
 from .. import __version__
 # from rgt.Util import Html
-from triplexTools import get_dbss, check_dir,run_triplexator, run_triplexes, \
+from .triplexTools import get_dbss, check_dir,run_triplexator, run_triplexes, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
                          merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs, merge_DNA_counts
 
@@ -189,7 +189,7 @@ def main():
             # there will probably only be one subparser_action,but better save than sorry
             for subparsers_action in subparsers_actions:
                 # get all subparsers and print help
-                for choice, subparser in subparsers_action.choices.items():
+                for choice, subparser in list(subparsers_action.choices.items()):
                     if choice == sys.argv[1]:
                         print("\nYou need more arguments.")
                         print("\nSubparser '{}'".format(choice))
@@ -466,7 +466,7 @@ def main():
                         reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
                                            linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
                         reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
-                                        truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
+                                        truecounts=list(stat.counts_dbs.values()), sig_boolean=stat.data["region"]["sig_boolean"],
                                         ylabel="Number of TTS on target regions")
                         reports.gen_html_regiontest()
 

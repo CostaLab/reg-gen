@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import numpy
 import os
@@ -210,7 +210,7 @@ class RNADNABindingSet:
         if not regionset.sorted: regionset.sort()
         
         iter_dbs = iter(dbss)
-        dbs = iter_dbs.next()
+        dbs = next(iter_dbs)
 
         last_j = len(regionset)-1
         j = 0
@@ -225,7 +225,7 @@ class RNADNABindingSet:
 
                 if cont_overlap == False: pre_inter = j
                 if j == last_j: 
-                    try: dbs = iter_dbs.next()
+                    try: dbs = next(iter_dbs)
                     except: cont_loop = False 
                 else: 
                     j = j + 1
@@ -234,7 +234,7 @@ class RNADNABindingSet:
             
             elif dbs < regionset[j]:
                 try: 
-                    dbs = iter_dbs.next()
+                    dbs = next(iter_dbs)
                     j = pre_inter
                     cont_overlap = False
                 except: cont_loop = False 
@@ -266,7 +266,7 @@ class RNADNABindingSet:
             return result
         #iter_rd = iter(txp_copy)
         iter_rd = iter(self)
-        rd = iter_rd.next()
+        rd = next(iter_rd)
 
         last_j = len(regionset)-1
         j = 0
@@ -281,7 +281,7 @@ class RNADNABindingSet:
 
                 if cont_overlap == False: pre_inter = j
                 if j == last_j: 
-                    try: rd = iter_rd.next()
+                    try: rd = next(iter_rd)
                     except: cont_loop = False 
                 else: 
                     j = j + 1
@@ -290,7 +290,7 @@ class RNADNABindingSet:
             
             elif rd.dna < regionset[j]:
                 try: 
-                    rd = iter_rd.next()
+                    rd = next(iter_rd)
                     j = pre_inter
                     cont_overlap = False
                 except: cont_loop = False 
@@ -326,7 +326,7 @@ class RNADNABindingSet:
         #iter_rd = iter(txp_copy)
         iter_rd = iter(self)
         
-        rd = iter_rd.next()
+        rd = next(iter_rd)
 
         last_j = len(regionset)-1
         j = 0
@@ -342,7 +342,7 @@ class RNADNABindingSet:
 
                 if cont_overlap == False: pre_inter = j
                 if j == last_j: 
-                    try: rd = iter_rd.next()
+                    try: rd = next(iter_rd)
                     except: cont_loop = False 
                 else: 
                     j = j + 1
@@ -350,7 +350,7 @@ class RNADNABindingSet:
             
             elif rd.dna < regionset[j]:
                 try: 
-                    rd = iter_rd.next()
+                    rd = next(iter_rd)
                     j = pre_inter
                     cont_overlap = False
                 except: cont_loop = False 
@@ -378,7 +378,7 @@ class RNADNABindingSet:
 
         #iter_rd = iter(txp_copy)
         iter_rd = iter(self)
-        rd = iter_rd.next()
+        rd = next(iter_rd)
 
         last_j = len(rbss)-1
         j = 0
@@ -393,7 +393,7 @@ class RNADNABindingSet:
 
                 if cont_overlap == False: pre_inter = j
                 if j == last_j: 
-                    try: rd = iter_rd.next()
+                    try: rd = next(iter_rd)
                     except: cont_loop = False 
                 else: 
                     j = j + 1
@@ -402,7 +402,7 @@ class RNADNABindingSet:
             
             elif rd.dna < rbss[j]:
                 try: 
-                    rd = iter_rd.next()
+                    rd = next(iter_rd)
                     j = pre_inter
                     cont_overlap = False
                 except: cont_loop = False 
@@ -443,14 +443,14 @@ class RNADNABindingSet:
             self.merged_dict[r] = GenomicRegionSet(r.toString())
 
         rbsm = iter(rna_merged)
-        try: r = rbsm.next()
+        try: r = next(rbsm)
         except: return
                 
         if self.sorted_rna: pass
         else: self.sort_rbs()
 
         con = iter(self)
-        try: rd = con.next()
+        try: rd = next(con)
         except: return
 
         con_loop = True
@@ -458,19 +458,19 @@ class RNADNABindingSet:
             #print(".", end="")
             if r.overlap(rd.rna):
                 self.merged_dict[r].add(rd.dna)
-                try: rd = con.next()
+                try: rd = next(con)
                 except: 
                     try:
-                        r = rbsm.next()
+                        r = next(rbsm)
                         # self.merged_dict[r] = GenomicRegionSet(r.toString())
                     except:
                         if rm_duplicate: self.merged_dict[r].remove_duplicates()
                         con_loop = False
             elif rd.rna < r:
-                try: rd = con.next()
+                try: rd = next(con)
                 except: 
                     try:
-                        r = rbsm.next()
+                        r = next(rbsm)
                         # self.merged_dict[r] = GenomicRegionSet(r.toString())
                     except: 
                         if rm_duplicate: self.merged_dict[r].remove_duplicates()
@@ -479,10 +479,10 @@ class RNADNABindingSet:
                 if rm_duplicate: self.merged_dict[r].remove_duplicates()
                     #print(self.merged_dict[r].sequences[0].name)
                 try:
-                    r = rbsm.next()
+                    r = next(rbsm)
                     # self.merged_dict[r] = GenomicRegionSet(r.toString())
                 except: 
-                    try: rd = con.next()
+                    try: rd = next(con)
                     except: con_loop = False
 
         if region_set:
@@ -632,13 +632,13 @@ class RNADNABindingSet:
         self.sort_dbs()
         if not promoters.sorted: promoters.sort()
         con_p = iter(promoters)
-        p = con_p.next()
+        p = next(con_p)
 
         for rd in self:
             if p.overlap(rd.dna):
                 rd.dna.name = p.name
             elif p < rd.dna:
-                try: p = con_p.next()
+                try: p = next(con_p)
                 except: break
 
     def write_txp(self, filename):
@@ -739,14 +739,14 @@ class RNADNABindingSet:
             self.pwm_dict[r] = [ numpy.zeros((4, len(r))), numpy.zeros((4, len(r))) ]
 
         rbsm = iter(rna_merged)
-        try: r = rbsm.next()
+        try: r = next(rbsm)
         except: return
                 
         if self.sorted_rna: pass
         else: self.sort_rbs()
 
         con = iter(self)
-        try: rd = con.next()
+        try: rd = next(con)
         except: return
 
         con_loop = True
@@ -764,24 +764,24 @@ class RNADNABindingSet:
                 for i, a in enumerate(seq):
                     self.pwm_dict[r][pa][ nucl[a], ind + i ] += 1
 
-                try: rd = con.next()
+                try: rd = next(con)
                 except: 
                     try:
-                        r = rbsm.next()
+                        r = next(rbsm)
                     except:
                         con_loop = False
             elif rd.rna < r:
-                try: rd = con.next()
+                try: rd = next(con)
                 except: 
                     try:
-                        r = rbsm.next()
+                        r = next(rbsm)
                     except: 
                         con_loop = False
             elif rd.rna > r:
                 try:
-                    r = rbsm.next()
+                    r = next(rbsm)
                 except: 
-                    try: rd = con.next()
+                    try: rd = next(con)
                     except: con_loop = False
 
     def overlap_rbss(self, rbss):

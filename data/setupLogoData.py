@@ -7,7 +7,7 @@
 ###################################################################################################
 
 # Import
-from __future__ import print_function
+
 
 import argparse
 from os import path, mkdir, listdir, walk

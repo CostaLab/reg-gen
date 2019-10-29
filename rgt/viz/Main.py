@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import division
-from __future__ import print_function
+
+
 
 import os
 import sys
@@ -393,7 +393,7 @@ def main():
             # there will probably only be one subparser_action,but better save than sorry
             for subparsers_action in subparsers_actions:
                 # get all subparsers and print help
-                for choice, subparser in subparsers_action.choices.items():
+                for choice, subparser in list(subparsers_action.choices.items()):
                     if choice == sys.argv[1]:
                         print("\nYou need more arguments.")
                         print("\nSubparser '{}'".format(choice))

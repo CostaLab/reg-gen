@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 
 # Local Libraries
 # Distal Libraries
@@ -43,7 +43,7 @@ class Jaccard:
         print2(self.parameter,
                "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}\t{5:s}".format("Reference", "Query", "Repeats", "True_Jaccard_index",
                                                                  "p-value", "Time"))
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             self.jlist[ty] = OrderedDict()
             self.realj[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
@@ -52,7 +52,7 @@ class Jaccard:
                     self.nalist.append(r.name)
                     continue
                 else:
-                    if r.name not in self.rlen.keys():
+                    if r.name not in list(self.rlen.keys()):
                         self.rlen[r.name] = len(r)
                     self.jlist[ty][r.name] = OrderedDict()
                     self.realj[ty][r.name] = OrderedDict()
@@ -66,7 +66,7 @@ class Jaccard:
                             self.nalist.append(q.name)
                             continue
                         else:
-                            if q.name not in self.qlen.keys():
+                            if q.name not in list(self.qlen.keys()):
                                 self.qlen[q.name] = len(q)
                             self.jlist[ty][r.name][q.name] = []
                             self.realj[ty][r.name][q.name] = q.jaccard(r)
@@ -103,8 +103,8 @@ class Jaccard:
             #     f.set_size_inches(nm * 0.1 +1 ,nm * 0.1 +1)
             #     legend_x = 1.2
             #     self.xtickrotation, self.xtickalign = 70,"right"
-            th = len(self.jlist[t].keys()) * ph
-            f, axarr = plt.subplots(len(self.jlist[t].keys()), 1, dpi=300,
+            th = len(list(self.jlist[t].keys())) * ph
+            f, axarr = plt.subplots(len(list(self.jlist[t].keys())), 1, dpi=300,
                                     figsize=(tw, th))
             try:
                 axarr = axarr.reshape(-1)
@@ -149,8 +149,8 @@ class Jaccard:
                     patch.set_edgecolor("none")
                     patch.set_zorder(z)
                     legends.append(patch)
-                axarr[i].scatter(x=range(1, 1 + len(self.jlist[t][r].keys())),
-                                 y=[y for y in self.realj[t][r].values()],
+                axarr[i].scatter(x=list(range(1, 1 + len(list(self.jlist[t][r].keys())))),
+                                 y=[y for y in list(self.realj[t][r].values())],
                                  s=10, c="red", edgecolors='none', zorder=2)
                 # Fine tuning subplot
                 # axarr[i].set_xticks(range(len(self.jlist[t][r].keys())))
@@ -169,7 +169,7 @@ class Jaccard:
                     axarr[i].tick_params(axis='y', which='both', left=False, right=False, labelbottom=False)
 
             plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
-            axarr[-1].legend(legends[0:len(self.jlist[t][r].keys())], self.jlist[t][r].keys(), loc='center left',
+            axarr[-1].legend(legends[0:len(list(self.jlist[t][r].keys()))], list(self.jlist[t][r].keys()), loc='center left',
                              handlelength=1,
                              handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size': 10},
                              bbox_to_anchor=(legend_x, 0.5))
@@ -245,9 +245,9 @@ class Jaccard:
 
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "true_jaccard", "random_jaccard", "p-value"]])
-        for ty in self.plist.keys():
-            for r in self.plist[ty].keys():
-                for q in self.plist[ty][r].keys():
+        for ty in list(self.plist.keys()):
+            for r in list(self.plist[ty].keys()):
+                for q in list(self.plist[ty][r].keys()):
                     ar = numpy.array([[r, q, self.realj[ty][r][q], self.qlist[ty][r][q], self.plist[ty][r][q]]])
                     arr = numpy.vstack((arr, ar))
         output_array(arr, directory, folder, filename="output_table.txt")

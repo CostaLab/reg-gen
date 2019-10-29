@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 from ..Util import GenomeData
 from ..tdf.triplexTools import save_sequence, run_triplexator, silentremove
@@ -58,7 +58,7 @@ def random_each(input):
     silentremove(os.path.join(input[3], "random_" + input[0] + ".fa"))
     silentremove(os.path.join(input[3], "random_" + input[0] + ".tpx"))
 
-    return [[len(tr) for tr in tpx.merged_dict.values()], [len(dbss) for dbss in tpxf.merged_dict.values()], distances]
+    return [[len(tr) for tr in list(tpx.merged_dict.values())], [len(dbss) for dbss in list(tpxf.merged_dict.values())], distances]
 
 
 class Triplexes(object):

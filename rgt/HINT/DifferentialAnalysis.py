@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import numpy as np
 import pandas as pd
@@ -311,7 +311,7 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     fastaFile = Fastafile(genome_file_name)
     fBiasDict = bias_table[0]
     rBiasDict = bias_table[1]
-    k_nb = len(fBiasDict.keys()[0])
+    k_nb = len(list(fBiasDict.keys())[0])
     p1 = start
     p2 = end
     p1_w = p1 - (window / 2)

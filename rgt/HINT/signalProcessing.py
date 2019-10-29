@@ -232,7 +232,7 @@ class GenomicSignal:
         fastaFile = Fastafile(genome_file_name)
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)
@@ -329,7 +329,7 @@ class GenomicSignal:
         fastaFile = Fastafile(genome_file_name)
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)
@@ -445,7 +445,7 @@ class GenomicSignal:
         fastaFile = Fastafile(genome_file_name)
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)
@@ -641,7 +641,7 @@ class GenomicSignal:
         #    raise TypeError("windowSize size must be a positive odd number")
         # if windowSize < order + 2:
         #    raise TypeError("windowSize is too small for the polynomials order")
-        order_range = range(order + 1)
+        order_range = list(range(order + 1))
         half_window = (window_size - 1) // 2
 
         # Precompute Coefficients
@@ -693,7 +693,7 @@ class GenomicSignal:
             fasta = Fastafile(genome_file_name)
             fBiasDict = bias_table[0]
             rBiasDict = bias_table[1]
-            k_nb = len(fBiasDict.keys()[0])
+            k_nb = len(list(fBiasDict.keys())[0])
             p1 = start
             p2 = end
             p1_w = p1 - (window / 2)
@@ -906,7 +906,7 @@ class GenomicSignal:
         # Initialization
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)
@@ -1061,7 +1061,7 @@ class GenomicSignal:
         # Initialization
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)

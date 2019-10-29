@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import sys
 import gc
 from random import sample
@@ -29,6 +29,7 @@ from .normalize import get_normalization_factor
 from .DualCoverageSet import DualCoverageSet
 from .norm_genelevel import norm_gene_level
 from ..CoverageSet import CoverageSet, get_gc_context
+from functools import reduce
 
 EPSILON = 1**-320
 ROUND_PRECISION = 3
@@ -141,15 +142,15 @@ class MultiCoverageSet(DualCoverageSet):
         tmp2 = [[[], []], [[], []]]
         
         for k in range(2):
-            it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
+            it = list(range(self.dim_1)) if k == 0 else list(range(self.dim_1, self.dim_1 + self.dim_2))
             for i in it:
                 if cov_strand:
                     tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'cov'))
                     tmp[k].append(tmp_el)
                  
-                    tmp_el = map(lambda x: (x[0], x[1]), reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand')))
-                    tmp2[k][0].append(map(lambda x: x[0], tmp_el))
-                    tmp2[k][1].append(map(lambda x: x[1], tmp_el))
+                    tmp_el = [(x[0], x[1]) for x in reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand'))]
+                    tmp2[k][0].append([x[0] for x in tmp_el])
+                    tmp2[k][1].append([x[1] for x in tmp_el])
                 else:
                     tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'normregion'))
                     tmp[k].append(tmp_el)
@@ -272,14 +273,13 @@ class MultiCoverageSet(DualCoverageSet):
         perc_a_h = np.percentile(a_values, a_threshold)
         
         try:
-            res = filter(lambda x: not(x[0]>perc_m_h or x[0]<perc_m_l),\
-                     filter(lambda x: not(x[1]>perc_a_h or x[1]<perc_a_l), zip(list(m_values.squeeze()),list(a_values.squeeze()))))
+            res = [x for x in [x for x in zip(list(m_values.squeeze()),list(a_values.squeeze())) if not(x[1]>perc_a_h or x[1]<perc_a_l)] if not(x[0]>perc_m_h or x[0]<perc_m_l)]
         except:
             print('something wrong %s %s' %(len(m_values), len(a_values)), file=sys.stderr)
             return np.asarray(m_values), np.asarray(a_values)
         
         if res:
-            return np.asarray(map(lambda x: x[0], res)), np.asarray(map(lambda x: x[1], res))
+            return np.asarray([x[0] for x in res]), np.asarray([x[1] for x in res])
         else:
             print('TMM normalization: nothing trimmed...', file=sys.stderr)
             return np.asarray(m_values), np.asarray(a_values)
@@ -294,12 +294,12 @@ class MultiCoverageSet(DualCoverageSet):
                 mask_ref = ref > 0
                 ref = ref[mask_ref]
                 data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref]
-                tmp = zip(data_rep, ref, data_rep + ref)
+                tmp = list(zip(data_rep, ref, data_rep + ref))
                 tmp.sort(key = lambda x: x[2], reverse=True)
                 tmp = tmp[:min(len(tmp), 10000)]
                 
-                data_rep = np.asarray(map(lambda x: x[0], tmp))
-                ref = np.asarray(map(lambda x: x[1], tmp))
+                data_rep = np.asarray([x[0] for x in tmp])
+                ref = np.asarray([x[1] for x in tmp])
                 assert len(data_rep) == len(ref)
                 m = data_rep > 0
                 data_rep = data_rep[m]
@@ -355,14 +355,14 @@ class MultiCoverageSet(DualCoverageSet):
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
         iter = self.genomicRegions.__iter__()
-        r = iter.next()
+        r = next(iter)
         sum = r.final
         last = 0
         i = 0
         while sum <= index * self.stepsize:
             last += len(self.covs[0].coverage[i])
             try:
-                r = iter.next()
+                r = next(iter)
             except StopIteration:
                 sum += r.final
                 i += 1
@@ -450,7 +450,7 @@ class MultiCoverageSet(DualCoverageSet):
         #compute training set parameters, re-compute training set if criteria do not hold
         rep=True
         while rep:
-            for i in sample(range(len(self.indices_of_interest)), min(y, len(self.indices_of_interest))):
+            for i in sample(list(range(len(self.indices_of_interest))), min(y, len(self.indices_of_interest))):
                 cov1, cov2 = self._get_covs(exp_data, i)
                 
                 #apply criteria for initial peak calling
@@ -469,9 +469,9 @@ class MultiCoverageSet(DualCoverageSet):
                 sys.exit()
             
             if len(s1) < 100/2 and len(s2) > 2*100:
-                s1 = map(lambda x: (x[0], x[2], x[1]), s2)
+                s1 = [(x[0], x[2], x[1]) for x in s2]
             if len(s2) < 100/2 and len(s1) > 2*100:
-                s2 = map(lambda x: (x[0], x[2], x[1]), s1)
+                s2 = [(x[0], x[2], x[1]) for x in s1]
             
             if len(s1) < 100 or len(s2) < 100:
                 diff_cov -= 15
@@ -503,9 +503,9 @@ class MultiCoverageSet(DualCoverageSet):
         s1 = sample(s1, l)
         s2 = sample(s2, l)
         
-        s0_v = map(lambda x: (x[1], x[2]), s0)
-        s1_v = map(lambda x: (x[1], x[2]), s1)
-        s2_v = map(lambda x: (x[1], x[2]), s2)
+        s0_v = [(x[1], x[2]) for x in s0]
+        s1_v = [(x[1], x[2]) for x in s1]
+        s2_v = [(x[1], x[2]) for x in s2]
         
         extension_set = set()
         for i, _, _ in s0 + s1 + s2:
@@ -513,7 +513,7 @@ class MultiCoverageSet(DualCoverageSet):
                 extension_set.add(j)
          
         tmp = s0 + s1 + s2
-        training_set = map(lambda x: x[0], tmp) + list(extension_set)
+        training_set = [x[0] for x in tmp] + list(extension_set)
          
         training_set = list(training_set)
         training_set.sort()

@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import numpy
 import natsort
@@ -211,7 +211,7 @@ class Report(object):
         f, ax = plt.subplots(1, 1, dpi=300, figsize=(6, 4))
 
         # Extract data points
-        x = range(rnalen)
+        x = list(range(rnalen))
         # print(rnalen)
         if log:
             all_y = [1] * rnalen
@@ -364,15 +364,15 @@ class Report(object):
             return s + '%'
 
         f, ax = plt.subplots(1, 1, dpi=300, figsize=(6, 4))
-        ind = range(len(self.stat.rbss))
+        ind = list(range(len(self.stat.rbss)))
         width = 0.35
 
         if not dbs:
-            propor_de = [float(b[0]) / len(self.input.dna.target_regions) for b in self.stat.frequency["promoters"]["de"].values()]
-            propor_nde = [float(b[0]) / len(self.input.dna.nontarget_regions) for b in self.stat.frequency["promoters"]["nde"].values()]
+            propor_de = [float(b[0]) / len(self.input.dna.target_regions) for b in list(self.stat.frequency["promoters"]["de"].values())]
+            propor_nde = [float(b[0]) / len(self.input.dna.nontarget_regions) for b in list(self.stat.frequency["promoters"]["nde"].values())]
         else:
-            propor_de = [float(b[0]) / (b[0] + b[1]) for b in self.stat.frequency["hits"]["de"].values()]
-            propor_nde = [float(b[0]) / (b[0] + b[1]) for b in self.stat.frequency["hits"]["nde"].values()]
+            propor_de = [float(b[0]) / (b[0] + b[1]) for b in list(self.stat.frequency["hits"]["de"].values())]
+            propor_nde = [float(b[0]) / (b[0] + b[1]) for b in list(self.stat.frequency["hits"]["nde"].values())]
 
         max_y = max([max(propor_de), max(propor_nde)]) * 1.2
 
@@ -471,7 +471,7 @@ class Report(object):
         plt.setp(bp['medians'], color='black', linewidth=1.5, zorder=z + 1)
 
         # Plot target regions
-        plt.plot(range(1, len(self.stat.rbss) + 1), truecounts, markerfacecolor=target_color,
+        plt.plot(list(range(1, len(self.stat.rbss) + 1)), truecounts, markerfacecolor=target_color,
                  marker='o', markersize=8, linestyle='None', markeredgecolor="white", zorder=z + 5, label="Target Regions")
 
         ax.set_xlabel(self.pars.rn + " DNA Binding Domains", fontsize=label_size)
@@ -1089,7 +1089,7 @@ class Report(object):
         else:
             # Table not exists
             header = ["gene", self.pars.rn]
-            for k, v in table.iteritems():
+            for k, v in table.items():
                 rank_table.append([k, v])
 
         # Write into file

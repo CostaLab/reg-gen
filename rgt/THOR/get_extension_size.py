@@ -36,7 +36,7 @@ Return shift/extension size of reads descriebed by BAM file.
 
 """
 
-from __future__ import print_function
+
 import pysam
 
 cov_f = {}
@@ -45,7 +45,7 @@ cov_r = {}
 
 def get_value(d, x):
     """Return d[x] of dictionary d or 0"""
-    return d[x] if d.has_key(x) else 0
+    return d[x] if x in d else 0
 
 
 def get_read_size(filename):
@@ -76,10 +76,10 @@ def init_cov(filename):
                 h = len(read.seq)
             pos = read.pos + read.rlen - h if read.is_reverse else read.pos
             if read.is_reverse:
-                if not cov_r.has_key(pos):
+                if pos not in cov_r:
                     cov_r[pos] = 1
             else:
-                if not cov_f.has_key(pos):
+                if pos not in cov_f:
                     cov_f[pos] = 1
 
 
@@ -87,7 +87,7 @@ def ccf(k):
     """Return value of cross-correlation function"""
     s = 0
     forward_keys = set(cov_f.keys())
-    reverse_keys = set(map(lambda x: x - k, cov_r.keys()))
+    reverse_keys = set([x - k for x in list(cov_r.keys())])
     keys = forward_keys & reverse_keys
 
     for p in keys:
@@ -104,9 +104,9 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     init_cov(filename)
 
-    r = map(ccf, range(start, end, stepsize))
+    r = list(map(ccf, list(range(start, end, stepsize))))
 
-    r = map(lambda x: (x[0], x[1]), r)
+    r = [(x[0], x[1]) for x in r]
 
     # print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
 
