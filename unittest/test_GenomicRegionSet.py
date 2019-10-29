@@ -342,6 +342,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.region_sets([['chr1', 1, 10]],
                          [['chr2', 1, 10]])
         result = self.setA.intersect(self.setB)
+        print(self.setA.sequences)
+        print(self.setB.sequences)
+        print(result.sequences)
+        print(self.setA.sequences[0] < self.setB.sequences[0])
         self.assertEqual(len(result), 0)
 
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)

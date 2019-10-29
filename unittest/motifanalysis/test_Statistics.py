@@ -1,5 +1,3 @@
-# Python 3 compatibility
-
 
 # Python
 import unittest

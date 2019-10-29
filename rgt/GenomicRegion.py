@@ -86,6 +86,21 @@ class GenomicRegion:
         return (self.chrom, self.initial, self.final, self.orientation) == \
                (other.chrom, other.initial, other.final, other.orientation)
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __lt__(self, other):
+        return (self.chrom, self.initial, self.final) < (other.chrom, other.initial, other.final)
+
+    def __le__(self, other):
+        return (self.chrom, self.initial, self.final) <= (other.chrom, other.initial, other.final)
+
+    def __gt__(self, other):
+        return (self.chrom, self.initial, self.final) > (other.chrom, other.initial, other.final)
+
+    def __ge__(self, other):
+        return (self.chrom, self.initial, self.final) >= (other.chrom, other.initial, other.final)
+
     def toString(self, space=False, underline=False, strand=False):
         """Return a string of GenomicRegion by its position.
 
@@ -172,30 +187,6 @@ class GenomicRegion:
     def __repr__(self):
         """Return official representation of GenomicRegion."""
         return ','.join([self.chrom, str(self.initial), str(self.final)])
-
-    def __cmp__(self, region):
-        """Return negative value if x < y, zero if x == y and strictly positive if x > y.
-
-        *Keyword arguments:*
-
-            - region -- Given GenomicRegion to compare.
-        """
-        if self.chrom < region.chrom:
-            return -1
-        elif self.chrom > region.chrom:
-            return 1
-        else:
-            if self.initial < region.initial:
-                return -1
-            elif self.initial > region.initial:
-                return 1
-            else:
-                if self.final < region.final:
-                    return -1
-                elif self.final > region.final:
-                    return 1
-                else:
-                    return 0
 
     def extract_blocks(self, keep_name=False):
         """Extract the block information in self.data into a GenomicRegionSet."""

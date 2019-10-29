@@ -30,7 +30,7 @@ class GenomicVariantSet(GenomicRegionSet):
         .. note:: By default, the genomic position is used as sorting criteria.
         
         """
-        self.sequences.sort(cmp=GenomicVariant.__cmp__)
+        self.sequences.sort()
         self.sorted = True
 
     def read_vcf(self, vcf_path):

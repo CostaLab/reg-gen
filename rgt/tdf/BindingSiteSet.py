@@ -86,7 +86,7 @@ class BindingSiteSet(GenomicRegionSet):
 
     def sort(self):
         """Sort Elements by criteria defined by a GenomicRegion."""
-        self.sequences.sort(cmp = GenomicRegion.__cmp__)
+        self.sequences.sort()
         self.sorted = True
     
     def get_bs(self, orientation):

@@ -193,12 +193,12 @@ class RNADNABindingSet:
 
     def sort_rbs(self):
         """Sort the dictionary by RNA"""
-        self.sequences = sorted(self.sequences, key=lambda x: x.rna, cmp=GenomicRegion.__cmp__)
+        self.sequences = sorted(self.sequences, key=lambda x: x.rna)
         self.sorted_rna = True
         
     def sort_dbs(self):
         """Sort the dictionary by DNA"""
-        self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
+        self.sequences = sorted(self.sequences, key=lambda x: x.dna)
         self.sorted_dna = True
     
     def sort_dbs_by_regions(self, regionset):

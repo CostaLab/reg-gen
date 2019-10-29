@@ -378,7 +378,7 @@ class GenomicRegionSet:
         if key:
             self.sequences.sort(key=key, reverse=reverse)
         else:
-            self.sequences.sort(cmp=GenomicRegion.__cmp__)
+            self.sequences.sort()
             self.sorted = True
 
     def get_sequences(self, genome_fasta, ex=0):
@@ -870,22 +870,22 @@ class GenomicRegionSet:
         lib = cdll.LoadLibrary(Lib.get_c_rgt())
         # C-Binding of intersect overlap function
         intersect_overlap_c = lib.intersectGenomicRegionSetsOverlap
-        intersect_overlap_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+        intersect_overlap_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
                                         POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
                                         POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_overlap_c.restype = None
 
         # C-Binding of intersect original function
         intersect_original_c = lib.intersectGenomicRegionSetsOriginal
-        intersect_original_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+        intersect_original_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
                                          POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
                                          POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_original_c.restype = None
 
         # C-Binding of intersect completely function
         intersect_completely_included_c = lib.intersectGenomicRegionSetsCompletelyIncluded
-        intersect_completely_included_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
-                                                    POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
+        intersect_completely_included_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int,
+                                                    POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int,
                                                     POINTER(POINTER(c_int)), POINTER(POINTER(c_int)),
                                                     POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_completely_included_c.restype = None
@@ -918,10 +918,10 @@ class GenomicRegionSet:
             max_len_result = len_self + len_y
 
             chromosomes_self_python = [gr.chrom for gr in a.sequences]
-            chromosomes_self_c = (c_char_p * len_self)(*chromosomes_self_python)
+            chromosomes_self_c = (c_wchar_p * len_self)(*chromosomes_self_python)
 
             chromosomes_y_python = [gr.chrom for gr in b.sequences]
-            chromosomes_y_c = (c_char_p * len_y)(*chromosomes_y_python)
+            chromosomes_y_c = (c_wchar_p * len_y)(*chromosomes_y_python)
 
             initials_self_python = [gr.initial for gr in a.sequences]
             initials_self_c = (c_int * len_self)(*initials_self_python)
@@ -954,7 +954,6 @@ class GenomicRegionSet:
                                                 chromosomes_y_c, initials_y_c, finals_y_c, len_y, pointer(indices_c),
                                                 pointer(initials_result_c), pointer(finals_result_c),
                                                 byref(size_result_c))
-
             # Construct result set
             for i in range(size_result_c.value):
                 ci = indices_c[i]
@@ -976,7 +975,7 @@ class GenomicRegionSet:
             - threshold -- Define the cutoff of the proportion of the intersecting region (0~50%)
 
         *Return:*
-        
+
             - A tupple of numbers: (A-B, B-A, intersection)
         """
 
@@ -1009,15 +1008,15 @@ class GenomicRegionSet:
                 return len_12, len_21, len_inter
 
     def closest(self, y, max_dis=10000, return_list=False, top_N=None):
-        """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 
+        """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region.
         If there are intersection, return False.
-        
+
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to compare with
             - max_dis -- maximum distance (default=10000 bp)
             - return_list -- return a list of the distances
-            - top_N -- return a dictionary with region names as keys and the GenomicRegionSet containing N clostest regions as values. 
+            - top_N -- return a dictionary with region names as keys and the GenomicRegionSet containing N clostest regions as values.
 
         *Return:*
 
@@ -1115,12 +1114,12 @@ class GenomicRegionSet:
         """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs
            upstream and downstream of each region in self. In effect, this allows regions in y that are near regions
            in self to be detected.
-        
+
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to compare with
             - adding_length -- the length of base pairs added to upstream and downstream of self (default 1000)
-        
+
         *Return:*
 
             - A GenomicRegionSet including the regions of overlapping between extended self and original y.
@@ -1135,7 +1134,7 @@ class GenomicRegionSet:
 
     def subtract(self, y, whole_region=False, merge=True, exact=False):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
-        
+
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to subtract by
@@ -1147,7 +1146,7 @@ class GenomicRegionSet:
         *Return:*
 
             - A GenomicRegionSet which contains the remaining regions of self after subtraction
-        
+
         ::
 
             self     ----------              ------
@@ -1259,7 +1258,7 @@ class GenomicRegionSet:
             elif len(self.sequences) == 1:
                 # GRS only contains 1 region, only check if this matches exactly with any region within y
                 for target_region in y.sequences:
-                    if target_region.__cmp__(self.sequences[0]) == 0:
+                    if target_region == self.sequences[0]:
                         return GenomicRegionSet("small_self")  # return empty GRS
                 return self
             else:
@@ -1391,15 +1390,15 @@ class GenomicRegionSet:
 
     def subtract_aregion(self, y):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
-        
+
         *Keyword arguments:*
 
             - y -- the GenomicRegion which to subtract by
-        
+
         *Return:*
 
             - the remaining regions of self after subtraction
-        
+
         ::
 
             self     ----------              ------
@@ -1537,21 +1536,21 @@ class GenomicRegionSet:
 
     def cluster(self, max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
-        
+
         *Keyword arguments:*
 
             - max_distance -- the maximum distance between regions within the same cluster
-        
+
         *Return:*
 
             - A GenomicRegionSet including clusters
-        
+
         ::
 
             self           ----           ----            ----
                               ----             ----                 ----
             Result(d=1)    -------        ---------       ----      ----
-            Result(d=10)   ---------------------------------------------        
+            Result(d=10)   ---------------------------------------------
         """
 
         if not self.sorted: self.sort()
@@ -1577,15 +1576,15 @@ class GenomicRegionSet:
 
     def flank(self, size):
         """Return two flanking intervals with given size from both ends of each region.
-        
+
         *Keyword arguments:*
 
             - size -- the length of flanking intervals (default = SAME length as the region)
-        
+
         *Return:*
 
             - z -- A GenomicRegionSet including all flanking intervals
-        
+
         ::
 
             self        -----           --            ---
@@ -1608,15 +1607,15 @@ class GenomicRegionSet:
 
     def jaccard(self, query):
         """Return jaccard index, a value of similarity of these two GenomicRegionSet.
-        
+
         *Keyword arguments:*
 
             - query -- the GenomicRegionSet which to compare with.
-        
+
         *Return:*
 
             - similarity -- (Total length of overlapping regions)/(Total length of original regions)
-        
+
         ::
 
             self              --8--      ---10---    -4-
@@ -1659,7 +1658,7 @@ class GenomicRegionSet:
         ctypes_jaccardC = lib.jaccard
 
         # Specify data types
-        ctypes_jaccardC.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+        ctypes_jaccardC.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
                                     POINTER(c_int), POINTER(c_int), c_int]
         ctypes_jaccardC.restype = c_double
 
@@ -1673,11 +1672,11 @@ class GenomicRegionSet:
 
         # Convert to ctypes
         chroms_self_python = [gr.chrom for gr in self.sequences]
-        chroms_self_c = (c_char_p * len(chroms_self_python))(*chroms_self_python)
+        chroms_self_c = (c_wchar_p * len(chroms_self_python))(*chroms_self_python)
         # print('Converted self.chroms to c', str(chroms_self_python[:4]), '...')
 
         chroms_query_python = [gr.chrom for gr in query.sequences]
-        chroms_query_c = (c_char_p * len(chroms_query_python))(*chroms_query_python)
+        chroms_query_c = (c_wchar_p * len(chroms_query_python))(*chroms_query_python)
         # print('Converted query.chroms to c', str(chroms_query_python[:4]), '...')
 
         initials_self_python = [gr.initial for gr in self.sequences]
