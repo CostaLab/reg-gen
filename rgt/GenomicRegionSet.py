@@ -870,22 +870,22 @@ class GenomicRegionSet:
         lib = cdll.LoadLibrary(Lib.get_c_rgt())
         # C-Binding of intersect overlap function
         intersect_overlap_c = lib.intersectGenomicRegionSetsOverlap
-        intersect_overlap_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
+        intersect_overlap_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
                                         POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
                                         POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_overlap_c.restype = None
 
         # C-Binding of intersect original function
         intersect_original_c = lib.intersectGenomicRegionSetsOriginal
-        intersect_original_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
+        intersect_original_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
                                          POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
                                          POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_original_c.restype = None
 
         # C-Binding of intersect completely function
         intersect_completely_included_c = lib.intersectGenomicRegionSetsCompletelyIncluded
-        intersect_completely_included_c.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int,
-                                                    POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int,
+        intersect_completely_included_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
+                                                    POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
                                                     POINTER(POINTER(c_int)), POINTER(POINTER(c_int)),
                                                     POINTER(POINTER(c_int)), POINTER(c_int)]
         intersect_completely_included_c.restype = None
@@ -917,11 +917,11 @@ class GenomicRegionSet:
             len_y = len(b)
             max_len_result = len_self + len_y
 
-            chromosomes_self_python = [gr.chrom for gr in a.sequences]
-            chromosomes_self_c = (c_wchar_p * len_self)(*chromosomes_self_python)
+            chromosomes_self_python = [gr.chrom.encode("utf-8") for gr in a.sequences]
+            chromosomes_self_c = (c_char_p * len_self)(*chromosomes_self_python)
 
-            chromosomes_y_python = [gr.chrom for gr in b.sequences]
-            chromosomes_y_c = (c_wchar_p * len_y)(*chromosomes_y_python)
+            chromosomes_y_python = [gr.chrom.encode("utf-8") for gr in b.sequences]
+            chromosomes_y_c = (c_char_p * len_y)(*chromosomes_y_python)
 
             initials_self_python = [gr.initial for gr in a.sequences]
             initials_self_c = (c_int * len_self)(*initials_self_python)
@@ -954,6 +954,7 @@ class GenomicRegionSet:
                                                 chromosomes_y_c, initials_y_c, finals_y_c, len_y, pointer(indices_c),
                                                 pointer(initials_result_c), pointer(finals_result_c),
                                                 byref(size_result_c))
+
             # Construct result set
             for i in range(size_result_c.value):
                 ci = indices_c[i]
@@ -1658,7 +1659,7 @@ class GenomicRegionSet:
         ctypes_jaccardC = lib.jaccard
 
         # Specify data types
-        ctypes_jaccardC.argtypes = [POINTER(c_wchar_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_wchar_p),
+        ctypes_jaccardC.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
                                     POINTER(c_int), POINTER(c_int), c_int]
         ctypes_jaccardC.restype = c_double
 
@@ -1671,12 +1672,12 @@ class GenomicRegionSet:
         assert query.sorted
 
         # Convert to ctypes
-        chroms_self_python = [gr.chrom for gr in self.sequences]
-        chroms_self_c = (c_wchar_p * len(chroms_self_python))(*chroms_self_python)
+        chroms_self_python = [gr.chrom.encode("utf-8") for gr in self.sequences]
+        chroms_self_c = (c_char_p * len(chroms_self_python))(*chroms_self_python)
         # print('Converted self.chroms to c', str(chroms_self_python[:4]), '...')
 
-        chroms_query_python = [gr.chrom for gr in query.sequences]
-        chroms_query_c = (c_wchar_p * len(chroms_query_python))(*chroms_query_python)
+        chroms_query_python = [gr.chrom.encode("utf-8") for gr in query.sequences]
+        chroms_query_c = (c_char_p * len(chroms_query_python))(*chroms_query_python)
         # print('Converted query.chroms to c', str(chroms_query_python[:4]), '...')
 
         initials_self_python = [gr.initial for gr in self.sequences]
