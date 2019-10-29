@@ -188,11 +188,7 @@ class Report(object):
 
     def plot_lines(self, tpx, ylabel, linelabel, filename):
         """Generate the plots for demonstration of RBS
-
-                rna:     File path to the RNA sequence in FASTA format
-                dir:     Directory where the figure is saved
-                ac:      RNA accessibility data.
-                """
+        """
         rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
         rnas.read_fasta(self.pars.r)
 

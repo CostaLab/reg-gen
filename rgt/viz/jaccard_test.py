@@ -1,7 +1,6 @@
 # Python Libraries
 
 
-
 # Local Libraries
 # Distal Libraries
 from .shared_function import *
@@ -177,10 +176,10 @@ class Jaccard:
             self.fig.append(f)
 
     def gen_html(self, outputname, title, align=50):
-        fp = os.path.join(dir, outputname, title)
+        fp = os.path.join(current_dir, outputname, title)
         link_d = {title: "index.html"}
         html = Html(name="Viz", links_dict=link_d,
-                    fig_dir=os.path.join(dir, outputname, "fig"), other_logo="viz",
+                    fig_dir=os.path.join(current_dir, outputname, "fig"), other_logo="viz",
                     homepage="../index.html")
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test" + str(i + 1) + ".png", align="center")

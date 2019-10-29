@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 from collections import OrderedDict, defaultdict
 from scipy.stats import stats
-from scipy.interpolate import spline
+from scipy.interpolate import CubicSpline
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html
@@ -287,7 +287,8 @@ class Lineplot:
             ticklabelsize = w * 1.5
         else:
             ticklabelsize = w * 3
-        tw = len(list(self.data.values())[0].values()[0].keys()) * w
+
+        tw = len(list(list(self.data.values())[0].values())[0].keys()) * w
         th = len(list(self.data.values())[0].keys()) * (h * 0.8)
 
         for g in self.group_tags:
@@ -353,7 +354,8 @@ class Lineplot:
 
                                         ## smoothening line
                                         xnew = numpy.linspace(x[0], x[-1], 500)
-                                        ynew = spline(x, y, xnew)
+                                        cs = CubicSpline(x, y)
+                                        ynew = cs(xnew)
 
                                         # ax.plot(x, y, color=self.colors[cc], lw=linewidth, label=cc)
                                         ax.plot(xnew, ynew, color=self.colors[cc], lw=linewidth, label=cc)

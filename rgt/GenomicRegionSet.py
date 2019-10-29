@@ -501,7 +501,8 @@ class GenomicRegionSet:
                             else:
                                 j += 1
                                 cont_overlap = True
-                        elif asso_names["overlap"] and d != 0:
+
+                        elif asso_names["overlap"]:
                             if strand_specific:
                                 if pre_inter[0] > 0 and pre_inter[1] > 0:
                                     j = min(pre_inter)
@@ -513,7 +514,7 @@ class GenomicRegionSet:
                                 j = pre_inter
                             cont_loop = False
 
-                        elif 0 < d < thresh_dist:
+                        elif d is not None and 0 < d < thresh_dist:
                             if show_dis:
                                 if s > genes[j]:
                                     if asso_names["close_l"] and d < asso_names["close_l"][0]:

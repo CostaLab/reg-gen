@@ -294,7 +294,7 @@ class Intersect:
                         r_label.append(r)
                 width = 0.6
                 bottom = 0
-                reverse_q = list(self.counts.values())[ai][r].keys()[::-1]
+                reverse_q = list(list(self.counts.values())[ai][r].keys())[::-1]
                 # ql = len(reverse_q) - 1
                 rc = self.color_tags[::-1]
                 for ind_q, q in enumerate(reverse_q):

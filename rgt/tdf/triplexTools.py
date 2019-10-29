@@ -64,7 +64,7 @@ def print2(summary, string):
 
 def output_summary(summary, directory, filename):
     """Save the summary log file into the defined directory"""
-    pd = os.path.join(dir, directory)
+    pd = os.path.join(current_dir, directory)
     try:
         os.stat(pd)
     except:
@@ -536,13 +536,13 @@ def random_each(input):
     return [ [len(tr) for tr in list(txp.merged_dict.values()) ], [len(dbss) for dbss in list(txpf.merged_dict.values())] ]
 
 
-def save_sequence(dir, filename, regions, genome_path):
+def save_sequence(dir_name, filename, regions, genome_path):
     """
     Fetch sequence into FASTA file according to the given BED file
     """
     genome = pysam.Fastafile(genome_path)
     # print(regions)
-    with open(os.path.join(dir, filename), 'w') as output:
+    with open(os.path.join(dir_name, filename), 'w') as output:
         for region in regions:
             if "_" not in region.chrom:
                 print(">"+ region.toString(), file=output)
@@ -554,7 +554,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
-    save_sequence(dir=temp, filename="dna_"+prefix+".fa", regions=dna_region, genome_path=genome_path)
+    save_sequence(dir_name=temp, filename="dna_"+prefix+".fa", regions=dna_region, genome_path=genome_path)
 
     # Triplexator
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
@@ -612,9 +612,9 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     # print(arg_strings)
     arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
 
-    arg_ptr[0] = "triplexator -bp"  # to simulate calling from cmd line
+    arg_ptr[0] = b"triplexator -bp"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
-        arg_ptr[i + 1] = s
+        arg_ptr[i + 1] = s.encode("utf-8")
     # print(arg_strings)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
     if not summary_file:
@@ -629,9 +629,9 @@ def run_triplexes(arguments):
     # print(arg_strings)
     arg_ptr = (c_char_p * (len(arg_strings) + 1))()
 
-    arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
+    arg_ptr[0] = b"triplexator"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
-        arg_ptr[i + 1] = s
+        arg_ptr[i + 1] = s.encode("utf-8")
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
 
 def region_link_internet(organism, region):
@@ -1287,8 +1287,8 @@ def shorten_dir(path):
         n = path.count("/") - 3 + 1
         return path.split("/",n)[-1]
 
-def purge(dir, pattern):
-    for f in os.listdir(dir):
+def purge(dir_name, pattern):
+    for f in os.listdir(dir_name):
         print([f, pattern])
         if re.search(pattern, f):
-            silentremove(os.path.join(dir, f))
+            silentremove(os.path.join(dir_name, f))

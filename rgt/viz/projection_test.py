@@ -13,7 +13,7 @@ from ..ExperimentalMatrix import *
 from .shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
 
 # Local test
-# dir = os.getcwd()
+current_dir = os.getcwd()
 
 
 ###########################################################################################
@@ -422,9 +422,9 @@ class Projection:
             self.fig.append(f)
 
     def gen_html_distribution(self, outputname, title, align=50):
-        fp = os.path.join(dir, outputname, title)
+        fp = os.path.join(current_dir, outputname, title)
         link_d = {title: "distribution.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir, outputname, "fig"),
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(current_dir, outputname, "fig"),
                     other_logo="viz", homepage="../index.html")
         for i, f in enumerate(self.fig):
             html.add_figure("distribution_test_" + str(i) + ".png", align="center")

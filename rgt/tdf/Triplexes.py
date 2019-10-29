@@ -30,7 +30,7 @@ def random_each(input):
                                          overlap_result=True, overlap_input=True,
                                          chrom_X=True, chrom_M=False)
     # Generate FASTA
-    save_sequence(dir=input[3], filename="random_" + input[0] + ".fa",
+    save_sequence(dir_name=input[3], filename="random_" + input[0] + ".fa",
                   regions=random, genome_path=input[16])
     # Triplexator
     run_triplexator(ss=input[1], ds=os.path.join(input[3], "random_" + input[0] + ".fa"),
@@ -83,7 +83,7 @@ class Triplexes(object):
         dna_fasta = os.path.join(self.outdir, prefix+".fa")
         tpx_file = os.path.join(self.outdir, prefix+".tpx")
         # Target
-        save_sequence(dir=self.outdir, filename=dna_fasta,
+        save_sequence(dir_name=self.outdir, filename=dna_fasta,
                       regions=target_regions, genome_path=self.genome.get_genome())
 
         run_triplexator(ss=rna_fasta, ds=dna_fasta, output=tpx_file,
@@ -110,7 +110,7 @@ class Triplexes(object):
                 autobinding=False, summary_file=False):
         """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
         # Generate FASTA
-        save_sequence(dir=self.outdir, filename="targets_" + prefix + ".fa",
+        save_sequence(dir_name=self.outdir, filename="targets_" + prefix + ".fa",
                       regions=target_regions, genome_path=self.genome.get_genome())
         # Triplexator
         run_triplexator(ss=rna_fasta_file, ds=os.path.join(self.outdir, "targets_" + prefix + ".fa"),
