@@ -82,9 +82,9 @@ class GRSFileIO:
                             continue
                         else:
                             error_line += 1
-                            if error_line > 2:
-                                # Skip the first error line which contains the track information
-                                print("Error at line", line, filename)
+                            # if error_line > 2:
+                            #     # Skip the first error line which contains the track information
+                            #     print("Error at line", line, filename)
                 grs.sort()
 
             return grs
@@ -959,7 +959,7 @@ class GenomicRegionSet:
             # Construct result set
             for i in range(size_result_c.value):
                 ci = indices_c[i]
-                result.add(GenomicRegion(chromosomes_self_c[ci], initials_result_c[i],
+                result.add(GenomicRegion(str(chromosomes_self_c[ci], "ascii"), initials_result_c[i],
                                          finals_result_c[i], name=a.sequences[ci].name,
                                          orientation=a.sequences[ci].orientation, data=a.sequences[ci].data,
                                          proximity=a.sequences[ci].proximity))
@@ -1318,9 +1318,11 @@ class GenomicRegionSet:
                         #   ------        --        ---
                         if s.final > b[j].final:
                             s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                                               name=s.name, orientation=s.orientation, data=s.data,
+                                               proximity=s.proximity)
                             s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
-                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                                               name=s.name, orientation=s.orientation, data=s.data,
+                                               proximity=s.proximity)
                             z.add(s1)
                             s = s2
                             if j < last_j: j = j + 1
@@ -1328,7 +1330,8 @@ class GenomicRegionSet:
                             continue
                         else:
                             s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                               name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
+                                               name=s.name, orientation=s.orientation, data=s.data,
+                                               proximity=s.proximity)
                             z.add(s1)
                             try:
                                 s = next(iter_a)
@@ -2460,7 +2463,8 @@ class GenomicRegionSet:
                     options.append(i)
             if options:
                 ind = random.sample(options, 1)[0]
-                ssite = random.sample(list(range(col_regionset[ind].initial, col_regionset[ind].final - len_each)), 1)[0]
+                ssite = random.sample(list(range(col_regionset[ind].initial, col_regionset[ind].final - len_each)), 1)[
+                    0]
                 res = GenomicRegion(chrom=col_regionset[ind].chrom,
                                     initial=ssite,
                                     final=ssite + len_each,
@@ -2830,11 +2834,11 @@ class GenomicRegionSet:
             if l < size:
                 z.add(r)
             else:
-                for i in range(int(l/size)):
-                    ff = r.initial+(i+1)*size
+                for i in range(int(l / size)):
+                    ff = r.initial + (i + 1) * size
                     if ff > r.final:
                         ff = r.final
-                    g = GenomicRegion(chrom=r.chrom, initial=r.initial+i*size,
+                    g = GenomicRegion(chrom=r.chrom, initial=r.initial + i * size,
                                       final=ff, name=r.name, orientation=r.orientation)
                     z.add(g)
         return z
@@ -2871,7 +2875,7 @@ class GenomicRegionSet:
                                     initial=max(cc[0].initial, cc[0].initial),
                                     final=min(cc[0].final, cc[0].final),
                                     orientation=cc[0].orientation,
-                                    name=cc[0].name+":"+cc[1].name,
+                                    name=cc[0].name + ":" + cc[1].name,
                                     data=str(p)))
             z.sort()
             # print(z.sequences[1:10])

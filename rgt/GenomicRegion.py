@@ -110,9 +110,9 @@ class GenomicRegion:
         """
         if strand:
             if self.orientation == "+":
-                s = "_FWR"
+                s = "FWR"
             elif self.orientation == "-":
-                s = "_REV"
+                s = "REV"
             else:
                 s = ""
         else:
@@ -120,18 +120,18 @@ class GenomicRegion:
 
         if s:
             if space:
-                return " ".join(["chr", self.chrom[3:] + ":", str(self.initial), "-", str(self.final), s])
+                return " ".join([self.chrom, str(self.initial) + "-" + str(self.final), s])
             elif underline:
-                return "_".join(["chr", self.chrom[3:], str(self.initial), str(self.final), s])
+                return "_".join([self.chrom, str(self.initial), str(self.final), s])
             else:
-                return "".join(["chr", self.chrom[3:] + ":", str(self.initial), "-", str(self.final), s])
+                return self.chrom + ":" + str(self.initial) + "-" + str(self.final) + s
         else:
             if space:
-                return " ".join(["chr", self.chrom[3:] + ":", str(self.initial), "-", str(self.final)])
+                return " ".join([self.chrom, str(self.initial) + "-" + str(self.final)])
             elif underline:
-                return "_".join(["chr", self.chrom[3:], str(self.initial), str(self.final)])
+                return "_".join([self.chrom, str(self.initial), str(self.final)])
             else:
-                return "".join(["chr", self.chrom[3:] + ":", str(self.initial), "-", str(self.final)])
+                return self.chrom + ":" + str(self.initial) + "-" + str(self.final)
 
     def extend(self, left, right, w_return=False):
         """Extend GenomicRegion on both sides.

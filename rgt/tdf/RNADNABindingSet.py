@@ -41,8 +41,8 @@ class RNADNABinding:
     
     """
 
-    __slots__ = ['rna', 'dna', 'motif', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 
-                 'match' ]
+    __slots__ = ['rna', 'dna', 'motif', 'strand', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 'match',
+                 '__dict__']
 
     def __init__(self, rna, dna, score, err_rate, err, guan_rate, match=None):
         """Initiation"""
@@ -130,7 +130,7 @@ class RNADNABindingSet:
         [12] Guanine-rate
     
     """
-    __slots__ = ['name', 'sequences', 'sorted_dna', 'sorted_rna' ]
+    __slots__ = ['name', 'sequences', 'sorted_dna', 'sorted_rna', '__dict__']
 
     def __init__(self, name):
         """Initialize"""
@@ -138,7 +138,6 @@ class RNADNABindingSet:
         self.sequences = []    # A list to contain all RNA/DNA interactions and extra information 
         self.sorted_dna = False
         self.sorted_rna = False
- 
 
     def __len__(self):
         """Return the number of interactions between DNA and RNA """
@@ -496,6 +495,8 @@ class RNADNABindingSet:
             for r in self.merged_dict:
                 self.merged_dict[r].remove_duplicates()
 
+        to_remove = []
+
         if cutoff:
             if cutoff >= 1:
                 ccf = int(cutoff)
@@ -505,7 +506,10 @@ class RNADNABindingSet:
             # print(ccf)
             for r in self.merged_dict:
                 if len(self.merged_dict[r]) < ccf:
-                    n = self.merged_dict.pop(r, None)
+                    to_remove.append(r)
+            for r in to_remove:
+                self.merged_dict.pop(r, None)
+
         if name_replace:
             for r in self.merged_dict:
                 self.merged_dict[r].replace_region_name(regions=name_replace)
