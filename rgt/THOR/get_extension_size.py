@@ -36,7 +36,7 @@ Return shift/extension size of reads descriebed by BAM file.
 
 """
 
-
+import math
 import pysam
 
 cov_f = {}
@@ -99,7 +99,7 @@ def ccf(k):
 def get_extension_size(filename, start=0, end=600, stepsize=5):
     """Return extension/shift size of reads and all computed values of the convolution. 
     Search value with a resolution of <stepsize> from start to end."""
-    read_length = get_read_size(filename)
+    read_length = math.ceil(get_read_size(filename))
     start -= read_length
 
     init_cov(filename)
@@ -108,9 +108,9 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     r = [(x[0], x[1]) for x in r]
 
-    # print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
+    # print('extension size is %s' % max(r[read_length//stepsize*2:])[1])
 
-    return max(r[read_length / stepsize * 2:])[1], r
+    return max(r[read_length // stepsize * 2:])[1], r
 
 
 if __name__ == '__main__':
