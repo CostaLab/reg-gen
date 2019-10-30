@@ -13,7 +13,7 @@ from scipy.stats import zscore
 from scipy.stats import norm
 from argparse import SUPPRESS
 
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 
 # Internal
 from rgt.Util import ErrorHandler, AuxiliaryFunctions, GenomeData, HmmData
@@ -89,8 +89,11 @@ def diff_analysis_run(args):
     if args.colors is not None:
         colors = args.colors.strip().split(",")
     else:
-        colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33",
-                  "#a65628", "#f781bf", "#999999"]
+        colors = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
+                  "#FF6600", "#0000CC", "#336633", "#CC0000", "#6600CC", "#FF00FF", "#555555", "#CCCC00",
+                  "#FF9900", "#0000FF", "#33CC33", "#FF0000", "#663399", "#FF33FF", "#888888", "#FFCC00",
+                  "#663300", "#009999", "#66CC66", "#FF3333", "#9933FF", "#FF66FF", "#AAAAAA", "#FFCC33",
+                  "#993300", "#00FFFF", "#99FF33", "#FF6666", "#CC99FF", "#FF99FF", "#CCCCCC", "#FFFF00"]
 
     assert len(mpbs_files) == len(reads_files) == len(conditions), \
         "Number of motif, read and condition names are not same: {}, {}, {}".format(len(mpbs_files), len(reads_files),
@@ -114,6 +117,8 @@ def diff_analysis_run(args):
     motif_len = list()
     motif_num = list()
     motif_pwm = list()
+
+    print(" {} cpus are detected and {} of them will be used...\n".format(cpu_count(), args.nc))
 
     genome_data = GenomeData(args.organism)
     fasta = Fastafile(genome_data.get_genome())
@@ -147,6 +152,7 @@ def diff_analysis_run(args):
         else:
             pool = Pool(processes=args.nc)
             for i, condition in enumerate(conditions):
+                print("generating signal for condition {} \n".format(condition))
                 arguments_list = list()
                 for mpbs_name in mpbs_name_list:
                     mpbs_regions = mpbs.by_names([mpbs_name])
@@ -160,8 +166,11 @@ def diff_analysis_run(args):
                     motif_pwm.append(get_pwm(fasta, mpbs_regions, args.window_size))
 
                 try:
-                    res = pool.map(get_bc_signal, arguments_list)
+                    res = pool.map_async(get_bc_signal, arguments_list)
                     signals[i] = np.array(res)
+                    pool.close()
+                    pool.join()
+                    del pool
                 except Exception:
                     logging.exception("get bias corrected signal failed")
 
@@ -201,8 +210,11 @@ def diff_analysis_run(args):
                     motif_pwm.append(get_pwm(fasta, mpbs_regions, args.window_size))
 
                 try:
-                    res = pool.map(get_raw_signal, arguments_list)
+                    res = pool.map_async(get_raw_signal, arguments_list)
                     signals[i] = np.array(res)
+                    pool.close()
+                    pool.join()
+                    del pool
                 except Exception:
                     logging.exception("get bias corrected signal failed")
 
@@ -231,7 +243,10 @@ def diff_analysis_run(args):
         for i, mpbs_name in enumerate(mpbs_name_list):
             arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
                                    args.window_size, colors))
-        pool.map(output_line_plot, arguments_list)
+        pool.map_async(output_line_plot, arguments_list)
+        pool.close()
+        pool.join()
+        del pool
 
     ps_tc_results = list()
     for i, mpbs_name in enumerate(mpbs_name_list):
