@@ -17,7 +17,7 @@ import types
 import pysam
 from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
-from sklearn.externals import joblib
+import joblib
 
 # Test
 import numpy as np
@@ -137,15 +137,19 @@ def atac_seq(args):
     ###################################################################################################
     # Load parameters for ATAC-seq
     ###################################################################################################
+
     if args.hmm_file:
-        hmm = joblib.load(args.hmm_file)
+        hmm_file = args.hmm_file
     else:
         if args.paired_end:
             hmm_file = hmm_data.get_default_hmm_atac_paired()
-            hmm = joblib.load(hmm_file)
         else:
             hmm_file = hmm_data.get_default_hmm_atac_single()
-            hmm = joblib.load(hmm_file)
+
+    # FIXME: make a clear-text file, like for dnase, and remove this pickle business
+    import pickle
+    with open(hmm_file, "rb") as f:
+        hmm = pickle.load(f, encoding="latin1")
 
     hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, hmm)
 
@@ -268,6 +272,7 @@ def atac_seq(args):
                                                                 forward_shift=forward_shift,
                                                                 reverse_shift=reverse_shift,
                                                                 min_length=145, max_length=None, strand=True)
+
 
             except Exception:
                 err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([region.chrom, str(region.initial), str(
@@ -753,7 +758,7 @@ def dnase_histone(args):
                                                                       per_slope=args.histone_slope_per,
                                                                       genome_file_name=genome_data.get_genome())
             except Exception:
-                err.throw_warning("FP_HISTONE_PROC", add_msg="for region (" + ",".join([r.chrom,str(r.initial),
+                err.throw_warning("FP_HISTONE_PROC", add_msg="for region (" + ",".join([r.chrom, str(r.initial),
                                 str(r.final)]) + ") and histone modification " + histone_file.file_name +
                                 ". This iteration will be skipped for this histone.")
                 continue

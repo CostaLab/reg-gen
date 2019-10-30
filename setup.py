@@ -112,7 +112,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pandas", "logomaker", "pyx"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pandas", "logomaker", "pyx", "joblib"],
         []
     ),
     "THOR": (

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from collections import Counter
-from sklearn.externals import joblib
+import joblib
 from scipy import linalg
 from argparse import SUPPRESS
 

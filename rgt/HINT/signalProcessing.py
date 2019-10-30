@@ -235,8 +235,8 @@ class GenomicSignal:
         k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
+        p1_w = p1 - (window // 2)
+        p2_w = p2 + (window // 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
         if p1 <= 0 or p1_w <= 0 or p1_wk <= 0: return signal
@@ -265,15 +265,15 @@ class GenomicSignal:
         rSum = sum(nr[:window])
         fLast = nf[0]
         rLast = nr[0]
-        for i in range((window / 2), len(nf) - (window / 2)):
+        for i in range((window // 2), len(nf) - (window // 2)):
             Nf.append(fSum)
             Nr.append(rSum)
             fSum -= fLast
-            fSum += nf[i + (window / 2)]
-            fLast = nf[i - (window / 2) + 1]
+            fSum += nf[i + (window // 2)]
+            fLast = nf[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += nr[i + (window / 2)]
-            rLast = nr[i - (window / 2) + 1]
+            rSum += nr[i + (window // 2)]
+            rLast = nr[i - (window // 2) + 1]
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
@@ -301,18 +301,18 @@ class GenomicSignal:
         fLast = af[0]
         rLast = ar[0]
         bias_corrected_signal = []
-        for i in range((window / 2), len(af) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+        for i in range((window // 2), len(af) - (window // 2)):
+            nhatf = Nf[i - (window // 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window // 2)] * (ar[i] / rSum)
             zf = log(nf[i] + 1) - log(nhatf + 1)
             zr = log(nr[i] + 1) - log(nhatr + 1)
             bias_corrected_signal.append(zf + zr)
             fSum -= fLast
-            fSum += af[i + (window / 2)]
-            fLast = af[i - (window / 2) + 1]
+            fSum += af[i + (window // 2)]
+            fLast = af[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += ar[i + (window / 2)]
-            rLast = ar[i - (window / 2) + 1]
+            rSum += ar[i + (window // 2)]
+            rLast = ar[i - (window // 2) + 1]
 
         # Termination
         fastaFile.close()
@@ -332,8 +332,8 @@ class GenomicSignal:
         k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
+        p1_w = p1 - (window // 2)
+        p2_w = p2 + (window // 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
 
@@ -381,15 +381,15 @@ class GenomicSignal:
         rSum = sum(nr[:window])
         fLast = nf[0]
         rLast = nr[0]
-        for i in range((window / 2), len(nf) - (window / 2)):
+        for i in range((window // 2), len(nf) - (window // 2)):
             Nf.append(fSum)
             Nr.append(rSum)
             fSum -= fLast
-            fSum += nf[i + (window / 2)]
-            fLast = nf[i - (window / 2) + 1]
+            fSum += nf[i + (window // 2)]
+            fLast = nf[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += nr[i + (window / 2)]
-            rLast = nr[i - (window / 2) + 1]
+            rSum += nr[i + (window // 2)]
+            rLast = nr[i - (window // 2) + 1]
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
@@ -418,17 +418,17 @@ class GenomicSignal:
         rLast = ar[0]
         bias_corrected_signal_forward = []
         bias_corrected_signal_reverse = []
-        for i in range((window / 2), len(af) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+        for i in range((window // 2), len(af) - (window // 2)):
+            nhatf = Nf[i - (window // 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window // 2)] * (ar[i] / rSum)
             bias_corrected_signal_forward.append(nhatf)
             bias_corrected_signal_reverse.append(nhatr)
             fSum -= fLast
-            fSum += af[i + (window / 2)]
-            fLast = af[i - (window / 2) + 1]
+            fSum += af[i + (window // 2)]
+            fLast = af[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += ar[i + (window / 2)]
-            rLast = ar[i - (window / 2) + 1]
+            rSum += ar[i + (window // 2)]
+            rLast = ar[i - (window // 2) + 1]
 
         # Termination
         fastaFile.close()
@@ -448,8 +448,8 @@ class GenomicSignal:
         k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
+        p1_w = p1 - (window // 2)
+        p2_w = p2 + (window // 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
         if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0):
@@ -495,15 +495,15 @@ class GenomicSignal:
         rSum = sum(nr[:window])
         fLast = nf[0]
         rLast = nr[0]
-        for i in range((window / 2), len(nf) - (window / 2)):
+        for i in range((window // 2), len(nf) - (window // 2)):
             Nf.append(fSum)
             Nr.append(rSum)
             fSum -= fLast
-            fSum += nf[i + (window / 2)]
-            fLast = nf[i - (window / 2) + 1]
+            fSum += nf[i + (window // 2)]
+            fLast = nf[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += nr[i + (window / 2)]
-            rLast = nr[i - (window / 2) + 1]
+            rSum += nr[i + (window // 2)]
+            rLast = nr[i - (window // 2) + 1]
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
@@ -531,16 +531,16 @@ class GenomicSignal:
         fLast = af[0]
         rLast = ar[0]
         bc_signal = []
-        for i in range((window / 2), len(af) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+        for i in range((window // 2), len(af) - (window // 2)):
+            nhatf = Nf[i - (window // 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window // 2)] * (ar[i] / rSum)
             bc_signal.append(nhatf + nhatr)
             fSum -= fLast
-            fSum += af[i + (window / 2)]
-            fLast = af[i - (window / 2) + 1]
+            fSum += af[i + (window // 2)]
+            fLast = af[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += ar[i + (window / 2)]
-            rLast = ar[i - (window / 2) + 1]
+            rSum += ar[i + (window // 2)]
+            rLast = ar[i - (window // 2) + 1]
 
         # Termination
         fastaFile.close()
@@ -661,7 +661,7 @@ class GenomicSignal:
         slope_seq -- Slope sequence.
         """
         slope_seq = convolve(sequence, sg_coefs)
-        slope_seq = [e for e in slope_seq[(len(sg_coefs) / 2):(len(slope_seq) - (len(sg_coefs) / 2))]]
+        slope_seq = [e for e in slope_seq[(len(sg_coefs) // 2):(len(slope_seq) - (len(sg_coefs) // 2))]]
 
         return slope_seq
 
@@ -696,8 +696,8 @@ class GenomicSignal:
             k_nb = len(list(fBiasDict.keys())[0])
             p1 = start
             p2 = end
-            p1_w = p1 - (window / 2)
-            p2_w = p2 + (window / 2)
+            p1_w = p1 - (window // 2)
+            p2_w = p2 + (window // 2)
             p1_wk = p1_w - int(k_nb / 2.)
             p2_wk = p2_w + int(k_nb / 2.)
 
@@ -739,15 +739,15 @@ class GenomicSignal:
             rSum = sum(signal_raw_r[:window])
             fLast = signal_raw_f[0]
             rLast = signal_raw_r[0]
-            for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+            for i in range((window // 2), len(signal_raw_f) - (window // 2)):
                 Nf.append(fSum)
                 Nr.append(rSum)
                 fSum -= fLast
-                fSum += signal_raw_f[i + (window / 2)]
-                fLast = signal_raw_f[i - (window / 2) + 1]
+                fSum += signal_raw_f[i + (window // 2)]
+                fLast = signal_raw_f[i - (window // 2) + 1]
                 rSum -= rLast
-                rSum += signal_raw_r[i + (window / 2)]
-                rLast = signal_raw_r[i - (window / 2) + 1]
+                rSum += signal_raw_r[i + (window // 2)]
+                rLast = signal_raw_r[i - (window // 2) + 1]
 
             # Calculating bias and writing to wig file
             fSum = sum(signal_bias_f[:window])
@@ -757,18 +757,18 @@ class GenomicSignal:
             signal_bc = []
             signal_bc_f = []
             signal_bc_r = []
-            for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-                nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-                nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            for i in range((window // 2), len(signal_bias_f) - (window // 2)):
+                nhatf = Nf[i - (window // 2)] * (signal_bias_f[i] / fSum)
+                nhatr = Nr[i - (window // 2)] * (signal_bias_r[i] / rSum)
                 signal_bc.append(nhatf + nhatr)
                 signal_bc_f.append(nhatf)
                 signal_bc_r.append(nhatr)
                 fSum -= fLast
-                fSum += signal_bias_f[i + (window / 2)]
-                fLast = signal_bias_f[i - (window / 2) + 1]
+                fSum += signal_bias_f[i + (window // 2)]
+                fLast = signal_bias_f[i - (window // 2) + 1]
                 rSum -= rLast
-                rSum += signal_bias_r[i + (window / 2)]
-                rLast = signal_bias_r[i - (window / 2) + 1]
+                rSum += signal_bias_r[i + (window // 2)]
+                rLast = signal_bias_r[i - (window // 2) + 1]
 
             if bc_signal_file:
                 f = open(bc_signal_file, "a")
@@ -909,8 +909,8 @@ class GenomicSignal:
         k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
+        p1_w = p1 - (window // 2)
+        p2_w = p2 + (window // 2)
         p1_wk = p1_w - int(k_nb / 2.)
         p2_wk = p2_w + int(k_nb / 2.)
 
@@ -1018,15 +1018,15 @@ class GenomicSignal:
         rSum = sum(raw_r[:window])
         fLast = raw_f[0]
         rLast = raw_r[0]
-        for i in range((window / 2), len(raw_f) - (window / 2)):
+        for i in range((window // 2), len(raw_f) - (window // 2)):
             Nf.append(fSum)
             Nr.append(rSum)
             fSum -= fLast
-            fSum += raw_f[i + (window / 2)]
-            fLast = raw_f[i - (window / 2) + 1]
+            fSum += raw_f[i + (window // 2)]
+            fLast = raw_f[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += raw_r[i + (window / 2)]
-            rLast = raw_r[i - (window / 2) + 1]
+            rSum += raw_r[i + (window // 2)]
+            rLast = raw_r[i - (window // 2) + 1]
 
         # Calculating bias and writing to wig file
         fSum = sum(signal_bias_f[:window])
@@ -1035,17 +1035,17 @@ class GenomicSignal:
         rLast = signal_bias_r[0]
         bc_f = []
         bc_r = []
-        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+        for i in range((window // 2), len(signal_bias_f) - (window // 2)):
+            nhatf = Nf[i - (window // 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window // 2)] * (signal_bias_r[i] / rSum)
             bc_f.append(nhatf)
             bc_r.append(nhatr)
             fSum -= fLast
-            fSum += signal_bias_f[i + (window / 2)]
-            fLast = signal_bias_f[i - (window / 2) + 1]
+            fSum += signal_bias_f[i + (window // 2)]
+            fLast = signal_bias_f[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += signal_bias_r[i + (window / 2)]
-            rLast = signal_bias_r[i - (window / 2) + 1]
+            rSum += signal_bias_r[i + (window // 2)]
+            rLast = signal_bias_r[i - (window // 2) + 1]
 
         if strand:
             return np.array(bc_f), np.array(bc_r)
@@ -1064,8 +1064,8 @@ class GenomicSignal:
         k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
+        p1_w = p1 - (window // 2)
+        p2_w = p2 + (window // 2)
         p1_wk = p1_w - int(k_nb / 2.)
         p2_wk = p2_w + int(k_nb / 2.)
 
@@ -1131,15 +1131,15 @@ class GenomicSignal:
         rSum = sum(signal_raw_r[:window])
         fLast = signal_raw_f[0]
         rLast = signal_raw_r[0]
-        for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+        for i in range((window // 2), len(signal_raw_f) - (window // 2)):
             Nf.append(fSum)
             Nr.append(rSum)
             fSum -= fLast
-            fSum += signal_raw_f[i + (window / 2)]
-            fLast = signal_raw_f[i - (window / 2) + 1]
+            fSum += signal_raw_f[i + (window // 2)]
+            fLast = signal_raw_f[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += signal_raw_r[i + (window / 2)]
-            rLast = signal_raw_r[i - (window / 2) + 1]
+            rSum += signal_raw_r[i + (window // 2)]
+            rLast = signal_raw_r[i - (window // 2) + 1]
 
         # Calculating bias and writing to wig file
         fSum = sum(signal_bias_f[:window])
@@ -1154,9 +1154,9 @@ class GenomicSignal:
         bc = []
         bc_f = []
         bc_r = []
-        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+        for i in range((window // 2), len(signal_bias_f) - (window // 2)):
+            nhatf = Nf[i - (window // 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window // 2)] * (signal_bias_r[i] / rSum)
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
             raw.append(signal_raw_f[i] + signal_raw_r[i])
@@ -1168,11 +1168,11 @@ class GenomicSignal:
             bc_f.append(nhatf)
             bc_r.append(nhatr)
             fSum -= fLast
-            fSum += signal_bias_f[i + (window / 2)]
-            fLast = signal_bias_f[i - (window / 2) + 1]
+            fSum += signal_bias_f[i + (window // 2)]
+            fLast = signal_bias_f[i - (window // 2) + 1]
             rSum -= rLast
-            rSum += signal_bias_r[i + (window / 2)]
-            rLast = signal_bias_r[i - (window / 2) + 1]
+            rSum += signal_bias_r[i + (window // 2)]
+            rLast = signal_bias_r[i - (window // 2) + 1]
 
         currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
@@ -1194,7 +1194,7 @@ class GenomicSignal:
 
         bias_f = []
         bias_r = []
-        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+        for i in range((window // 2), len(signal_bias_f) - (window // 2)):
             bias_f.append(signal_bias_f[i])
             bias_r.append(signal_bias_r[i])
 
