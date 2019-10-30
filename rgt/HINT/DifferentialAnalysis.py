@@ -118,7 +118,7 @@ def diff_analysis_run(args):
     motif_num = list()
     motif_pwm = list()
 
-    print(" {} cpus are detected and {} of them will be used...\n".format(cpu_count(), args.nc))
+    print((" {} cpus are detected and {} of them will be used...\n".format(cpu_count(), args.nc)))
 
     genome_data = GenomeData(args.organism)
     fasta = Fastafile(genome_data.get_genome())
@@ -152,7 +152,7 @@ def diff_analysis_run(args):
         else:
             pool = Pool(processes=args.nc)
             for i, condition in enumerate(conditions):
-                print("generating signal for condition {} \n".format(condition))
+                print(("generating signal for condition {} \n".format(condition)))
                 arguments_list = list()
                 for mpbs_name in mpbs_name_list:
                     mpbs_regions = mpbs.by_names([mpbs_name])
