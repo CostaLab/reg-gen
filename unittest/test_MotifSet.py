@@ -1,7 +1,4 @@
 
-# Python 3 compatibility
-from __future__ import print_function
-
 # Python
 import unittest
 import os
@@ -24,8 +21,8 @@ class MotifSetTest(unittest.TestCase):
         self.assertTrue("'name': 'ALX1_HUMAN.H11MO.0.B'" in str(ms2), msg="str(ms2): wrong MotifMap")
         self.assertTrue(str(ms2).startswith("MotifSet:{"), msg="str(ms2): wrong format")
         ma = ms2.__getitem__("ALX1_HUMAN.H11MO.0.B")
-        self.assertTrue("'thresholds': {1e-05: 13.4015, 0.0001: 10.3565, 0.001: 6.52, 0.0005: 7.778, 5e-05: 11.318,"
-                        " 0.005: 3.1595}" in str(ma), msg="str(ma): threshold missing")
+        self.assertTrue("'thresholds': {0.005: 3.1595, 0.001: 6.52, 0.0005: 7.778, 0.0001: 10.3565, "
+                        "5e-05: 11.318, 1e-05: 13.4015}" in str(ma), msg="str(ma): threshold missing")
         self.assertTrue("'name': 'ALX1_HUMAN.H11MO.0.B'" in str(ma), msg="str(ma): wrong Motif")
         self.assertTrue(repr(ma) == str(ma), msg="MotifAnnotation: repr does not equal str")
 

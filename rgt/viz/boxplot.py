@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import division
-from __future__ import print_function
+
+
 
 import os
 from collections import OrderedDict
@@ -114,13 +114,13 @@ class Boxplot:
             self.tableDict[bed.name] = []
             bed.sort()
             conList.append(bed.__iter__())
-            iterList.append(conList[-1].next())
+            iterList.append(next(conList[-1]))
 
         for i, r in enumerate(self.all_bed.sequences):
             for j in range(len(self.beds)):
                 while r > iterList[j]:
                     try:
-                        iterList[j] = conList[j].next()
+                        iterList[j] = next(conList[j])
                     except:
                         break
                 if r == iterList[j]:
@@ -166,7 +166,7 @@ class Boxplot:
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cuesbed = OrderedDict()  # Storing the cues for back tracking
         cuesbam = OrderedDict()
-        for bedname in self.tableDict.keys():
+        for bedname in list(self.tableDict.keys()):
             plotDict[bedname] = OrderedDict()
             mt = numpy.array(self.tableDict[bedname])
 
@@ -197,7 +197,7 @@ class Boxplot:
                         if {g, a, c} >= cuesbed[bed]:
                             # print(cuesbed[bed])
                             sortDict[g][a][c] = []
-                            for bam in cuesbam.keys():
+                            for bam in list(cuesbam.keys()):
 
                                 if {g, a, c} >= cuesbam[bam]:
                                     # print(cuesbam[bam])
@@ -338,7 +338,7 @@ class Boxplot:
             axarr[i].set_xticks([len(self.color_tags) * n + 1 + (len(self.color_tags) - 1) / 2 for n, s in
                                  enumerate(self.sortDict[g].keys())])
             # plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=self.xtickrotation,
+            axarr[i].set_xticklabels(list(self.sortDict[g].keys()), rotation=self.xtickrotation,
                                      ha=self.xtickalign)
             # axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=70, ha=self.xtickalign, fontsize=10)
 
@@ -382,14 +382,14 @@ class Boxplot:
 
         #### Calculate p value ####
         plist = {}
-        for g in self.sortDict.keys():
+        for g in list(self.sortDict.keys()):
             plist[g] = {}
-            for s1 in self.sortDict[g].keys():
-                for c1 in self.sortDict[g][s1].keys():
+            for s1 in list(self.sortDict[g].keys()):
+                for c1 in list(self.sortDict[g][s1].keys()):
                     data1 = self.sortDict[g][s1][c1]
                     plist[g][s1 + c1] = {}
-                    for s2 in self.sortDict[g].keys():
-                        for c2 in self.sortDict[g][s2].keys():
+                    for s2 in list(self.sortDict[g].keys()):
+                        for c2 in list(self.sortDict[g][s2].keys()):
                             if s2 == s1 and c2 == c1:
                                 pass
                             else:
@@ -400,21 +400,21 @@ class Boxplot:
         print("Multiple test correction.")
         multiple_correction(plist)
 
-        for g in self.sortDict.keys():
+        for g in list(self.sortDict.keys()):
             html.add_heading(g, size=4, bold=False)
             data_table = []
             col_size_list = [15]
             header_list = ["p-value"]
-            for s in self.sortDict[g].keys():
-                for c in self.sortDict[g][s1].keys():
+            for s in list(self.sortDict[g].keys()):
+                for c in list(self.sortDict[g][s1].keys()):
                     header_list.append(s + "\n" + c)
                     col_size_list.append(15)
 
-            for s1 in self.sortDict[g].keys():
-                for c1 in self.sortDict[g][s1].keys():
+            for s1 in list(self.sortDict[g].keys()):
+                for c1 in list(self.sortDict[g][s1].keys()):
                     row = [s1 + "\n" + c1]
-                    for s2 in self.sortDict[g].keys():
-                        for c2 in self.sortDict[g][s2].keys():
+                    for s2 in list(self.sortDict[g].keys()):
+                        for c2 in list(self.sortDict[g][s2].keys()):
                             if s2 == s1 and c2 == c1:
                                 row.append("-")
                             else:

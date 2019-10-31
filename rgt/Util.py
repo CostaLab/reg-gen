@@ -6,15 +6,15 @@ The Util classes contains many utilities needed by other classes such as the pat
 """
 
 # Python
-from __future__ import print_function
+
 import os
 import sys
 import shutil
 import re
 import codecs
-from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
+from configparser import ConfigParser
 
 
 def strmatch(pattern, string, search="exact", case_insensitive=True):
@@ -740,7 +740,7 @@ class Html:
 
     def add_links(self):
         """Adds all the links."""
-        for k in self.links_dict.keys():
+        for k in list(self.links_dict.keys()):
             self.document.append("<a class=\"pure-button\" href=\"" + \
                                  os.path.join(self.cluster_path_fix, self.links_dict[k]) + \
                                  "\">" + \

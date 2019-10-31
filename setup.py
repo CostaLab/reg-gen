@@ -112,7 +112,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pandas", "logomaker", "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pandas", "logomaker", "pyx", "joblib"],
         []
     ),
     "THOR": (
@@ -137,7 +137,7 @@ tools_dictionary = {
     "TDF": (
         "rgt-TDF",
         "rgt.tdf.Main:main",
-        ["matplotlib>=1.1.0", "natsort", "pyBigWig==0.3.12"],
+        ["matplotlib>=1.1.0", "natsort", "pyBigWig"],
         []
     )
 }
@@ -196,10 +196,10 @@ param_rgt_tool_name = "--rgt-tool"
 parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
                   help=("The tool which will be installed. If this argument is not used, "
                         "then the complete package is installed. The current available options "
-                        "are: " + ", ".join(tools_dictionary.keys()) + "; where 'core' means that "
+                        "are: " + ", ".join(list(tools_dictionary.keys())) + "; where 'core' means that "
                         "only the RGT python library will be installed with no further command-line "
                         "tools. You can also provide multiple tools in a list separated by comma."),
-                  dest="param_rgt_tool", default=",".join(tools_dictionary.keys()))
+                  dest="param_rgt_tool", default=",".join(list(tools_dictionary.keys())))
 
 # Processing Options
 options, arguments = parser.parse_args()
@@ -368,7 +368,7 @@ copy_files_dictionary = {
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
             "tdf_logo.png", "viz_logo.png"],
 }
-for copy_folder in copy_files_dictionary.keys():
+for copy_folder in list(copy_files_dictionary.keys()):
     copy_dest_path = path.join(rgt_data_location, copy_folder)
     if not path.exists(copy_dest_path): makedirs(copy_dest_path)
     for copy_file in copy_files_dictionary[copy_folder]:
@@ -422,7 +422,7 @@ if p3_supported:
 # External scripts
 external_scripts = []
 for tool_option in options.param_rgt_tool:
-    print(tools_dictionary[tool_option][3])
+    print((tools_dictionary[tool_option][3]))
     for e in tools_dictionary[tool_option][3]:
         external_scripts.append(e)
 

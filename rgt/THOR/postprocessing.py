@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 from ..GenomicRegion import GenomicRegion
 from ..GenomicRegionSet import GenomicRegionSet
 import sys
@@ -75,8 +75,8 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     for i, t in enumerate(peak_list):
         chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
-        r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '',
-                          orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
+        r = GenomicRegion(chrom=chrom, initial=int(start), final=int(end), name='',
+                          orientation=strand, data=str((c1, c2, pvalue_list[i], ratio)))
         # if end - start > ext_size:
         if strand == '+':
             if last_orientation == '+':
@@ -119,7 +119,7 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
         ratios_pass = np.where(np.bitwise_and(zscore_ratios > -2, zscore_ratios < 2) == True, True, False)
     if not no_correction:
         pv_pass = [True] * len(pvalues)
-        pvalues = map(lambda x: 10**-x, pvalues)
+        pvalues = [10**-x for x in pvalues]
         
         _output_BED(name + '-uncor', output, pvalues, pv_pass)
         _output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
@@ -147,7 +147,7 @@ def _output_BED(name, output, pvalues, filter):
     
     for i in range(len(pvalues)):
         c, s, e, strand, counts = output[i]
-        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxsize
         counts = ';'.join(counts.split(';')[:2] + [str(p_tmp)])
         
         if filter[i]:
@@ -161,7 +161,7 @@ def _output_narrowPeak(name, output, pvalues, filter):
     f = open(name + '-diffpeaks.narrowPeak', 'w')
     for i in range(len(pvalues)):
         c, s, e, strand, _ = output[i]
-        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxsize
         if filter[i]:
             print(c, s, e, 'Peak' + str(i), 0, strand, 0, p_tmp, 0, -1, sep='\t', file=f)
     f.close()

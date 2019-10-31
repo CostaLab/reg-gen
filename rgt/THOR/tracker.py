@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import re
 import numpy as np
 from ..Util import Html
@@ -45,7 +45,7 @@ class Tracker:
         self.chrom_sizes = chrom_sizes
         self.dims = dims
         self.inputs = inputs
-        self.samples = map(lambda x: path.splitext(path.basename(x))[0], bamfiles)
+        self.samples = [path.splitext(path.basename(x))[0] for x in bamfiles]
         self.options = options
         self.version = version
     

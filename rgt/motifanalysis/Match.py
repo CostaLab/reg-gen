@@ -3,8 +3,8 @@
 ###################################################################################################
 
 # Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
+
+
 
 # Python
 import os
@@ -242,7 +242,7 @@ def main(args):
     regions_to_match = []
 
     # Iterating on experimental matrix objects
-    for k in genomic_regions_dict.keys():
+    for k in list(genomic_regions_dict.keys()):
 
         curr_genomic_region = genomic_regions_dict[k]
 

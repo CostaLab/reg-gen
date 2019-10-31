@@ -11,7 +11,7 @@ Filter VCF files by pipeline described in README.
 @author: Manuel Allhoff
 
 """
-from __future__ import print_function
+
 from optparse import OptionParser
 import sys
 from ..GenomicVariantSet import GenomicVariantSet
@@ -44,7 +44,7 @@ def load_data(path_sample_vcf):
 
 def print_length(l, info):
     """Print length of each GenomicVariant set in list l"""
-    names = map(lambda x: x.name, l)
+    names = [x.name for x in l]
     print(info, file=sys.stderr)
     for i, name in enumerate(names):
         print(name, len(l[i]), file=sys.stderr, sep='\t')
@@ -68,14 +68,14 @@ def get_max_density(GenomicVariantSets, lowerBound=20, upperBound=50, max_it=5):
                 density_seq[record.pos][0] += 1
                 i += 1
 
-    density_seq = map(lambda x: tuple(x), density_seq)
+    density_seq = [tuple(x) for x in density_seq]
 
     print('Max. Density Iterations, lower bound: %s, upper bound: %s' % (lowerBound, upperBound), file=sys.stderr)
     print('(Regions to consider: %s)' % i, file=sys.stderr)
 
     for i in range(max_it):
         den, coord = AlgGoldwasser(density_seq, lowerBound, upperBound)
-        s = sum(map(lambda x: x[0], density_seq[coord[0]:coord[1]]))
+        s = sum([x[0] for x in density_seq[coord[0]:coord[1]]])
         print("%s. It.: density %s at %s - %s with %s SNPs" % (i + 1, round(den, 5), coord[0], coord[1], s),
               file=sys.stderr)
         density_seq[coord[0]:coord[1]] = [(0, 1)] * (coord[1] - coord[0])
@@ -147,13 +147,13 @@ def output_intersections(sample_data):
                 else:
                     intersect_variants.intersect(sample)
 
-            name = "-".join(map(lambda x: x.name, list(tuple)))
+            name = "-".join([x.name for x in list(tuple)])
             print("Intersection:", name, len(intersect_variants), sep='\t', file=sys.stderr)
             intersect_variants.write_vcf('intersect-%s.vcf' % name)
 
 
 def main():
-    options, vcf_list = input()
+    options, vcf_list = eval(input())
 
     # thres_mq = 20
     # thres_dp = 20

@@ -52,14 +52,14 @@ genesets=exps.get_genesets()
 if len(outdir)>0:
   outGene = open(outdir+"/mapped_genes.txt","w")
   
-print genesets
+print(genesets)
 
 random_regions=[]
 
 for region in exps.get_regionsets():
     for j,n in enumerate(range(randomize)):
             if backGroundPeaks:
-              print len(backBed), len(region)
+              print(len(backBed), len(region))
               br=backBed.random_subregions(len(region))
             else:
               br=region.random_regions('hg19',total_size=len(region),overlap_result=True, overlap_input=True)
@@ -96,7 +96,7 @@ for region in exps.get_regionsets():
         #prop_de=a/float(degenes)
         #prop_back=m/float(degenes)
         p= scipy.stats.norm.sf(z)
-        print region.name,g.name,a,m,z,len(all_genes),len(allgenes),p
+        print(region.name,g.name,a,m,z,len(all_genes),len(allgenes),p)
 
         #if len(outdir)>0:
         #  outGene.write(region.name+"\t"+g.name+"\t"+("\t".join(bed.genes))+"\n")  

@@ -5,7 +5,7 @@ Represents a transcription factor motif and the standardization of motif annotat
 
 """
 # Python 3 compatibility
-from __future__ import print_function
+
 
 # Python
 from glob import glob
@@ -98,7 +98,7 @@ class MotifSet:
         return len(self.motifs_map)
 
     def __iter__(self):
-        return iter(self.motifs_map.values())
+        return iter(list(self.motifs_map.values()))
 
     def __getitem__(self, key):
         return self.motifs_map[key]
@@ -153,13 +153,13 @@ class MotifSet:
 
         valid_keys = ["name", "gene_names", "family", "uniprot_ids", "data_source", "tax_group", "species", "database"]
 
-        for key_type in values.keys():
+        for key_type in list(values.keys()):
             if not key_type in valid_keys:
                 raise ValueError("wrong key-type: key_type must be one of {}".format(valid_keys))
 
         # TODO: maybe just ignore invalid keys instead of raising an error
 
-        current = self.motifs_map.values()
+        current = list(self.motifs_map.values())
 
         motif_set = MotifSet(preload_motifs=None)
 
@@ -167,7 +167,7 @@ class MotifSet:
             for m in current:
                 motif_set.add(m)
 
-        for key_type in values.keys():
+        for key_type in list(values.keys()):
 
             motif_set = MotifSet(preload_motifs=None)
 
@@ -181,7 +181,7 @@ class MotifSet:
                     for attr_val in attr_vals:
                         if strmatch(key, attr_val, search=search):
                             motif_set.add(m)
-            current = motif_set.motifs_map.values()
+            current = list(motif_set.motifs_map.values())
 
         motif_set.motif_data = self.motif_data  # contains data from more motifs than those in motif_set.motifs_map
 
@@ -441,7 +441,7 @@ class MotifSet:
             all_tfs = all_tfs.union(tfs)
 
         # printing out network
-        for net_name, pairs_aux in net_pairs.items():
+        for net_name, pairs_aux in list(net_pairs.items()):
             f = open(out_path + "/" + net_name + "_targets.txt", "w")
 
             for pair in all_pairs:
@@ -474,7 +474,7 @@ class MotifSet:
         for motif_dir_path in self.motif_data.pwm_list:
 
             # iterate over all motif elements in this set
-            for motif_name, ma in self.motifs_map.items():
+            for motif_name, ma in list(self.motifs_map.items()):
                 motif_file_name = os.path.join(motif_dir_path, motif_name + ".pwm")
 
                 # if the motif annotation has a corresponding PWM file, add to return list

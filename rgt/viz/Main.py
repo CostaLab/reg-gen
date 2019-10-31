@@ -1,6 +1,4 @@
 # Python Libraries
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys
@@ -56,7 +54,8 @@ def main():
     version_message = "viz - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                     add_help=True, version=version_message)
+                                     add_help=True)
+    parser.add_argument('--version', action='version', version=version_message)
 
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
@@ -393,7 +392,7 @@ def main():
             # there will probably only be one subparser_action,but better save than sorry
             for subparsers_action in subparsers_actions:
                 # get all subparsers and print help
-                for choice, subparser in subparsers_action.choices.items():
+                for choice, subparser in list(subparsers_action.choices.items()):
                     if choice == sys.argv[1]:
                         print("\nYou need more arguments.")
                         print("\nSubparser '{}'".format(choice))
@@ -619,7 +618,7 @@ def main():
             if args.table:
                 jaccard.table(directory=args.o, folder=args.t)
 
-            print("\nAll related files are saved in:  " + os.path.join(dir, args.o, args.t))
+            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
             print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1 - t0))))
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
@@ -800,7 +799,7 @@ def main():
             print2(parameter, "\t--- finished in {0} secs".format(str(round(t3 - t2))))
             print2(parameter,
                    "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3 - t0))) + "(H:M:S)\n")
-            print("\nAll related files are saved in:  " + os.path.join(dir, args.o, args.t))
+            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)

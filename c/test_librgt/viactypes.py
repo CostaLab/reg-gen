@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os.path
 from ctypes import *
 from rgt.GenomicRegionSet import GenomicRegionSet

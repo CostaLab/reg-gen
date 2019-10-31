@@ -1,5 +1,3 @@
-# Python 3 compatibility
-from __future__ import print_function
 
 # Python
 import unittest
@@ -26,4 +24,4 @@ class EnrichmentTest(unittest.TestCase):
         self.assertEqual(len(background_tmp.sequences), len(reference.sequences))
 
         for region, region_ref in zip(background_tmp.sequences, reference.sequences):
-            self.assertEqual(region.__cmp__(region_ref), 0)
+            self.assertEqual(region, region_ref)

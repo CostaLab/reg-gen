@@ -21,10 +21,10 @@ def get_chrom_sizes_as_genomicregionset(chrom_size_path):
 
 
 def pretty(d, indent=0):
-    for key, value in d.items():
-        print('\t' * indent + str(key))
+    for key, value in list(d.items()):
+        print(('\t' * indent + str(key)))
         if isinstance(value, dict):
             pretty(value, indent + 1)
         else:
             for t in value:
-                print('\t' * (indent + 1) + str(t))
+                print(('\t' * (indent + 1) + str(t)))

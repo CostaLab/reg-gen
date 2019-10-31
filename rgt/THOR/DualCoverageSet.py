@@ -17,14 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import sys
 import numpy as np
 from os import path
 from random import sample
 from rgt.CoverageSet import CoverageSet
 from rgt.CoverageSet import get_gc_context
-from normalize import get_normalization_factor
+from .normalize import get_normalization_factor
+from functools import reduce
 
 EPSILON=1e-320
 
@@ -236,14 +237,14 @@ class DualCoverageSet():
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
         iter = self.genomicRegions.__iter__()
-        r = iter.next()
+        r = next(iter)
         sum = r.final
         last = 0
         i = 0
         while sum <= index * self.stepsize:
             last += len(self.cov1.coverage[i])
             try:
-                r = iter.next()
+                r = next(iter)
             except StopIteration:
                 sum += r.final
                 i += 1

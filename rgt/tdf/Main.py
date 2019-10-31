@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import sys
 import time
@@ -16,7 +16,7 @@ from collections import OrderedDict
 # Distal Libraries
 from .. import __version__
 # from rgt.Util import Html
-from triplexTools import get_dbss, check_dir,run_triplexator, run_triplexes, \
+from .triplexTools import get_dbss, check_dir,run_triplexator, run_triplexes, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
                          merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs, merge_DNA_counts
 
@@ -28,7 +28,7 @@ from ..tdf.Statistics import Statistics
 from ..tdf.Report import Report
 
 
-dir = os.getcwd()
+current_dir = os.getcwd()
 
 """
 Triplex Domain Finder (TDF) provides statistical tests and plotting tools for 
@@ -50,9 +50,10 @@ def main():
                                                   for detection of triple helix potential of \
                                                   lncRNAs from genome-wide functional data. \
                                                   Author: Chao-Chung Kuo',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter, version=version_message)
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--version', action='version', version=version_message)
     
-    subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
+    subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
     
     ################### Promoter test ##########################################
 
@@ -189,7 +190,7 @@ def main():
             # there will probably only be one subparser_action,but better save than sorry
             for subparsers_action in subparsers_actions:
                 # get all subparsers and print help
-                for choice, subparser in subparsers_action.choices.items():
+                for choice, subparser in list(subparsers_action.choices.items()):
                     if choice == sys.argv[1]:
                         print("\nYou need more arguments.")
                         print("\nSubparser '{}'".format(choice))
@@ -259,7 +260,7 @@ def main():
 
             get_dbss(input_BED=args.i,output_BED=args.tts,rna_fasta=args.r,output_rbss="none",
                      organism=args.organism,l=args.l,e=args.e,c=args.c,
-                     fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=dir)
+                     fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=current_dir)
 
             os.remove("dna_targeted_region.fa")
             os.remove("dna_targeted_region.txp")
@@ -269,7 +270,7 @@ def main():
         ####################################################################################
         ######### autobinding
         elif args.mode == "autobinding":
-            run_triplexator(ss=None, ds=None, output=dir, l=args.l, e=args.e,
+            run_triplexator(ss=None, ds=None, output=current_dir, l=args.l, e=args.e,
                             par="", autobinding=args.i, summary_file=False)
 
             sys.exit(0)
@@ -293,8 +294,8 @@ def main():
             # Normalised output path
             if not args.t: args.t = args.rn
             # else: title = args.t
-            args.r = os.path.normpath(os.path.join(dir, args.r))
-            args.o = os.path.normpath(os.path.join(dir, args.o, args.t))
+            args.r = os.path.normpath(os.path.join(current_dir, args.r))
+            args.o = os.path.normpath(os.path.join(current_dir, args.o, args.t))
             check_dir(os.path.dirname(os.path.dirname(args.o)))
             check_dir(os.path.dirname(args.o))
             check_dir(args.o)
@@ -316,9 +317,9 @@ def main():
                     print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
                     print("Please add '-score'.")
                     sys.exit(1)
-                if args.de: args.de = os.path.normpath(os.path.join(dir, args.de))
-                if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
-                if args.bg: args.bg = os.path.normpath(os.path.join(dir, args.bg))
+                if args.de: args.de = os.path.normpath(os.path.join(current_dir, args.de))
+                if args.bed: args.bed = os.path.normpath(os.path.join(current_dir, args.bed))
+                if args.bg: args.bg = os.path.normpath(os.path.join(current_dir, args.bg))
 
                 if args.filter_havana == "T": args.filter_havana = True
                 else: args.filter_havana = False
@@ -399,7 +400,7 @@ def main():
             ################################################################################
             if args.mode == 'regiontest':
                 if args.bed:
-                    args.bed = os.path.normpath(os.path.join(dir, args.bed))
+                    args.bed = os.path.normpath(os.path.join(current_dir, args.bed))
 
                 print("\n"+"*************** Genomic Region Test ***************")
                 print("*** Input RNA sequence: " + args.r)
@@ -466,7 +467,7 @@ def main():
                         reports.plot_lines(tpx=stat.tpx, ylabel="Number of TTSs",
                                            linelabel="No. TTSs", filename=args.rn + "_lineplot.png")
                         reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
-                                        truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
+                                        truecounts=list(stat.counts_dbs.values()), sig_boolean=stat.data["region"]["sig_boolean"],
                                         ylabel="Number of TTS on target regions")
                         reports.gen_html_regiontest()
 

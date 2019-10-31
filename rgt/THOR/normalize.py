@@ -25,12 +25,13 @@ Features must have same length in both input files.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 from optparse import OptionParser
 from HTSeq import GenomicPosition, GenomicArray, GenomicInterval
 from math import fabs
 import pysam, sys, operator, os.path
 from itertools import chain
+from functools import reduce
 
 
 class HelpfulOptionParser(OptionParser):
@@ -102,7 +103,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
             chromosomes.add(chrom)
 
         # ignore reads that fall out of chromosome borders, should not be necassary!
-        if chrom not in CHROM_LEN.keys() or pos >= CHROM_LEN[chrom] or pos < 0:
+        if chrom not in list(CHROM_LEN.keys()) or pos >= CHROM_LEN[chrom] or pos < 0:
             # print("illegal read on chromosome %s at positions %s not"%(chrom, pos), file=sys.stderr)
             continue
 
@@ -115,9 +116,8 @@ def get_count_list(CHROM_LEN, path, stop=False):
 
 def _get_overrun(chrom, i, end, step_width, count_list, feature_len):
     """Return overrun of reads that fall in two bins"""
-    help_c1 = filter(lambda x: x[0].start + feature_len > end and x[1] is not 0,
-                     list(count_list[GenomicInterval(chrom, i, end)].steps()))
-    overrun = 0 if not help_c1 else sum(map(lambda x: x[1], help_c1))
+    help_c1 = [x for x in list(count_list[GenomicInterval(chrom, i, end)].steps()) if x[0].start + feature_len > end and x[1] is not 0]
+    overrun = 0 if not help_c1 else sum([x[1] for x in help_c1])
 
     return overrun
 
@@ -141,7 +141,7 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
     result = {}
     for chrom in chromosomes:
         overrun = 0
-        if not chrom_len.has_key(chrom):
+        if chrom not in chrom_len:
             #             print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
             pass
         else:
@@ -152,7 +152,7 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
                 count_list[GenomicInterval(chrom, i, end)] = 0
                 counts += overrun
 
-                if chrom in result.keys():
+                if chrom in list(result.keys()):
                     result[chrom].append(counts)
                 else:
                     result[chrom] = [counts]
@@ -166,7 +166,7 @@ def _get_lists(count_list, zero_counts, two_sample=False):
     if two_sample:
         count_list.sort(key=lambda x: x[0] + x[1])
         if not zero_counts:
-            count_list = filter(lambda x: x[0] != 0.0 or x[1] != 0.0, count_list)
+            count_list = [x for x in count_list if x[0] != 0.0 or x[1] != 0.0]
         pre_pq_list = list(_accumulate(count_list))
         pq_list = pre_pq_list
         max_index = int(len(pq_list) * 0.5)
@@ -174,11 +174,11 @@ def _get_lists(count_list, zero_counts, two_sample=False):
     else:
         count_list.sort(key=lambda a: a[0])
         if not zero_counts:
-            count_list = filter(lambda x: x[0] != 0.0, count_list)
+            count_list = [x for x in count_list if x[0] != 0.0]
         pre_pq_list = list(_accumulate(count_list))
         # get k, a from Diaz et al., 2012, compute p, q from Diaz et al., 2012
-        pq_list = map(lambda x: [x[0] / float(pre_pq_list[-1][0]), x[1] / float(pre_pq_list[-1][1])], pre_pq_list)
-        max_index, max_value = max(enumerate(map(lambda x: fabs(x[0] - x[1]), pq_list)), key=operator.itemgetter(1))
+        pq_list = [[x[0] / float(pre_pq_list[-1][0]), x[1] / float(pre_pq_list[-1][1])] for x in pre_pq_list]
+        max_index, max_value = max(enumerate([fabs(x[0] - x[1]) for x in pq_list]), key=operator.itemgetter(1))
 
     return pq_list, max_index, max_value, \
            float(pq_list[max_index][0]) / pq_list[max_index][1], \
@@ -198,9 +198,9 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     counts_dict_2 = get_bins(chrom_len, chromosomes, count_list_2, step_width, feature_len)
     counts_dict_1 = get_bins(chrom_len, chromosomes, count_list_1, step_width, feature_len)
     # merge values with zip, obtain [ [(),()...], [(),(),..] ]
-    tmp_list = [zip(counts_dict_1[chrom], counts_dict_2[chrom]) for chrom in counts_dict_2.keys()]
+    tmp_list = [list(zip(counts_dict_1[chrom], counts_dict_2[chrom])) for chrom in list(counts_dict_2.keys())]
     # convert tmp_list to [[],[],[]...]
-    count_list = map(lambda x: list(x), list(chain.from_iterable(tmp_list)))
+    count_list = [list(x) for x in list(chain.from_iterable(tmp_list))]
 
     return _get_lists(count_list, zero_counts, two_sample)
 
@@ -234,7 +234,7 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     # tmp.sort(key=lambda x: x[1], reverse=True)
     # tmp = dict(tmp[:min(len(tmp), 5)])
     tmp = {}
-    for k in chrom_sizes_dict.keys():
+    for k in list(chrom_sizes_dict.keys()):
         new_k = k if k.startswith('chr') else 'chr' + k
         tmp[new_k] = chrom_sizes_dict[k]
     # tmp = chrom_sizes_dict

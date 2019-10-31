@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # Python
-from __future__ import print_function
+
 import sys
 
 # Internal
@@ -72,8 +72,8 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
                               save_input=options.save_input, m_threshold=options.m_threshold,
                               a_threshold=options.a_threshold, rmdup=options.rmdup)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
-            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
-            tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
+            tracker.write(text=" ".join([str(x) for x in exp_data.exts]), header="Extension size (rep1, rep2, input1, input2)")
+            tracker.write(text=[str(x) for x in exp_data.scaling_factors_ip], header="Scaling factors")
             break
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
