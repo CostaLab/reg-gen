@@ -26,8 +26,6 @@ from os.path import basename
 from MOODS import tools, parsers
 import argparse
 
-
-
 # Parameters
 dataLocation = "./"
 group = "."

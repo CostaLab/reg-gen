@@ -5,8 +5,6 @@
 ###################################################################################################
 
 # Import
-
-
 from optparse import OptionParser
 from os import system, path, mkdir
 from sys import platform

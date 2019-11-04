@@ -6,9 +6,8 @@
 ###################################################################################################
 
 # Import
-
 import gzip
-from optparse import OptionParser
+import argparse
 from os import system, path, remove, mkdir
 from sys import platform
 import re
@@ -21,61 +20,65 @@ def download(url, prefix, output=None):
         system("wget -c --tries=0 --read-timeout=30 " + url + " -P " + prefix)
 
 
-# Optional Input
-usage_message = "python setupGenomicData.py [options]"
-
-# Initializing Option Parser
-parser = OptionParser(usage=usage_message)
+# Initialising Options
+parser = argparse.ArgumentParser()
 
 # Parameter: RGT Data Location
-parser.add_option("--all", dest="all", action="store_true", default=False, help="Fetch all data sets.")
-parser.add_option("--hg19", dest="hg19", action="store_true", default=False, help="Fetch human genome files.")
-parser.add_option("--hg38", dest="hg38", action="store_true", default=False, help="Fetch human genome files.")
-parser.add_option("--mm9", dest="mm9", action="store_true", default=False, help="Fetch mouse files.")
-parser.add_option("--mm10", dest="mm10", action="store_true", default=False, help="Fetch mouse files.")
-parser.add_option("--zv9", dest="zv9", action="store_true", default=False, help="Fetch zebrafish files.")
-parser.add_option("--zv10", dest="zv10", action="store_true", default=False, help="Fetch zebrafish files.")
+parser.add_argument("--all", dest="all", action="store_true", default=False, help="Fetch all data sets.")
+parser.add_argument("--hg19", dest="hg19", action="store_true", default=False, help="Fetch human genome files.")
+parser.add_argument("--hg38", dest="hg38", action="store_true", default=False, help="Fetch human genome files.")
+parser.add_argument("--mm9", dest="mm9", action="store_true", default=False, help="Fetch mouse files.")
+parser.add_argument("--mm10", dest="mm10", action="store_true", default=False, help="Fetch mouse files.")
+parser.add_argument("--zv9", dest="zv9", action="store_true", default=False, help="Fetch zebrafish files.")
+parser.add_argument("--zv10", dest="zv10", action="store_true", default=False, help="Fetch zebrafish files.")
 
-parser.add_option("--hg19-genome-path", type="string", metavar="STRING", dest="hg19_genome_path", default=None,
-                  help="Path to an already existing hg19 genome (all chromosomes in the same file).")
-parser.add_option("--hg38-genome-path", type="string", metavar="STRING", dest="hg38_genome_path", default=None,
-                  help="Path to an already existing hg38 genome (all chromosomes in the same file).")
-parser.add_option("--mm9-genome-path", type="string", metavar="STRING", dest="mm9_genome_path", default=None,
-                  help="Path to an already existing mm9 genome (all chromosomes in the same file).")
-parser.add_option("--mm10-genome-path", type="string", metavar="STRING", dest="mm10_genome_path", default=None,
-                  help="Path to an already existing mm9 genome (all chromosomes in the same file).")
-parser.add_option("--zv9-genome-path", type="string", metavar="STRING", dest="zv9_genome_path", default=None,
-                  help="Path to an already existing zv9 genome (all chromosomes in the same file).")
-parser.add_option("--zv10-genome-path", type="string", metavar="STRING", dest="zv10_genome_path", default=None,
-                  help="Path to an already existing zv10 genome (all chromosomes in the same file).")
+parser.add_argument("--hg19-genome-path", type=str, metavar="STRING", dest="hg19_genome_path", default=None,
+                    help="Path to an already existing hg19 genome (all chromosomes in the same file).")
+parser.add_argument("--hg38-genome-path", type=str, metavar="STRING", dest="hg38_genome_path", default=None,
+                    help="Path to an already existing hg38 genome (all chromosomes in the same file).")
+parser.add_argument("--mm9-genome-path", type=str, metavar="STRING", dest="mm9_genome_path", default=None,
+                    help="Path to an already existing mm9 genome (all chromosomes in the same file).")
+parser.add_argument("--mm10-genome-path", type=str, metavar="STRING", dest="mm10_genome_path", default=None,
+                    help="Path to an already existing mm9 genome (all chromosomes in the same file).")
+parser.add_argument("--zv9-genome-path", type=str, metavar="STRING", dest="zv9_genome_path", default=None,
+                    help="Path to an already existing zv9 genome (all chromosomes in the same file).")
+parser.add_argument("--zv10-genome-path", type=str, metavar="STRING", dest="zv10_genome_path", default=None,
+                    help="Path to an already existing zv10 genome (all chromosomes in the same file).")
 
-parser.add_option("--hg19-gtf-path", type="string", metavar="STRING", dest="hg19_gtf_path", default=None,
-                  help="Path to an already existing hg19 GTF file.")
-parser.add_option("--hg38-gtf-path", type="string", metavar="STRING", dest="hg38_gtf_path", default=None,
-                  help="Path to an already existing hg38 GTF file.")
-parser.add_option("--mm9-gtf-path", type="string", metavar="STRING", dest="mm9_gtf_path", default=None,
-                  help="Path to an already existing mm9 GTF file.")
-parser.add_option("--mm10-gtf-path", type="string", metavar="STRING", dest="mm10_gtf_path", default=None,
-                  help="Path to an already existing mm10 GTF file.")
-parser.add_option("--zv9-gtf-path", type="string", metavar="STRING", dest="zv9_gtf_path", default=None,
-                  help="Path to an already existing zv9 GTF file.")
-parser.add_option("--zv10-gtf-path", type="string", metavar="STRING", dest="zv10_gtf_path", default=None,
-                  help="Path to an already existing zv10 GTF file.")
+parser.add_argument("--hg19-gtf-path", type=str, metavar="STRING", dest="hg19_gtf_path", default=None,
+                    help="Path to an already existing hg19 GTF file.")
+parser.add_argument("--hg38-gtf-path", type=str, metavar="STRING", dest="hg38_gtf_path", default=None,
+                    help="Path to an already existing hg38 GTF file.")
+parser.add_argument("--mm9-gtf-path", type=str, metavar="STRING", dest="mm9_gtf_path", default=None,
+                    help="Path to an already existing mm9 GTF file.")
+parser.add_argument("--mm10-gtf-path", type=str, metavar="STRING", dest="mm10_gtf_path", default=None,
+                    help="Path to an already existing mm10 GTF file.")
+parser.add_argument("--zv9-gtf-path", type=str, metavar="STRING", dest="zv9_gtf_path", default=None,
+                    help="Path to an already existing zv9 GTF file.")
+parser.add_argument("--zv10-gtf-path", type=str, metavar="STRING", dest="zv10_gtf_path", default=None,
+                    help="Path to an already existing zv10 GTF file.")
 
 # Repeat masker
-parser.add_option("--hg38-rm", dest="hg38_rm", action="store_true", default=False, help="Fetch repeat masker files for hg38 from Broad institute.")
-parser.add_option("--hg19-rm", dest="hg19_rm", action="store_true", default=False, help="Fetch repeat masker files for hg19 from Broad institute.")
-parser.add_option("--mm9-rm", dest="mm9_rm", action="store_true", default=False, help="Fetch repeat masker files for mm9 from Broad institute.")
+parser.add_argument("--hg38-rm", dest="hg38_rm", action="store_true", default=False,
+                    help="Fetch repeat masker files for hg38 from Broad institute.")
+parser.add_argument("--hg19-rm", dest="hg19_rm", action="store_true", default=False,
+                    help="Fetch repeat masker files for hg19 from Broad institute.")
+parser.add_argument("--mm9-rm", dest="mm9_rm", action="store_true", default=False,
+                    help="Fetch repeat masker files for mm9 from Broad institute.")
 
-options, arguments = parser.parse_args()
+args = parser.parse_args()
 
-if options.all:
-    options.hg19 = True
-    options.hg38 = True
-    options.mm9 = True
-    options.mm10 = True
-    options.zv9 = True
-    options.zv10 = True
+if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.zv9, args.zv10]):
+    parser.print_help()
+    exit(1)
+
+if args.all:
+    args.hg19 = True
+    args.hg38 = True
+    args.mm9 = True
+    args.mm10 = True
+    args.zv9 = True
+    args.zv10 = True
 
 ###################################################################################################
 # Parameters
@@ -96,7 +99,7 @@ if platform not in supported_platforms:
 
 gencode_url = "ftp://ftp.ebi.ac.uk/pub/databases/gencode/"
 
-if options.hg19:
+if args.hg19:
 
     output_location = path.join(curr_dir, "hg19")
     if not path.exists(output_location):
@@ -104,9 +107,9 @@ if options.hg19:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_hg19.fa")
-    if options.hg19_genome_path:
+    if args.hg19_genome_path:
         print("Creating symbolic link to HG19 genome")
-        system("ln -s " + options.hg19_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.hg19_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/"
@@ -118,7 +121,7 @@ if options.hg19:
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
             download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(gz_file.read())
+            output_genome_file.write(str(gz_file.read()))
             gz_file.close()
             to_remove.append(gz_file_name)
             print("OK")
@@ -128,9 +131,9 @@ if options.hg19:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.v19.annotation.gtf")
-    if options.hg19_gtf_path:
+    if args.hg19_gtf_path:
         print("Creating symbolic link to HG19 GTF")
-        system("ln -s " + options.hg19_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.hg19_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
         gtf_url = gencode_url + "Gencode_human/release_19/gencode.v19.annotation.gtf.gz"
@@ -140,7 +143,7 @@ if options.hg19:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
@@ -150,7 +153,7 @@ if options.hg19:
 # Genomic Data HG38
 ###################################################################################################
 
-if options.hg38:
+if args.hg38:
 
     output_location = path.join(curr_dir, "hg38")
     if not path.exists(output_location):
@@ -158,9 +161,9 @@ if options.hg38:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_hg38.fa")
-    if options.hg38_genome_path:
+    if args.hg38_genome_path:
         print("Creating symbolic link to HG38 genome")
-        system("ln -s " + options.hg38_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.hg38_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = gencode_url + "Gencode_human/release_24/GRCh38.primary_assembly.genome.fa.gz"
@@ -172,7 +175,7 @@ if options.hg38:
         # if(path.isfile(gz_file_name)): remove(gz_file_name)
         download(gen_root_url, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
-        output_genome_file.write(gz_file.read())
+        output_genome_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gz_file_name)
         print("OK")
@@ -180,9 +183,9 @@ if options.hg38:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.v24.annotation.gtf")
-    if options.hg38_gtf_path:
+    if args.hg38_gtf_path:
         print("Creating symbolic link to HG38 GTF")
-        system("ln -s " + options.hg38_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.hg38_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
         gtf_url = gencode_url + "Gencode_human/release_24/gencode.v24.annotation.gtf.gz"
@@ -192,7 +195,7 @@ if options.hg38:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
@@ -200,12 +203,11 @@ if options.hg38:
 
     # Get Repeat Masker
 
-
 ###################################################################################################
 # Genomic Data MM9
 ###################################################################################################
 
-if options.mm9:
+if args.mm9:
 
     output_location = path.join(curr_dir, "mm9")
     if not path.exists(output_location):
@@ -213,9 +215,9 @@ if options.mm9:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm9.fa")
-    if options.mm9_genome_path:
+    if args.mm9_genome_path:
         print("Creating symbolic link to MM9 genome")
-        system("ln -s " + options.mm9_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.mm9_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/mm9/chromosomes/"
@@ -227,7 +229,7 @@ if options.mm9:
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
             download(gen_root_url + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(gz_file.read())
+            output_genome_file.write(str(gz_file.read()))
             gz_file.close()
             to_remove.append(gz_file_name)
             print("OK")
@@ -237,9 +239,9 @@ if options.mm9:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.vM1.annotation.gtf")
-    if options.mm9_gtf_path:
+    if args.mm9_gtf_path:
         print("Creating symbolic link to MM9 GTF")
-        system("ln -s " + options.mm9_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.mm9_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
 
@@ -250,7 +252,7 @@ if options.mm9:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
@@ -260,7 +262,7 @@ if options.mm9:
 # Genomic Data MM10
 ###################################################################################################
 
-if options.mm10:
+if args.mm10:
 
     output_location = path.join(curr_dir, "mm10")
     if not path.exists(output_location):
@@ -268,9 +270,9 @@ if options.mm10:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm10.fa")
-    if options.mm10_genome_path:
+    if args.mm10_genome_path:
         print("Creating symbolic link to MM10 genome")
-        system("ln -s " + options.mm10_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.mm10_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = gencode_url + "Gencode_mouse/release_M11/GRCm38.primary_assembly.genome.fa.gz"
@@ -279,7 +281,7 @@ if options.mm10:
         gz_file_name = path.join(output_location, "GRCm38.primary_assembly.genome.fa.gz")
         download(gen_root_url, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
-        output_genome_file.write(gz_file.read())
+        output_genome_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gz_file_name)
         print("OK")
@@ -287,9 +289,9 @@ if options.mm10:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.vM20.annotation.gtf")
-    if options.mm10_gtf_path:
+    if args.mm10_gtf_path:
         print("Creating symbolic link to MM10 GTF")
-        system("ln -s " + options.mm10_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.mm10_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
         gtf_url = gencode_url + "Gencode_mouse/release_M20/gencode.vM20.annotation.gtf.gz"
@@ -299,7 +301,7 @@ if options.mm10:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(gz_file.read())
+        gtf_output_file.write(str(gz_file.read()))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
@@ -309,7 +311,7 @@ if options.mm10:
 # Genomic Data ZV9
 ###################################################################################################
 
-if options.zv9:
+if args.zv9:
 
     output_location = path.join(curr_dir, "zv9")
     if not path.exists(output_location):
@@ -317,9 +319,9 @@ if options.zv9:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_zv9_ensembl_release_79.fa")
-    if options.zv9_genome_path:
+    if args.zv9_genome_path:
         print("Creating symbolic link to ZV9 genome")
-        system("ln -s " + options.zv9_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.zv9_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = "ftp://ftp.ensembl.org/pub/release-79/fasta/danio_rerio/dna/"
@@ -331,7 +333,7 @@ if options.zv9:
             gz_file_name = path.join(output_location, "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz")
             download(gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(re.sub("^>.*", ">chr"+chr_name, gz_file.read(), flags=re.MULTILINE))
+            output_genome_file.write(re.sub("^>.*", ">chr" + chr_name, str(gz_file.read()), flags=re.MULTILINE))
             gz_file.close()
             to_remove.append(gz_file_name)
             print("OK")
@@ -341,9 +343,9 @@ if options.zv9:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "Danio_rerio.Zv9.79.gtf")
-    if options.zv9_gtf_path:
+    if args.zv9_gtf_path:
         print("Creating symbolic link to ZV9 GTF")
-        system("ln -s " + options.zv9_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.zv9_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
         gtf_url = "ftp://ftp.ensembl.org/pub/release-79/gtf/danio_rerio/Danio_rerio.Zv9.79.gtf.gz"
@@ -353,7 +355,7 @@ if options.zv9:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read(), flags=re.MULTILINE))
+        gtf_output_file.write(re.sub('^([0-9a-zA-Z_\\\.]+\t)', "chr\\1", str(gz_file.read()), flags=re.MULTILINE))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
@@ -363,7 +365,7 @@ if options.zv9:
 # Genomic Data ZV10
 ###################################################################################################
 
-if options.zv10:
+if args.zv10:
 
     output_location = path.join(curr_dir, "zv10")
     if not path.exists(output_location):
@@ -371,9 +373,9 @@ if options.zv10:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_zv10_ensembl_release_84.fa")
-    if options.zv10_genome_path:
+    if args.zv10_genome_path:
         print("Creating symbolic link to ZV10 genome")
-        system("ln -s " + options.zv10_genome_path + " " + output_genome_file_name)
+        system("ln -s " + args.zv10_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
         gen_root_url = "ftp://ftp.ensembl.org/pub/release-84/fasta/danio_rerio/dna/"
@@ -385,7 +387,7 @@ if options.zv10:
             gz_file_name = path.join(output_location, "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz")
             download(gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz", output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write(re.sub("^>.*", ">chr"+chr_name, gz_file.read(), flags=re.MULTILINE))
+            output_genome_file.write(re.sub("^>.*", ">chr" + chr_name, str(gz_file.read()), flags=re.MULTILINE))
             gz_file.close()
             to_remove.append(gz_file_name)
             print("OK")
@@ -395,9 +397,9 @@ if options.zv10:
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "Danio_rerio.GRCz10.84.gtf")
-    if options.zv10_gtf_path:
+    if args.zv10_gtf_path:
         print("Creating symbolic link to ZV10 GTF")
-        system("ln -s " + options.zv10_gtf_path + " " + gtf_output_file_name)
+        system("ln -s " + args.zv10_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
         gtf_url = "ftp://ftp.ensembl.org/pub/release-84/gtf/danio_rerio/Danio_rerio.GRCz10.84.gtf.gz"
@@ -407,23 +409,21 @@ if options.zv10:
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
-        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read(), flags=re.MULTILINE))
+        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", str(gz_file.read()), flags=re.MULTILINE))
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
         print("OK")
 
-
 ###################################################################################################
 # Repeat Maskers
 ###################################################################################################
 
-
-if options.hg38_rm:
+if args.hg38_rm:
     root_url = "https://data.broadinstitute.org/igvdata/annotations/hg38/rmsk/"
     gen_root_url = ["LINE.bed", "LTR.bed", "DNA.bed", "Simple_repeat.bed", "Low_complexity.bed",
                     "Satellite.bed", "RC.bed", "Retroposon.bed", "RNA.bed", "rRNA.bed",
-                    "scRNA.bed", "snRNA.bed", "srpRNA.bed", "tRNA.bed" ]
+                    "scRNA.bed", "snRNA.bed", "srpRNA.bed", "tRNA.bed"]
 
     output_location = path.join(curr_dir, "hg38", "repeat_maskers")
     if not path.exists(output_location):
@@ -435,18 +435,18 @@ if options.hg38_rm:
         gz_file_name = path.join(output_location, masker + ".gz")
         download(root_url + masker + ".gz", output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
-        output_file.write(gz_file.read())
+        output_file.write(str(gz_file.read()))
         gz_file.close()
         print(path.join(output_location, masker) + "\t.....OK")
         output_file.close()
     for gz_file_name in to_remove:
         remove(gz_file_name)
 
-if options.hg19_rm:
+if args.hg19_rm:
     root_url = "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/variations/"
     gen_root_url = ["SINE.rmask.gz", "LINE.rmask.gz", "LTR.rmask.gz", "DNA.rmask.gz",
                     "Simple_repeat.rmask.gz", "Low_complexity.rmask.gz", "Satellite.rmask.gz", "RC.rmask.gz",
-                    "RNA.rmask.gz", "Other.rmask.gz", "Unknown.rmask.gz" ]
+                    "RNA.rmask.gz", "Other.rmask.gz", "Unknown.rmask.gz"]
 
     output_location = path.join(curr_dir, "hg19", "repeat_maskers")
     if not path.exists(output_location):
@@ -454,12 +454,12 @@ if options.hg19_rm:
 
     to_remove = []
     for masker in gen_root_url:
-        bedname = masker.split(".")[0]+".bed"
+        bedname = masker.split(".")[0] + ".bed"
         output_file = open(path.join(output_location, bedname), "w")
         gz_file_name = path.join(output_location, masker)
         download(root_url + masker, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
-        output_file.write(gz_file.read())
+        output_file.write(str(gz_file.read()))
         gz_file.close()
         print(path.join(output_location, bedname) + "\t.....OK")
         output_file.close()
@@ -467,8 +467,7 @@ if options.hg19_rm:
     for gz_file_name in to_remove:
         remove(gz_file_name)
 
-
-if options.mm9_rm:
+if args.mm9_rm:
     gen_root_url = ["http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_SINE.bed",
                     "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_LINE.bed",
                     "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_LTR.bed",
@@ -493,7 +492,7 @@ if options.mm9_rm:
             gz_file_name = path.join(output_location, path.basename(masker))
             download(masker, output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
-            output_file.write(gz_file.read())
+            output_file.write(str(gz_file.read()))
             gz_file.close()
             output_file.close()
             to_remove.append(gz_file_name)

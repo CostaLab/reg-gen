@@ -10,10 +10,6 @@ from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
-p3_supported = False
-if not sys.version_info[0] == 2:
-    p3_supported = True
-
 """
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
@@ -89,10 +85,6 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
     triplexes_file = "lib/libtriplexator.so"
-
-if not p3_supported:
-    # needed to be able to do "import configparser", which is the new Python 3 name for ConfigParser
-    common_deps.append("configparser")
 
 tools_dictionary = {
     "core": (
@@ -400,24 +392,25 @@ author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
-if p3_supported:
-    # I'm not really sure what was going on here, but without this few lines
-    # the installation fails when processing the external Bedtools binaries.
-    # It looks like Python3 setuptools expects the "external scripts" to be python scripts.
-    # If they are not, the tokenize function fails. This few lines of code "hijack" the tokenize function
-    # to allow it to support binaries files as scripts.
-    import tokenize
-    try:
-        _detect_encoding = tokenize.detect_encoding
-    except AttributeError:
-        pass
-    else:
-        def detect_encoding(readline):
-            try:
-                return _detect_encoding(readline)
-            except SyntaxError:
-                return 'latin-1', []
-        tokenize.detect_encoding = detect_encoding
+### TO REVIEW LATER
+# I'm not really sure what was going on here, but without this few lines
+# the installation fails when processing the external Bedtools binaries.
+# It looks like Python3 setuptools expects the "external scripts" to be python scripts.
+# If they are not, the tokenize function fails. This few lines of code "hijack" the tokenize function
+# to allow it to support binaries files as scripts.
+import tokenize
+try:
+    _detect_encoding = tokenize.detect_encoding
+except AttributeError:
+    pass
+else:
+    def detect_encoding(readline):
+        try:
+            return _detect_encoding(readline)
+        except SyntaxError:
+            return 'latin-1', []
+    tokenize.detect_encoding = detect_encoding
+###
 
 # External scripts
 external_scripts = []
@@ -449,6 +442,7 @@ setup(name="RGT",
       entry_points=current_entry_points,
       install_requires=current_install_requires,
       scripts=external_scripts,
+      python_requires='>=3.6',
       url="http://www.regulatory-genomics.org",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)

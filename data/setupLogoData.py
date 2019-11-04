@@ -7,8 +7,6 @@
 ###################################################################################################
 
 # Import
-
-
 import argparse
 from os import path, mkdir, listdir, walk
 from sys import platform, exit
@@ -16,7 +14,7 @@ from sys import platform, exit
 from Bio import motifs
 
 # Initializing Option Parser
-parser = argparse.ArgumentParser(prog='setupLogoData')
+parser = argparse.ArgumentParser()
 
 g = parser.add_mutually_exclusive_group()
 
