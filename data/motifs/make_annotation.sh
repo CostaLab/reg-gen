@@ -1,6 +1,8 @@
 #!/bin/bash
 # param -j for JASPAR, -h for HOCOMOCO
 
+echo $1
+
 # check parameters
 # JASPAR: source=1, HOCOMOCO: source=2, both : source=0
 source=0
@@ -17,26 +19,26 @@ fi
 
 if [ ${source} -eq 0 ] || [ ${source} -eq 1 ]
     then
-        echo "### Jaspar (2018) Annotation ###"
+        echo "### Jaspar (2020) Annotation ###"
 
         echo "Downloading SQL dump.."
 
-        wget -c http://jaspar.genereg.net/download/database/JASPAR2018.sql.tar.gz --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6"
+        wget -c http://jaspar.genereg.net/download/database/JASPAR2020.sql.tar.gz --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6"
 
         echo "Un-tarring it (it isn't actually gzipped).."
-        tar xvf JASPAR2018.sql.tar.gz || { echo "failed extracting archive"; exit 1; }
+        tar xvf JASPAR2020.sql.tar.gz || { echo "failed extracting archive"; exit 1; }
 
         echo "Converting to SQLite3.."
 
         chmod 755 mysql2sqlite
-        ./mysql2sqlite JASPAR2018.sql | sqlite3 jaspar.db || { echo "failed converting DB to SQLite3"; exit 1; }
+        ./mysql2sqlite JASPAR2020.sql | sqlite3 jaspar.db || { echo "failed converting DB to SQLite3"; exit 1; }
 
         echo "Exporting annotation.."
 
         sqlite3 jaspar.db '.read jaspar_anno_query.sql' | sed -e 's/"//g' > jaspar_anno.csv || { echo "failed exporting sql table"; exit 1; }
 
         echo "Cleaning up.."
-        rm ._JASPAR2018.sql JASPAR2018.sql jaspar.db JASPAR2018.sql.tar.gz
+        rm JASPAR2020.sql jaspar.db JASPAR2020.sql.tar.gz
 
         echo "Done"
 
@@ -80,5 +82,5 @@ if [ ${source} -eq 0 ] || [ ${source} -eq 2 ]
         echo
 
         echo "Re-creating Mtf file.."
-        python createMtf.py --h
+        python createMtf.py --hoc
 fi
