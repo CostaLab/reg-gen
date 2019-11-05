@@ -63,8 +63,8 @@ if options.hoc:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     hocomoco_anno = {}
-    with open("hocomoco_anno.csv", "rb") as f:
-        csvf = csv.reader(f)
+    with open("hocomoco_anno.csv", "r") as f:
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             hocomoco_anno[l[0]] = l[1:]
     for inputFileName in glob(inputLocation + "*.pwm"):
@@ -122,7 +122,7 @@ if options.jv:
     resultMatrix = []
     jaspar_anno = {}
     with open("jaspar_anno.csv", "r") as f:
-        csvf = csv.reader(f)
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             if not l:
                 continue
@@ -181,7 +181,7 @@ if options.jp:
     resultMatrix = []
     jaspar_anno = {}
     with open("jaspar_anno.csv", "r") as f:
-        csvf = csv.reader(f)
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             if not l:
                 continue

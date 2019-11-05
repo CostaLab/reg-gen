@@ -1,6 +1,8 @@
 #!/bin/bash
 # param -j for JASPAR, -h for HOCOMOCO
 
+echo $1
+
 # check parameters
 # JASPAR: source=1, HOCOMOCO: source=2, both : source=0
 source=0
@@ -80,5 +82,5 @@ if [ ${source} -eq 0 ] || [ ${source} -eq 2 ]
         echo
 
         echo "Re-creating Mtf file.."
-        python createMtf.py --h
+        python createMtf.py --hoc
 fi

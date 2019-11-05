@@ -22,7 +22,7 @@ n_lines = len(content)
 output_folder = npath(args.output_folder)
 
 # make output directory path, if it doesn't exist
-os.makedirs(output_folder)
+os.makedirs(output_folder, exist_ok=True)
 
 ###################################################################################################
 # JASPAR 2014
