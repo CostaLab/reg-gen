@@ -121,7 +121,7 @@ if options.jv:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     jaspar_anno = {}
-    with open("jaspar_anno.csv", "rb") as f:
+    with open("jaspar_anno.csv", "r") as f:
         csvf = csv.reader(f)
         for l in csvf:
             if not l:
@@ -180,7 +180,7 @@ if options.jp:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     jaspar_anno = {}
-    with open("jaspar_anno.csv", "rb") as f:
+    with open("jaspar_anno.csv", "r") as f:
         csvf = csv.reader(f)
         for l in csvf:
             if not l:

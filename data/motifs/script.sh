@@ -62,18 +62,18 @@ elif [ ${source} == "-j" ]
         echo "JASPAR"
         echo
         echo "Create Pwm files.."
-        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
-        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
-        python createPwm.py -i JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_vertebrates
-        python createPwm.py -i JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_plants
+        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2020_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+        wget -c --user-agent="Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6" http://jaspar.genereg.net/download/CORE/JASPAR2020_CORE_plants_non-redundant_pfms_jaspar.txt
+        python createPwm.py -i JASPAR2020_CORE_vertebrates_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_vertebrates
+        python createPwm.py -i JASPAR2020_CORE_plants_non-redundant_pfms_jaspar.txt -f jaspar-2016 -o jaspar_plants
         echo
         echo "Create Mtf file..."
         ./make_annotation.sh -j
         echo
 
         # clean up
-        rm JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
-        rm JASPAR2018_CORE_plants_non-redundant_pfms_jaspar.txt
+        rm JASPAR2020_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+        rm JASPAR2020_CORE_plants_non-redundant_pfms_jaspar.txt
 
 elif [ ${source} == "-all" ]
     then

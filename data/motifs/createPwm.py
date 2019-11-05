@@ -54,10 +54,10 @@ if args.input_format == "jaspar-2014":
 elif args.input_format == "jaspar-2016":
     for i in range(n_lines // 5):
         motif_name = content[i * 5 + 0].replace(">", "").replace("\t", ".").replace("/", "_").strip()
-        count_a = content[i * 5 + 1].translate(None, "[A]").strip()
-        count_c = content[i * 5 + 2].translate(None, "[C]").strip()
-        count_g = content[i * 5 + 3].translate(None, "[G]").strip()
-        count_t = content[i * 5 + 4].translate(None, "[T]").strip()
+        count_a = content[i * 5 + 1].translate(str.maketrans('','',"[A]")).strip()
+        count_c = content[i * 5 + 2].translate(str.maketrans('','',"[C]")).strip()
+        count_g = content[i * 5 + 3].translate(str.maketrans('','',"[G]")).strip()
+        count_t = content[i * 5 + 4].translate(str.maketrans('','',"[T]")).strip()
         count_a = re.sub('\s+', ' ', count_a)
         count_c = re.sub('\s+', ' ', count_c)
         count_g = re.sub('\s+', ' ', count_g)

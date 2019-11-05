@@ -1,76 +1,76 @@
 MA0002	MA0002.2.RUNX1	2	RUNX1	Runt-related factors	Q01196	ChIP-seq	vertebrates	Mus musculus	2.8725,6.6975,8.04,10.693,11.679,13.42
-MA0003	MA0003.3.TFAP2A	3	TFAP2A	AP-2	P05549	HT-SELEX	vertebrates	Homo sapiens	1.68,6.3075,7.885,10.761,11.8655,13.5495
-MA0004	MA0004.1.Arnt	1	Arnt	PAS domain factors	P53762	SELEX	vertebrates	Mus musculus	3.093,5.2725,7.35,10.3271973427,10.3271973427,10.3271973427
-MA0006	MA0006.1.Ahr::Arnt	1	Ahr::Arnt	PAS domain factors	P30561;P53762	SELEX	vertebrates	Mus musculus	3.9075,6.2295,8.6555,10.2222885869,10.2222885869,10.2222885869
+MA0003	MA0003.4.TFAP2A	4	TFAP2A	AP-2	P05549	ChIP-seq	vertebrates	Homo sapiens	2.1745,5.9955,7.472,10.366,11.5145,13.797
+MA0004	MA0004.1.Arnt	1	Arnt	PAS domain factors	P53762	SELEX	vertebrates	Mus musculus	3.093,5.2725,7.35,10.327197342700234,10.327197342700234,10.327197342700234
+MA0006	MA0006.1.Ahr::Arnt	1	Ahr::Arnt	PAS domain factors	P30561;P53762	SELEX	vertebrates	Mus musculus	3.9075,6.2295,8.6555,10.222288586894066,10.222288586894066,10.222288586894066
 MA0007	MA0007.3.Ar	3	Ar	Steroid hormone receptors (NR3)	P19091	HT-SELEX	vertebrates	Mus musculus	-9.65,-2.532,0.145,5.7055,7.819,12.151
-MA0009	MA0009.2.T	2	T	Brachyury-related factors	O15178	HT-SELEX	vertebrates	Homo sapiens	-7.519,-0.7165,1.7735,6.7655,8.632,12.432
+MA0009	MA0009.2.TBXT	2	TBXT	Brachyury-related factors	O15178	HT-SELEX	vertebrates	Homo sapiens	-7.519,-0.7165,1.7735,6.7655,8.632,12.432
 MA0014	MA0014.3.PAX5	3	PAX5	Paired domain only	Q02548	ChIP-seq	vertebrates	Homo sapiens	2.7485,6.3335,7.6395,10.4755,11.461,13.449
 MA0017	MA0017.2.NR2F1	2	NR2F1	RXR-related receptors (NR2)	P10589	HT-SELEX	vertebrates	Homo sapiens	-7.1505,0.3285,4.767,10.6335,11.974,14.1845
-MA0018	MA0018.3.CREB1	3	CREB1	CREB-related factors	P16220	ChIP-seq	vertebrates	Homo sapiens	2.096,5.863,7.2655,10.328,11.169,13.799
-MA0019	MA0019.1.Ddit3::Cebpa	1	Ddit3::Cebpa	C/EBP-related	Q62857;P05554	SELEX	vertebrates	Rattus norvegicus	2.644,6.4005,7.831,10.648,11.6445,13.533
+MA0018	MA0018.4.CREB1	4	CREB1	CREB-related factors	P16220	ChIP-seq	vertebrates	Homo sapiens	2.385,5.962,7.541,10.2425,11.222,14.0375
+MA0019	MA0019.1.Ddit3::Cebpa	1	Ddit3::Cebpa	C/EBP-related factors	Q62857;P05554	SELEX	vertebrates	Rattus norvegicus	2.644,6.4005,7.831,10.648,11.6445,13.533
 MA0024	MA0024.3.E2F1	3	E2F1	E2F-related factors	Q01094	HT-SELEX	vertebrates	Homo sapiens	-0.4225,4.974,6.853,10.333,11.5615,13.887
-MA0025	MA0025.1.NFIL3	1	NFIL3	C/EBP-related	Q16649	SELEX	vertebrates	Homo sapiens	1.287,5.338,7.2335,10.076,11.41,14.4065
-MA0027	MA0027.2.EN1	2	EN1	NK-related factors	Q05925	HT-SELEX	vertebrates	Homo sapiens	3.184,7.1475,8.6185,10.965,11.199,11.9018228923
+MA0025	MA0025.2.NFIL3	2	NFIL3	C/EBP-related	Q16649	ChIP-seq	vertebrates	Homo sapiens	2.385,5.9875,7.541,10.288,11.286,13.929
+MA0027	MA0027.2.EN1	2	EN1	NK-related factors	Q05925	HT-SELEX	vertebrates	Homo sapiens	3.184,7.1475,8.6185,10.965,11.199,11.901822892324972
 MA0028	MA0028.2.ELK1	2	ELK1	Ets-related factors	P19419	HT-SELEX	vertebrates	Homo sapiens	-2.5385,3.193,5.331,9.5865,11.1705,14.173
 MA0029	MA0029.1.Mecom	1	Mecom	Factors with multiple dispersed zinc fingers	A4QPC8	SELEX	vertebrates	Mus musculus	-1.8015,3.067,4.917,8.761,10.265,13.349
 MA0030	MA0030.1.FOXF2	1	FOXF2	Forkhead box (FOX) factors	Q12947	SELEX	vertebrates	Homo sapiens	0.262,4.9335,6.5835,9.8945,11.421,14.1535
-MA0031	MA0031.1.FOXD1	1	FOXD1	Forkhead box (FOX) factors	Q16676	SELEX	vertebrates	Homo sapiens	3.359,6.0695,7.938,9.894,11.806,13.5871582989
+MA0031	MA0031.1.FOXD1	1	FOXD1	Forkhead box (FOX) factors	Q16676	SELEX	vertebrates	Homo sapiens	3.359,6.0695,7.938,9.894,11.806,13.58715829889991
 MA0032	MA0032.2.FOXC1	2	FOXC1	Forkhead box (FOX) factors	Q12948	HT-SELEX	vertebrates	Homo sapiens	1.156,5.7015,7.365,10.6605,11.769,13.8965
-MA0033	MA0033.2.FOXL1	2	FOXL1	Forkhead box (FOX) factors	Q12952	HT-SELEX	vertebrates	Homo sapiens	1.3335,5.981,8.1095,12.015,12.1891960344,12.1891960344
-MA0035	MA0035.3.Gata1	3	Gata1	GATA-type zinc fingers	P17679	ChIP-seq	vertebrates	Mus musculus	-8.913,-2.4495,3.803,10.4355,11.9315,14.387
+MA0033	MA0033.2.FOXL1	2	FOXL1	Forkhead box (FOX) factors	Q12952	HT-SELEX	vertebrates	Homo sapiens	1.3335,5.981,8.1095,12.015,12.189196034398893,12.189196034398893
+MA0035	MA0035.4.GATA1	4	GATA1	GATA-type zinc fingers	P15976	ChIP-seq	vertebrates	Homo sapiens	3.0045,6.8685,7.9045,10.7635,12.011,13.3735
 MA0036	MA0036.3.GATA2	3	GATA2	GATA-type zinc fingers	P23769	ChIP-seq	vertebrates	Homo sapiens	2.18,6.179,7.91,10.7585,12.116,13.5505
-MA0037	MA0037.3.GATA3	3	GATA3	GATA-type zinc fingers	P23771	SMiLE-seq	vertebrates	Homo sapiens	1.5695,7.297,8.887,11.1755,11.4555,12.1447673052
-MA0038	MA0038.1.Gfi1	1	Gfi1	More than 3 adjacent zinc finger factors	Q07120	SELEX	vertebrates	Rattus norvegicus	3.4805,7.564,8.7935,10.6045,11.2385,12.2775
-MA0039	MA0039.3.KLF4	3	KLF4	Three-zinc finger Kruppel-related factors	O43474	ChIP-seq	vertebrates	Homo sapiens	2.326,6.2085,7.5465,10.6425,11.8025,13.8045
+MA0037	MA0037.3.GATA3	3	GATA3	GATA-type zinc fingers	P23771	SMiLE-seq	vertebrates	Homo sapiens	1.5695,7.297,8.887,11.1755,11.4555,12.144767305173657
+MA0038	MA0038.2.GFI1	2	GFI1	More than 3 adjacent zinc finger factors	Q99684	HT-SELEX	vertebrates	Homo sapiens	-10.633,-1.9,1.876,8.6335,10.6725,14.011
+MA0039	MA0039.4.KLF4	4	KLF4	Three-zinc finger Kruppel-related factors	O43474	ChIP-seq	vertebrates	Homo sapiens	2.7205,6.2485,7.532,10.387,11.256,14.209
 MA0040	MA0040.1.Foxq1	1	Foxq1	Forkhead box (FOX) factors	Q63244	SELEX	vertebrates	Rattus norvegicus	1.7375,5.8265,7.3145,10.3025,11.478,13.9605
 MA0041	MA0041.1.Foxd3	1	Foxd3	Forkhead box (FOX) factors	Q63245	SELEX	vertebrates	Rattus norvegicus	1.4385,5.7165,7.2845,10.427,11.6125,13.859
-MA0042	MA0042.2.FOXI1	2	FOXI1	Forkhead box (FOX) factors	Q12951	HT-SELEX	vertebrates	Homo sapiens	0.343,5.642,7.033,10.646,11.982183965,11.982183965
-MA0043	MA0043.2.HLF	2	HLF	C/EBP-related	Q16534	HT-SELEX	vertebrates	Homo sapiens	0.521,5.5555,7.355,10.841,11.9535,13.9515
+MA0042	MA0042.2.FOXI1	2	FOXI1	Forkhead box (FOX) factors	Q12951	HT-SELEX	vertebrates	Homo sapiens	0.343,5.642,7.033,10.646,11.982183964958246,11.982183964958246
+MA0043	MA0043.3.HLF	3	HLF	C/EBP-related	Q16534	ChIP-seq	vertebrates	Homo sapiens	-0.2785,4.452,6.3165,9.775,11.203,14.2855
 MA0046	MA0046.2.HNF1A	2	HNF1A	POU domain factors	P20823	HT-SELEX	vertebrates	Homo sapiens	-1.711,3.3175,5.1825,9.001,10.4165,13.443
-MA0047	MA0047.2.Foxa2	2	Foxa2	Forkhead box (FOX) factors	P35583	ChIP-seq	vertebrates	Mus musculus	-1.0025,4.3055,6.22,10.2665,11.6925,14.2035
+MA0047	MA0047.3.FOXA2	3	FOXA2	Forkhead box (FOX) factors	Q9Y261	ChIP-seq	vertebrates	Homo sapiens	2.6355,6.5505,7.804,10.5015,11.878,13.715
 MA0048	MA0048.2.NHLH1	2	NHLH1	Tal-related factors	Q02575	HT-SELEX	vertebrates	Homo sapiens	-1.945,4.182,6.363,10.357,11.6285,14.1455
 MA0050	MA0050.2.IRF1	2	IRF1	Interferon-regulatory factors	P10914	ChIP-seq	vertebrates	Homo sapiens	-6.0595,0.313,2.6765,7.4665,9.269,12.927
 MA0051	MA0051.1.IRF2	1	IRF2	Interferon-regulatory factors	P14316	SELEX	vertebrates	Homo sapiens	-1.565,3.088,4.8515,8.5965,10.035,13.145
-MA0052	MA0052.3.MEF2A	3	MEF2A	Regulators of differentiation	Q02078	HT-SELEX	vertebrates	Homo sapiens	-7.987,-0.9725,1.6175,7.0195,8.9775,13.1535
-MA0056	MA0056.1.MZF1	1	MZF1	More than 3 adjacent zinc finger factors	P28698	SELEX	vertebrates	Homo sapiens	3.904,6.924,8.987,9.61752343643,9.61752343643,9.61752343643
+MA0052	MA0052.4.MEF2A	4	MEF2A	Regulators of differentiation	Q02078	ChIP-seq	vertebrates	Homo sapiens	1.9415,5.7655,7.207,10.1735,11.307,13.644
+MA0056	MA0056.2.MZF1	2	MZF1	More than 3 adjacent zinc finger factors	P28698	ChIP-seq	vertebrates	Homo sapiens	2.2305,6.086,7.6775,10.628,11.6515,14.166
 MA0057	MA0057.1.MZF1(var.2)	1.2	MZF1	More than 3 adjacent zinc finger factors	P28698	SELEX	vertebrates	Homo sapiens	4.419,7.377,8.436,10.334,11.081,12.2085
 MA0058	MA0058.3.MAX	3	MAX	bHLH-ZIP factors	P61244	HT-SELEX	vertebrates	Homo sapiens	0.2215,5.5225,6.9985,11.534,12.3515,13.439
 MA0059	MA0059.1.MAX::MYC	1	MAX::MYC	bHLH-ZIP factors	P61244;P01106	SELEX	vertebrates	Homo sapiens	1.482,5.498,7.0925,10.2135,11.3355,13.525
 MA0060	MA0060.3.NFYA	3	NFYA	NFY	P23511	ChIP-seq	vertebrates	Homo sapiens	1.393,5.6245,7.211,10.331,11.5735,14.0345
-MA0062	MA0062.2.Gabpa	2	Gabpa	Ets-related factors	Q91YY8	ChIP-seq	vertebrates	Mus musculus	-2.549,3.4125,5.7985,10.3875,11.845,14.178
-MA0063	MA0063.1.Nkx2-5	1	Nkx2-5	NK-related factors	P42582	SELEX	vertebrates	Mus musculus	4.9395,7.815,8.4025,9.955,10.1304697357,10.1304697357
+MA0062	MA0062.3.GABPA	3	GABPA	Ets-related factors	Q06546	ChIP-seq	vertebrates	Homo sapiens	2.3925,6.0245,7.434,10.2855,11.4115,13.707
+MA0063	MA0063.2.NKX2-5	2	NKX2-5	NK-related factors	P52952	ChIP-seq	vertebrates	Homo sapiens	2.931,6.845,8.0225,10.2755,12.3345,13.4725
 MA0065	MA0065.2.Pparg::Rxra	2	Pparg::Rxra	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P37238;P28700	ChIP-seq	vertebrates	Mus musculus	2.583,6.1865,7.533,10.2845,11.3295,13.4885
 MA0066	MA0066.1.PPARG	1	PPARG	Thyroid hormone receptor-related factors (NR1)	P37231	SELEX	vertebrates	Homo sapiens	-2.8165,2.11,3.9885,7.913,9.4425,12.683
-MA0067	MA0067.1.Pax2	1	Pax2	Paired domain only	P32114	SELEX	vertebrates	Mus musculus	5.179,7.274,8.3195,9.3835,9.735,9.80872771281
-MA0068	MA0068.2.PAX4	2	PAX4	Paired plus homeo domain	O43316	HT-SELEX	vertebrates	Homo sapiens	3.469,7.106,8.4905,10.6065,11.46,12.5468704341
-MA0069	MA0069.1.Pax6	1	Pax6	Paired plus homeo domain	P26367	SELEX	vertebrates	Homo sapiens	1.7275,5.539,6.989,9.9705,11.1695,13.555
+MA0067	MA0067.1.Pax2	1	Pax2	Paired domain only	P32114	SELEX	vertebrates	Mus musculus	5.179,7.274,8.3195,9.3835,9.735,9.808727712811397
+MA0068	MA0068.2.PAX4	2	PAX4	Paired plus homeo domain	O43316	HT-SELEX	vertebrates	Homo sapiens	3.469,7.106,8.4905,10.6065,11.46,12.546870434095421
+MA0069	MA0069.1.PAX6	1	PAX6	Paired plus homeo domain	P26367	SELEX	vertebrates	Homo sapiens	1.7275,5.539,6.989,9.9705,11.1695,13.555
 MA0070	MA0070.1.PBX1	1	PBX1	TALE-type homeo domain factors	P40424	SELEX	vertebrates	Homo sapiens	1.5735,5.4905,7.0275,10.211,11.231,13.5085
 MA0071	MA0071.1.RORA	1	RORA	Thyroid hormone receptor-related factors (NR1)	P35398	SELEX	vertebrates	Homo sapiens	1.3765,5.862,7.187,10.744,12.0575,13.9595
 MA0072	MA0072.1.RORA(var.2)	1.2	RORA	Thyroid hormone receptor-related factors (NR1)	P35398	SELEX	vertebrates	Homo sapiens	-3.3705,2.386,3.952,8.843,10.188,12.968
 MA0073	MA0073.1.RREB1	1	RREB1	Factors with multiple dispersed zinc fingers	Q92766	SELEX	vertebrates	Homo sapiens	-1.7395,2.9315,4.7175,8.45,9.906,12.9925
 MA0074	MA0074.1.RXRA::VDR	1	RXRA::VDR	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P19793;P11473	SELEX	vertebrates	Homo sapiens	-0.326,4.001,5.6835,9.137,10.472,13.3335
-MA0075	MA0075.2.Prrx2	2	Prrx2	Paired-related HD factors	Q06348	HT-SELEX	vertebrates	Mus musculus	5.1145,7.078,8.4135,10.064,10.301,10.6501561341
+MA0075	MA0075.3.PRRX2	3	PRRX2	Paired-related HD factors	Q99811	HT-SELEX	vertebrates	Homo sapiens	-3.1475,5.675,8.1795,11.2775,12.2255,12.924591783791437
 MA0076	MA0076.2.ELK4	2	ELK4	Ets-related factors	P28324	ChIP-seq	vertebrates	Homo sapiens	-5.1275,1.488,5.6465,10.7695,11.96,14.186
 MA0077	MA0077.1.SOX9	1	SOX9	SOX-related factors	P48436	SELEX	vertebrates	Homo sapiens	4.0405,7.1265,8.276,10.537,11.194,13.1155
 MA0078	MA0078.1.Sox17	1	Sox17	SOX-related factors	Q61473	SELEX	vertebrates	Mus musculus	3.399,6.752,8.3255,11.213,11.6605,12.2895
-MA0079	MA0079.3.SP1	3	SP1	Three-zinc finger Krüppel-related factors	P08047	ChIP-seq	vertebrates	Homo sapiens	-7.0835,0.0105,4.8615,10.685,11.957,14.127
-MA0080	MA0080.4.SPI1	4	SPI1	Ets-related factors	P17947	HT-SELEX	vertebrates	Homo sapiens	-17.5735,-8.8755,-5.576,1.2335,3.8595,9.287
-MA0081	MA0081.1.SPIB	1	SPIB	Ets-related factors	Q01892	SELEX	vertebrates	Homo sapiens	3.6655,7.5085,8.818,10.6315,10.9194803134,10.9194803134
+MA0079	MA0079.4.SP1	4	SP1	Three-zinc finger Kruppel-related factors	P08047	HT-SELEX	vertebrates	Homo sapiens	-17.0075,-7.0845,-3.397,3.9855,6.594,11.7195
+MA0080	MA0080.5.SPI1	5	SPI1	Ets-related factors	P17947	ChIP-seq	vertebrates	Homo sapiens	0.418,4.6155,6.2115,9.525,10.805,13.489
+MA0081	MA0081.2.SPIB	2	SPIB	Ets-related factors	Q01892	ChIP-seq	vertebrates	Homo sapiens	0.095,4.465,6.1215,9.549,10.866,13.605
 MA0083	MA0083.3.SRF	3	SRF	Responders to external signals (SRF/RLM1)	P11831	HT-SELEX	vertebrates	Homo sapiens	-12.007,-4.659,-1.877,3.8865,6.104,10.739
 MA0084	MA0084.1.SRY	1	SRY	SOX-related factors	Q05066	SELEX	vertebrates	Homo sapiens	4.193,7.5245,8.5945,10.417,11.072,12.139
-MA0087	MA0087.1.Sox5	1	Sox5	SOX-related factors	P35710	SELEX	vertebrates	Mus musculus	3.624,6.7545,7.7115,11.3860998265,11.3860998265,11.3860998265
+MA0087	MA0087.1.Sox5	1	Sox5	SOX-related factors	P35710	SELEX	vertebrates	Mus musculus	3.624,6.7545,7.7115,11.386099826509259,11.386099826509259,11.386099826509259
 MA0088	MA0088.2.ZNF143	2	ZNF143	More than 3 adjacent zinc finger factors	P52747	HT-SELEX	vertebrates	Homo sapiens	-17.5745,-8.963,-5.699,1.0695,3.677,9.1155
-MA0089	MA0089.1.MAFG::NFE2L1	1	MAFG::NFE2L1	Jun-related factors;Maf-related factors	Q90889;Q5ZL67	SELEX	vertebrates	Gallus gallus	4.8185,7.4375,8.874,9.4409061074,9.4409061074,9.4409061074
-MA0090	MA0090.2.TEAD1	2	TEAD1	TEF-1-related factors	P28347	HT-SELEX	vertebrates	Homo sapiens	3.3805,7.1275,8.4435,10.836,11.515,12.8185
+MA0089	MA0089.2.NFE2L1	2	NFE2L1	Jun-related factors	Q14494	ChIP-seq	vertebrates	Homo sapiens	-4.6825,0.9765,3.122,7.571,9.281,12.8525
+MA0090	MA0090.3.TEAD1	3	TEAD1	TEF-1-related factors	P28347	ChIP-seq	vertebrates	Homo sapiens	1.403,5.4325,7.0865,10.2505,11.276,13.8595
 MA0091	MA0091.1.TAL1::TCF3	1	TAL1::TCF3	E2A-related factors;Tal-related factors	P17542;P15923	SELEX	vertebrates	Homo sapiens	0.1865,4.851,6.588,10.098,11.5045,14.1505
 MA0092	MA0092.1.Hand1::Tcf3	1	Hand1::Tcf3	E2A-related factors;Tal-related factors	Q64279;P15806	SELEX	vertebrates	Mus musculus	3.671,7.1035,8.3505,10.777,11.45,12.794
-MA0093	MA0093.2.USF1	2	USF1	bHLH-ZIP factors	P22415	ChIP-seq	vertebrates	Homo sapiens	-6.461,2.817,5.8315,10.38,11.745,14.179
+MA0093	MA0093.3.USF1	3	USF1	bHLH-ZIP factors	P22415	ChIP-seq	vertebrates	Homo sapiens	1.001,5.2075,6.808,10.071,11.291,13.841
 MA0095	MA0095.2.YY1	2	YY1	More than 3 adjacent zinc finger factors	P25490	ChIP-seq	vertebrates	Homo sapiens	-5.113,2.2635,4.897,9.739,11.3345,14.087
 MA0098	MA0098.3.ETS1	3	ETS1	Ets-related factors	P14921	HT-SELEX	vertebrates	Homo sapiens	-0.6925,5.2825,7.288,10.802,11.889,13.9735
 MA0099	MA0099.3.FOS::JUN	3	FOS::JUN	Fos-related factors;Jun-related factors	P01100;P05412	SMiLE-seq	vertebrates	Homo sapiens	1.0735,5.6815,7.4425,10.831,11.892,13.754
 MA0100	MA0100.3.MYB	3	MYB	Myb/SANT domain factors	P10242	ChIP-seq	vertebrates	Homo sapiens	-0.2275,5.1165,7.328,11.9455,12.352,12.805
 MA0101	MA0101.1.REL	1	REL	NF-kappaB-related factors	Q04864	SELEX	vertebrates	Homo sapiens	3.8815,6.99,8.1425,10.4645,11.3345,13.1165
-MA0102	MA0102.3.CEBPA	3	CEBPA	C/EBP-related	P49715	ChIP-seq	vertebrates	Homo sapiens	-8.119,-2.6805,4.703,10.669,11.9235,14.274
+MA0102	MA0102.4.CEBPA	4	CEBPA	C/EBP-related factors	P49715	ChIP-seq	vertebrates	Homo sapiens	1.7775,5.709,7.2185,10.2655,11.4235,13.8005
 MA0103	MA0103.3.ZEB1	3	ZEB1	HD-ZF factors	P37275	ChIP-seq	vertebrates	Homo sapiens	1.158,6.0015,7.0735,11.554,12.2445,13.245
 MA0104	MA0104.4.MYCN	4	MYCN	bHLH-ZIP factors	P04198	ChIP-seq	vertebrates	Homo sapiens	1.691,5.993,7.332,10.6835,11.551,14.159
 MA0105	MA0105.4.NFKB1	4	NFKB1	NF-kappaB-related factors	P19838	HT-SELEX	vertebrates	Homo sapiens	-17.0105,-8.2445,-4.93,1.916,4.5455,10.0155
@@ -81,17 +81,17 @@ MA0109	MA0109.1.HLTF	1	HLTF	Myb/SANT domain factors	Q95216	SELEX	vertebrates	Ory
 MA0111	MA0111.1.Spz1	1	Spz1	.	Q99MY0	SELEX	vertebrates	Mus musculus	3.7365,6.8765,8.051,10.429,11.3555,13.047
 MA0112	MA0112.3.ESR1	3	ESR1	Steroid hormone receptors (NR3)	P03372	HT-SELEX	vertebrates	Homo sapiens	-16.869,-8.7055,-5.5895,0.901,3.412,8.7615
 MA0113	MA0113.3.NR3C1	3	NR3C1	Steroid hormone receptors (NR3)	P04150	HT-SELEX	vertebrates	Homo sapiens	-13.6375,-5.503,-2.417,3.8965,6.364,11.241
-MA0114	MA0114.3.Hnf4a	3	Hnf4a	RXR-related receptors (NR2)	P49698	HT-SELEX	vertebrates	Mus musculus	-16.2005,-7.7555,-4.5675,2.0085,4.526,9.757
+MA0114	MA0114.4.HNF4A	4	HNF4A	RXR-related receptors (NR2)	P41235	ChIP-seq	vertebrates	Homo sapiens	2.234,5.953,7.3705,10.1795,11.6195,13.2715
 MA0115	MA0115.1.NR1H2::RXRA	1	NR1H2::RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P55055;P19793	SELEX	vertebrates	Homo sapiens	-11.11,-4.902,-2.4785,2.6735,4.6665,9.0135
 MA0116	MA0116.1.Znf423	1	Znf423	Factors with multiple dispersed zinc fingers	O08961	SELEX	vertebrates	Rattus norvegicus	-3.3845,2.228,4.0965,8.6485,10.2865,12.817
 MA0117	MA0117.2.Mafb	2	Mafb	Maf-related factors	P54841	HT-SELEX	vertebrates	Mus musculus	1.9575,6.1465,7.705,10.6795,11.6895,13.628
 MA0119	MA0119.1.NFIC::TLX1	1	NFIC::TLX1	NK-related factors;Nuclear factor 1	P08651;P31314	SELEX	vertebrates	Homo sapiens	-1.797,2.915,4.717,8.5475,9.926,13.2965
-MA0122	MA0122.2.NKX3-2	2	NKX3-2	NK-related factors	P78367	HT-SELEX	vertebrates	Homo sapiens	2.7565,6.708,8.0505,10.979,11.8615,13.0355
+MA0122	MA0122.3.Nkx3-2	3	Nkx3-2	NK-related factors	P97503	ChIP-seq	vertebrates	Mus musculus	0.9245,5.4575,6.9325,10.6985,11.94,13.925
 MA0124	MA0124.2.Nkx3-1	2	Nkx3-1	NK-related factors	P97436	HT-SELEX	vertebrates	Mus musculus	0.959,6.1385,7.7655,11.04,12.042,13.5075
-MA0125	MA0125.1.Nobox	1	Nobox	Paired-related HD factors	Q8VIH1	SELEX	vertebrates	Mus musculus	3.9145,7.231,8.3295,11.1375,11.6825,12.0662874862
-MA0130	MA0130.1.ZNF354C	1	ZNF354C	More than 3 adjacent zinc finger factors	Q86Y25	SELEX	vertebrates	Homo sapiens	3.8015,7.8185,8.6665,9.71583541793,9.71583541793,9.71583541793
+MA0125	MA0125.1.Nobox	1	Nobox	Paired-related HD factors	Q8VIH1	SELEX	vertebrates	Mus musculus	3.9145,7.231,8.3295,11.1375,11.6825,12.066287486172643
+MA0130	MA0130.1.ZNF354C	1	ZNF354C	More than 3 adjacent zinc finger factors	Q86Y25	SELEX	vertebrates	Homo sapiens	3.8015,7.8185,8.6665,9.715835417927039,9.715835417927039,9.715835417927039
 MA0131	MA0131.2.HINFP	2	HINFP	Factors with multiple dispersed zinc fingers	Q9BQA5	HT-SELEX	vertebrates	Homo sapiens	-0.468,4.748,6.665,10.2775,11.6045,14.1515
-MA0132	MA0132.2.PDX1	2	PDX1	HOX-related factors	P52945	HT-SELEX	vertebrates	Homo sapiens	-2.8795,7.327,9.458,10.792,11.307,11.7807570202
+MA0132	MA0132.2.PDX1	2	PDX1	HOX-related factors	P52945	HT-SELEX	vertebrates	Homo sapiens	-2.8795,7.327,9.458,10.792,11.307,11.78075702020042
 MA0135	MA0135.1.Lhx3	1	Lhx3	HD-LIM factors	P50481	SELEX	vertebrates	Mus musculus	0.169,4.565,6.23,9.671,10.988,13.64
 MA0136	MA0136.2.ELF5	2	ELF5	Ets-related factors	Q9UKW6	HT-SELEX	vertebrates	Homo sapiens	2.274,6.802,8.264,10.8515,11.687,13.286
 MA0137	MA0137.3.STAT1	3	STAT1	STAT factors	P42224	ChIP-seq	vertebrates	Homo sapiens	-5.782,1.4545,4.0555,9.1875,11.0045,14.6395
@@ -100,148 +100,147 @@ MA0139	MA0139.1.CTCF	1	CTCF	More than 3 adjacent zinc finger factors	P49711	ChIP
 MA0140	MA0140.2.GATA1::TAL1	2	GATA1::TAL1	GATA-type zinc fingers;Tal-related factors	P15976;P17542	ChIP-seq	vertebrates	Homo sapiens	-6.337,1.6455,4.7115,9.7955,11.3775,14.207
 MA0141	MA0141.3.ESRRB	3	ESRRB	Steroid hormone receptors (NR3)	O95718	HT-SELEX	vertebrates	Homo sapiens	-6.862,-0.247,2.3445,7.4675,9.339,13.8725
 MA0142	MA0142.1.Pou5f1::Sox2	1	Pou5f1::Sox2	POU domain factors;SOX-related factors	P20263;P48432	ChIP-seq	vertebrates	Mus musculus	0.1975,4.4805,6.107,9.4835,10.7875,13.5225
-MA0143	MA0143.3.Sox2	3	Sox2	SOX-related factors	P48432	ChIP-seq	vertebrates	Mus musculus	-10.888,0.781,1.3695,2.5975,13.0385,14.0306618552
+MA0143	MA0143.4.SOX2	4	SOX2	SOX-related factors	P48431	ChIP-seq	vertebrates	Homo sapiens	3.1795,6.6565,7.8565,10.816,11.895,13.2905
 MA0144	MA0144.2.STAT3	2	STAT3	STAT factors	P40763	ChIP-seq	vertebrates	Homo sapiens	-5.538,3.9735,6.3615,10.424,11.6965,14.364
 MA0145	MA0145.3.TFCP2	3	TFCP2	CP2-related factors	Q12800	HT-SELEX	vertebrates	Homo sapiens	1.588,5.985,7.515,10.686,11.716,13.7425
 MA0146	MA0146.2.Zfx	2	Zfx	More than 3 adjacent zinc finger factors	P17012	ChIP-seq	vertebrates	Mus musculus	-1.5245,3.978,6.0645,10.5735,11.924,14.117
 MA0147	MA0147.3.MYC	3	MYC	bHLH-ZIP factors	P01106	ChIP-seq	vertebrates	Homo sapiens	2.3375,6.1965,7.645,10.551,11.6685,13.959
-MA0148	MA0148.3.FOXA1	3	FOXA1	Forkhead box (FOX) factors	P55317	ChIP-seq	vertebrates	Homo sapiens	-7.9565,0.6235,4.5805,10.2445,11.756,14.297
+MA0148	MA0148.4.FOXA1	4	FOXA1	Forkhead box (FOX) factors	P55317	ChIP-seq	vertebrates	Homo sapiens	2.4045,6.1385,7.523,10.409,11.5205,13.7365
 MA0149	MA0149.1.EWSR1-FLI1	1	EWSR1-FLI1	Ets-related factors	F1JVV7;F1JVV8	ChIP-seq	vertebrates	Homo sapiens	-25.156,-17.0115,-13.8415,-7.116,-4.535,1.2875
 MA0150	MA0150.2.Nfe2l2	2	Nfe2l2	Jun-related factors	Q60795	ChIP-seq	vertebrates	Mus musculus	-2.9235,2.7555,4.828,8.9615,10.4975,13.5805
-MA0151	MA0151.1.Arid3a	1	Arid3a	ARID-related factors	Q62431	SELEX	vertebrates	Mus musculus	3.9095,6.8915,8.982,10.2274466809,10.2274466809,10.2274466809
-MA0152	MA0152.1.NFATC2	1	NFATC2	NFAT-related factors	Q13469	COMPILED	vertebrates	Rattus norvegicus	3.8305,7.0005,8.3245,10.24,11.2902874842,11.2902874842
+MA0151	MA0151.1.Arid3a	1	Arid3a	ARID-related factors	Q62431	SELEX	vertebrates	Mus musculus	3.9095,6.8915,8.982,10.227446680850264,10.227446680850264,10.227446680850264
+MA0152	MA0152.1.NFATC2	1	NFATC2	NFAT-related factors	Q13469	COMPILED	vertebrates	Homo sapiens	3.8305,7.0005,8.3245,10.24,11.290287484214394,11.290287484214394
 MA0153	MA0153.2.HNF1B	2	HNF1B	POU domain factors	P35680	HT-SELEX	vertebrates	Homo sapiens	-1.869,3.085,4.933,8.767,10.2265,13.2965
-MA0154	MA0154.3.EBF1	3	EBF1	Early B-Cell Factor-related factors	Q9UH73	HT-SELEX	vertebrates	Homo sapiens	-4.643,1.5305,3.828,8.468,10.1905,13.6795
+MA0154	MA0154.4.EBF1	4	EBF1	Early B-Cell Factor-related factors	Q9UH73	ChIP-seq	vertebrates	Homo sapiens	1.6725,5.54,6.9775,10.0635,11.1625,13.618
 MA0155	MA0155.1.INSM1	1	INSM1	Factors with multiple dispersed zinc fingers	Q01101	COMPILED	vertebrates	Homo sapiens	0.706,5.0885,6.7285,10.041,11.3345,14.0105
 MA0156	MA0156.2.FEV	2	FEV	Ets-related factors	Q99581	HT-SELEX	vertebrates	Homo sapiens	0.28,5.821,7.638,10.8295,11.8375,13.7165
-MA0157	MA0157.2.FOXO3	2	FOXO3	Forkhead box (FOX) factors	O43524	HT-SELEX	vertebrates	Homo sapiens	-1.8835,3.801,5.129,9.732,10.2105,14.5772812409
-MA0158	MA0158.1.HOXA5	1	HOXA5	HOX-related factors	P20719	COMPILED	vertebrates	Mus musculus	4.541,7.4505,8.833,10.169,10.374,10.7058653425
+MA0157	MA0157.2.FOXO3	2	FOXO3	Forkhead box (FOX) factors	O43524	HT-SELEX	vertebrates	Homo sapiens	-1.8835,3.801,5.129,9.732,10.2105,14.577281240860582
+MA0158	MA0158.2.HOXA5	2	HOXA5	HOX-related factors	P20719	HT-SELEX	vertebrates	Homo sapiens	-2.945,7.2975,9.0595,11.139,11.5075,12.304841178269513
 MA0159	MA0159.1.RARA::RXRA	1	RARA::RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P10276;P19793	COMPILED	vertebrates	Homo sapiens	0.6355,4.8305,6.419,9.6975,10.955,13.588
-MA0160	MA0160.1.NR4A2	1	NR4A2	NGFI-B-related receptors (NR4)	P43354	COMPILED	vertebrates	Rattus norvegicus	4.1885,7.3055,8.149,10.7115,11.1075,12.2268140991
+MA0160	MA0160.1.NR4A2	1	NR4A2	NGFI-B-related receptors (NR4)	P43354	COMPILED	vertebrates	Homo sapiens	4.1885,7.3055,8.149,10.7115,11.1075,12.226814099144004
 MA0161	MA0161.2.NFIC	2	NFIC	Nuclear factor 1	P08651	ChIP-seq	vertebrates	Homo sapiens	3.074,7.212,8.222,9.3055,12.531,13.6165
-MA0162	MA0162.3.EGR1	3	EGR1	Three-zinc finger Kruppel-related factors	P18146	HT-SELEX	vertebrates	Homo sapiens	-15.136,-6.6515,-3.529,3.082,5.7495,10.902
+MA0162	MA0162.4.EGR1	4	EGR1	Three-zinc finger Kruppel-related factors	P18146	ChIP-seq	vertebrates	Homo sapiens	2.151,5.925,7.3485,10.2665,11.377,13.658
 MA0163	MA0163.1.PLAG1	1	PLAG1	More than 3 adjacent zinc finger factors	Q6DJT9	bacterial 1-hybrid	vertebrates	Homo sapiens	-1.6715,3.072,4.891,8.6725,10.143,13.2685
-MA0164	MA0164.1.Nr2e3	1	Nr2e3	RXR-related receptors (NR2)	Q9QXZ7	SELEX	vertebrates	Mus musculus	1.998,6.152,6.215,11.469,12.0803036149,12.0803036149
+MA0164	MA0164.1.Nr2e3	1	Nr2e3	RXR-related receptors (NR2)	Q9QXZ7	SELEX	vertebrates	Mus musculus	1.998,6.152,6.215,11.469,12.080303614905446,12.080303614905446
 MA0258	MA0258.2.ESR2	2	ESR2	Steroid hormone receptors (NR3)	Q92731	ChIP-seq	vertebrates	Homo sapiens	0.6175,5.2155,6.8685,10.1485,11.363,13.782
-MA0259	MA0259.1.ARNT::HIF1A	1	ARNT::HIF1A	PAS domain factors	P27540;Q16665	COMPILED	vertebrates	Rattus rattus	2.088,7.753,9.2585,10.7915,10.976,11.7112035001
+MA0259	MA0259.1.ARNT::HIF1A	1	ARNT::HIF1A	PAS domain factors	P27540;Q16665	COMPILED	vertebrates	Homo sapiens	2.088,7.753,9.2585,10.7915,10.976,11.711203500130203
 MA0442	MA0442.2.SOX10	2	SOX10	SOX-related factors	P56693	ChIP-seq	vertebrates	Homo sapiens	1.2255,5.764,6.8225,11.45,12.171,13.525
 MA0461	MA0461.2.Atoh1	2	Atoh1	Tal-related factors	P48985	HT-SELEX	vertebrates	Mus musculus	1.662,6.056,7.5825,10.677,11.9965,14.0975
-MA0462	MA0462.1.BATF::JUN	1	BATF::JUN	B-ATF-related factors;Jun-related factors	Q16520;P05412	ChIP-seq	vertebrates	Homo sapiens	-7.5575,0.618,4.7445,10.2235,11.9355,14.323
-MA0463	MA0463.1.Bcl6	1	Bcl6	More than 3 adjacent zinc finger factors	P41183	ChIP-seq	vertebrates	Mus musculus	-0.415,4.6995,6.5045,10.0145,11.3115,13.892
+MA0462	MA0462.2.BATF::JUN	2	BATF::JUN	B-ATF-related factors::Jun-related factors	Q16520;P05412	ChIP-seq	vertebrates	Homo sapiens	2.162,6.2205,7.645,10.6655,11.8795,13.9455
+MA0463	MA0463.2.BCL6	2	BCL6	More than 3 adjacent zinc finger factors	P41182	HT-SELEX	vertebrates	Homo sapiens	-1.837,3.069,4.915,8.734,10.198,13.2785
 MA0464	MA0464.2.BHLHE40	2	BHLHE40	Hairy-related factors	O14503	HT-SELEX	vertebrates	Homo sapiens	-1.1955,4.6,6.299,10.4245,12.562,14.441
-MA0465	MA0465.1.CDX2	1	CDX2	HOX-related factors	Q99626	ChIP-seq	vertebrates	Homo sapiens	-9.5505,-0.0435,1.521,10.4145,12.1455,14.418
-MA0466	MA0466.2.CEBPB	2	CEBPB	C/EBP-related	P17676	HT-SELEX	vertebrates	Homo sapiens	-1.1255,4.6685,6.5585,10.1905,11.917,14.679
+MA0465	MA0465.2.CDX2	2	CDX2	HOX-related factors	Q99626	ChIP-seq	vertebrates	Homo sapiens	2.3315,6.1005,7.4845,10.4425,11.4865,13.9855
+MA0466	MA0466.2.CEBPB	2	CEBPB	C/EBP-related factors	P17676	HT-SELEX	vertebrates	Homo sapiens	-1.1255,4.6685,6.5585,10.1905,11.917,14.679
 MA0467	MA0467.1.Crx	1	Crx	Paired-related HD factors	O54751	ChIP-seq	vertebrates	Mus musculus	-2.965,4.315,6.661,10.625,11.778,14.081
 MA0468	MA0468.1.DUX4	1	DUX4	Paired-related HD factors	Q9UBX2	ChIP-seq	vertebrates	Homo sapiens	-12.974,-4.134,0.2925,8.9245,10.9655,14.2935
-MA0469	MA0469.2.E2F3	2	E2F3	E2F-related factors	O00716	HT-SELEX	vertebrates	Homo sapiens	-17.17,-8.2405,-4.886,1.999,4.634,10.0205
-MA0470	MA0470.1.E2F4	1	E2F4	E2F-related factors	Q16254	ChIP-seq	vertebrates	Homo sapiens	-4.3445,2.4535,5.5375,10.498,12.131,14.4165
-MA0471	MA0471.1.E2F6	1	E2F6	E2F-related factors	O75461	ChIP-seq	vertebrates	Homo sapiens	-6.2585,0.938,4.049,10.722,12.2155,14.294
+MA0469	MA0469.3.E2F3	3	E2F3	E2F-related factors	O00716	HT-SELEX	vertebrates	Homo sapiens	-14.751,-6.505,-3.4035,2.965,5.397,10.422
+MA0470	MA0470.2.E2F4	2	E2F4	E2F-related factors	Q16254	HT-SELEX	vertebrates	Homo sapiens	-3.05,3.099,5.3705,9.6365,11.101,13.89
+MA0471	MA0471.2.E2F6	2	E2F6	E2F-related factors	O75461	ChIP-seq	vertebrates	Homo sapiens	2.1955,5.99,7.4575,10.389,11.408,13.999
 MA0472	MA0472.2.EGR2	2	EGR2	Three-zinc finger Krüppel-related factors	P11161	HT-SELEX	vertebrates	Homo sapiens	-2.087,3.188,5.142,9.092,10.625,13.649
-MA0473	MA0473.2.ELF1	2	ELF1	Ets-related factors	P32519	HT-SELEX	vertebrates	Homo sapiens	-8.6995,-0.9325,2.0655,8.1265,10.123,13.816
+MA0473	MA0473.3.ELF1	3	ELF1	Ets-related factors	P32519	ChIP-seq	vertebrates	Homo sapiens	1.4775,5.528,7.0085,10.1175,11.317,13.6795
 MA0474	MA0474.2.ERG	2	ERG	Ets-related factors	P11308	HT-SELEX	vertebrates	Homo sapiens	0.2095,5.701,7.561,10.788,11.8725,13.7935
 MA0475	MA0475.2.FLI1	2	FLI1	Ets-related factors	Q01543	HT-SELEX	vertebrates	Homo sapiens	-2.969,3.816,6.224,10.4415,11.712,14.2785
 MA0476	MA0476.1.FOS	1	FOS	Fos-related factors	P01100	ChIP-seq	vertebrates	Homo sapiens	-10.649,-3.806,-1.2235,10.301,11.802,14.8455
-MA0477	MA0477.1.FOSL1	1	FOSL1	Fos-related factors	P15407	ChIP-seq	vertebrates	Homo sapiens	-11.455,-2.067,0.4385,9.448,11.4715,14.791
+MA0477	MA0477.2.FOSL1	2	FOSL1	Fos-related factors	P15407	ChIP-seq	vertebrates	Homo sapiens	0.7115,5.224,6.8555,10.2355,11.7645,14.041
 MA0478	MA0478.1.FOSL2	1	FOSL2	Fos-related factors	P15408	ChIP-seq	vertebrates	Homo sapiens	-8.58,-0.5775,2.357,9.607,11.3975,14.807
 MA0479	MA0479.1.FOXH1	1	FOXH1	Forkhead box (FOX) factors	O75593	ChIP-seq	vertebrates	Homo sapiens	-8.7615,-1.809,1.2155,10.1605,11.994,14.471
 MA0480	MA0480.1.Foxo1	1	Foxo1	Forkhead box (FOX) factors	Q9R1E0	ChIP-seq	vertebrates	Mus musculus	-5.3105,0.3235,5.0925,10.72,12.0,14.199
-MA0481	MA0481.2.FOXP1	2	FOXP1	Forkhead box (FOX) factors	Q9H334	ChIP-seq	vertebrates	Homo sapiens	1.7175,5.8395,7.523,10.086,11.72,14.2105
-MA0482	MA0482.1.Gata4	1	Gata4	GATA-type zinc fingers	Q08369	ChIP-seq	vertebrates	Mus musculus	-6.12,0.671,4.2195,10.6215,12.1805,14.472
+MA0481	MA0481.3.FOXP1	3	FOXP1	Forkhead box (FOX) factors	Q9H334	ChIP-seq	vertebrates	Homo sapiens	3.1985,6.836,8.024,10.5315,11.688,13.5295
+MA0482	MA0482.2.GATA4	2	GATA4	GATA-type zinc fingers	P43694	ChIP-seq	vertebrates	Homo sapiens	2.596,6.2835,7.717,10.396,11.542,13.9975
 MA0483	MA0483.1.Gfi1b	1	Gfi1b	More than 3 adjacent zinc finger factors	O70237	ChIP-seq	vertebrates	Mus musculus	-3.8565,3.0435,5.712,10.335,11.7055,14.186
-MA0484	MA0484.1.HNF4G	1	HNF4G	RXR-related receptors (NR2)	Q14541	ChIP-seq	vertebrates	Homo sapiens	0.1935,4.9255,6.641,10.0555,11.32,13.8605
-MA0485	MA0485.1.Hoxc9	1	Hoxc9	HOX-related factors	P09633	ChIP-seq	vertebrates	Mus musculus	-1.3555,4.2455,6.277,10.124,11.464,14.007
+MA0484	MA0484.2.HNF4G	2	HNF4G	RXR-related receptors (NR2)	Q14541	ChIP-seq	vertebrates	Homo sapiens	2.056,5.808,7.304,10.14,11.5515,13.3455
+MA0485	MA0485.2.HOXC9	2	HOXC9	HOX-related factors	P31274	HT-SELEX	vertebrates	Homo sapiens	-10.9875,-1.757,1.197,9.9265,11.797,14.349
 MA0486	MA0486.2.HSF1	2	HSF1	HSF factors	Q00613	HT-SELEX	vertebrates	Homo sapiens	-8.7565,-2.077,0.558,5.694,7.7745,12.069
 MA0488	MA0488.1.JUN	1	JUN	Jun-related factors	P05412	ChIP-seq	vertebrates	Homo sapiens	-11.829,-3.1705,0.6425,8.8915,10.947,14.2785
 MA0489	MA0489.1.JUN(var.2)	1.2	JUN	Jun-related factors	P05412	ChIP-seq	vertebrates	Homo sapiens	-8.59,-1.5065,2.858,10.148,11.7765,14.3605
-MA0490	MA0490.1.JUNB	1	JUNB	Jun-related factors	P17275	ChIP-seq	vertebrates	Homo sapiens	-15.901,-3.644,-1.4395,10.0965,11.877,14.757
-MA0491	MA0491.1.JUND	1	JUND	Jun-related factors	P17535	ChIP-seq	vertebrates	Homo sapiens	-19.2695,-5.4625,-3.3,8.5375,11.3865,14.7405
+MA0490	MA0490.2.JUNB	2	JUNB	Jun-related factors	P17275	ChIP-seq	vertebrates	Homo sapiens	1.003,5.4655,6.8415,10.106,11.446,13.782
+MA0491	MA0491.2.JUND	2	JUND	Jun-related factors	P17535	ChIP-seq	vertebrates	Homo sapiens	0.7705,5.1815,6.8105,10.0545,11.552,14.0435
 MA0492	MA0492.1.JUND(var.2)	1.2	JUND	Jun-related factors	P17535	ChIP-seq	vertebrates	Homo sapiens	-12.217,-3.265,1.0395,9.0535,11.0835,14.26
 MA0493	MA0493.1.Klf1	1	Klf1	Three-zinc finger Krüppel-related factors	P46099	ChIP-seq	vertebrates	Mus musculus	-2.765,3.3375,5.849,10.287,11.6525,14.1265
 MA0494	MA0494.1.Nr1h3::Rxra	1	Nr1h3::Rxra	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q9Z0Y9;P28700	ChIP-seq	vertebrates	Mus musculus	0.6305,5.106,6.7285,9.98,11.198,13.686
-MA0495	MA0495.2.MAFF	2	MAFF	Maf-related factors	Q9ULX9	ChIP-seq	vertebrates	Homo sapiens	0.0015,4.1065,5.6875,9.022,10.3345,13.141
-MA0496	MA0496.2.MAFK	2	MAFK	Maf-related factors	O60675	ChIP-seq	vertebrates	Homo sapiens	-0.485,3.773,5.41,8.856,10.21,13.0985
+MA0495	MA0495.3.MAFF	3	MAFF	Maf-related factors	Q9ULX9	ChIP-seq	vertebrates	Homo sapiens	1.208,5.2695,6.806,9.9755,11.1925,13.704
+MA0496	MA0496.3.MAFK	3	MAFK	Maf-related factors	O60675	ChIP-seq	vertebrates	Homo sapiens	1.9365,5.6515,7.098,10.013,11.2335,13.549
 MA0497	MA0497.1.MEF2C	1	MEF2C	Regulators of differentiation	Q06413	ChIP-seq	vertebrates	Homo sapiens	-1.275,4.1885,6.1285,9.861,11.254,13.9305
-MA0498	MA0498.2.MEIS1	2	MEIS1	TALE-type homeo domain factors	O00470	HT-SELEX	vertebrates	Homo sapiens	4.773,7.3165,9.2925,10.304,10.338942959,10.338942959
-MA0499	MA0499.1.Myod1	1	Myod1	MyoD / ASC-related factors	P10085	ChIP-seq	vertebrates	Mus musculus	-10.0385,-2.4255,2.746,11.177,12.4805,14.163
-MA0500	MA0500.1.Myog	1	Myog	MyoD / ASC-related factors	P12979	ChIP-seq	vertebrates	Mus musculus	-10.892,-3.0665,-1.529,11.2355,12.5465,14.176
+MA0498	MA0498.2.MEIS1	2	MEIS1	TALE-type homeo domain factors	O00470	HT-SELEX	vertebrates	Homo sapiens	4.773,7.3165,9.2925,10.304,10.338942958957766,10.338942958957766
+MA0499	MA0499.2.MYOD1	2	MYOD1	MyoD / ASC-related factors	P15172	ChIP-seq	vertebrates	Homo sapiens	1.8275,5.9265,7.379,10.388,11.693,13.9215
+MA0500	MA0500.2.MYOG	2	MYOG	MyoD / ASC-related factors	P15173	ChIP-seq	vertebrates	Homo sapiens	0.0975,5.4055,6.395,11.3065,12.418,13.7545
 MA0501	MA0501.1.MAF::NFE2	1	MAF::NFE2	Jun-related factors;Maf-related factors	O75444;Q16621	ChIP-seq	vertebrates	Homo sapiens	-6.4155,0.1795,2.6255,7.5345,9.3605,13.027
-MA0502	MA0502.1.NFYB	1	NFYB	NFY	P25208	ChIP-seq	vertebrates	Homo sapiens	-8.0335,-0.4375,3.34,9.701,11.4065,14.249
+MA0502	MA0502.2.NFYB	2	NFYB	.	P25208	ChIP-seq	vertebrates	Homo sapiens	1.4785,5.55,7.148,10.22,11.4065,14.016
 MA0503	MA0503.1.Nkx2-5(var.2)	1.2	Nkx2-5	NK-related factors	P42582	ChIP-seq	vertebrates	Mus musculus	-4.111,3.492,6.6125,10.8835,12.0505,14.0375
 MA0504	MA0504.1.NR2C2	1	NR2C2	RXR-related receptors (NR2)	P49116	ChIP-seq	vertebrates	Homo sapiens	-3.1855,2.523,4.6175,8.8015,10.3575,13.505
 MA0505	MA0505.1.Nr5a2	1	Nr5a2	FTZ-F1-related receptors (NR5)	P45448	ChIP-seq	vertebrates	Mus musculus	-3.221,2.881,5.0935,9.407,10.943,13.925
 MA0506	MA0506.1.NRF1	1	NRF1	Jun-related factors	Q16656	ChIP-seq	vertebrates	Homo sapiens	-5.4585,2.575,5.2715,9.8355,11.254,14.1315
 MA0507	MA0507.1.POU2F2	1	POU2F2	POU domain factors	P09086	ChIP-seq	vertebrates	Homo sapiens	-7.7505,-0.146,2.6145,8.782,10.8135,14.243
-MA0508	MA0508.2.PRDM1	2	PRDM1	More than 3 adjacent zinc finger factors	O75626	ChIP-seq	vertebrates	Homo sapiens	-3.285,3.084,4.676,10.9495,12.2705,14.201
-MA0509	MA0509.1.Rfx1	1	Rfx1	RFX-related factors	P48377	ChIP-seq	vertebrates	Mus musculus	-3.194,3.234,5.3885,9.4245,10.8525,13.7195
+MA0508	MA0508.3.PRDM1	3	PRDM1	More than 3 adjacent zinc finger factors	O75626	ChIP-seq	vertebrates	Homo sapiens	2.0085,5.9575,7.628,9.9805,11.5915,14.1925
+MA0509	MA0509.2.RFX1	2	RFX1	RFX-related factors	P48743	ChIP-seq	vertebrates	Homo sapiens	1.0995,5.246,6.817,10.026,11.2525,13.78
 MA0510	MA0510.2.RFX5	2	RFX5	RFX-related factors	P48382	HT-SELEX	vertebrates	Homo sapiens	-7.6825,-1.529,0.804,5.6635,7.538,11.5275
 MA0511	MA0511.2.RUNX2	2	RUNX2	Runt-related factors	Q13950	HT-SELEX	vertebrates	Homo sapiens	-1.0665,5.998,7.8405,10.941,11.842,13.7315
 MA0512	MA0512.2.Rxra	2	Rxra	RXR-related receptors (NR2)	P28700	HT-SELEX	vertebrates	Mus musculus	-14.4945,-7.0535,-4.199,1.7585,4.1015,9.0075
 MA0513	MA0513.1.SMAD2::SMAD3::SMAD4	1	SMAD2::SMAD3::SMAD4	SMAD factors	Q15796;P84022;Q13485	ChIP-seq	vertebrates	Homo sapiens	-1.5925,4.276,6.332,10.1235,11.4235,13.942
 MA0514	MA0514.1.Sox3	1	Sox3	SOX-related factors	P53784	ChIP-seq	vertebrates	Mus musculus	-4.9845,1.3995,5.348,10.812,12.1185,14.2055
 MA0515	MA0515.1.Sox6	1	Sox6	SOX-related factors	P40645	ChIP-seq	vertebrates	Mus musculus	-3.2085,3.2045,4.6745,10.752,12.336,14.344
-MA0516	MA0516.1.SP2	1	SP2	Three-zinc finger Krüppel-related factors	Q02086	ChIP-seq	vertebrates	Homo sapiens	-3.2605,3.468,5.9695,10.2265,11.574,14.033
+MA0516	MA0516.2.SP2	2	SP2	Three-zinc finger Kruppel-related factors	Q02086	HT-SELEX	vertebrates	Homo sapiens	-4.542,1.0845,3.1925,7.5275,9.191,12.659
 MA0517	MA0517.1.STAT1::STAT2	1	STAT1::STAT2	STAT factors	P42224;P52630	ChIP-seq	vertebrates	Homo sapiens	-3.977,1.8145,3.9795,8.3985,10.062,13.468
 MA0518	MA0518.1.Stat4	1	Stat4	STAT factors	P42228	ChIP-seq	vertebrates	Mus musculus	-4.418,2.5455,5.3465,10.4,11.8875,14.248
 MA0519	MA0519.1.Stat5a::Stat5b	1	Stat5a::Stat5b	STAT factors	P42230;P42232	ChIP-seq	vertebrates	Mus musculus	-7.3215,1.922,5.497,10.4535,11.8665,14.3375
 MA0520	MA0520.1.Stat6	1	Stat6	STAT factors	P52633	ChIP-seq	vertebrates	Mus musculus	-4.936,1.9715,4.658,9.7905,11.5015,14.399
 MA0521	MA0521.1.Tcf12	1	Tcf12	E2A-related factors	Q61286	ChIP-seq	vertebrates	Mus musculus	-9.15,-1.9275,1.5035,11.065,12.5635,14.263
-MA0522	MA0522.2.TCF3	2	TCF3	E2A-related factors	P15923	HT-SELEX	vertebrates	Homo sapiens	-0.957,4.9765,7.703,11.617,12.504,13.2935
+MA0522	MA0522.3.TCF3	3	TCF3	E2A-related factors	P15923	ChIP-seq	vertebrates	Homo sapiens	3.2345,6.8985,8.237,9.7475,12.3265,13.5675
 MA0523	MA0523.1.TCF7L2	1	TCF7L2	TCF-7-related factors	Q9NQB0	ChIP-seq	vertebrates	Homo sapiens	-2.906,3.769,6.063,10.2255,11.6235,14.1545
 MA0524	MA0524.2.TFAP2C	2	TFAP2C	AP-2	Q92754	HT-SELEX	vertebrates	Homo sapiens	2.8845,6.652,8.01,10.6465,11.5935,13.335
 MA0525	MA0525.2.TP63	2	TP63	p53-related factors	Q9H3D4	HT-SELEX	vertebrates	Homo sapiens	-23.118,-13.458,-9.7935,-2.2,0.727,6.8295
-MA0526	MA0526.2.USF2	2	USF2	bHLH-ZIP factors	Q15853	ChIP-seq	vertebrates	Homo sapiens	-1.344,3.724,5.6355,9.516,10.9825,14.025
+MA0526	MA0526.3.USF2	3	USF2	bHLH-ZIP factors	Q15853	ChIP-seq	vertebrates	Homo sapiens	1.283,5.4125,6.984,10.182,11.36,13.8525
 MA0527	MA0527.1.ZBTB33	1	ZBTB33	Other factors with up to three adjacent zinc fingers	Q86T24	ChIP-seq	vertebrates	Homo sapiens	-1.4915,3.972,5.928,9.754,11.144,13.8795
-MA0528	MA0528.1.ZNF263	1	ZNF263	More than 3 adjacent zinc finger factors	O14978	ChIP-seq	vertebrates	Homo sapiens	-1.149,3.763,5.537,9.121,10.4835,13.3215
+MA0528	MA0528.2.ZNF263	2	ZNF263	More than 3 adjacent zinc finger factors	O14978	ChIP-seq	vertebrates	Homo sapiens	2.1905,6.1285,7.6605,9.927,11.522,14.0505
 MA0591	MA0591.1.Bach1::Mafk	1	Bach1::Mafk	Jun-related factors;Maf-related factors	P97302;Q61827	ChIP-seq	vertebrates	Mus musculus	-5.1935,0.6185,2.8145,7.3785,9.1315,12.787
-MA0592	MA0592.2.Esrra	2	Esrra	Steroid hormone receptors (NR3)	O08580	HT-SELEX	vertebrates	Mus musculus	-9.8805,-2.359,0.489,6.297,8.338,12.8365
+MA0592	MA0592.3.ESRRA	3	ESRRA	Steroid hormone receptors (NR3)	P11474	ChIP-seq	vertebrates	Homo sapiens	0.943,5.1515,6.625,10.1455,11.174,13.8045
 MA0593	MA0593.1.FOXP2	1	FOXP2	Forkhead box (FOX) factors	O15409	ChIP-seq	vertebrates	Homo sapiens	-6.6255,1.416,3.136,10.058,12.127,14.5025
-MA0594	MA0594.1.Hoxa9	1	Hoxa9	HOX-related factors	P09631	ChIP-seq	vertebrates	Mus musculus	-0.455,4.521,6.38,10.0405,11.405,13.8975
+MA0594	MA0594.2.HOXA9	2	HOXA9	HOX-related factors	P31269	HT-SELEX	vertebrates	Homo sapiens	4.713,7.5485,8.573,10.195,10.576,11.3325
 MA0595	MA0595.1.SREBF1	1	SREBF1	bHLH-ZIP factors	P36956	ChIP-seq	vertebrates	Homo sapiens	-0.4345,4.735,6.349,10.612,11.8615,14.213
 MA0596	MA0596.1.SREBF2	1	SREBF2	bHLH-ZIP factors	Q12772	ChIP-seq	vertebrates	Homo sapiens	0.095,5.0085,6.668,10.4585,11.8905,14.247
 MA0597	MA0597.1.THAP1	1	THAP1	THAP-related factors	Q9NVV9	ChIP-seq	vertebrates	Homo sapiens	5.207,7.452,8.2295,9.5135,10.0,10.908
-MA0598	MA0598.2.EHF	2	EHF	Ets-related factors	Q9NZC4	HT-SELEX	vertebrates	Homo sapiens	-2.1675,3.3755,5.4175,9.453,10.9295,13.8345
+MA0598	MA0598.3.EHF	3	EHF	Ets-related factors	Q9NZC4	ChIP-seq	vertebrates	Homo sapiens	1.818,5.7825,7.2775,10.2875,11.456,13.798
 MA0599	MA0599.1.KLF5	1	KLF5	Three-zinc finger Krüppel-related factors	Q13887	ChIP-seq	vertebrates	Homo sapiens	-7.4445,-1.6345,5.49,10.8375,12.194,14.0465
 MA0600	MA0600.2.RFX2	2	RFX2	RFX-related factors	P48378	HT-SELEX	vertebrates	Homo sapiens	-10.823,-3.621,-0.9095,4.681,6.8315,11.28
 MA0601	MA0601.1.Arid3b	1	Arid3b	ARID-related factors	Q9Z1N7	PBM	vertebrates	Mus musculus	1.5035,7.133,8.4835,10.8365,11.722,13.164
 MA0602	MA0602.1.Arid5a	1	Arid5a	ARID-related factors	Q3U108	universal protein binding microarray (PBM)	vertebrates	Mus musculus	3.238,6.747,8.004,10.567,11.5675,13.3745
 MA0603	MA0603.1.Arntl	1	Arntl	PAS domain factors	Q9WTL8	PBM	vertebrates	Mus musculus	2.217,6.304,7.842,10.611,11.872,14.159
-MA0604	MA0604.1.Atf1	1	Atf1	CREB-related factors	P81269	PBM	vertebrates	Mus musculus	0.9905,6.642,8.583,11.1315,11.387,13.1365088774
-MA0605	MA0605.1.Atf3	1	Atf3	Fos-related factors	Q60765	PBM	vertebrates	Mus musculus	-1.7845,6.1435,8.1395,11.2635,11.8525,13.3560109925
+MA0604	MA0604.1.Atf1	1	Atf1	CREB-related factors	P81269	PBM	vertebrates	Mus musculus	0.9905,6.642,8.583,11.1315,11.387,13.136508877385767
+MA0605	MA0605.2.ATF3	2	ATF3	Jun-related factors	P18847	HT-SELEX	vertebrates	Homo sapiens	-22.27,-10.0945,-5.6655,1.6505,6.7665,12.9795
 MA0606	MA0606.1.NFAT5	1	NFAT5	NFAT-related factors	A0A1D5NT38	PBM	vertebrates	Gallus gallus	2.841,7.108,8.269,10.626,11.4085,13.4015
-MA0607	MA0607.1.Bhlha15	1	Bhlha15	Tal-related factors	Q9QYC3	PBM	vertebrates	Mus musculus	-2.123,1.5925,7.435,11.838,11.841,13.3354520361
+MA0607	MA0607.1.Bhlha15	1	Bhlha15	Tal-related factors	Q9QYC3	PBM	vertebrates	Mus musculus	-2.123,1.5925,7.435,11.838,11.841,13.33545203606614
 MA0608	MA0608.1.Creb3l2	1	Creb3l2	CREB-related factors	Q8BH52	PBM	vertebrates	Mus musculus	-3.5655,3.232,4.8065,10.567,12.1415,14.445
-MA0609	MA0609.1.Crem	1	Crem	CREB-related factors	P27699	PBM	vertebrates	Mus musculus	-2.8815,0.999,3.633,11.155,12.1795,13.8265
-MA0610	MA0610.1.DMRT3	1	DMRT3	DMRT	Q9NQL9	PBM	vertebrates	Homo sapiens	-1.616,6.357,8.189,11.0165,11.839,13.394
-MA0611	MA0611.1.Dux	1	Dux	Paired-related HD factors	A1JVI8	PBM	vertebrates	Mus musculus	-2.6535,0.7825,1.3035,11.745,12.5565,12.9060128519
-MA0612	MA0612.1.EMX1	1	EMX1	NK-related factors	Q04741	PBM	vertebrates	Homo sapiens	4.5365,7.3775,8.5175,10.419,10.879,11.7575
-MA0613	MA0613.1.FOXG1	1	FOXG1	Forkhead box (FOX) factors	P55316	PBM	vertebrates	Homo sapiens	-5.001,3.903,4.0585,6.488,12.9625,13.9887610495
-MA0614	MA0614.1.Foxj2	1	Foxj2	Forkhead box (FOX) factors	Q9ES18	PBM	vertebrates	Mus musculus	-2.1955,5.1825,7.2895,11.5605,11.85,13.6917220522
+MA0609	MA0609.2.CREM	2	CREM	CREB-related factors	Q03060	ChIP-seq	vertebrates	Homo sapiens	2.623,6.111,7.4525,10.211,11.287,13.4715
+MA0610	MA0610.1.DMRT3	1	DMRT3	DMRT factors	Q9NQL9	PBM	vertebrates	Homo sapiens	-1.616,6.357,8.189,11.0165,11.839,13.394
+MA0611	MA0611.1.Dux	1	Dux	Paired-related HD factors	A1JVI8	PBM	vertebrates	Mus musculus	-2.6535,0.7825,1.3035,11.745,12.5565,12.906012851947088
+MA0612	MA0612.2.EMX1	2	EMX1	NK-related factors	Q04741	HT-SELEX	vertebrates	Homo sapiens	-4.3315,6.7605,8.8505,11.0535,11.8005,12.657896116576227
+MA0613	MA0613.1.FOXG1	1	FOXG1	Forkhead box (FOX) factors	P55316	PBM	vertebrates	Homo sapiens	-5.001,3.903,4.0585,6.488,12.9625,13.988761049464456
+MA0614	MA0614.1.Foxj2	1	Foxj2	Forkhead box (FOX) factors	Q9ES18	PBM	vertebrates	Mus musculus	-2.1955,5.1825,7.2895,11.5605,11.85,13.691722052179434
 MA0615	MA0615.1.Gmeb1	1	Gmeb1	GMEB	Q9JL60	universal protein binding microarray (PBM)	vertebrates	Mus musculus	4.4415,7.6465,8.615,10.2845,10.835,11.866
-MA0616	MA0616.1.Hes2	1	Hes2	Hairy-related factors	O54792	PBM	vertebrates	Mus musculus	4.4555,7.293,8.318,10.252,11.015,12.5165
-MA0617	MA0617.1.Id2	1	Id2	HLH domain only	P41136	PBM	vertebrates	Mus musculus	-9.941,1.1515,2.024,11.6885,12.532,13.5660460838
-MA0618	MA0618.1.LBX1	1	LBX1	NK-related factors	P52954	PBM	vertebrates	Homo sapiens	0.8035,7.295,8.809,10.84,11.749,12.6361142622
+MA0616	MA0616.2.HES2	2	HES2	Hairy-related factors	Q9Y543	HT-SELEX	vertebrates	Homo sapiens	-1.054,5.123,7.202,10.831,11.8265,13.8645
+MA0618	MA0618.1.LBX1	1	LBX1	NK-related factors	P52954	PBM	vertebrates	Homo sapiens	0.8035,7.295,8.809,10.84,11.749,12.636114262226291
 MA0619	MA0619.1.LIN54	1	LIN54	.	F1NCE0	PBM	vertebrates	Gallus gallus	-1.8275,1.0195,8.5055,11.303,12.0975,12.9845
-MA0620	MA0620.2.MITF	2	MITF	bHLH-ZIP factors	O75030	ChIP-seq	vertebrates	Homo sapiens	-1.124,3.8755,5.752,9.58,11.008,13.8675
+MA0620	MA0620.3.MITF	3	MITF	bHLH-ZIP factors	O75030	ChIP-seq	vertebrates	Homo sapiens	0.6045,5.06,6.7305,10.139,11.395,13.936
 MA0621	MA0621.1.mix-a	1	mix-a	Paired-related HD factors	P21711	PBM	vertebrates	Xenopus laevis	-3.6185,2.717,6.0245,11.121,12.4505,13.953
-MA0622	MA0622.1.Mlxip	1	Mlxip	bHLH-ZIP factors	Q2VPU4	PBM	vertebrates	Mus musculus	-10.1875,1.099,1.7775,12.0675,12.746,13.4020828349
-MA0623	MA0623.1.Neurog1	1	Neurog1	Tal-related factors	P70660	PBM	vertebrates	Mus musculus	4.843,7.3165,8.2175,9.9055,10.5605,11.711
+MA0622	MA0622.1.Mlxip	1	Mlxip	bHLH-ZIP factors	Q2VPU4	PBM	vertebrates	Mus musculus	-10.1875,1.099,1.7775,12.0675,12.746,13.402082834869615
+MA0623	MA0623.2.NEUROG1	2	NEUROG1	Tal-related factors	Q92886	HT-SELEX	vertebrates	Homo sapiens	-4.9845,2.162,4.5975,9.6405,11.003,14.7075
 MA0624	MA0624.1.NFATC1	1	NFATC1	NFAT-related factors	G1MTN6	PBM	vertebrates	Meleagris gallopavo	4.1585,7.621,8.695,10.407,10.8975,11.6735
 MA0625	MA0625.1.NFATC3	1	NFATC3	NFAT-related factors	Q12968	PBM	vertebrates	Homo sapiens	3.8695,7.2325,8.48,10.6975,11.3555,12.468
 MA0626	MA0626.1.Npas2	1	Npas2	PAS domain factors	P97460	PBM	vertebrates	Mus musculus	-1.9595,5.2685,8.04,11.163,12.17,13.698
-MA0627	MA0627.1.Pou2f3	1	Pou2f3	POU domain factors	P31362	universal protein binding microarray (PBM)	vertebrates	Mus musculus	-1.6265,3.562,5.4935,9.3965,10.9335,13.976
+MA0627	MA0627.2.POU2F3	2	POU2F3	POU domain factors	Q9UKI9	ChIP-seq	vertebrates	Homo sapiens	0.303,4.82,6.514,9.969,11.2595,13.9455
 MA0628	MA0628.1.POU6F1	1	POU6F1	POU domain factors	Q14863	PBM	vertebrates	Homo sapiens	3.25,6.84,8.052,10.665,11.858,13.132
 MA0629	MA0629.1.Rhox11	1	Rhox11	Paired-related HD factors	Q810N8	universal protein binding microarray (PBM)	vertebrates	Mus musculus	1.943,5.999,7.5,10.527,11.626,13.717
-MA0630	MA0630.1.SHOX	1	SHOX	Paired-related HD factors	O15266	PBM	vertebrates	Homo sapiens	4.7665,7.1965,8.4815,10.4125,10.7175,10.9760864622
+MA0630	MA0630.1.SHOX	1	SHOX	Paired-related HD factors	O15266	PBM	vertebrates	Homo sapiens	4.7665,7.1965,8.4815,10.4125,10.7175,10.976086462188503
 MA0631	MA0631.1.Six3	1	Six3	HD-SINE factors	Q62233	universal protein binding microarray (PBM)	vertebrates	Mus musculus	-0.531,4.181,5.9445,9.543,10.9045,13.69
-MA0632	MA0632.1.Tcfl5	1	Tcfl5	PAS domain factors	Q32NY8	PBM	vertebrates	Mus musculus	4.8905,7.8025,8.466,9.2415,9.4065,9.775
+MA0632	MA0632.2.TCFL5	2	TCFL5	PAS domain factors	Q9UL49	HT-SELEX	vertebrates	Homo sapiens	0.06,5.706,7.4225,10.8585,11.9985,13.9665
 MA0633	MA0633.1.Twist2	1	Twist2	Tal-related factors	Q9D030	PBM	vertebrates	Mus musculus	-2.6215,2.7,7.5615,11.1555,12.039,13.8765
 MA0634	MA0634.1.ALX3	1	ALX3	Paired-related HD factors	O95076	HT-SELEX	vertebrates	Homo sapiens	4.678,7.291,8.3005,10.333,10.8575,11.7345
 MA0635	MA0635.1.BARHL2	1	BARHL2	NK-related factors	Q9NY43	HT-SELEX	vertebrates	Homo sapiens	4.306,7.6345,8.699,10.484,11.0395,11.911
 MA0636	MA0636.1.BHLHE41	1	BHLHE41	Hairy-related factors	Q9C0J9	HT-SELEX	vertebrates	Homo sapiens	-8.0105,-0.814,2.243,7.324,9.4295,14.7145
 MA0637	MA0637.1.CENPB	1	CENPB	.	P07199	HT-SELEX	vertebrates	Homo sapiens	-0.454,4.47,6.2575,9.818,11.1445,13.819
 MA0638	MA0638.1.CREB3	1	CREB3	CREB-related factors	O43889	HT-SELEX	vertebrates	Homo sapiens	-2.8255,2.7535,4.8375,9.063,10.627,13.7635
-MA0639	MA0639.1.DBP	1	DBP	C/EBP-related	Q10586	HT-SELEX	vertebrates	Homo sapiens	-4.261,2.3825,4.814,10.1335,11.548,14.6335
-MA0640	MA0640.1.ELF3	1	ELF3	Ets-related factors	P78545	HT-SELEX	vertebrates	Homo sapiens	-7.051,-0.31,2.2185,7.3215,9.246,13.117
+MA0639	MA0639.1.DBP	1	DBP	C/EBP-related factors	Q10586	HT-SELEX	vertebrates	Homo sapiens	-4.261,2.3825,4.814,10.1335,11.548,14.6335
+MA0640	MA0640.2.ELF3	2	ELF3	Ets-related factors	P78545	ChIP-seq	vertebrates	Homo sapiens	2.169,5.97,7.4385,10.302,11.4395,13.836
 MA0641	MA0641.1.ELF4	1	ELF4	Ets-related factors	Q99607	HT-SELEX	vertebrates	Homo sapiens	-4.6405,1.4745,3.754,8.3625,10.1055,13.4725
 MA0642	MA0642.1.EN2	1	EN2	NK-related factors	P19622	HT-SELEX	vertebrates	Homo sapiens	4.1375,7.6205,8.702,10.5415,11.0805,11.976
 MA0643	MA0643.1.Esrrg	1	Esrrg	Steroid hormone receptors (NR3)	P62509	HT-SELEX	vertebrates	Mus musculus	-1.204,4.3815,6.325,10.23,11.546,14.3015
@@ -251,23 +250,23 @@ MA0646	MA0646.1.GCM1	1	GCM1	GCM factors	Q9NP62	HT-SELEX	vertebrates	Homo sapiens
 MA0647	MA0647.1.GRHL1	1	GRHL1	Grainyhead-related factors	Q9NZI5	HT-SELEX	vertebrates	Homo sapiens	-2.05,3.7475,5.808,9.756,11.1915,13.961
 MA0648	MA0648.1.GSC	1	GSC	Paired-related HD factors	P56915	HT-SELEX	vertebrates	Homo sapiens	3.1365,7.2025,8.478,10.8345,11.637,12.8325
 MA0649	MA0649.1.HEY2	1	HEY2	Hairy-related factors	Q9UBP5	HT-SELEX	vertebrates	Homo sapiens	1.1515,5.6715,7.279,10.3005,11.3765,14.1505
-MA0650	MA0650.1.HOXA13	1	HOXA13	HOX-related factors	P31271	HT-SELEX	vertebrates	Homo sapiens	1.6035,6.226,7.854,10.8025,11.8075,13.636
+MA0650	MA0650.2.HOXA13	2	HOXA13	HOX-related factors	P31271	HT-SELEX	vertebrates	Homo sapiens	-8.305,-0.2555,2.2975,8.44,10.7355,14.4195
 MA0651	MA0651.1.HOXC11	1	HOXC11	HOX-related factors	O43248	HT-SELEX	vertebrates	Homo sapiens	-0.357,5.026,6.7445,10.538,11.9715,14.1305
 MA0652	MA0652.1.IRF8	1	IRF8	Interferon-regulatory factors	Q02556	HT-SELEX	vertebrates	Homo sapiens	-25.957,-15.639,-11.679,-3.467,-0.2905,6.344
 MA0653	MA0653.1.IRF9	1	IRF9	Interferon-regulatory factors	Q00978	HT-SELEX	vertebrates	Homo sapiens	-24.8965,-15.361,-11.7175,-4.086,-1.1035,5.165
-MA0654	MA0654.1.ISX	1	ISX	Paired-related HD factors	Q2M1V0	HT-SELEX	vertebrates	Homo sapiens	-0.5155,5.4305,6.8375,11.3675,12.017,12.1864450952
+MA0654	MA0654.1.ISX	1	ISX	Paired-related HD factors	Q2M1V0	HT-SELEX	vertebrates	Homo sapiens	-0.5155,5.4305,6.8375,11.3675,12.017,12.186445095203158
 MA0655	MA0655.1.JDP2	1	JDP2	Fos-related factors	Q8WYK2	HT-SELEX	vertebrates	Homo sapiens	-4.5675,1.583,3.9045,8.913,10.4435,14.9295
 MA0656	MA0656.1.JDP2(var.2)	1.2	JDP2	Fos-related factors	Q8WYK2	HT-SELEX	vertebrates	Homo sapiens	-12.626,-4.258,-1.1095,5.2125,7.5725,13.3185
 MA0657	MA0657.1.KLF13	1	KLF13	Three-zinc finger Krüppel-related factors	Q9Y2Y9	HT-SELEX	vertebrates	Homo sapiens	-12.3355,-4.6585,-1.766,4.1805,6.444,11.149
 MA0658	MA0658.1.LHX6	1	LHX6	HD-LIM factors	Q9UPM6	HT-SELEX	vertebrates	Homo sapiens	1.504,6.3665,8.0095,10.9335,11.907,13.5955
-MA0659	MA0659.1.MAFG	1	MAFG	Maf-related factors	O15525	HT-SELEX	vertebrates	Homo sapiens	-0.802,3.691,5.3965,8.9445,10.3215,13.2245
+MA0659	MA0659.2.MAFG	2	MAFG	Maf-related factors	O15525	ChIP-seq	vertebrates	Homo sapiens	1.176,5.3155,6.8705,10.069,11.295,13.7845
 MA0660	MA0660.1.MEF2B	1	MEF2B	Regulators of differentiation	Q02080	HT-SELEX	vertebrates	Homo sapiens	-13.335,-5.0205,-1.911,4.5175,6.8515,11.8165
 MA0661	MA0661.1.MEOX1	1	MEOX1	HOX-related factors	P50221	HT-SELEX	vertebrates	Homo sapiens	3.1825,7.168,8.4665,10.9785,11.7755,12.9
 MA0662	MA0662.1.MIXL1	1	MIXL1	Paired-related HD factors	Q9H2W2	HT-SELEX	vertebrates	Homo sapiens	4.8085,7.281,8.2995,10.2385,10.642,11.1075
 MA0663	MA0663.1.MLX	1	MLX	bHLH-ZIP factors	Q9UH92	HT-SELEX	vertebrates	Homo sapiens	-2.672,2.978,5.09,9.2885,10.9345,14.1425
 MA0664	MA0664.1.MLXIPL	1	MLXIPL	bHLH-ZIP factors	Q9NP71	HT-SELEX	vertebrates	Homo sapiens	-1.155,4.3655,6.3425,10.8755,12.177,14.287
 MA0665	MA0665.1.MSC	1	MSC	Tal-related factors	O60682	HT-SELEX	vertebrates	Homo sapiens	-0.9365,3.9215,5.6505,9.6765,11.186,13.703
-MA0666	MA0666.1.MSX1	1	MSX1	NK-related factors	P28360	HT-SELEX	vertebrates	Homo sapiens	4.192,7.0085,8.425,10.8115,11.0995,11.7769992096
+MA0666	MA0666.1.MSX1	1	MSX1	NK-related factors	P28360	HT-SELEX	vertebrates	Homo sapiens	4.192,7.0085,8.425,10.8115,11.0995,11.776999209624487
 MA0667	MA0667.1.MYF6	1	MYF6	MyoD / ASC-related factors	P23409	HT-SELEX	vertebrates	Homo sapiens	-2.5845,3.131,5.262,9.438,10.997,13.7575
 MA0668	MA0668.1.NEUROD2	1	NEUROD2	Tal-related factors	Q15784	HT-SELEX	vertebrates	Homo sapiens	1.925,6.654,8.1305,10.8835,11.753,13.6585
 MA0669	MA0669.1.NEUROG2	1	NEUROG2	Tal-related factors	Q9H2A3	HT-SELEX	vertebrates	Homo sapiens	-3.545,2.3715,4.619,8.9965,10.4655,14.4245
@@ -275,17 +274,17 @@ MA0670	MA0670.1.NFIA	1	NFIA	Nuclear factor 1	Q12857	HT-SELEX	vertebrates	Homo sa
 MA0671	MA0671.1.NFIX	1	NFIX	Nuclear factor 1	Q14938	HT-SELEX	vertebrates	Homo sapiens	4.6915,7.9135,8.743,10.2255,10.397,10.828
 MA0672	MA0672.1.NKX2-3	1	NKX2-3	NK-related factors	Q8TAU0	HT-SELEX	vertebrates	Homo sapiens	0.817,6.2245,8.1435,11.0845,11.929,13.3315
 MA0673	MA0673.1.NKX2-8	1	NKX2-8	NK-related factors	O15522	HT-SELEX	vertebrates	Homo sapiens	3.685,7.501,8.6575,10.765,11.2375,12.457
-MA0674	MA0674.1.NKX6-1	1	NKX6-1	NK-related factors	P78426	HT-SELEX	vertebrates	Homo sapiens	3.534,7.387,8.791,10.7395,11.392,12.2166929489
-MA0675	MA0675.1.NKX6-2	1	NKX6-2	NK-related factors	Q9C056	HT-SELEX	vertebrates	Homo sapiens	4.874,7.617,8.5955,10.2035,10.3395,10.8134072716
+MA0674	MA0674.1.NKX6-1	1	NKX6-1	NK-related factors	P78426	HT-SELEX	vertebrates	Homo sapiens	3.534,7.387,8.791,10.7395,11.392,12.216692948875574
+MA0675	MA0675.1.NKX6-2	1	NKX6-2	NK-related factors	Q9C056	HT-SELEX	vertebrates	Homo sapiens	4.874,7.617,8.5955,10.2035,10.3395,10.81340727159701
 MA0676	MA0676.1.Nr2e1	1	Nr2e1	RXR-related receptors (NR2)	Q9Y466	HT-SELEX	vertebrates	Mus musculus	1.457,6.091,7.7985,10.6855,11.762,13.7795
 MA0677	MA0677.1.Nr2f6	1	Nr2f6	RXR-related receptors (NR2)	P43136	HT-SELEX	vertebrates	Mus musculus	-2.9955,1.9965,3.9155,7.904,9.451,12.769
 MA0678	MA0678.1.OLIG2	1	OLIG2	Tal-related factors	Q13516	HT-SELEX	vertebrates	Homo sapiens	-0.356,4.82,6.6045,10.269,11.587,14.048
-MA0679	MA0679.1.ONECUT1	1	ONECUT1	HD-CUT factors	Q9UBC0	HT-SELEX	vertebrates	Homo sapiens	-10.474,-2.0405,0.755,7.3575,9.8525,13.903
+MA0679	MA0679.2.ONECUT1	2	ONECUT1	HD-CUT factors	Q9UBC0	ChIP-seq	vertebrates	Homo sapiens	-0.587,4.18,5.962,9.608,11.024,13.9405
 MA0680	MA0680.1.PAX7	1	PAX7	Paired plus homeo domain	P23759	HT-SELEX	vertebrates	Homo sapiens	-7.1505,-0.318,2.32,7.538,9.493,13.0625
-MA0681	MA0681.1.Phox2b	1	Phox2b	Paired-related HD factors	Q99453	HT-SELEX	vertebrates	Mus musculus	0.263,5.0975,6.817,10.242,11.432,13.78
-MA0682	MA0682.1.Pitx1	1	Pitx1	Paired-related HD factors	P70314	HT-SELEX	vertebrates	Mus musculus	4.1595,7.272,8.133,10.848,11.513,12.0449678377
+MA0681	MA0681.2.PHOX2B	2	PHOX2B	Paired-related HD factors	Q99453	ChIP-seq	vertebrates	Homo sapiens	0.003,4.3205,5.9655,9.394,10.7195,13.4985
+MA0682	MA0682.2.PITX1	2	PITX1	Paired-related HD factors	P78337	HT-SELEX	vertebrates	Homo sapiens	-2.799,5.643,7.621,11.727,12.0355,12.793239203959464
 MA0683	MA0683.1.POU4F2	1	POU4F2	POU domain factors	Q12837	HT-SELEX	vertebrates	Homo sapiens	-9.203,-2.541,-0.0295,5.146,7.133,11.282
-MA0684	MA0684.1.RUNX3	1	RUNX3	Runt-related factors	Q13761	HT-SELEX	vertebrates	Homo sapiens	0.9905,5.8845,7.5225,10.7525,11.8685,13.8615
+MA0684	MA0684.2.RUNX3	2	RUNX3	Runt-related factors	Q13761	ChIP-seq	vertebrates	Homo sapiens	2.9825,6.449,7.9775,10.8795,11.766,13.322
 MA0685	MA0685.1.SP4	1	SP4	Three-zinc finger Krüppel-related factors	Q02446	HT-SELEX	vertebrates	Homo sapiens	-13.9365,-5.7475,-2.6675,3.671,6.086,11.043
 MA0686	MA0686.1.SPDEF	1	SPDEF	Ets-related factors	O95238	HT-SELEX	vertebrates	Homo sapiens	-3.8805,2.5045,4.868,9.489,11.128,14.2795
 MA0687	MA0687.1.SPIC	1	SPIC	Ets-related factors	Q8N5J4	HT-SELEX	vertebrates	Homo sapiens	1.0085,5.3685,6.9545,10.1265,11.307,13.7195
@@ -294,40 +293,40 @@ MA0689	MA0689.1.TBX20	1	TBX20	TBX1-related factors	Q9UMR3	HT-SELEX	vertebrates	H
 MA0690	MA0690.1.TBX21	1	TBX21	TBrain-related factors	Q9UL17	HT-SELEX	vertebrates	Homo sapiens	-0.7685,4.504,6.3435,10.0125,11.2375,13.9665
 MA0691	MA0691.1.TFAP4	1	TFAP4	bHLH-ZIP factors	Q01664	HT-SELEX	vertebrates	Homo sapiens	-5.2315,1.9035,4.4575,9.785,11.5365,14.095
 MA0692	MA0692.1.TFEB	1	TFEB	bHLH-ZIP factors	P19484	HT-SELEX	vertebrates	Homo sapiens	1.5915,6.1245,7.7125,10.695,11.846,13.806
-MA0693	MA0693.2.VDR	2	VDR	Thyroid hormone receptor-related factors (NR1)	P11473	SMiLE-seq	vertebrates	Homo sapiens	4.4185,7.2955,8.021,10.7985,11.322,11.7595732879
+MA0693	MA0693.2.VDR	2	VDR	Thyroid hormone receptor-related factors (NR1)	P11473	SMiLE-seq	vertebrates	Homo sapiens	4.4185,7.2955,8.021,10.7985,11.322,11.7595732878587
 MA0694	MA0694.1.ZBTB7B	1	ZBTB7B	More than 3 adjacent zinc finger factors	O15156	HT-SELEX	vertebrates	Homo sapiens	-3.3285,2.8655,5.378,10.086,11.527,14.1255
 MA0695	MA0695.1.ZBTB7C	1	ZBTB7C	More than 3 adjacent zinc finger factors	A1YPR0	HT-SELEX	vertebrates	Homo sapiens	2.918,6.701,8.0495,10.647,11.562,13.3265
 MA0696	MA0696.1.ZIC1	1	ZIC1	More than 3 adjacent zinc finger factors	Q15915	HT-SELEX	vertebrates	Homo sapiens	-9.1745,-1.939,0.7425,6.1795,8.216,12.3675
 MA0697	MA0697.1.ZIC3	1	ZIC3	More than 3 adjacent zinc finger factors	O60481	HT-SELEX	vertebrates	Homo sapiens	-4.0055,1.701,3.836,8.1885,9.8375,13.211
 MA0698	MA0698.1.ZBTB18	1	ZBTB18	More than 3 adjacent zinc finger factors	Q99592	HT-SELEX	vertebrates	Homo sapiens	-4.9305,1.481,3.8335,8.68,10.4115,13.997
 MA0699	MA0699.1.LBX2	1	LBX2	NK-related factors	Q6XYB7	HT-SELEX	vertebrates	Homo sapiens	4.739,7.1825,8.222,10.288,10.9315,11.601
-MA0700	MA0700.1.LHX2	1	LHX2	HD-LIM factors	P50458	HT-SELEX	vertebrates	Homo sapiens	2.2645,6.851,8.369,10.9385,11.899,13.2655
-MA0701	MA0701.1.LHX9	1	LHX9	HD-LIM factors	Q9NQ69	HT-SELEX	vertebrates	Homo sapiens	4.791,7.596,8.616,10.2535,10.881,11.0324715015
-MA0702	MA0702.1.LMX1A	1	LMX1A	HD-LIM factors	Q8TE12	HT-SELEX	vertebrates	Homo sapiens	4.5305,7.3575,8.514,10.312,11.1825,12.0248090221
-MA0703	MA0703.1.LMX1B	1	LMX1B	HD-LIM factors	O60663	HT-SELEX	vertebrates	Homo sapiens	4.995,7.443,8.2785,9.8135,10.5835,10.958895398
-MA0704	MA0704.1.Lhx4	1	Lhx4	HD-LIM factors	P53776	HT-SELEX	vertebrates	Mus musculus	4.436,7.481,8.407,10.56,10.9855,11.8548935645
-MA0705	MA0705.1.Lhx8	1	Lhx8	HD-LIM factors	O35652	HT-SELEX	vertebrates	Mus musculus	3.1135,8.136,9.0025,10.4865,10.6635,11.5571976562
+MA0700	MA0700.2.LHX2	2	LHX2	HD-LIM factors	P50458	ChIP-seq	vertebrates	Homo sapiens	2.2975,6.2265,7.649,11.213,12.004,13.2915
+MA0701	MA0701.2.LHX9	2	LHX9	HD-LIM factors	Q9NQ69	HT-SELEX	vertebrates	Homo sapiens	-2.5035,6.146,8.356,11.123,12.065,13.100357103945521
+MA0702	MA0702.2.LMX1A	2	LMX1A	HD-LIM factors	Q8TE12	HT-SELEX	vertebrates	Homo sapiens	-4.8365,2.968,5.949,11.395,12.603,13.81415115678442
+MA0703	MA0703.2.LMX1B	2	LMX1B	HD-LIM factors	O60663	HT-SELEX	vertebrates	Homo sapiens	-11.7825,-1.3815,0.44,10.113,11.9155,14.4285
+MA0704	MA0704.1.Lhx4	1	Lhx4	HD-LIM factors	P53776	HT-SELEX	vertebrates	Mus musculus	4.436,7.481,8.407,10.56,10.9855,11.854893564457509
+MA0705	MA0705.1.Lhx8	1	Lhx8	HD-LIM factors	O35652	HT-SELEX	vertebrates	Mus musculus	3.1135,8.136,9.0025,10.4865,10.6635,11.557197656201806
 MA0706	MA0706.1.MEOX2	1	MEOX2	HOX-related factors	Q6FHY5	HT-SELEX	vertebrates	Homo sapiens	4.756,7.491,8.4195,10.0735,10.6625,11.653
 MA0707	MA0707.1.MNX1	1	MNX1	HOX-related factors	P50219	HT-SELEX	vertebrates	Homo sapiens	4.092,7.527,8.639,10.5745,11.1855,12.128
-MA0708	MA0708.1.MSX2	1	MSX2	NK-related factors	P35548	HT-SELEX	vertebrates	Homo sapiens	2.7035,6.6345,8.1395,11.125,11.724,12.5254090619
-MA0709	MA0709.1.Msx3	1	Msx3	NK-related factors	P70354	HT-SELEX	vertebrates	Mus musculus	3.2875,6.024,7.9485,11.1535,11.7325,12.1373117201
+MA0708	MA0708.1.MSX2	1	MSX2	NK-related factors	P35548	HT-SELEX	vertebrates	Homo sapiens	2.7035,6.6345,8.1395,11.125,11.724,12.525409061864627
+MA0709	MA0709.1.Msx3	1	Msx3	NK-related factors	P70354	HT-SELEX	vertebrates	Mus musculus	3.2875,6.024,7.9485,11.1535,11.7325,12.13731172014582
 MA0710	MA0710.1.NOTO	1	NOTO	NK-related factors	A8MTQ0	HT-SELEX	vertebrates	Homo sapiens	2.8195,7.2955,8.6815,10.936,11.5045,12.3725
-MA0711	MA0711.1.OTX1	1	OTX1	Paired-related HD factors	P32242	HT-SELEX	vertebrates	Homo sapiens	3.274,7.0045,8.7385,10.955,11.6135,12.1855711548
-MA0712	MA0712.1.OTX2	1	OTX2	Paired-related HD factors	P32243	HT-SELEX	vertebrates	Homo sapiens	3.2825,7.017,8.07,11.179,11.515,12.2948699532
+MA0711	MA0711.1.OTX1	1	OTX1	Paired-related HD factors	P32242	HT-SELEX	vertebrates	Homo sapiens	3.274,7.0045,8.7385,10.955,11.6135,12.18557115475713
+MA0712	MA0712.2.OTX2	2	OTX2	Paired-related HD factors	P32243	ChIP-seq	vertebrates	Homo sapiens	2.123,6.372,7.356,11.3925,12.239,13.307
 MA0713	MA0713.1.PHOX2A	1	PHOX2A	Paired-related HD factors	O14813	HT-SELEX	vertebrates	Homo sapiens	1.573,5.8765,7.413,10.4,11.4815,13.7285
 MA0714	MA0714.1.PITX3	1	PITX3	Paired-related HD factors	O75364	HT-SELEX	vertebrates	Homo sapiens	3.817,7.1335,8.2925,11.008,11.341,12.6195
 MA0715	MA0715.1.PROP1	1	PROP1	Paired-related HD factors	O75360	HT-SELEX	vertebrates	Homo sapiens	-2.232,3.246,5.254,9.32,10.764,13.8405
-MA0716	MA0716.1.PRRX1	1	PRRX1	Paired-related HD factors	P54821	HT-SELEX	vertebrates	Homo sapiens	4.4875,7.032,8.8725,10.478,10.963,11.43980601
-MA0717	MA0717.1.RAX2	1	RAX2	Paired-related HD factors	Q96IS3	HT-SELEX	vertebrates	Homo sapiens	4.8855,7.1365,8.14,10.282,10.8175,10.9507987416
+MA0716	MA0716.1.PRRX1	1	PRRX1	Paired-related HD factors	P54821	HT-SELEX	vertebrates	Homo sapiens	4.4875,7.032,8.8725,10.478,10.963,11.43980600999575
+MA0717	MA0717.1.RAX2	1	RAX2	Paired-related HD factors	Q96IS3	HT-SELEX	vertebrates	Homo sapiens	4.8855,7.1365,8.14,10.282,10.8175,10.950798741615134
 MA0718	MA0718.1.RAX	1	RAX	Paired-related HD factors	Q9Y2V3	HT-SELEX	vertebrates	Homo sapiens	3.383,6.7115,8.469,11.0755,11.603,12.511
-MA0719	MA0719.1.RHOXF1	1	RHOXF1	Paired-related HD factors	Q8NHV9	HT-SELEX	vertebrates	Homo sapiens	4.662,8.154,9.053,10.067,10.1525,10.2033015281
-MA0720	MA0720.1.Shox2	1	Shox2	Paired-related HD factors	P70390	HT-SELEX	vertebrates	Mus musculus	3.5385,6.747,8.578,11.08,11.7405,11.7960788407
-MA0721	MA0721.1.UNCX	1	UNCX	Paired-related HD factors	A6NJT0	HT-SELEX	vertebrates	Homo sapiens	4.8065,7.2105,8.1825,10.316,10.66,10.9475204659
-MA0722	MA0722.1.VAX1	1	VAX1	NK-related factors	Q5SQQ9	HT-SELEX	vertebrates	Homo sapiens	4.8025,7.3645,8.3325,10.225,10.7775,11.2733023154
-MA0723	MA0723.1.VAX2	1	VAX2	NK-related factors	Q9UIW0	HT-SELEX	vertebrates	Homo sapiens	4.654,7.3605,8.385,10.38,10.65,11.4914624866
+MA0719	MA0719.1.RHOXF1	1	RHOXF1	Paired-related HD factors	Q8NHV9	HT-SELEX	vertebrates	Homo sapiens	4.662,8.154,9.053,10.067,10.1525,10.203301528080495
+MA0720	MA0720.1.Shox2	1	Shox2	Paired-related HD factors	P70390	HT-SELEX	vertebrates	Mus musculus	3.5385,6.747,8.578,11.08,11.7405,11.796078840733282
+MA0721	MA0721.1.UNCX	1	UNCX	Paired-related HD factors	A6NJT0	HT-SELEX	vertebrates	Homo sapiens	4.8065,7.2105,8.1825,10.316,10.66,10.947520465877737
+MA0722	MA0722.1.VAX1	1	VAX1	NK-related factors	Q5SQQ9	HT-SELEX	vertebrates	Homo sapiens	4.8025,7.3645,8.3325,10.225,10.7775,11.27330231541686
+MA0723	MA0723.1.VAX2	1	VAX2	NK-related factors	Q9UIW0	HT-SELEX	vertebrates	Homo sapiens	4.654,7.3605,8.385,10.38,10.65,11.491462486569615
 MA0724	MA0724.1.VENTX	1	VENTX	NK-related factors	O95231	HT-SELEX	vertebrates	Homo sapiens	-1.7435,6.2375,8.222,11.0745,12.082,13.361
-MA0725	MA0725.1.VSX1	1	VSX1	Paired-related HD factors	Q9NZR4	HT-SELEX	vertebrates	Homo sapiens	4.4105,7.297,8.322,11.04,11.3265,11.8191038281
-MA0726	MA0726.1.VSX2	1	VSX2	Paired-related HD factors	P58304	HT-SELEX	vertebrates	Homo sapiens	3.6765,7.2,8.196,11.0725,12.073,12.4712369687
+MA0725	MA0725.1.VSX1	1	VSX1	Paired-related HD factors	Q9NZR4	HT-SELEX	vertebrates	Homo sapiens	4.4105,7.297,8.322,11.04,11.3265,11.819103828102483
+MA0726	MA0726.1.VSX2	1	VSX2	Paired-related HD factors	P58304	HT-SELEX	vertebrates	Homo sapiens	3.6765,7.2,8.196,11.0725,12.073,12.471236968706549
 MA0727	MA0727.1.NR3C2	1	NR3C2	Steroid hormone receptors (NR3)	P08235	HT-SELEX	vertebrates	Homo sapiens	-15.2535,-6.4315,-3.1235,3.637,6.2265,11.4695
 MA0728	MA0728.1.Nr2f6(var.2)	1.2	Nr2f6	RXR-related receptors (NR2)	P43136	HT-SELEX	vertebrates	Mus musculus	-21.0955,-12.5625,-9.2925,-2.41,0.28,6.0565
 MA0729	MA0729.1.RARA	1	RARA	Thyroid hormone receptor-related factors (NR1)	P10276	HT-SELEX	vertebrates	Homo sapiens	-28.4035,-18.8585,-15.196,-7.498,-4.4715,1.956
@@ -335,7 +334,7 @@ MA0730	MA0730.1.RARA(var.2)	1.2	RARA	Thyroid hormone receptor-related factors (N
 MA0731	MA0731.1.BCL6B	1	BCL6B	More than 3 adjacent zinc finger factors	A8KA13	HT-SELEX	vertebrates	Homo sapiens	-30.116,-20.794,-17.195,-9.383,-6.481,0.149
 MA0732	MA0732.1.EGR3	1	EGR3	Three-zinc finger Krüppel-related factors	Q06889	HT-SELEX	vertebrates	Homo sapiens	-8.658,-1.6975,0.965,6.3165,8.3725,12.582
 MA0733	MA0733.1.EGR4	1	EGR4	Three-zinc finger Krüppel-related factors	Q05215	HT-SELEX	vertebrates	Homo sapiens	0.823,4.9795,6.5475,9.7895,11.035,13.63
-MA0734	MA0734.1.GLI2	1	GLI2	More than 3 adjacent zinc finger factors	P10070	HT-SELEX	vertebrates	Homo sapiens	-0.394,4.3725,6.1445,9.7925,11.177,13.894
+MA0734	MA0734.2.GLI2	2	GLI2	More than 3 adjacent zinc finger factors	P10070	HT-SELEX	vertebrates	Homo sapiens	-10.992,-2.5605,0.502,6.385,8.4795,12.601
 MA0735	MA0735.1.GLIS1	1	GLIS1	More than 3 adjacent zinc finger factors	Q8NBF1	HT-SELEX	vertebrates	Homo sapiens	-30.8245,-20.403,-16.4535,-8.0285,-4.812,2.2855
 MA0736	MA0736.1.GLIS2	1	GLIS2	More than 3 adjacent zinc finger factors	Q9BZE0	HT-SELEX	vertebrates	Homo sapiens	-4.9475,1.1355,3.4125,8.0385,9.7765,13.2935
 MA0737	MA0737.1.GLIS3	1	GLIS3	More than 3 adjacent zinc finger factors	Q8NEA6	HT-SELEX	vertebrates	Homo sapiens	-10.4615,-3.5905,-0.9805,4.4675,6.561,10.976
@@ -344,17 +343,17 @@ MA0739	MA0739.1.Hic1	1	Hic1	Factors with multiple dispersed zinc fingers	Q9R1Y5	
 MA0740	MA0740.1.KLF14	1	KLF14	Three-zinc finger Krüppel-related factors	Q8TD94	HT-SELEX	vertebrates	Homo sapiens	-4.9285,1.368,3.71,8.4115,10.1605,13.6395
 MA0741	MA0741.1.KLF16	1	KLF16	Three-zinc finger Krüppel-related factors	Q9BXK1	HT-SELEX	vertebrates	Homo sapiens	-0.139,4.7935,6.6075,10.1135,11.421,14.116
 MA0742	MA0742.1.Klf12	1	Klf12	Three-zinc finger Krüppel-related factors	O35738	HT-SELEX	vertebrates	Mus musculus	-5.347,0.842,3.164,7.8565,9.6795,13.213
-MA0743	MA0743.1.SCRT1	1	SCRT1	More than 3 adjacent zinc finger factors	Q9BWW7	HT-SELEX	vertebrates	Homo sapiens	-9.8275,-2.3515,0.478,6.21,8.3995,12.9075
-MA0744	MA0744.1.SCRT2	1	SCRT2	More than 3 adjacent zinc finger factors	Q9NQ03	HT-SELEX	vertebrates	Homo sapiens	-10.1935,-2.7565,0.065,5.87,8.0305,12.5375
-MA0745	MA0745.1.SNAI2	1	SNAI2	More than 3 adjacent zinc finger factors	O43623	HT-SELEX	vertebrates	Homo sapiens	3.414,7.1265,8.324,10.8275,11.9095,12.645
-MA0746	MA0746.1.SP3	1	SP3	Three-zinc finger Krüppel-related factors	Q02447	HT-SELEX	vertebrates	Homo sapiens	3.1225,6.6505,7.9335,10.5395,11.556,13.4915
+MA0743	MA0743.2.SCRT1	2	SCRT1	More than 3 adjacent zinc finger factors	Q9BWW7	ChIP-seq	vertebrates	Homo sapiens	0.3765,4.811,6.487,9.888,11.185,13.868
+MA0744	MA0744.2.SCRT2	2	SCRT2	More than 3 adjacent zinc finger factors	Q9NQ03	ChIP-seq	vertebrates	Homo sapiens	1.0905,5.2815,6.846,10.0855,11.284,13.7965
+MA0745	MA0745.2.SNAI2	2	SNAI2	More than 3 adjacent zinc finger factors	O43623	ChIP-seq	vertebrates	Homo sapiens	-0.327,4.8595,6.4575,10.0075,11.9335,14.349
+MA0746	MA0746.2.SP3	2	SP3	Three-zinc finger Kruppel-related factors	Q02447	HT-SELEX	vertebrates	Homo sapiens	-4.519,2.4135,4.873,9.426,10.973,13.943
 MA0747	MA0747.1.SP8	1	SP8	Three-zinc finger Krüppel-related factors	Q8IXZ3	HT-SELEX	vertebrates	Homo sapiens	1.897,5.906,7.3805,10.3675,11.503,13.74
-MA0748	MA0748.1.YY2	1	YY2	More than 3 adjacent zinc finger factors	O15391	HT-SELEX	vertebrates	Homo sapiens	1.6305,5.987,7.523,10.5385,11.724,13.8385
+MA0748	MA0748.2.YY2	2	YY2	More than 3 adjacent zinc finger factors	O15391	ChIP-seq	vertebrates	Homo sapiens	2.656,6.3535,7.8315,10.3775,11.736,13.6765
 MA0749	MA0749.1.ZBED1	1	ZBED1	BED zinc finger factors	O96006	HT-SELEX	vertebrates	Homo sapiens	-11.9595,-4.197,-1.29,4.739,7.026,11.704
 MA0750	MA0750.2.ZBTB7A	2	ZBTB7A	More than 3 adjacent zinc finger factors	O95365	ChIP-seq	vertebrates	Homo sapiens	2.3075,6.1295,7.5355,10.418,11.548,13.76
 MA0751	MA0751.1.ZIC4	1	ZIC4	More than 3 adjacent zinc finger factors	Q8N9L1	HT-SELEX	vertebrates	Homo sapiens	0.1925,4.883,6.5875,9.986,11.2495,13.787
 MA0752	MA0752.1.ZNF410	1	ZNF410	More than 3 adjacent zinc finger factors	Q86VK4	HT-SELEX	vertebrates	Homo sapiens	-25.6935,-16.019,-12.324,-4.566,-1.551,4.8625
-MA0753	MA0753.1.ZNF740	1	ZNF740	Other factors with up to three adjacent zinc fingers	Q8NDX6	HT-SELEX	vertebrates	Homo sapiens	1.327,5.4735,7.082,10.259,11.4395,13.948
+MA0753	MA0753.2.ZNF740	2	ZNF740	Other factors with up to three adjacent zinc fingers	Q8NDX6	HT-SELEX	vertebrates	Homo sapiens	-1.3965,3.524,5.382,9.216,10.6665,13.681
 MA0754	MA0754.1.CUX1	1	CUX1	HD-CUT factors	P39880	HT-SELEX	vertebrates	Homo sapiens	1.2655,5.2865,7.207,11.1205,12.1155,13.585
 MA0755	MA0755.1.CUX2	1	CUX2	HD-CUT factors	O14529	HT-SELEX	vertebrates	Homo sapiens	1.303,5.592,7.361,10.809,11.9725,13.9305
 MA0756	MA0756.1.ONECUT2	1	ONECUT2	HD-CUT factors	O95948	HT-SELEX	vertebrates	Homo sapiens	-3.818,2.052,4.23,8.683,10.365,13.7625
@@ -362,28 +361,28 @@ MA0757	MA0757.1.ONECUT3	1	ONECUT3	HD-CUT factors	O60422	HT-SELEX	vertebrates	Hom
 MA0758	MA0758.1.E2F7	1	E2F7	E2F-related factors	Q96AV8	HT-SELEX	vertebrates	Homo sapiens	-23.547,-14.3825,-10.882,-3.4925,-0.5935,5.563
 MA0759	MA0759.1.ELK3	1	ELK3	Ets-related factors	P41970	HT-SELEX	vertebrates	Homo sapiens	1.045,5.9115,7.567,10.6425,11.671,13.7225
 MA0760	MA0760.1.ERF	1	ERF	Ets-related factors	P50548	HT-SELEX	vertebrates	Homo sapiens	0.2785,5.139,6.885,10.344,11.5305,13.9895
-MA0761	MA0761.1.ETV1	1	ETV1	Ets-related factors	P50549	HT-SELEX	vertebrates	Homo sapiens	2.175,6.557,8.0515,10.8675,11.7365,13.609
+MA0761	MA0761.2.ETV1	2	ETV1	Ets-related factors	P50549	ChIP-seq	vertebrates	Homo sapiens	1.9585,5.898,7.3385,10.338,11.506,13.7705
 MA0762	MA0762.1.ETV2	1	ETV2	Ets-related factors	Q3KNT2	HT-SELEX	vertebrates	Homo sapiens	-5.35,1.5725,4.1545,9.3685,11.188,14.269
 MA0763	MA0763.1.ETV3	1	ETV3	Ets-related factors	P41162	HT-SELEX	vertebrates	Homo sapiens	1.959,6.1505,7.7025,10.592,11.6415,13.6725
-MA0764	MA0764.1.ETV4	1	ETV4	Ets-related factors	P43268	HT-SELEX	vertebrates	Homo sapiens	1.9355,6.681,8.277,10.8835,11.7015,13.4335
-MA0765	MA0765.1.ETV5	1	ETV5	Ets-related factors	P41161	HT-SELEX	vertebrates	Homo sapiens	3.2275,7.2865,8.6295,10.8195,11.453,12.7305
-MA0766	MA0766.1.GATA5	1	GATA5	GATA-type zinc fingers	Q9BWX5	HT-SELEX	vertebrates	Homo sapiens	4.518,7.768,8.7035,10.5115,10.948,11.2450270198
+MA0764	MA0764.2.ETV4	2	ETV4	Ets-related factors	P43268	ChIP-seq	vertebrates	Homo sapiens	-2.544,4.2355,5.564,11.598,12.4775,13.667
+MA0765	MA0765.2.ETV5	2	ETV5	Ets-related factors	P41161	ChIP-seq	vertebrates	Homo sapiens	3.5525,6.876,8.1555,10.5785,11.611,13.2145
+MA0766	MA0766.2.GATA5	2	GATA5	GATA-type zinc fingers	Q9BWX5	HT-SELEX	vertebrates	Homo sapiens	-3.818,5.3315,7.1175,11.693,12.259,13.351
 MA0767	MA0767.1.GCM2	1	GCM2	GCM factors	O75603	HT-SELEX	vertebrates	Homo sapiens	2.1845,6.3885,7.909,10.672,11.694,13.833
 MA0768	MA0768.1.LEF1	1	LEF1	TCF-7-related factors	Q9UJU2	HT-SELEX	vertebrates	Homo sapiens	-5.8945,0.275,2.594,7.351,9.1645,12.85
-MA0769	MA0769.1.Tcf7	1	Tcf7	TCF-7-related factors	Q00417	HT-SELEX	vertebrates	Mus musculus	-4.624,1.316,3.517,7.983,9.686,13.25
+MA0769	MA0769.2.TCF7	2	TCF7	TCF-7-related factors	P36402	ChIP-seq	vertebrates	Homo sapiens	1.979,6.3055,7.3775,11.157,12.241,13.559
 MA0770	MA0770.1.HSF2	1	HSF2	HSF factors	Q03933	HT-SELEX	vertebrates	Homo sapiens	-5.168,0.942,3.1935,7.813,9.527,13.149
 MA0771	MA0771.1.HSF4	1	HSF4	HSF factors	Q9ULV5	HT-SELEX	vertebrates	Homo sapiens	0.1675,4.7635,6.4755,9.9285,11.203,13.8565
 MA0772	MA0772.1.IRF7	1	IRF7	Interferon-regulatory factors	Q92985	HT-SELEX	vertebrates	Homo sapiens	-6.111,0.11,2.463,7.2915,9.1305,12.9375
 MA0773	MA0773.1.MEF2D	1	MEF2D	Regulators of differentiation	Q05BX2	HT-SELEX	vertebrates	Homo sapiens	-15.0335,-6.1875,-2.937,3.8125,6.2605,11.5585
-MA0774	MA0774.1.MEIS2	1	MEIS2	TALE-type homeo domain factors	O14770	HT-SELEX	vertebrates	Homo sapiens	1.602,6.3515,7.727,11.364,11.7415,13.5230014193
-MA0775	MA0775.1.MEIS3	1	MEIS3	TALE-type homeo domain factors	Q99687	HT-SELEX	vertebrates	Homo sapiens	3.8635,7.1935,8.829,10.752,11.37,12.1667190811
+MA0774	MA0774.1.MEIS2	1	MEIS2	TALE-type homeo domain factors	O14770	HT-SELEX	vertebrates	Homo sapiens	1.602,6.3515,7.727,11.364,11.7415,13.523001419293852
+MA0775	MA0775.1.MEIS3	1	MEIS3	TALE-type homeo domain factors	Q99687	HT-SELEX	vertebrates	Homo sapiens	3.8635,7.1935,8.829,10.752,11.37,12.166719081127964
 MA0776	MA0776.1.MYBL1	1	MYBL1	Myb/SANT domain factors	P10243	HT-SELEX	vertebrates	Homo sapiens	-3.3535,2.464,4.6135,8.953,10.621,13.905
 MA0777	MA0777.1.MYBL2	1	MYBL2	Myb/SANT domain factors	P10244	HT-SELEX	vertebrates	Homo sapiens	-3.148,2.247,4.2715,8.4165,9.988,13.263
 MA0778	MA0778.1.NFKB2	1	NFKB2	NF-kappaB-related factors	Q00653	HT-SELEX	vertebrates	Homo sapiens	-7.402,-0.214,2.4095,7.788,9.7865,13.5765
 MA0779	MA0779.1.PAX1	1	PAX1	Paired domain only	P15863	HT-SELEX	vertebrates	Homo sapiens	-12.35,-4.232,-1.227,4.8575,7.151,11.7815
 MA0780	MA0780.1.PAX3	1	PAX3	Paired plus homeo domain	P23760	HT-SELEX	vertebrates	Homo sapiens	-4.0505,1.8095,4.001,8.685,10.062,14.0665
 MA0781	MA0781.1.PAX9	1	PAX9	Paired domain only	P55771	HT-SELEX	vertebrates	Homo sapiens	-19.741,-10.327,-6.795,0.4525,3.213,8.906
-MA0782	MA0782.1.PKNOX1	1	PKNOX1	TALE-type homeo domain factors	P55347	HT-SELEX	vertebrates	Homo sapiens	-16.5235,-8.394,-5.2545,1.209,3.8245,8.8815
+MA0782	MA0782.2.PKNOX1	2	PKNOX1	TALE-type homeo domain factors	P55347	ChIP-seq	vertebrates	Homo sapiens	2.023,5.781,7.181,10.1385,11.305,13.664
 MA0783	MA0783.1.PKNOX2	1	PKNOX2	TALE-type homeo domain factors	Q96KN3	HT-SELEX	vertebrates	Homo sapiens	-14.547,-6.7625,-3.81,2.3695,4.7205,9.6345
 MA0784	MA0784.1.POU1F1	1	POU1F1	POU domain factors	P28069	HT-SELEX	vertebrates	Homo sapiens	-0.585,4.073,5.821,9.403,10.7765,13.6135
 MA0785	MA0785.1.POU2F1	1	POU2F1	POU domain factors	P14859	HT-SELEX	vertebrates	Homo sapiens	1.676,5.829,7.349,10.398,11.514,13.7565
@@ -399,23 +398,23 @@ MA0794	MA0794.1.PROX1	1	PROX1	HD-PROS factors	Q92786	HT-SELEX	vertebrates	Homo s
 MA0795	MA0795.1.SMAD3	1	SMAD3	SMAD factors	P84022	HT-SELEX	vertebrates	Homo sapiens	-4.133,1.858,3.83,8.684,10.285,13.8715
 MA0796	MA0796.1.TGIF1	1	TGIF1	TALE-type homeo domain factors	Q15583	HT-SELEX	vertebrates	Homo sapiens	-20.5445,-11.8755,-8.281,-1.3125,1.6935,6.7585
 MA0797	MA0797.1.TGIF2	1	TGIF2	TALE-type homeo domain factors	Q9GZN2	HT-SELEX	vertebrates	Homo sapiens	-4.7655,0.6935,2.85,7.2165,8.9455,12.396
-MA0798	MA0798.1.RFX3	1	RFX3	RFX-related factors	P48380	HT-SELEX	vertebrates	Homo sapiens	-3.085,2.284,4.2875,8.3875,9.953,13.1935
+MA0798	MA0798.2.RFX3	2	RFX3	RFX-related factors	P48380	ChIP-seq	vertebrates	Homo sapiens	1.2405,5.2265,6.767,9.879,11.0995,13.697
 MA0799	MA0799.1.RFX4	1	RFX4	RFX-related factors	Q33E94	HT-SELEX	vertebrates	Homo sapiens	-1.9815,3.2435,5.174,9.0815,10.554,13.573
 MA0800	MA0800.1.EOMES	1	EOMES	TBrain-related factors	O95936	HT-SELEX	vertebrates	Homo sapiens	0.995,5.5385,7.1815,10.383,11.5615,13.8645
-MA0801	MA0801.1.MGA	1	MGA	TBX6-related factors	Q8IWI9	HT-SELEX	vertebrates	Homo sapiens	2.199,6.319,8.081,11.109,11.395,13.3271123536
+MA0801	MA0801.1.MGA	1	MGA	TBX6-related factors	Q8IWI9	HT-SELEX	vertebrates	Homo sapiens	2.199,6.319,8.081,11.109,11.395,13.327112353551906
 MA0802	MA0802.1.TBR1	1	TBR1	TBrain-related factors	Q16650	HT-SELEX	vertebrates	Homo sapiens	0.7605,5.461,7.1495,10.374,11.657,13.7995
-MA0803	MA0803.1.TBX15	1	TBX15	TBX1-related factors	Q96SF7	HT-SELEX	vertebrates	Homo sapiens	-0.7075,4.606,6.2525,10.346,10.8455,13.6195980298
+MA0803	MA0803.1.TBX15	1	TBX15	TBX1-related factors	Q96SF7	HT-SELEX	vertebrates	Homo sapiens	-0.7075,4.606,6.2525,10.346,10.8455,13.619598029769628
 MA0804	MA0804.1.TBX19	1	TBX19	Brachyury-related factors	O60806	HT-SELEX	vertebrates	Homo sapiens	-3.266,2.0505,4.055,8.1865,9.7695,13.0485
-MA0805	MA0805.1.TBX1	1	TBX1	TBX1-related factors	O43435	HT-SELEX	vertebrates	Homo sapiens	-1.142,4.6675,6.7755,10.9695,11.559,13.6572272972
-MA0806	MA0806.1.TBX4	1	TBX4	TBX2-related factors	P57082	HT-SELEX	vertebrates	Homo sapiens	3.258,6.933,8.2935,10.7065,11.111,13.1303637402
-MA0807	MA0807.1.TBX5	1	TBX5	TBX2-related factors	Q99593	HT-SELEX	vertebrates	Homo sapiens	4.256,7.148,8.4655,10.0775,10.877,12.5269697058
-MA0808	MA0808.1.TEAD3	1	TEAD3	TEF-1-related factors	Q99594	HT-SELEX	vertebrates	Homo sapiens	-5.5675,5.014,8.022,11.578,12.323,13.2179816022
-MA0809	MA0809.1.TEAD4	1	TEAD4	TEF-1-related factors	Q15561	HT-SELEX	vertebrates	Homo sapiens	3.515,6.954,8.459,10.954,11.5935,12.5125
+MA0805	MA0805.1.TBX1	1	TBX1	TBX1-related factors	O43435	HT-SELEX	vertebrates	Homo sapiens	-1.142,4.6675,6.7755,10.9695,11.559,13.65722729718172
+MA0806	MA0806.1.TBX4	1	TBX4	TBX2-related factors	P57082	HT-SELEX	vertebrates	Homo sapiens	3.258,6.933,8.2935,10.7065,11.111,13.130363740173697
+MA0807	MA0807.1.TBX5	1	TBX5	TBX2-related factors	Q99593	HT-SELEX	vertebrates	Homo sapiens	4.256,7.148,8.4655,10.0775,10.877,12.526969705798455
+MA0808	MA0808.1.TEAD3	1	TEAD3	TEF-1-related factors	Q99594	HT-SELEX	vertebrates	Homo sapiens	-5.5675,5.014,8.022,11.578,12.323,13.217981602209768
+MA0809	MA0809.2.TEAD4	2	TEAD4	TEF-1-related factors	Q15561	ChIP-seq	vertebrates	Homo sapiens	2.294,6.0085,7.5255,10.287,11.4575,14.2145
 MA0810	MA0810.1.TFAP2A(var.2)	1.2	TFAP2A	AP-2	P05549	HT-SELEX	vertebrates	Homo sapiens	2.3585,6.54,7.997,10.7445,11.715,13.48
 MA0811	MA0811.1.TFAP2B	1	TFAP2B	AP-2	Q92481	HT-SELEX	vertebrates	Homo sapiens	2.3805,6.4815,7.931,10.7005,11.694,13.509
 MA0812	MA0812.1.TFAP2B(var.2)	1.2	TFAP2B	AP-2	Q92481	HT-SELEX	vertebrates	Homo sapiens	-0.742,4.848,6.8105,10.6175,11.8235,14.011
 MA0813	MA0813.1.TFAP2B(var.3)	1.3	TFAP2B	AP-2	Q92481	HT-SELEX	vertebrates	Homo sapiens	-5.494,1.111,4.0315,9.8605,11.491,14.2185
-MA0814	MA0814.1.TFAP2C(var.2)	1.2	TFAP2C	AP-2	Q92754	HT-SELEX	vertebrates	Homo sapiens	1.7165,6.1495,7.6645,10.685,11.768,13.7025
+MA0814	MA0814.2.TFAP2C(var.2)	2.2	TFAP2C	AP-2	Q92754	ChIP-seq	vertebrates	Homo sapiens	2.338,6.079,7.471,10.344,11.523,13.6215
 MA0815	MA0815.1.TFAP2C(var.3)	1.3	TFAP2C	AP-2	Q92754	HT-SELEX	vertebrates	Homo sapiens	-6.85,0.123,3.809,9.779,11.4085,14.224
 MA0816	MA0816.1.Ascl2	1	Ascl2	MyoD / ASC-related factors	O35885	HT-SELEX	vertebrates	Mus musculus	0.04,4.911,6.7245,10.3335,11.7185,14.0075
 MA0817	MA0817.1.BHLHE23	1	BHLHE23	Tal-related factors	Q8NDY6	HT-SELEX	vertebrates	Homo sapiens	-6.0675,0.9015,3.4855,8.619,10.4035,14.5505
@@ -425,33 +424,32 @@ MA0820	MA0820.1.FIGLA	1	FIGLA	Tal-related factors	Q6QHK4	HT-SELEX	vertebrates	Ho
 MA0821	MA0821.1.HES5	1	HES5	Hairy-related factors	Q5TA89	HT-SELEX	vertebrates	Homo sapiens	-15.2455,-6.5365,-3.4855,3.513,6.1205,11.241
 MA0822	MA0822.1.HES7	1	HES7	Hairy-related factors	Q9BYE0	HT-SELEX	vertebrates	Homo sapiens	-13.771,-5.889,-2.9215,3.2845,5.7315,10.899
 MA0823	MA0823.1.HEY1	1	HEY1	Hairy-related factors	Q9Y5J3	HT-SELEX	vertebrates	Homo sapiens	-0.782,4.8445,6.764,10.9595,12.113,13.7455
-MA0824	MA0824.1.ID4	1	ID4	HLH domain only	P47928	HT-SELEX	vertebrates	Homo sapiens	0.0675,5.4525,7.7805,10.6775,12.5935,13.648
 MA0825	MA0825.1.MNT	1	MNT	bHLH-ZIP factors	Q99583	HT-SELEX	vertebrates	Homo sapiens	0.903,6.2405,7.3245,11.6035,12.348,13.0535
 MA0826	MA0826.1.OLIG1	1	OLIG1	Tal-related factors	Q8TAK6	HT-SELEX	vertebrates	Homo sapiens	-4.4515,2.0665,4.3785,9.217,10.735,14.511
 MA0827	MA0827.1.OLIG3	1	OLIG3	Tal-related factors	Q7RTU3	HT-SELEX	vertebrates	Homo sapiens	1.8055,6.0895,7.652,10.731,11.8225,13.982
 MA0828	MA0828.1.SREBF2(var.2)	1.2	SREBF2	bHLH-ZIP factors	Q12772	HT-SELEX	vertebrates	Homo sapiens	-3.8995,2.0285,4.229,8.807,10.3425,13.901
-MA0829	MA0829.1.Srebf1(var.2)	1.2	Srebf1	bHLH-ZIP factors	Q9WTN3	HT-SELEX	vertebrates	Mus musculus	-3.156,2.7005,4.8635,9.2205,10.667,13.7595
-MA0830	MA0830.1.TCF4	1	TCF4	E2A-related factors	P15884	HT-SELEX	vertebrates	Homo sapiens	-2.937,4.073,7.099,11.326,12.7745,13.5885
-MA0831	MA0831.2.TFE3	2	TFE3	bHLH-ZIP factors	P19532	SMiLE-seq	vertebrates	Homo sapiens	1.3525,6.387,7.8565,11.054,11.3935,13.6457815958
+MA0829	MA0829.2.SREBF1(var.2)	2.2	SREBF1	bHLH-ZIP factors	P36956	ChIP-seq	vertebrates	Homo sapiens	0.547,4.853,6.4505,9.93,11.1035,13.8645
+MA0830	MA0830.2.TCF4	2	TCF4	E2A-related factors	P15884	ChIP-seq	vertebrates	Homo sapiens	2.6045,6.386,7.6965,10.681,11.757,13.6775
+MA0831	MA0831.2.TFE3	2	TFE3	bHLH-ZIP factors	P19532	SMiLE-seq	vertebrates	Homo sapiens	1.3525,6.387,7.8565,11.054,11.3935,13.645781595766007
 MA0832	MA0832.1.Tcf21	1	Tcf21	Tal-related factors	O35437	HT-SELEX	vertebrates	Mus musculus	-7.3885,-0.8825,1.549,6.7125,8.636,12.6535
-MA0833	MA0833.1.ATF4	1	ATF4	ATF-4-related factors	P18848	HT-SELEX	vertebrates	Homo sapiens	-4.5705,1.6545,3.9425,8.625,10.3545,13.928
+MA0833	MA0833.2.ATF4	2	ATF4	ATF-4-related factors	P18848	ChIP-seq	vertebrates	Homo sapiens	-1.9775,3.096,5.1485,9.1055,10.5425,13.999
 MA0834	MA0834.1.ATF7	1	ATF7	Jun-related factors	P17544	HT-SELEX	vertebrates	Homo sapiens	-9.4455,-2.188,0.4375,6.3215,8.2415,12.846
-MA0835	MA0835.1.BATF3	1	BATF3	B-ATF-related factors	Q9NR55	HT-SELEX	vertebrates	Homo sapiens	-16.411,-8.469,-5.436,0.916,3.3935,8.6195
-MA0836	MA0836.1.CEBPD	1	CEBPD	C/EBP-related	P49716	HT-SELEX	vertebrates	Homo sapiens	-2.7385,3.9095,6.0865,10.0135,11.844,14.344
-MA0837	MA0837.1.CEBPE	1	CEBPE	C/EBP-related	Q15744	HT-SELEX	vertebrates	Homo sapiens	1.2695,5.956,7.417,10.504,11.95,14.3185
-MA0838	MA0838.1.CEBPG	1	CEBPG	C/EBP-related	P53567	HT-SELEX	vertebrates	Homo sapiens	-3.1495,2.697,4.9595,9.3555,10.972,14.387
+MA0835	MA0835.2.BATF3	2	BATF3	B-ATF-related factors	Q9NR55	ChIP-seq	vertebrates	Homo sapiens	1.765,5.959,7.439,10.424,11.7435,14.006
+MA0836	MA0836.2.CEBPD	2	CEBPD	C/EBP-related factors	P49716	ChIP-seq	vertebrates	Homo sapiens	1.7075,5.762,7.263,10.3715,11.566,13.8665
+MA0837	MA0837.1.CEBPE	1	CEBPE	C/EBP-related factors	Q15744	HT-SELEX	vertebrates	Homo sapiens	1.2695,5.956,7.417,10.504,11.95,14.3185
+MA0838	MA0838.1.CEBPG	1	CEBPG	C/EBP-related factors	P53567	HT-SELEX	vertebrates	Homo sapiens	-3.1495,2.697,4.9595,9.3555,10.972,14.387
 MA0839	MA0839.1.CREB3L1	1	CREB3L1	CREB-related factors	Q96BA8	HT-SELEX	vertebrates	Homo sapiens	-4.9085,1.0845,3.3345,7.906,9.6505,13.174
 MA0840	MA0840.1.Creb5	1	Creb5	CREB-related factors	Q8K1L0	HT-SELEX	vertebrates	Mus musculus	-8.9695,-1.334,1.55,7.2715,9.46,13.8545
 MA0841	MA0841.1.NFE2	1	NFE2	Jun-related factors	Q16621	HT-SELEX	vertebrates	Homo sapiens	-15.3935,-6.3685,-2.6635,4.438,6.468,13.811
-MA0842	MA0842.1.NRL	1	NRL	Maf-related factors	P54845	HT-SELEX	vertebrates	Homo sapiens	4.358,7.307,8.3455,10.365,11.1355,12.3785
+MA0842	MA0842.2.NRL	2	NRL	Maf-related factors	P54845	HT-SELEX	vertebrates	Homo sapiens	-6.455,1.377,4.1085,9.102,10.831,13.9925
 MA0843	MA0843.1.TEF	1	TEF	TEF-1-related factors	Q10587	HT-SELEX	vertebrates	Homo sapiens	-3.606,2.673,4.838,9.3315,10.9445,14.2145
 MA0844	MA0844.1.XBP1	1	XBP1	XBP-1-related factors	P17861	HT-SELEX	vertebrates	Homo sapiens	-3.1305,2.6075,4.7235,8.9775,10.5525,13.74
 MA0845	MA0845.1.FOXB1	1	FOXB1	Forkhead box (FOX) factors	Q99853	HT-SELEX	vertebrates	Homo sapiens	1.569,5.701,7.222,10.3275,11.433,13.845
 MA0846	MA0846.1.FOXC2	1	FOXC2	Forkhead box (FOX) factors	Q99958	HT-SELEX	vertebrates	Homo sapiens	1.7715,5.945,7.5125,10.63,11.736,13.788
-MA0847	MA0847.1.FOXD2	1	FOXD2	Forkhead box (FOX) factors	O60548	HT-SELEX	vertebrates	Homo sapiens	4.1275,7.5265,8.4535,10.7335,11.2632354147,11.2632354147
-MA0848	MA0848.1.FOXO4	1	FOXO4	Forkhead box (FOX) factors	P98177	HT-SELEX	vertebrates	Homo sapiens	1.9565,6.2775,7.606,11.1185,11.9617421808,11.9617421808
-MA0849	MA0849.1.FOXO6	1	FOXO6	Forkhead box (FOX) factors	A8MYZ6	HT-SELEX	vertebrates	Homo sapiens	-2.489,4.292,6.5385,11.061,12.2010508376,12.2010508376
-MA0850	MA0850.1.FOXP3	1	FOXP3	Forkhead box (FOX) factors	B7ZLG1	HT-SELEX	vertebrates	Homo sapiens	4.3075,7.4285,8.7105,10.8115,11.2539793006,11.2539793006
+MA0847	MA0847.2.FOXD2	2	FOXD2	Forkhead box (FOX) factors	O60548	HT-SELEX	vertebrates	Homo sapiens	-0.972,4.4235,6.3385,10.1345,11.5365,14.157
+MA0848	MA0848.1.FOXO4	1	FOXO4	Forkhead box (FOX) factors	P98177	HT-SELEX	vertebrates	Homo sapiens	1.9565,6.2775,7.606,11.1185,11.961742180757392,11.961742180757392
+MA0849	MA0849.1.FOXO6	1	FOXO6	Forkhead box (FOX) factors	A8MYZ6	HT-SELEX	vertebrates	Homo sapiens	-2.489,4.292,6.5385,11.061,12.20105083758701,12.20105083758701
+MA0850	MA0850.1.FOXP3	1	FOXP3	Forkhead box (FOX) factors	B7ZLG1	HT-SELEX	vertebrates	Homo sapiens	4.3075,7.4285,8.7105,10.8115,11.253979300595228,11.253979300595228
 MA0851	MA0851.1.Foxj3	1	Foxj3	Forkhead box (FOX) factors	Q8BUR3	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.3955,5.033,6.753,10.281,11.5575,13.9855
 MA0852	MA0852.2.FOXK1	2	FOXK1	Forkhead box (FOX) factors	P85037	ChIP-seq	vertebrates	Homo sapiens	2.1295,6.124,7.5375,10.424,11.721,13.8755
 MA0853	MA0853.1.Alx4	1	Alx4	Paired-related HD factors	O35137	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.405,4.974,6.6635,10.0565,11.4465,14.054
@@ -463,30 +461,30 @@ MA0858	MA0858.1.Rarb(var.2)	1.2	Rarb	Thyroid hormone receptor-related factors (N
 MA0859	MA0859.1.Rarg	1	Rarg	Thyroid hormone receptor-related factors (NR1)	P18911	HT-SELEX	vertebrates	Mus musculus	-24.5235,-14.8465,-11.1745,-3.546,-0.597,5.609
 MA0860	MA0860.1.Rarg(var.2)	1.2	Rarg	Thyroid hormone receptor-related factors (NR1)	P18911	HT-SELEX	vertebrates	Mus musculus	-28.0355,-17.937,-14.0785,-6.0165,-2.872,3.756
 MA0861	MA0861.1.TP73	1	TP73	p53-related factors	O15350	HT-SELEX	vertebrates	Homo sapiens	-6.891,0.127,2.652,7.615,9.4325,13.0635
-MA0862	MA0862.1.GMEB2	1	GMEB2	GMEB	Q9UKD1	HT-SELEX	vertebrates	Homo sapiens	2.9245,7.0785,8.491,10.6385,11.735,12.6758094689
+MA0862	MA0862.1.GMEB2	1	GMEB2	GMEB	Q9UKD1	HT-SELEX	vertebrates	Homo sapiens	2.9245,7.0785,8.491,10.6385,11.735,12.675809468943884
 MA0863	MA0863.1.MTF1	1	MTF1	More than 3 adjacent zinc finger factors	Q14872	HT-SELEX	vertebrates	Homo sapiens	-5.2285,0.266,2.353,6.8015,8.506,12.1345
-MA0864	MA0864.1.E2F2	1	E2F2	E2F-related factors	Q14209	HT-SELEX	vertebrates	Homo sapiens	-9.4075,-3.1445,-0.74,4.3125,6.2805,10.4905
+MA0864	MA0864.2.E2F2	2	E2F2	E2F-related factors	Q14209	HT-SELEX	vertebrates	Homo sapiens	-0.7855,4.8275,6.799,10.357,11.5585,13.867
 MA0865	MA0865.1.E2F8	1	E2F8	E2F-related factors	A0AVK6	HT-SELEX	vertebrates	Homo sapiens	-8.1555,-1.9705,0.3395,5.3555,7.4725,11.536
 MA0866	MA0866.1.SOX21	1	SOX21	SOX-related factors	Q9Y651	HT-SELEX	vertebrates	Homo sapiens	-19.2985,-10.8425,-7.606,-0.8295,1.8045,7.415
-MA0867	MA0867.1.SOX4	1	SOX4	SOX-related factors	Q06945	HT-SELEX	vertebrates	Homo sapiens	-31.0545,-21.3805,-17.466,-9.687,-6.319,0.109
-MA0868	MA0868.1.SOX8	1	SOX8	SOX-related factors	P57073	HT-SELEX	vertebrates	Homo sapiens	-31.1575,-21.5475,-18.0685,-10.226,-7.0535,-0.2285
+MA0867	MA0867.2.SOX4	2	SOX4	SOX-related factors	Q06945	HT-SELEX	vertebrates	Homo sapiens	0.0715,5.7135,7.917,11.2225,12.0575,13.4015
+MA0868	MA0868.2.SOX8	2	SOX8	SOX-related factors	P57073	HT-SELEX	vertebrates	Homo sapiens	2.849,6.8325,8.2065,10.851,11.7215,13.252
 MA0869	MA0869.1.Sox11	1	Sox11	SOX-related factors	Q7M6Y2	HT-SELEX	vertebrates	Mus musculus	-28.8065,-19.5945,-15.876,-8.118,-4.8335,1.4775
 MA0870	MA0870.1.Sox1	1	Sox1	SOX-related factors	P53783	HT-SELEX	vertebrates	Mus musculus	-17.0995,-8.23,-4.846,2.0445,4.6725,10.1425
-MA0871	MA0871.1.TFEC	1	TFEC	bHLH-ZIP factors	O14948	HT-SELEX	vertebrates	Homo sapiens	2.689,6.8625,8.2555,10.747,11.6435,13.046
+MA0871	MA0871.2.TFEC	2	TFEC	bHLH-ZIP factors	O14948	HT-SELEX	vertebrates	Homo sapiens	-7.1925,0.7455,3.62,9.3315,10.976,15.0615
 MA0872	MA0872.1.TFAP2A(var.3)	1.3	TFAP2A	AP-2	P05549	HT-SELEX	vertebrates	Homo sapiens	-5.2385,1.3895,5.081,10.066,11.4965,14.1585
 MA0873	MA0873.1.HOXD12	1	HOXD12	HOX-related factors	P35452	HT-SELEX	vertebrates	Homo sapiens	-3.2645,2.8895,5.1605,9.8035,11.2675,14.3275
 MA0874	MA0874.1.Arx	1	Arx	Paired-related HD factors	O35085	universal protein binding microarray (PBM)	vertebrates	Mus musculus	-0.417,4.404,6.182,9.832,11.2445,13.9765
-MA0875	MA0875.1.BARX1	1	BARX1	NK-related factors	Q9HBU1	HT-SELEX	vertebrates	Homo sapiens	3.2915,8.099,9.301,10.476,10.8845,11.0916856416
-MA0876	MA0876.1.BSX	1	BSX	NK-related factors	Q3C1V8	HT-SELEX	vertebrates	Homo sapiens	3.6995,8.291,9.1725,10.148,10.3245,10.9256643896
-MA0877	MA0877.1.Barhl1	1	Barhl1	NK-related factors	P63157	HT-SELEX	vertebrates	Mus musculus	5.2755,7.6675,8.353,9.5165,9.9215,10.557
-MA0878	MA0878.1.CDX1	1	CDX1	HOX-related factors	P47902	HT-SELEX	vertebrates	Homo sapiens	3.65,7.096,8.226,10.8015,11.6095,13.0605
+MA0875	MA0875.1.BARX1	1	BARX1	NK-related factors	Q9HBU1	HT-SELEX	vertebrates	Homo sapiens	3.2915,8.099,9.301,10.476,10.8845,11.09168564161254
+MA0876	MA0876.1.BSX	1	BSX	NK-related factors	Q3C1V8	HT-SELEX	vertebrates	Homo sapiens	3.6995,8.291,9.1725,10.148,10.3245,10.925664389630695
+MA0877	MA0877.2.BARHL1	2	BARHL1	NK-related factors	Q9BZE3	HT-SELEX	vertebrates	Homo sapiens	4.774,7.857,8.7495,10.015,10.517,10.882952189975917
+MA0878	MA0878.2.CDX1	2	CDX1	HOX-related factors	P47902	HT-SELEX	vertebrates	Homo sapiens	-14.7945,-3.4715,-0.91,8.468,11.549,14.576
 MA0879	MA0879.1.Dlx1	1	Dlx1	NK-related factors	Q64317	PBM	vertebrates	Mus musculus	4.7825,7.467,8.6635,10.097,10.457,11.134
-MA0880	MA0880.1.Dlx3	1	Dlx3	NK-related factors	Q64205	PBM	vertebrates	Mus musculus	5.062,6.909,7.7145,10.1615,10.331,10.5309597178
-MA0881	MA0881.1.Dlx4	1	Dlx4	NK-related factors	P70436	PBM	vertebrates	Mus musculus	4.8905,6.989,7.868,10.475,10.5695,10.8259939565
-MA0882	MA0882.1.DLX6	1	DLX6	NK-related factors	P56179	HT-SELEX	vertebrates	Homo sapiens	4.2665,6.9755,7.921,10.5665,10.785,11.0740390518
+MA0880	MA0880.1.Dlx3	1	Dlx3	NK-related factors	Q64205	PBM	vertebrates	Mus musculus	5.062,6.909,7.7145,10.1615,10.331,10.530959717823025
+MA0881	MA0881.1.Dlx4	1	Dlx4	NK-related factors	P70436	PBM	vertebrates	Mus musculus	4.8905,6.989,7.868,10.475,10.5695,10.825993956536122
+MA0882	MA0882.1.DLX6	1	DLX6	NK-related factors	P56179	HT-SELEX	vertebrates	Homo sapiens	4.2665,6.9755,7.921,10.5665,10.785,11.074039051818058
 MA0883	MA0883.1.Dmbx1	1	Dmbx1	Paired-related HD factors	Q91ZK4	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.425,5.1035,6.8235,10.4525,11.7505,14.028
 MA0884	MA0884.1.DUXA	1	DUXA	Paired-related HD factors	A6NLW8	HT-SELEX	vertebrates	Homo sapiens	0.809,5.354,7.036,10.33,11.5555,13.966
-MA0885	MA0885.1.Dlx2	1	Dlx2	NK-related factors	P40764	HT-SELEX	vertebrates	Mus musculus	4.195,6.374,7.433,10.7985,10.9775,11.1993591088
+MA0885	MA0885.1.Dlx2	1	Dlx2	NK-related factors	P40764	HT-SELEX	vertebrates	Mus musculus	4.195,6.374,7.433,10.7985,10.9775,11.199359108764147
 MA0886	MA0886.1.EMX2	1	EMX2	NK-related factors	Q04743	HT-SELEX	vertebrates	Homo sapiens	-0.4785,6.9815,8.5995,11.162,11.756,12.6875
 MA0887	MA0887.1.EVX1	1	EVX1	HOX-related factors	P49640	HT-SELEX	vertebrates	Homo sapiens	4.535,7.6185,8.674,10.285,10.6985,11.5115
 MA0888	MA0888.1.EVX2	1	EVX2	HOX-related factors	Q03828	HT-SELEX	vertebrates	Homo sapiens	4.5025,7.593,8.739,10.296,10.666,11.428
@@ -494,43 +492,43 @@ MA0889	MA0889.1.GBX1	1	GBX1	HOX-related factors	Q14549	HT-SELEX	vertebrates	Homo
 MA0890	MA0890.1.GBX2	1	GBX2	HOX-related factors	P52951	HT-SELEX	vertebrates	Homo sapiens	2.6815,6.1715,7.961,11.2635,11.741,12.4625
 MA0891	MA0891.1.GSC2	1	GSC2	Paired-related HD factors	O15499	HT-SELEX	vertebrates	Homo sapiens	4.5495,7.474,8.338,10.3025,11.083,12.124
 MA0892	MA0892.1.GSX1	1	GSX1	HOX-related factors	A4IFQ3	HT-SELEX	vertebrates	Homo sapiens	5.087,7.3345,8.2835,9.6795,10.079,10.766
-MA0893	MA0893.1.GSX2	1	GSX2	HOX-related factors	Q9BZM3	HT-SELEX	vertebrates	Homo sapiens	4.967,7.3595,8.292,9.677,10.104,10.853
+MA0893	MA0893.2.GSX2	2	GSX2	HOX-related factors	Q9BZM3	HT-SELEX	vertebrates	Homo sapiens	3.764,7.8145,8.839,10.807,11.127,11.394595842821987
 MA0894	MA0894.1.HESX1	1	HESX1	Paired-related HD factors	Q9UBX0	HT-SELEX	vertebrates	Homo sapiens	0.561,5.7225,7.9285,11.397,11.9375,12.8705
 MA0895	MA0895.1.HMBOX1	1	HMBOX1	POU domain factors	Q6NT76	HT-SELEX	vertebrates	Homo sapiens	3.4535,7.0285,8.252,10.8105,11.619,13.174
 MA0896	MA0896.1.Hmx1	1	Hmx1	NK-related factors	O70218	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.753,5.149,6.7775,10.0765,11.3115,13.802
 MA0897	MA0897.1.Hmx2	1	Hmx2	NK-related factors	P43687	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.2995,4.754,6.4185,9.8115,11.095,13.711
 MA0898	MA0898.1.Hmx3	1	Hmx3	NK-related factors	P42581	universal protein binding microarray (PBM)	vertebrates	Mus musculus	0.8055,5.0915,6.6895,9.9455,11.1765,13.696
 MA0899	MA0899.1.HOXA10	1	HOXA10	HOX-related factors	P31260	HT-SELEX	vertebrates	Homo sapiens	3.846,7.099,8.2815,10.6295,11.3895,12.906
-MA0900	MA0900.1.HOXA2	1	HOXA2	HOX-related factors	O43364	HT-SELEX	vertebrates	Homo sapiens	4.527,7.6605,8.7725,10.3325,10.6795,11.5
-MA0901	MA0901.1.HOXB13	1	HOXB13	HOX-related factors	Q92826	HT-SELEX	vertebrates	Homo sapiens	0.624,5.4685,7.156,10.6725,11.6585,13.9265
-MA0902	MA0902.1.HOXB2	1	HOXB2	HOX-related factors	P14652	HT-SELEX	vertebrates	Homo sapiens	4.845,7.675,8.672,9.966,10.288,10.828
+MA0900	MA0900.2.HOXA2	2	HOXA2	HOX-related factors	O43364	HT-SELEX	vertebrates	Homo sapiens	-6.6755,5.985,8.448,11.361,11.979,12.535801056210353
+MA0901	MA0901.2.HOXB13	2	HOXB13	HOX-related factors	Q92826	ChIP-seq	vertebrates	Homo sapiens	0.927,5.1605,6.7635,10.0405,11.256,13.879
+MA0902	MA0902.2.HOXB2	2	HOXB2	HOX-related factors	P14652	HT-SELEX	vertebrates	Homo sapiens	-3.4365,8.0975,9.301,10.779,11.3005,11.582085413348516
 MA0903	MA0903.1.HOXB3	1	HOXB3	HOX-related factors	P14651	HT-SELEX	vertebrates	Homo sapiens	4.666,7.696,8.875,10.213,10.4585,11.009
-MA0904	MA0904.1.Hoxb5	1	Hoxb5	HOX-related factors	P09079	universal protein binding microarray (PBM)	vertebrates	Mus musculus	1.4525,5.677,7.2505,10.385,11.5175,13.735
+MA0904	MA0904.2.HOXB5	2	HOXB5	HOX-related factors	P09067	HT-SELEX	vertebrates	Homo sapiens	0.521,7.863,8.886,10.49,11.789,12.018548132823684
 MA0905	MA0905.1.HOXC10	1	HOXC10	HOX-related factors	Q9NYD6	HT-SELEX	vertebrates	Homo sapiens	1.6535,6.277,7.8145,10.9565,12.0295,13.616
 MA0906	MA0906.1.HOXC12	1	HOXC12	HOX-related factors	P31275	HT-SELEX	vertebrates	Homo sapiens	-3.5725,2.7145,4.956,9.592,11.225,14.3655
 MA0907	MA0907.1.HOXC13	1	HOXC13	HOX-related factors	P31276	HT-SELEX	vertebrates	Homo sapiens	-2.2885,3.3705,5.494,9.6355,11.1725,14.1875
 MA0908	MA0908.1.HOXD11	1	HOXD11	HOX-related factors	P31277	HT-SELEX	vertebrates	Homo sapiens	-0.127,5.117,7.0795,10.8045,11.9465,13.9675
-MA0909	MA0909.1.HOXD13	1	HOXD13	HOX-related factors	P35453	HT-SELEX	vertebrates	Homo sapiens	-0.3745,5.2175,7.195,10.795,11.782,14.1655
-MA0910	MA0910.1.Hoxd8	1	Hoxd8	HOX-related factors	P23463	universal protein binding microarray (PBM)	vertebrates	Mus musculus	2.053,5.803,7.216,10.125,11.2395,13.5555
+MA0909	MA0909.2.HOXD13	2	HOXD13	HOX-related factors	P35453	HT-SELEX	vertebrates	Homo sapiens	-5.8925,0.8185,3.3865,8.4135,10.4675,14.474
+MA0910	MA0910.2.HOXD8	2	HOXD8	HOX-related factors	P13378	HT-SELEX	vertebrates	Homo sapiens	-2.2975,7.6735,9.0055,10.9635,11.528,12.202198294041317
 MA0911	MA0911.1.Hoxa11	1	Hoxa11	HOX-related factors	P31270	HT-SELEX	vertebrates	Mus musculus	1.812,6.121,7.596,10.7205,11.8645,13.7725
-MA0912	MA0912.1.Hoxd3	1	Hoxd3	HOX-related factors	P09027	universal protein binding microarray (PBM)	vertebrates	Mus musculus	2.1735,6.2665,7.767,10.623,11.618,13.5525
-MA0913	MA0913.1.Hoxd9	1	Hoxd9	HOX-related factors	P28357	HT-SELEX	vertebrates	Mus musculus	3.949,7.147,8.3045,10.5875,11.4415,12.751
-MA0914	MA0914.1.ISL2	1	ISL2	HD-LIM factors	Q96A47	HT-SELEX	vertebrates	Homo sapiens	4.599,7.31,8.3395,10.2045,10.994,11.7046925251
-MA1099	MA1099.1.Hes1	1	Hes1	Hairy-related factors	P35428	PBM	vertebrates	Mus musculus	5.0295,7.1115,7.85,9.3695,9.8215,10.441
-MA1100	MA1100.1.ASCL1	1	ASCL1	MyoD / ASC-related factors	P50553	ChIP-seq	vertebrates	Homo sapiens	0.188,4.8745,6.634,9.9235,11.477,14.263
-MA1101	MA1101.1.BACH2	1	BACH2	Jun-related factors	Q9BYV9	ChIP-seq	vertebrates	Homo sapiens	-0.138,4.3235,5.9985,9.5025,10.8945,13.6765
-MA1102	MA1102.1.CTCFL	1	CTCFL	More than 3 adjacent zinc finger factors	Q8NI51	ChIP-seq	vertebrates	Homo sapiens	-0.018,4.3925,6.076,9.547,10.867,13.6355
-MA1103	MA1103.1.FOXK2	1	FOXK2	Forkhead box (FOX) factors	Q01167	ChIP-seq	vertebrates	Homo sapiens	2.6185,6.463,7.754,10.8315,12.1095,13.438
-MA1104	MA1104.1.GATA6	1	GATA6	GATA-type zinc fingers	Q92908	ChIP-seq	vertebrates	Homo sapiens	1.5805,5.748,7.3305,10.374,11.707,14.235
-MA1105	MA1105.1.GRHL2	1	GRHL2	Grainyhead-related factors	Q6ISB3	ChIP-seq	vertebrates	Homo sapiens	2.1145,5.8895,7.328,10.2415,11.368,13.6585
+MA0912	MA0912.2.HOXD3	2	HOXD3	HOX-related factors	P31249	HT-SELEX	vertebrates	Homo sapiens	-5.101,5.222,7.7875,10.998,12.2245,13.45511322881985
+MA0913	MA0913.2.HOXD9	2	HOXD9	HOX-related factors	P28356	HT-SELEX	vertebrates	Homo sapiens	-1.846,4.857,6.8565,10.73,11.668,14.408
+MA0914	MA0914.1.ISL2	1	ISL2	HD-LIM factors	Q96A47	HT-SELEX	vertebrates	Homo sapiens	4.599,7.31,8.3395,10.2045,10.994,11.704692525137006
+MA1099	MA1099.2.HES1	2	HES1	Hairy-related factors	Q14469	HT-SELEX	vertebrates	Homo sapiens	0.163,6.3195,8.257,11.0025,12.0075,13.3135
+MA1100	MA1100.2.ASCL1	2	ASCL1	MyoD / ASC-related factors	P50553	HT-SELEX	vertebrates	Homo sapiens	3.487,7.162,8.4895,10.7845,11.4525,12.863
+MA1101	MA1101.2.BACH2	2	BACH2	Jun-related factors	Q9BYV9	HT-SELEX	vertebrates	Homo sapiens	-14.2235,-5.05,-1.6695,5.1275,7.8205,12.918
+MA1102	MA1102.2.CTCFL	2	CTCFL	More than 3 adjacent zinc finger factors	Q8NI51	ChIP-seq	vertebrates	Homo sapiens	1.4555,5.539,7.076,10.201,11.3895,13.8825
+MA1103	MA1103.2.FOXK2	2	FOXK2	Forkhead box (FOX) factors	Q01167	ChIP-seq	vertebrates	Homo sapiens	3.2045,6.942,8.0035,10.4245,11.946,13.405
+MA1104	MA1104.2.GATA6	2	GATA6	GATA-type zinc fingers	Q92908	ChIP-seq	vertebrates	Homo sapiens	2.497,6.253,7.662,10.533,11.5685,13.7185
+MA1105	MA1105.2.GRHL2	2	GRHL2	Grainyhead-related factors	Q6ISB3	ChIP-seq	vertebrates	Homo sapiens	2.589,6.1265,7.498,10.423,11.245,13.964
 MA1106	MA1106.1.HIF1A	1	HIF1A	PAS domain factors	Q16665	ChIP-seq	vertebrates	Homo sapiens	1.9565,6.8445,8.106,11.4395,11.9685,12.762
-MA1107	MA1107.1.KLF9	1	KLF9	Three-zinc finger Kruppel-related factors	Q13886	ChIP-seq	vertebrates	Homo sapiens	0.794,5.1275,6.7575,10.049,11.341,13.943
-MA1108	MA1108.1.MXI1	1	MXI1	bHLH-ZIP factors	P50539	ChIP-seq	vertebrates	Homo sapiens	1.9495,6.0235,7.4495,10.6215,11.8885,13.923
+MA1107	MA1107.2.KLF9	2	KLF9	Three-zinc finger Kruppel-related factors	Q13886	ChIP-seq	vertebrates	Homo sapiens	0.785,4.971,6.555,9.826,11.081,13.674
+MA1108	MA1108.2.MXI1	2	MXI1	bHLH-ZIP factors	P50539	ChIP-seq	vertebrates	Homo sapiens	0.892,6.2515,7.01,11.8785,12.164,12.436
 MA1109	MA1109.1.NEUROD1	1	NEUROD1	Tal-related factors	Q13562	ChIP-seq	vertebrates	Homo sapiens	1.4035,5.607,7.2905,10.163,11.494,14.24
 MA1110	MA1110.1.NR1H4	1	NR1H4	Thyroid hormone receptor-related factors (NR1)	Q96RI1	ChIP-seq	vertebrates	Homo sapiens	3.0785,6.5815,7.9955,10.2795,11.549,13.829
 MA1111	MA1111.1.NR2F2	1	NR2F2	RXR-related receptors (NR2)	P24468	ChIP-seq	vertebrates	Homo sapiens	2.138,6.31,7.545,10.3485,12.1685,13.872
-MA1112	MA1112.1.NR4A1	1	NR4A1	NGFI-B-related receptors (NR4)	P22736	ChIP-seq	vertebrates	Homo sapiens	-0.1855,4.648,6.4695,10.8635,12.1075,14.597
-MA1113	MA1113.1.PBX2	1	PBX2	TALE-type homeo domain factors	P40425	ChIP-seq	vertebrates	Homo sapiens	2.2335,6.0235,7.4515,10.379,11.493,13.7275
+MA1112	MA1112.2.NR4A1	2	NR4A1	NGFI-B-related receptors (NR4)	P22736	ChIP-seq	vertebrates	Homo sapiens	1.5935,5.5395,7.2505,10.254,11.1585,14.642
+MA1113	MA1113.2.PBX2	2	PBX2	TALE-type homeo domain factors	P40425	ChIP-seq	vertebrates	Homo sapiens	2.148,5.9005,7.333,10.2845,11.3575,13.609
 MA1114	MA1114.1.PBX3	1	PBX3	TALE-type homeo domain factors	P40426	ChIP-seq	vertebrates	Homo sapiens	1.7025,5.479,6.927,9.9415,11.106,13.608
 MA1115	MA1115.1.POU5F1	1	POU5F1	POU domain factors	Q01860	ChIP-seq	vertebrates	Homo sapiens	3.077,6.652,7.9975,10.4775,11.6175,13.4635
 MA1116	MA1116.1.RBPJ	1	RBPJ	CSL-related factors	Q06330	ChIP-seq	vertebrates	Homo sapiens	0.513,5.57,6.6655,11.789,12.3915,12.908
@@ -540,7 +538,7 @@ MA1119	MA1119.1.SIX2	1	SIX2	HD-SINE factors	Q9NPC8	ChIP-seq	vertebrates	Homo sap
 MA1120	MA1120.1.SOX13	1	SOX13	SOX-related factors	Q9UN79	ChIP-seq	vertebrates	Homo sapiens	3.1205,6.434,7.676,11.0145,11.942,13.0945
 MA1121	MA1121.1.TEAD2	1	TEAD2	TEF-1-related factors	Q15562	ChIP-seq	vertebrates	Homo sapiens	2.522,6.353,7.7435,10.3425,11.685,13.873
 MA1122	MA1122.1.TFDP1	1	TFDP1	E2F-related factors	Q14186	ChIP-seq	vertebrates	Homo sapiens	2.508,6.2125,7.8115,10.26,11.457,14.0685
-MA1123	MA1123.1.TWIST1	1	TWIST1	Tal-related factors	Q15672	ChIP-seq	vertebrates	Homo sapiens	2.047,6.014,7.5875,10.619,11.7095,14.111
+MA1123	MA1123.2.TWIST1	2	TWIST1	Tal-related factors	Q15672	ChIP-seq	vertebrates	Homo sapiens	2.247,6.1445,7.663,10.637,11.7085,14.086
 MA1124	MA1124.1.ZNF24	1	ZNF24	More than 3 adjacent zinc finger factors	P17028	ChIP-seq	vertebrates	Homo sapiens	-2.16,2.6245,4.4465,8.288,9.8065,12.928
 MA1125	MA1125.1.ZNF384	1	ZNF384	More than 3 adjacent zinc finger factors	Q8TF68	ChIP-seq	vertebrates	Homo sapiens	-3.1185,3.004,4.854,10.8545,12.167,14.1345
 MA1126	MA1126.1.FOS::JUN(var.2)	1.2	FOS::JUN	Fos-related factors;Jun-related factors	P01100;P05412	SMiLE-seq	vertebrates	Homo sapiens	3.4135,6.5835,7.7905,10.2875,11.257,13.2715
@@ -557,23 +555,192 @@ MA1136	MA1136.1.FOSB::JUNB(var.2)	1.2	FOSB::JUNB	Fos-related factors;Jun-related
 MA1137	MA1137.1.FOSL1::JUNB	1	FOSL1::JUNB	Fos-related factors;Jun-related factors	P15407;P17275	SMiLE-seq	vertebrates	Homo sapiens	3.861,6.97,8.116,10.477,11.372,13.0415
 MA1138	MA1138.1.FOSL2::JUNB	1	FOSL2::JUNB	Fos-related factors;Jun-related factors	P15408;P17275	SMiLE-seq	vertebrates	Homo sapiens	-3.2565,2.8985,5.881,10.775,12.1735,14.1925
 MA1139	MA1139.1.FOSL2::JUNB(var.2)	1.2	FOSL2::JUNB	Fos-related factors;Jun-related factors	P15408;P17275	SMiLE-seq	vertebrates	Homo sapiens	0.4225,4.8125,6.4695,9.931,11.1755,13.97
-MA1140	MA1140.1.JUNB(var.2)	1.2	JUNB	Jun-related factors	P17275	SMiLE-seq	vertebrates	Homo sapiens	3.9265,6.9085,8.084,10.4385,11.091,13.251
+MA1140	MA1140.2.JUNB(var.2)	2.2	JUNB	Jun-related factors	P17275	HT-SELEX	vertebrates	Homo sapiens	-6.387,-0.2045,2.216,6.959,8.8885,12.776
 MA1141	MA1141.1.FOS::JUND	1	FOS::JUND	Fos-related factors;Jun-related factors	P01100;P17535	SMiLE-seq	vertebrates	Homo sapiens	-2.951,3.6205,6.129,10.3765,11.7125,14.248
 MA1142	MA1142.1.FOSL1::JUND	1	FOSL1::JUND	Fos-related factors;Jun-related factors	P15407;P17535	SMiLE-seq	vertebrates	Homo sapiens	4.5905,7.2435,8.2255,10.2005,10.814,12.057
 MA1143	MA1143.1.FOSL1::JUND(var.2)	1.2	FOSL1::JUND	Fos-related factors;Jun-related factors	P15407;P17535	SMiLE-seq	vertebrates	Homo sapiens	4.5795,7.129,8.1135,10.1035,10.8295,12.205
 MA1144	MA1144.1.FOSL2::JUND	1	FOSL2::JUND	Fos-related factors;Jun-related factors	P15408;P17535	SMiLE-seq	vertebrates	Homo sapiens	-2.9235,3.3195,6.14,10.756,11.969,14.1605
 MA1145	MA1145.1.FOSL2::JUND(var.2)	1.2	FOSL2::JUND	Fos-related factors;Jun-related factors	P15408;P17535	SMiLE-seq	vertebrates	Homo sapiens	0.978,5.1635,6.704,10.049,11.2265,13.7605
-MA1146	MA1146.1.NR1A4::RXRA	1	NR1A4::RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q96RI1;P19793	SMiLE-seq	vertebrates	Homo sapiens	1.9415,5.6805,7.097,10.0315,11.1645,13.54
+MA1146	MA1146.1.NR1H4::RXRA	1	NR1H4::RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q96RI1;P19793	SMiLE-seq	vertebrates	Homo sapiens	1.9415,5.6805,7.097,10.0315,11.1645,13.54
 MA1147	MA1147.1.NR4A2::RXRA	1	NR4A2::RXRA	NGFI-B-related receptors (NR4);RXR-related receptors (NR2)	P43354;P19793	SMiLE-seq	vertebrates	Homo sapiens	0.299,4.66,6.2985,9.6705,10.96,13.6365
 MA1148	MA1148.1.PPARA::RXRA	1	PPARA::RXRA	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	Q07869;P19793	SMiLE-seq	vertebrates	Homo sapiens	2.3095,5.8935,7.2545,10.0845,11.181,13.4855
 MA1149	MA1149.1.RARA::RXRG	1	RARA::RXRG	RXR-related receptors (NR2);Thyroid hormone receptor-related factors (NR1)	P10276;P48443	SMiLE-seq	vertebrates	Homo sapiens	1.1135,5.2625,6.8165,9.997,11.2065,13.695
 MA1150	MA1150.1.RORB	1	RORB	Thyroid hormone receptor-related factors (NR1)	Q92753	SMiLE-seq	vertebrates	Homo sapiens	3.721,6.946,8.112,10.4695,11.4575,13.168
 MA1151	MA1151.1.RORC	1	RORC	Thyroid hormone receptor-related factors (NR1)	P51449	SMiLE-seq	vertebrates	Homo sapiens	3.336,6.819,8.0925,10.578,11.53,13.1935
 MA1152	MA1152.1.SOX15	1	SOX15	SOX-related factors	O60248	SMiLE-seq	vertebrates	Homo sapiens	2.9875,7.2325,8.768,10.8745,11.487,12.588
-MA1153	MA1153.1.Smad4	1	Smad4	SMAD factors	P97471	SMiLE-seq	vertebrates	Mus musculus	-2.1,0.9165,2.2235,11.4655,12.227,13.1615434948
+MA1153	MA1153.1.Smad4	1	Smad4	SMAD factors	P97471	SMiLE-seq	vertebrates	Mus musculus	-2.1,0.9165,2.2235,11.4655,12.227,13.161543494829646
 MA1154	MA1154.1.ZNF282	1	ZNF282	More than 3 adjacent zinc finger factors	Q9UDV7	HT-SELEX	vertebrates	Homo sapiens	-8.701,-2.321,0.1075,5.1685,7.133,11.2705
 MA1155	MA1155.1.ZSCAN4	1	ZSCAN4	More than 3 adjacent zinc finger factors	Q8NAM6	HT-SELEX	vertebrates	Homo sapiens	-16.37,-7.943,-4.7305,1.9055,4.469,9.793
 MA1418	MA1418.1.IRF3	1	IRF3	Interferon-regulatory factors	Q14653	HT-SELEX	vertebrates	Homo sapiens	-14.0225,-6.765,-3.99,1.818,4.0835,8.879
 MA1419	MA1419.1.IRF4	1	IRF4	Interferon-regulatory factors	Q15306	HT-SELEX	vertebrates	Homo sapiens	-20.6995,-11.7745,-8.371,-1.28,1.4855,7.3
 MA1420	MA1420.1.IRF5	1	IRF5	Interferon-regulatory factors	Q13568	HT-SELEX	vertebrates	Homo sapiens	-0.481,4.0955,5.823,9.347,10.7125,13.5275
 MA1421	MA1421.1.TCF7L1	1	TCF7L1	TCF-7-related factors	Q9HCS4	HT-SELEX	vertebrates	Homo sapiens	-3.386,2.0855,4.1775,8.4725,10.121,13.3685
+MA1463	MA1463.1.ARGFX	1	ARGFX	Paired-related HD factors	A6NJG6	HT-SELEX	vertebrates	Homo sapiens	-2.054,5.252,7.354,10.871,11.828,14.102
+MA1464	MA1464.1.ARNT2	1	ARNT2	PAS domain factors	Q9HBZ2	HT-SELEX	vertebrates	Homo sapiens	-1.281,4.696,6.5205,10.8585,12.1495,13.9925
+MA1466	MA1466.1.ATF6	1	ATF6	Jun-related factors	P18850	HT-SELEX	vertebrates	Homo sapiens	-11.1955,-3.7245,-0.9025,4.936,7.177,11.7345
+MA1467	MA1467.1.ATOH1(var.2)	1.2	ATOH1	Tal-related factors	Q92858	HT-SELEX	vertebrates	Homo sapiens	-6.387,0.381,3.2725,10.0785,11.6615,14.471
+MA1468	MA1468.1.ATOH7	1	ATOH7	Tal-related factors	Q8N100	HT-SELEX	vertebrates	Homo sapiens	1.9635,6.61,8.11,10.9105,11.6615,13.7935
+MA1470	MA1470.1.BACH2(var.2)	1.2	BACH2	Jun-related factors	Q9BYV9	HT-SELEX	vertebrates	Homo sapiens	-16.1245,-8.054,-4.966,1.4155,3.9195,9.1215
+MA1471	MA1471.1.BARX2	1	BARX2	NK-related factors	Q9UMQ3	HT-SELEX	vertebrates	Homo sapiens	2.4165,6.8945,8.288,10.7895,11.627,13.2735
+MA1472	MA1472.1.BHLHA15(var.2)	1.2	BHLHA15	Tal-related factors	Q7RTS1	HT-SELEX	vertebrates	Homo sapiens	3.2185,6.946,8.3495,10.96,11.6685,12.7295
+MA1473	MA1473.1.CDX4	1	CDX4	HOX-related factors	O14627	HT-SELEX	vertebrates	Homo sapiens	-12.722,-3.467,-0.654,9.6415,11.7515,14.5155
+MA1474	MA1474.1.CREB3L4	1	CREB3L4	CREB-related factors	Q8TEY5	HT-SELEX	vertebrates	Homo sapiens	2.854,6.4525,7.772,10.455,11.443,13.4875
+MA1475	MA1475.1.CREB3L4(var.2)	1.2	CREB3L4	CREB-related factors	Q8TEY5	HT-SELEX	vertebrates	Homo sapiens	2.6225,6.362,7.729,10.477,11.498,13.557
+MA1476	MA1476.1.DLX5	1	DLX5	NK-related factors	P56178	HT-SELEX	vertebrates	Homo sapiens	-4.793,3.4295,6.292,11.5155,11.6965,12.201214914681962
+MA1478	MA1478.1.DMRTA2	1	DMRTA2	DMRT factors	Q96SC8	HT-SELEX	vertebrates	Homo sapiens	3.469,7.2895,8.498,10.636,11.353,12.778
+MA1479	MA1479.1.DMRTC2	1	DMRTC2	DMRT factors	Q8IXT2	HT-SELEX	vertebrates	Homo sapiens	1.079,5.782,7.3985,10.454,11.533,13.749
+MA1480	MA1480.1.DPRX	1	DPRX	Paired-related HD factors	A6NFQ7	HT-SELEX	vertebrates	Homo sapiens	2.5875,6.8195,8.216,10.72,11.6765,13.409
+MA1481	MA1481.1.DRGX	1	DRGX	Paired-related HD factors	A6NNA5	HT-SELEX	vertebrates	Homo sapiens	3.2795,7.5165,8.498,11.1735,11.2465,11.646330386016476
+MA1483	MA1483.1.ELF2	1	ELF2	Ets-related factors	Q15723	HT-SELEX	vertebrates	Homo sapiens	-7.2755,0.289,3.1215,8.6355,10.492,13.903
+MA1484	MA1484.1.ETS2	1	ETS2	Ets-related factors	P15036	HT-SELEX	vertebrates	Homo sapiens	-5.267,2.441,5.5295,10.281,11.577,14.6515
+MA1485	MA1485.1.FERD3L	1	FERD3L	Tal-related factors	Q96RJ6	HT-SELEX	vertebrates	Homo sapiens	-10.386,-2.275,0.645,6.393,8.4885,12.701
+MA1487	MA1487.1.FOXE1	1	FOXE1	Forkhead box (FOX) factors	O00358	HT-SELEX	vertebrates	Homo sapiens	-9.613,-1.9785,0.9255,6.5445,8.816,13.476
+MA1489	MA1489.1.FOXN3	1	FOXN3	Forkhead box (FOX) factors	O00409	PBM	vertebrates	Homo sapiens	-4.467,2.2475,2.2475,8.962,8.962,12.31774136518817
+MA1491	MA1491.1.GLI3	1	GLI3	More than 3 adjacent zinc finger factors	P10071	HT-SELEX	vertebrates	Homo sapiens	-7.1745,0.33,3.0595,8.2315,10.033,13.504
+MA1493	MA1493.1.HES6	1	HES6	Hairy-related factors	Q96HZ4	HT-SELEX	vertebrates	Homo sapiens	-0.713,4.156,6.193,9.347,11.316,13.67
+MA1494	MA1494.1.HNF4A(var.2)	1.2	HNF4A	RXR-related receptors (NR2)	P41235	HT-SELEX	vertebrates	Homo sapiens	-11.056,-4.068,-1.406,4.1265,6.271,10.756
+MA1495	MA1495.1.HOXA1	1	HOXA1	HOX-related factors	P49639	HT-SELEX	vertebrates	Homo sapiens	4.5555,7.9345,8.7585,10.224,10.895,11.348348593418859
+MA1496	MA1496.1.HOXA4	1	HOXA4	HOX-related factors	Q00056	HT-SELEX	vertebrates	Homo sapiens	4.576,7.6845,8.773,10.495,10.821,11.15912438429391
+MA1497	MA1497.1.HOXA6	1	HOXA6	HOX-related factors	P31267	HT-SELEX	vertebrates	Homo sapiens	4.9875,7.5045,8.3,9.9385,10.4665,11.263
+MA1498	MA1498.1.HOXA7	1	HOXA7	HOX-related factors	P31268	HT-SELEX	vertebrates	Homo sapiens	3.6785,8.0085,8.958,10.517,10.9905,11.473737726419587
+MA1499	MA1499.1.HOXB4	1	HOXB4	HOX-related factors	P17483	HT-SELEX	vertebrates	Homo sapiens	-2.0775,6.607,8.7385,11.5535,12.055,12.190530294077977
+MA1500	MA1500.1.HOXB6	1	HOXB6	HOX-related factors	P17509	HT-SELEX	vertebrates	Homo sapiens	4.7495,7.643,8.427,10.6895,10.733,11.311603319874976
+MA1501	MA1501.1.HOXB7	1	HOXB7	HOX-related factors	P09629	HT-SELEX	vertebrates	Homo sapiens	1.336,6.6805,8.2405,11.038,11.8395,13.266
+MA1502	MA1502.1.HOXB8	1	HOXB8	HOX-related factors	P17481	HT-SELEX	vertebrates	Homo sapiens	-2.5035,8.0545,8.881,11.087,11.5065,11.83844093875039
+MA1503	MA1503.1.HOXB9	1	HOXB9	HOX-related factors	P17482	HT-SELEX	vertebrates	Homo sapiens	-4.476,2.2955,5.0885,10.499,11.943,14.297
+MA1504	MA1504.1.HOXC4	1	HOXC4	HOX-related factors	P09017	HT-SELEX	vertebrates	Homo sapiens	0.613,7.7705,9.3965,10.697,11.1785,11.234317699754795
+MA1505	MA1505.1.HOXC8	1	HOXC8	HOX-related factors	P31273	HT-SELEX	vertebrates	Homo sapiens	4.847,7.9855,8.7725,10.0875,10.253,10.907679296847363
+MA1506	MA1506.1.HOXD10	1	HOXD10	HOX-related factors	P28358	HT-SELEX	vertebrates	Homo sapiens	-6.2845,1.109,3.8655,9.326,11.113,14.2745
+MA1507	MA1507.1.HOXD4	1	HOXD4	HOX-related factors	P09016	HT-SELEX	vertebrates	Homo sapiens	-2.5515,7.182,9.562,11.1245,11.358,11.434111817015388
+MA1508	MA1508.1.IKZF1	1	IKZF1	Factors with multiple dispersed zinc fingers	Q13422	ChIP-seq	vertebrates	Homo sapiens	2.448,6.1725,7.523,10.4375,11.4625,13.7025
+MA1509	MA1509.1.IRF6	1	IRF6	Interferon-regulatory factors	O14896	HT-SELEX	vertebrates	Homo sapiens	-3.0385,3.1175,5.1445,9.5765,11.381,14.442
+MA1511	MA1511.1.KLF10	1	KLF10	Three-zinc finger Kruppel-related factors	Q13118	HT-SELEX	vertebrates	Homo sapiens	-2.247,4.276,6.3825,10.2175,11.5415,14.0735
+MA1512	MA1512.1.KLF11	1	KLF11	Three-zinc finger Kruppel-related factors	O14901	HT-SELEX	vertebrates	Homo sapiens	-1.1665,4.462,6.466,10.238,11.5755,13.974
+MA1513	MA1513.1.KLF15	1	KLF15	Three-zinc finger Kruppel-related factors	Q9UIH9	ChIP-seq	vertebrates	Homo sapiens	-5.781,1.38,4.138,8.9665,11.338,14.495
+MA1514	MA1514.1.KLF17	1	KLF17	Three-zinc finger Kruppel-related factors	Q5JT82	HT-SELEX	vertebrates	Homo sapiens	-3.519,1.9245,3.998,8.272,9.897,13.329
+MA1515	MA1515.1.KLF2	1	KLF2	Three-zinc finger Kruppel-related factors	Q9Y5W3	HT-SELEX	vertebrates	Homo sapiens	3.137,6.7915,8.1405,10.5945,11.531,13.432
+MA1516	MA1516.1.KLF3	1	KLF3	Three-zinc finger Kruppel-related factors	P57682	HT-SELEX	vertebrates	Homo sapiens	-2.1155,3.4295,5.426,9.6445,10.9745,14.1045
+MA1517	MA1517.1.KLF6	1	KLF6	Three-zinc finger Kruppel-related factors	Q99612	HT-SELEX	vertebrates	Homo sapiens	1.2275,6.078,7.687,10.8055,11.8185,13.8825
+MA1518	MA1518.1.LHX1	1	LHX1	HD-LIM factors	P48742	HT-SELEX	vertebrates	Homo sapiens	5.2695,7.5335,8.2425,9.4505,9.5155,10.03142020295905
+MA1519	MA1519.1.LHX5	1	LHX5	HD-LIM factors	Q9H2C1	HT-SELEX	vertebrates	Homo sapiens	-2.887,5.4585,7.3855,11.741,11.895,12.723418250912461
+MA1520	MA1520.1.MAF	1	MAF	Maf-related factors	O75444	HT-SELEX	vertebrates	Homo sapiens	2.1315,5.798,7.183,10.0595,11.1795,13.492
+MA1521	MA1521.1.MAFA	1	MAFA	Maf-related factors	Q8NHW3	HT-SELEX	vertebrates	Homo sapiens	2.393,5.953,7.3015,10.105,11.193,13.456
+MA1522	MA1522.1.MAZ	1	MAZ	More than 3 adjacent zinc finger factors	P56270	ChIP-seq	vertebrates	Homo sapiens	-3.625,2.5555,5.0895,9.027,11.648,14.5475
+MA1523	MA1523.1.MSANTD3	1	MSANTD3	Myb/SANT domain factors	Q96H12	PBM	vertebrates	Homo sapiens	3.997,7.163,8.291,10.6135,11.2745,12.864
+MA1524	MA1524.1.MSGN1	1	MSGN1	Tal-related factors	A6NI15	HT-SELEX	vertebrates	Homo sapiens	2.4,7.0255,8.4495,10.823,11.632,13.158
+MA1525	MA1525.1.NFATC4	1	NFATC4	NFAT-related factors	Q14934	HT-SELEX	vertebrates	Homo sapiens	-2.01,6.6025,8.4655,11.224,11.8625,13.1125
+MA1527	MA1527.1.NFIC(var.2)	1.2	NFIC	Nuclear factor 1	P08651	HT-SELEX	vertebrates	Homo sapiens	-15.354,-6.776,-3.181,3.567,6.0285,12.1275
+MA1528	MA1528.1.NFIX(var.2)	1.2	NFIX	Nuclear factor 1	Q14938	HT-SELEX	vertebrates	Homo sapiens	-11.025,-2.185,1.792,8.368,10.3395,13.8585
+MA1529	MA1529.1.NHLH2	1	NHLH2	Tal-related factors	Q02577	HT-SELEX	vertebrates	Homo sapiens	-9.315,-1.482,1.4195,6.981,8.943,12.769
+MA1530	MA1530.1.NKX6-3	1	NKX6-3	NK-related factors	A6NJ46	HT-SELEX	vertebrates	Homo sapiens	0.2035,6.9245,8.344,11.3665,11.9565,12.8865
+MA1531	MA1531.1.NR1D1	1	NR1D1	Thyroid hormone receptor-related factors (NR1)	P20393	HT-SELEX	vertebrates	Homo sapiens	-10.9065,-3.1795,-0.309,5.51,7.7075,12.127
+MA1532	MA1532.1.NR1D2	1	NR1D2	Thyroid hormone receptor-related factors (NR1)	Q14995	HT-SELEX	vertebrates	Homo sapiens	-0.072,4.5775,6.296,9.77,11.077,13.744
+MA1533	MA1533.1.NR1I2	1	NR1I2	Thyroid hormone receptor-related factors (NR1)	O75469	HT-SELEX	vertebrates	Homo sapiens	-0.853,4.103,5.9345,9.6255,11.001,13.7715
+MA1534	MA1534.1.NR1I3	1	NR1I3	Thyroid hormone receptor-related factors (NR1)	Q14994	HT-SELEX	vertebrates	Homo sapiens	1.5095,6.522,8.1985,11.024,11.678,13.3955
+MA1535	MA1535.1.NR2C1	1	NR2C1	RXR-related receptors (NR2)	P13056	HT-SELEX	vertebrates	Homo sapiens	1.549,6.733,9.0165,11.298,11.489,11.7825
+MA1536	MA1536.1.NR2C2(var.2)	1.2	NR2C2	RXR-related receptors (NR2)	P49116	HT-SELEX	vertebrates	Homo sapiens	4.962,7.9055,8.7125,9.9855,10.2125,10.262283568107557
+MA1537	MA1537.1.NR2F1(var.2)	1.2	NR2F1	RXR-related receptors (NR2)	P10589	HT-SELEX	vertebrates	Homo sapiens	-9.626,-2.7135,-0.1335,5.172,7.222,11.435
+MA1538	MA1538.1.NR2F1(var.3)	1.3	NR2F1	RXR-related receptors (NR2)	P10589	HT-SELEX	vertebrates	Homo sapiens	-5.388,0.5015,2.7145,7.226,8.988,12.542
+MA1539	MA1539.1.NR2F6(var.3)	1.3	NR2F6	RXR-related receptors (NR2)	P10588	HT-SELEX	vertebrates	Homo sapiens	-10.5075,-3.5915,-0.9495,4.4765,6.6075,10.958
+MA1540	MA1540.1.NR5A1	1	NR5A1	FTZ-F1-related receptors (NR5)	Q13285	HT-SELEX	vertebrates	Homo sapiens	2.6705,6.745,8.112,10.736,11.763,13.4225
+MA1541	MA1541.1.NR6A1	1	NR6A1	GCNF-related receptors (NR6)	Q15406	HT-SELEX	vertebrates	Homo sapiens	-0.742,3.8555,5.5895,9.172,10.551,13.4325
+MA1542	MA1542.1.OSR1	1	OSR1	Other factors with up to three adjacent zinc fingers	Q8TAX0	HT-SELEX	vertebrates	Homo sapiens	-0.885,4.843,6.8835,10.8305,11.5945,14.416
+MA1544	MA1544.1.OVOL1	1	OVOL1	More than 3 adjacent zinc finger factors	O14753	HT-SELEX	vertebrates	Homo sapiens	-14.4875,-3.546,-1.021,8.113,10.885,14.448
+MA1545	MA1545.1.OVOL2	1	OVOL2	More than 3 adjacent zinc finger factors	Q9BRP0	HT-SELEX	vertebrates	Homo sapiens	-4.915,2.556,5.6395,11.144,12.3215,14.035
+MA1546	MA1546.1.PAX3(var.2)	1.2	PAX3	Paired plus homeo domain	P23760	HT-SELEX	vertebrates	Homo sapiens	-0.7655,4.1145,5.9115,9.5345,10.894,13.667
+MA1547	MA1547.1.PITX2	1	PITX2	Paired-related HD factors	Q99697	HT-SELEX	vertebrates	Homo sapiens	-1.0735,5.8685,7.7915,11.332,12.3845,12.865739995801336
+MA1548	MA1548.1.PLAGL2	1	PLAGL2	More than 3 adjacent zinc finger factors	Q9UPG8	PBM	vertebrates	Homo sapiens	-2.4125,4.8825,7.4245,11.105,12.0795,14.076
+MA1549	MA1549.1.POU6F1(var.2)	1.2	POU6F1	POU domain factors	Q14863	HT-SELEX	vertebrates	Homo sapiens	2.1305,6.4965,8.0475,10.795,11.933,13.595
+MA1550	MA1550.1.PPARD	1	PPARD	Thyroid hormone receptor-related factors (NR1)	Q03181	HT-SELEX	vertebrates	Homo sapiens	-10.5375,-3.2885,-0.584,4.958,7.064,11.4375
+MA1552	MA1552.1.RARB(var.3)	1.3	RARB	Thyroid hormone receptor-related factors (NR1)	P10826	HT-SELEX	vertebrates	Homo sapiens	-1.5395,3.3255,5.155,8.9235,10.368,13.375
+MA1553	MA1553.1.RARG(var.3)	1.3	RARG	Thyroid hormone receptor-related factors (NR1)	P13631	HT-SELEX	vertebrates	Homo sapiens	-1.459,3.3585,5.178,8.939,10.394,13.398
+MA1554	MA1554.1.RFX7	1	RFX7	RFX-related factors	O14593	HT-SELEX	vertebrates	Homo sapiens	3.5295,7.355,8.396,10.402,11.382,12.759
+MA1555	MA1555.1.RXRB(var.2)	1.2	RXRB	RXR-related receptors (NR2)	P28702	HT-SELEX	vertebrates	Homo sapiens	-1.7775,3.089,4.917,8.746,10.2055,13.305
+MA1556	MA1556.1.RXRG(var.2)	1.2	RXRG	RXR-related receptors (NR2)	P48443	HT-SELEX	vertebrates	Homo sapiens	-6.295,0.155,2.53,7.33,9.1365,12.838
+MA1557	MA1557.1.SMAD5	1	SMAD5	SMAD factors	Q99717	HT-SELEX	vertebrates	Homo sapiens	-0.587,4.3265,6.2665,10.11,11.282,14.011
+MA1558	MA1558.1.SNAI1	1	SNAI1	More than 3 adjacent zinc finger factors	O95863	HT-SELEX	vertebrates	Homo sapiens	1.624,6.2935,7.602,11.235,12.269,13.554
+MA1559	MA1559.1.SNAI3	1	SNAI3	More than 3 adjacent zinc finger factors	Q3KNW1	HT-SELEX	vertebrates	Homo sapiens	-2.8385,3.553,5.6,10.163,12.034,14.3725
+MA1560	MA1560.1.SOHLH2	1	SOHLH2	PAS domain factors	Q9NX45	HT-SELEX	vertebrates	Homo sapiens	1.7485,6.175,7.6265,10.939,11.827,13.922
+MA1561	MA1561.1.SOX12	1	SOX12	SOX-related factors	O15370	HT-SELEX	vertebrates	Homo sapiens	-0.3665,4.828,6.66,10.1635,11.4095,13.965
+MA1562	MA1562.1.SOX14	1	SOX14	SOX-related factors	O95416	HT-SELEX	vertebrates	Homo sapiens	0.7505,5.36,7.004,10.3275,11.607,13.716
+MA1563	MA1563.1.SOX18	1	SOX18	SOX-related factors	P35713	HT-SELEX	vertebrates	Homo sapiens	5.3085,7.62,8.29,9.7165,10.139,10.552095362319113
+MA1564	MA1564.1.SP9	1	SP9	Three-zinc finger Kruppel-related factors	P0CG40	HT-SELEX	vertebrates	Homo sapiens	1.7345,6.0735,7.5875,10.5465,11.6115,13.7065
+MA1565	MA1565.1.TBX18	1	TBX18	TBX1-related factors	O95935	HT-SELEX	vertebrates	Homo sapiens	2.437,6.331,7.734,10.482,11.518,13.5625
+MA1566	MA1566.1.TBX3	1	TBX3	TBX2-related factors	O15119	HT-SELEX	vertebrates	Homo sapiens	5.008,7.6205,8.4425,9.965,10.4665,11.4805
+MA1567	MA1567.1.TBX6	1	TBX6	TBX6-related factors	O95947	HT-SELEX	vertebrates	Homo sapiens	4.186,7.429,8.5105,10.4455,11.1465,12.502
+MA1568	MA1568.1.TCF21(var.2)	1.2	TCF21	Tal-related factors	O43680	HT-SELEX	vertebrates	Homo sapiens	1.5555,5.901,7.467,10.497,11.6085,13.7805
+MA1569	MA1569.1.TFAP2E	1	TFAP2E	AP-2	Q6VUC0	HT-SELEX	vertebrates	Homo sapiens	-6.4235,-2.8925,6.959,11.3285,12.1605,13.6825
+MA1570	MA1570.1.TFAP4(var.2)	1.2	TFAP4	bHLH-ZIP factors	Q01664	HT-SELEX	vertebrates	Homo sapiens	0.2345,6.918,8.7775,11.093,11.7755,12.9145
+MA1571	MA1571.1.TGIF2LX	1	TGIF2LX	TALE-type homeo domain factors	Q8IUE1	HT-SELEX	vertebrates	Homo sapiens	0.8445,4.96,6.526,9.7385,10.9935,13.579
+MA1572	MA1572.1.TGIF2LY	1	TGIF2LY	TALE-type homeo domain factors	Q8IUE0	HT-SELEX	vertebrates	Homo sapiens	1.9175,5.686,7.1185,10.1615,11.274,13.536
+MA1573	MA1573.1.THAP11	1	THAP11	THAP-related factors	Q96EK4	ChIP-seq	vertebrates	Homo sapiens	-9.706,-3.393,-0.9675,4.1255,6.12,10.359
+MA1574	MA1574.1.THRB	1	THRB	Thyroid hormone receptor-related factors (NR1)	P10828	HT-SELEX	vertebrates	Homo sapiens	-2.6775,2.721,4.7315,8.823,10.3725,13.5235
+MA1575	MA1575.1.THRB(var.2)	1.2	THRB	Thyroid hormone receptor-related factors (NR1)	P10828	HT-SELEX	vertebrates	Homo sapiens	-7.7245,-0.674,1.941,7.223,9.172,12.997
+MA1576	MA1576.1.THRB(var.3)	1.3	THRB	Thyroid hormone receptor-related factors (NR1)	P10828	HT-SELEX	vertebrates	Homo sapiens	-10.7405,-3.738,-1.0935,4.373,6.4765,10.865
+MA1577	MA1577.1.TLX2	1	TLX2	NK-related factors	O43763	HT-SELEX	vertebrates	Homo sapiens	-4.339,5.355,9.148,11.367,11.845,11.988879838030234
+MA1578	MA1578.1.VEZF1	1	VEZF1	More than 3 adjacent zinc finger factors	Q14119	PBM	vertebrates	Homo sapiens	-0.23,4.852,7.3395,11.2025,12.302,13.6175
+MA1579	MA1579.1.ZBTB26	1	ZBTB26	More than 3 adjacent zinc finger factors	Q9HCK0	ChIP-seq	vertebrates	Homo sapiens	1.5245,5.74,7.25,10.8375,12.001,13.8785
+MA1580	MA1580.1.ZBTB32	1	ZBTB32	Other factors with up to three adjacent zinc fingers	Q9Y2Y4	HT-SELEX	vertebrates	Homo sapiens	-7.1765,0.4665,2.897,8.6615,11.1875,14.24
+MA1581	MA1581.1.ZBTB6	1	ZBTB6	More than 3 adjacent zinc finger factors	Q15916	ChIP-seq	vertebrates	Homo sapiens	1.7465,5.7155,7.269,10.283,11.3995,13.9895
+MA1583	MA1583.1.ZFP57	1	ZFP57	Factors with multiple dispersed zinc fingers	Q9NU63	ChIP-seq	vertebrates	Homo sapiens	1.2775,5.688,7.338,10.5935,12.0655,14.0325
+MA1584	MA1584.1.ZIC5	1	ZIC5	More than 3 adjacent zinc finger factors	Q96T25	HT-SELEX	vertebrates	Homo sapiens	-11.161,-3.2785,-0.359,5.5265,7.7335,12.1935
+MA1585	MA1585.1.ZKSCAN1	1	ZKSCAN1	More than 3 adjacent zinc finger factors	P17029	ChIP-seq	vertebrates	Homo sapiens	-2.9695,3.3775,5.38,10.2455,11.857,14.1935
+MA1587	MA1587.1.ZNF135	1	ZNF135	More than 3 adjacent zinc finger factors	P52742	ChIP-seq	vertebrates	Homo sapiens	-4.2775,1.215,3.3005,7.629,9.3075,12.7965
+MA1588	MA1588.1.ZNF136	1	ZNF136	More than 3 adjacent zinc finger factors	P52737	ChIP-seq	vertebrates	Homo sapiens	-2.7105,2.182,4.059,7.9955,9.5395,12.7995
+MA1589	MA1589.1.ZNF140	1	ZNF140	More than 3 adjacent zinc finger factors	P52738	ChIP-seq	vertebrates	Homo sapiens	-9.2465,-3.071,-0.7005,4.2785,6.229,10.3755
+MA1592	MA1592.1.ZNF274	1	ZNF274	More than 3 adjacent zinc finger factors	Q96GC6	HT-SELEX	vertebrates	Homo sapiens	-9.6685,-1.6075,1.335,7.2385,9.371,13.39
+MA1593	MA1593.1.ZNF317	1	ZNF317	More than 3 adjacent zinc finger factors	Q96PQ6	ChIP-seq	vertebrates	Homo sapiens	2.1585,5.8635,7.3155,10.301,11.3015,13.851
+MA1594	MA1594.1.ZNF382	1	ZNF382	Factors with multiple dispersed zinc fingers	Q96SR6	ChIP-seq	vertebrates	Homo sapiens	-10.6145,-4.4865,-2.1255,2.8575,4.822,9.031
+MA1596	MA1596.1.ZNF460	1	ZNF460	More than 3 adjacent zinc finger factors	Q14592	ChIP-seq	vertebrates	Homo sapiens	-6.246,-0.5655,1.6125,6.178,7.9615,11.7365
+MA1597	MA1597.1.ZNF528	1	ZNF528	More than 3 adjacent zinc finger factors	Q3MIS6	ChIP-seq	vertebrates	Homo sapiens	-7.6135,-1.7415,0.514,5.25,7.106,11.052
+MA1599	MA1599.1.ZNF682	1	ZNF682	More than 3 adjacent zinc finger factors	O95780	ChIP-seq	vertebrates	Homo sapiens	-0.3405,4.156,5.8645,9.402,10.7525,13.5645
+MA1600	MA1600.1.ZNF684	1	ZNF684	More than 3 adjacent zinc finger factors	Q5T5D7	HT-SELEX	vertebrates	Homo sapiens	-6.5935,-0.7995,1.4045,6.002,7.791,11.5765
+MA1601	MA1601.1.ZNF75D	1	ZNF75D	More than 3 adjacent zinc finger factors	P51815	ChIP-seq	vertebrates	Homo sapiens	-1.7535,3.955,5.8135,10.415,11.907,14.453
+MA1602	MA1602.1.ZSCAN29	1	ZSCAN29	More than 3 adjacent zinc finger factors	Q8IWY8	ChIP-seq	vertebrates	Homo sapiens	-4.3495,2.0435,4.3985,9.1075,10.9025,14.2145
+MA1603	MA1603.1.Dmrt1	1	Dmrt1	DMRT factors	Q9QZ59	ChIP-seq	vertebrates	Mus musculus	1.0005,5.218,6.806,10.0505,11.286,13.809
+MA1604	MA1604.1.Ebf2	1	Ebf2	Early B-Cell Factor-related factors	O08792	ChIP-seq	vertebrates	Mus musculus	1.571,5.5565,7.072,10.1535,11.36,13.692
+MA1606	MA1606.1.Foxf1	1	Foxf1	Forkhead box (FOX) factors	Q61080	ChIP-seq	vertebrates	Mus musculus	2.6045,6.511,7.6945,11.035,12.142,13.4275
+MA1607	MA1607.1.Foxl2	1	Foxl2	Forkhead box (FOX) factors	O88470	ChIP-seq	vertebrates	Mus musculus	2.3805,6.08,7.5065,10.3755,11.431,13.7765
+MA1608	MA1608.1.Isl1	1	Isl1	HD-LIM factors	P61372	ChIP-seq	vertebrates	Mus musculus	2.94,6.591,8.149,10.742,12.2315,13.154
+MA1615	MA1615.1.Plagl1	1	Plagl1	More than 3 adjacent zinc fingers	O35745	ChIP-seq	vertebrates	Mus musculus	2.436,6.1745,7.5765,10.378,11.4455,13.793
+MA1616	MA1616.1.Prdm15	1	Prdm15	Factors with multiple dispersed zinc fingers	E9Q8T2	ChIP-seq	vertebrates	Mus musculus	1.3205,5.336,6.8525,9.9855,11.1645,13.6575
+MA1618	MA1618.1.Ptf1a	1	Ptf1a	Tal-related factors	Q9QX98	ChIP-seq	vertebrates	Mus musculus	2.507,6.364,7.62,10.814,11.7345,13.516
+MA1619	MA1619.1.Ptf1a(var.2)	1.2	Ptf1a	Tal-related factors	Q9QX98	ChIP-seq	vertebrates	Mus musculus	1.53,5.7715,7.2935,11.0125,12.131,13.865
+MA1620	MA1620.1.Ptf1a(var.3)	1.3	Ptf1a	Tal-related factors	Q9QX98	ChIP-seq	vertebrates	Mus musculus	2.4095,6.1595,7.673,10.8365,11.8805,13.8765
+MA1621	MA1621.1.Rbpjl	1	Rbpjl	CSL-related factors	O08674	ChIP-seq	vertebrates	Mus musculus	2.4195,6.267,7.598,10.824,11.9025,13.635
+MA1622	MA1622.1.Smad2::Smad3	1	Smad2::Smad3	SMAD factors::SMAD factors	Q15796;Q8BUN5	ChIP-seq	vertebrates	Mus musculus	1.5715,5.8005,7.274,10.7005,11.8825,13.9885
+MA1623	MA1623.1.Stat2	1	Stat2	STAT factors	Q9WVL2	ChIP-seq	vertebrates	Mus musculus	1.339,5.305,6.8195,9.958,11.188,13.6475
+MA1624	MA1624.1.Stat5a	1	Stat5a	STAT factors	P42230	ChIP-seq	vertebrates	Mus musculus	1.282,5.4315,7.0075,10.292,11.3525,13.9325
+MA1625	MA1625.1.Stat5b	1	Stat5b	STAT factors	P42232	ChIP-seq	vertebrates	Mus musculus	0.8095,4.98,6.653,10.023,11.141,14.19
+MA1627	MA1627.1.Wt1	1	Wt1	More than 3 adjacent zinc fingers	P22561	ChIP-seq	vertebrates	Mus musculus	0.7675,5.0395,6.645,9.955,11.21,13.802
+MA1628	MA1628.1.Zic1::Zic2	1	Zic1::Zic2	More than 3 adjacent zinc fingers::More than 3 adjacent zinc fingers	P46684;Q62520	ChIP-seq	vertebrates	Mus musculus	1.52,5.7555,7.5105,9.9745,12.156,14.118
+MA1629	MA1629.1.Zic2	1	Zic2	More than 3 adjacent zinc fingers::More than 3 adjacent zinc fingers	Q62520	ChIP-seq	vertebrates	Mus musculus	0.8835,5.063,6.63,10.0115,11.1485,13.8595
+MA1630	MA1630.1.Znf281	1	Znf281	More than 3 adjacent zinc finger factors	Q99LI5	ChIP-seq	vertebrates	Mus musculus	-2.1295,3.154,5.1335,9.177,10.705,13.8125
+MA1631	MA1631.1.ASCL1(var.2)	1.2	ASCL1	MyoD / ASC-related factors	P50553	ChIP-seq	vertebrates	Homo sapiens	1.657,5.85,7.3515,10.361,11.7465,14.002
+MA1632	MA1632.1.ATF2	1	ATF2	Jun-related factors	P15336	ChIP-seq	vertebrates	Homo sapiens	-0.1705,4.436,6.1395,9.8085,11.047,13.8795
+MA1633	MA1633.1.BACH1	1	BACH1	Jun-related factors	O14867	ChIP-seq	vertebrates	Homo sapiens	0.507,4.798,6.409,9.754,11.154,13.602
+MA1634	MA1634.1.BATF	1	BATF	B-ATF-related factors	Q16520	ChIP-seq	vertebrates	Homo sapiens	2.4025,6.3455,7.743,10.6895,11.8415,13.849
+MA1635	MA1635.1.BHLHE22(var.2)	1.2	BHLHE22	Tal-related factors	Q8NFJ8	ChIP-seq	vertebrates	Homo sapiens	-4.6795,3.182,4.085,12.131,12.6435,13.192
+MA1636	MA1636.1.CEBPG(var.2)	1.2	CEBPG	C/EBP-related factors	P53567	ChIP-seq	vertebrates	Homo sapiens	0.411,4.802,6.453,9.8495,11.148,13.776
+MA1637	MA1637.1.EBF3	1	EBF3	Early B-Cell Factor-related factors	Q9H4W6	ChIP-seq	vertebrates	Homo sapiens	1.7935,5.725,7.2085,10.2455,11.4295,13.78
+MA1638	MA1638.1.HAND2	1	HAND2	Tal-related factors	P61296	ChIP-seq	vertebrates	Homo sapiens	0.336,4.9465,6.8595,11.8515,12.282,12.892
+MA1639	MA1639.1.MEIS1(var.2)	1.2	MEIS1	TALE-type homeo domain factors	O00470	ChIP-seq	vertebrates	Homo sapiens	1.9815,5.85,7.332,10.324,11.3755,13.86
+MA1640	MA1640.1.MEIS2(var.2)	1.2	MEIS2	TALE-type homeo domain factors	O14770	ChIP-seq	vertebrates	Homo sapiens	2.1025,5.895,7.3295,10.2775,11.385,13.7
+MA1641	MA1641.1.MYF5	1	MYF5	MyoD / ASC-related factors	P13349	ChIP-seq	vertebrates	Homo sapiens	1.31,5.73,7.091,10.6215,12.1235,14.0435
+MA1642	MA1642.1.NEUROG2(var.2)	1.2	NEUROG2	Tal-related factors	Q9H2A3	ChIP-seq	vertebrates	Homo sapiens	2.025,6.129,7.49,10.6835,11.8715,13.8625
+MA1643	MA1643.1.NFIB	1	NFIB	Nuclear factor 1	O00712	ChIP-seq	vertebrates	Homo sapiens	-5.205,0.479,2.6425,7.139,8.875,12.51
+MA1644	MA1644.1.NFYC	1	NFYC	.	Q13952	ChIP-seq	vertebrates	Homo sapiens	3.049,6.5835,7.9775,10.224,11.6035,13.7565
+MA1645	MA1645.1.NKX2-2	1	NKX2-2	NK-related factors	O95096	ChIP-seq	vertebrates	Homo sapiens	2.813,6.333,7.7675,10.7,11.3865,14.139
+MA1646	MA1646.1.OSR2	1	OSR2	More than 3 adjacent zinc finger factors	Q8N2R0	ChIP-seq	vertebrates	Homo sapiens	3.117,6.6125,8.051,10.4865,11.697,13.8325
+MA1647	MA1647.1.PRDM4	1	PRDM4	Factors with multiple dispersed zinc fingers	Q9UKN5	ChIP-seq	vertebrates	Homo sapiens	3.471,6.822,8.162,10.2505,11.558,13.5045
+MA1648	MA1648.1.TCF12(var.2)	1.2	TCF12	E2A-related factors	Q99081	ChIP-seq	vertebrates	Homo sapiens	3.6575,7.243,8.3225,9.699,12.228,13.3235
+MA1649	MA1649.1.ZBTB12	1	ZBTB12	More than 3 adjacent zinc finger factors	Q9Y330	ChIP-seq	vertebrates	Homo sapiens	2.5935,6.9735,7.738,11.126,12.2775,13.343
+MA1650	MA1650.1.ZBTB14	1	ZBTB14	More than 3 adjacent zinc finger factors	O43829	ChIP-seq	vertebrates	Homo sapiens	1.8945,5.8485,7.328,10.3115,11.4175,13.766
+MA1651	MA1651.1.ZFP42	1	ZFP42	More than 3 adjacent zinc finger factors	Q96MM3	ChIP-seq	vertebrates	Homo sapiens	-1.2605,3.585,5.4135,9.1675,10.602,13.554
+MA1652	MA1652.1.ZKSCAN5	1	ZKSCAN5	Factors with multiple dispersed zinc fingers	Q9Y2L8	ChIP-seq	vertebrates	Homo sapiens	0.3915,4.463,6.523,9.7275,10.887,14.238
+MA1653	MA1653.1.ZNF148	1	ZNF148	More than 3 adjacent zinc finger factors	Q9UQR1	ChIP-seq	vertebrates	Homo sapiens	0.6215,4.9145,6.5505,9.891,11.149,13.836
+MA1654	MA1654.1.ZNF16	1	ZNF16	More than 3 adjacent zinc finger factors	P17020	ChIP-seq	vertebrates	Homo sapiens	-11.7815,-5.1935,-2.673,2.6105,4.678,9.0765
+MA1655	MA1655.1.ZNF341	1	ZNF341	Factors with multiple dispersed zinc fingers	Q9BYN7	ChIP-seq	vertebrates	Homo sapiens	2.733,6.3935,7.751,10.511,11.66,13.5755
+MA1656	MA1656.1.ZNF449	1	ZNF449	More than 3 adjacent zinc finger factors	Q6P9G9	ChIP-seq	vertebrates	Homo sapiens	0.794,5.062,6.6765,10.0205,11.2135,13.848
+MA1657	MA1657.1.ZNF652	1	ZNF652	More than 3 adjacent zinc finger factors	Q9Y2D9	ChIP-seq	vertebrates	Homo sapiens	1.4505,5.526,6.9225,10.2095,11.3375,13.6825
+MA1683	MA1683.1.FOXA3	1	FOXA3	Forkhead box (FOX) factors	P55318	ChIP-seq	vertebrates	Homo sapiens	3.1945,6.897,8.0025,10.43,11.6445,13.5615
