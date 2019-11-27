@@ -2,10 +2,6 @@
 # Libraries
 ###################################################################################################
 
-# Python 3 compatibility
-
-
-
 # Python
 import base64
 import os
@@ -33,7 +29,7 @@ from fisher import pvalue
 ###################################################################################################
 
 def options(parser):
-    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
+    parser.add_argument("--organism", type=str, metavar="STRING", required=True,
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
     parser.add_argument("--matching-location", type=str, metavar="PATH",
