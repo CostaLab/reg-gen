@@ -299,7 +299,7 @@ def _get_covs(DCS, i, as_list=False):
     return cov1, cov2
 
 
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
+def get_peaks(DCS, states, exts, merge, distr, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []

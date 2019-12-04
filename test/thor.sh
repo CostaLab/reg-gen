@@ -23,8 +23,9 @@ fi
 
 # Run test script
 cd THOR_example_data/
-rm -rf report_* sample-*
+rm -rf report_* sample*
 rgt-THOR -n sample --report THOR.config
-rgt-THOR -n sample_no --report THOR.config --no-merge-bin
+rgt-THOR -n sample_nomergebin --report THOR.config --no-merge-bin
+rgt-THOR -n sample_nocor_pv1_merge --report THOR.config --no-correction --pvalue 1.0 --merge
 
 echo "********* THOR test completed ****************"

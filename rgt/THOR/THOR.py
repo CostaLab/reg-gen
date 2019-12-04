@@ -128,10 +128,9 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         
         states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
         
-        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data,
+        inst_ratios, inst_pvalues, inst_output = get_peaks(states=states, DCS=exp_data,
                                                            distr=distr, merge=options.merge, exts=exp_data.exts,
-                                                           pcutoff=options.pcutoff, debug=options.debug, p=options.par,
-                                                           no_correction=options.no_correction,
+                                                           p=options.par,
                                                            merge_bin=options.merge_bin, deadzones=options.deadzones)
         # if not inst_output:
         output += inst_output
