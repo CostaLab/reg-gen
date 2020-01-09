@@ -26,8 +26,6 @@ from os.path import basename
 from MOODS import tools, parsers
 import argparse
 
-
-
 # Parameters
 dataLocation = "./"
 group = "."
@@ -65,8 +63,8 @@ if options.hoc:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     hocomoco_anno = {}
-    with open("hocomoco_anno.csv", "rb") as f:
-        csvf = csv.reader(f)
+    with open("hocomoco_anno.csv", "r") as f:
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             hocomoco_anno[l[0]] = l[1:]
     for inputFileName in glob(inputLocation + "*.pwm"):
@@ -123,8 +121,8 @@ if options.jv:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     jaspar_anno = {}
-    with open("jaspar_anno.csv", "rb") as f:
-        csvf = csv.reader(f)
+    with open("jaspar_anno.csv", "r") as f:
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             if not l:
                 continue
@@ -182,8 +180,8 @@ if options.jp:
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     jaspar_anno = {}
-    with open("jaspar_anno.csv", "rb") as f:
-        csvf = csv.reader(f)
+    with open("jaspar_anno.csv", "r") as f:
+        csvf = csv.reader(f, dialect="unix")
         for l in csvf:
             if not l:
                 continue

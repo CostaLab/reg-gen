@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 from mpmath import gamma, rf, loggamma
 import numpy as np
 from math import log
@@ -71,14 +71,14 @@ class NegBin():
         self.nbin_log = np.frompyfunc(self._get_value_log, 3, 1)
         
     def pdf(self, x):
-        if not self.map_pdf.has_key(x):
+        if x not in self.map_pdf:
             v_log = self.nbin(x, self.mu, 1./self.alpha)
             self.map_pdf[x] = v_log
         
         return self.map_pdf[x]
     
     def logpdf(self, x):
-        if not self.map_logpdf.has_key(x):
+        if x not in self.map_logpdf:
             v_log = self.nbin_log(x, self.mu, 1./self.alpha)
             self.map_logpdf[x] = v_log
         
@@ -97,7 +97,7 @@ class NegBin():
                 if fabs(v_old - v) < 10**-10:
                     break
                 v_old = v
-            self.bins = map(lambda x: float(x), np.add.accumulate(probs))
+            self.bins = [float(x) for x in np.add.accumulate(probs)]
         return np.digitize(random_sample(1), self.bins)[0]
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData
 import argparse 

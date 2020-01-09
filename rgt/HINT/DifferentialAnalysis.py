@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import numpy as np
 import pandas as pd
@@ -118,7 +118,7 @@ def diff_analysis_run(args):
     motif_num = list()
     motif_pwm = list()
 
-    print(" {} cpus are detected and {} of them will be used...\n".format(cpu_count(), args.nc))
+    print((" {} cpus are detected and {} of them will be used...\n".format(cpu_count(), args.nc)))
 
     genome_data = GenomeData(args.organism)
     fasta = Fastafile(genome_data.get_genome())
@@ -152,7 +152,7 @@ def diff_analysis_run(args):
         else:
             pool = Pool(processes=args.nc)
             for i, condition in enumerate(conditions):
-                print("generating signal for condition {} \n".format(condition))
+                print(("generating signal for condition {} \n".format(condition)))
                 arguments_list = list()
                 for mpbs_name in mpbs_name_list:
                     mpbs_regions = mpbs.by_names([mpbs_name])
@@ -326,7 +326,7 @@ def bias_correction(chrom, start, end, bam, bias_table, genome_file_name, forwar
     fastaFile = Fastafile(genome_file_name)
     fBiasDict = bias_table[0]
     rBiasDict = bias_table[1]
-    k_nb = len(fBiasDict.keys()[0])
+    k_nb = len(list(fBiasDict.keys())[0])
     p1 = start
     p2 = end
     p1_w = p1 - (window / 2)

@@ -21,7 +21,7 @@ Create *.data file for each row in M.
 @Author: Ivan Costa, Manuel Allhoff
 
 """
-from __future__ import print_function
+
 from optparse import OptionParser
 from rgt.ExperimentalMatrix import *
 import numpy as np
@@ -56,9 +56,9 @@ def mode_2(exp_matrix,thresh):
 
         print(mappedGenes)
         
-        for k in gene_peaks_mapping.keys():
+        for k in list(gene_peaks_mapping.keys()):
             chr, raw_positions = k.split(':')
-            start, end = map(lambda x: int(x), raw_positions.split('-'))
+            start, end = [int(x) for x in raw_positions.split('-')]
             
             #if peak is not assigned, an empty string occurs
             if "" in gene_peaks_mapping[k]:
@@ -91,7 +91,7 @@ def mode_3(exp_matrix, thresh, type_file):
         genes = {}
         
         print('Consider row %s of exp. matrix, number of mapped genes is %s' %(i, mappedGenes), file=sys.stderr)
-        for peak, gene_list in gene_peaks_mapping.items():            
+        for peak, gene_list in list(gene_peaks_mapping.items()):            
             for gen in gene_list: #reverse mapping peak -> gene to gene -> peak
                 if not gen:
                     continue
@@ -101,7 +101,7 @@ def mode_3(exp_matrix, thresh, type_file):
                 avg_score[gen] = avg_score.get(gen, [])
                 avg_score[gen].append(score[peak]) #join all scores of peaks assigned to a gen
         
-        for gen in genes.keys():
+        for gen in list(genes.keys()):
             if options.metric == 'mean':
                 avg = np.mean(avg_score[gen])
             elif options.metric == 'max':
@@ -134,7 +134,7 @@ def mode_4(exp_matrix,thresh,type_file,geneexp_file):
         genes = {}
         
         print(region)
-        for peak, gene_list in gene_peaks_mapping.items():            
+        for peak, gene_list in list(gene_peaks_mapping.items()):            
             for gen in gene_list: #reverse mapping peak -> gene to gene -> peak
                 if not gen:
                     continue
@@ -149,7 +149,7 @@ def mode_4(exp_matrix,thresh,type_file,geneexp_file):
         
         for gen in gene_set.genes:
             try:
-              avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
+              avg = sum([float(x) for x in avg_score[gen]])/ float(len(avg_score[gen]))
               peaks = ", ".join(str(t) for t in genes[gen])
               siz=avg*len(avg_score[gen])
             except:

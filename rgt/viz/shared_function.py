@@ -1,6 +1,5 @@
 # Python Libraries
-from __future__ import division
-from __future__ import print_function
+
 
 import datetime
 import fnmatch
@@ -30,7 +29,7 @@ from ..motifanalysis.Statistics import multiple_test_correction
 if sys.version_info >= (3, 1):
     from urllib.request import urlopen
 else:
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
 
 # Local test
 current_dir = os.getcwd()
@@ -128,7 +127,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                     color_res.append(c)
         else:
             color_res = []
-            for i in exps.fieldsDict[colorby].values():
+            for i in list(exps.fieldsDict[colorby].values()):
                 c = exps.get_type(i[0], "color")
                 if c[0] == "(":
                     rgb = [float(j) for j in c.strip('()').split(',')]
@@ -153,7 +152,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                     ks.append(exps.get_type(name=gr, field="factor"))
                 n = len(set(ks))
             else:
-                n = len(exps.fieldsDict[colorby].keys())
+                n = len(list(exps.fieldsDict[colorby].keys()))
             # print(n)
             if n < 8:
                 indn = np.linspace(0, 32, 256)
@@ -190,9 +189,9 @@ def colormaps(exps, colorby, definedinEM):
             colors = [exps.get_type(i, "color") for i in exps.fieldsDict[colorby]]
     else:
         if colorby == "reads" or colorby == "regions":
-            n = len(exps.fieldsDict["factor"].keys())
+            n = len(list(exps.fieldsDict["factor"].keys()))
         else:
-            n = len(exps.fieldsDict[colorby].keys())
+            n = len(list(exps.fieldsDict[colorby].keys()))
         colors = plt.cm.Set1(numpy.linspace(0, n - 1, n)).tolist()
         # if len(exps.get_regionsnames()) < 20:
         #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu',
@@ -207,8 +206,8 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
         colors = OrderedDict()
-        for ty in grouped_region.keys():
-            for q in grouped_region[ty].keys():
+        for ty in list(grouped_region.keys()):
+            for q in list(grouped_region[ty].keys()):
                 c = EM.get_type(q.name, "color")
                 if c[0] == "(":
                     rgb = [eval(j) for j in c.strip('()').split(',')]
@@ -219,7 +218,7 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
         colors = OrderedDict()
         qs = []
         if colorby == "regions":
-            for ty in grouped_region.keys():
+            for ty in list(grouped_region.keys()):
                 for q in grouped_region[ty]:
                     qs.append(q.name)
             qs = list(set(qs))
@@ -229,11 +228,11 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
-            types = EM.fieldsDict[colorby].keys()
+            types = list(EM.fieldsDict[colorby].keys())
 
             colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
 
-            for ty in grouped_region.keys():
+            for ty in list(grouped_region.keys()):
                 for q in grouped_region[ty]:
                     i = types.index(EM.get_type(q.name, colorby))
                     colors[q.name] = colormap[i]
@@ -361,16 +360,16 @@ def multiple_correction(dic):
     """
     dic[ty][r][q] = p
     """
-    for ty in dic.keys():
+    for ty in list(dic.keys()):
         all_p = []
-        rn = len(dic[ty].keys())
-        qn = len(dic[ty].values()[0].keys())
+        rn = len(list(dic[ty].keys()))
+        qn = len(list(dic[ty].values())[0].keys())
         cue = {}
         i = 0
         if rn == 1 and qn == 1: return
         # get all p values from the dictionary
-        for r in dic[ty].keys():
-            for q in dic[ty][r].keys():
+        for r in list(dic[ty].keys()):
+            for q in list(dic[ty][r].keys()):
 
                 if isinstance(dic[ty][r][q], str):
                     pass
@@ -475,7 +474,7 @@ def compute_coverage(inputs):
                 # print([len[ar], len(left_ar), len(rest), len(right_ar)])
                 try:
                     xp = numpy.linspace(0, ss_side, len(rest))
-                    rest = numpy.interp(range(ss_side), xp=xp, fp=rest)
+                    rest = numpy.interp(list(range(ss_side)), xp=xp, fp=rest)
                     nar = numpy.concatenate((left_ar, rest))
                     nar = numpy.concatenate((nar, right_ar))
                     new_arrays.append(nar)
@@ -589,7 +588,7 @@ def get_url(url, filename):
         f.close()
         print("\t... Done")
     else:
-        u = urllib2.urlopen(url)
+        u = urllib.request.urlopen(url)
         print("** Loading " + url, end="")
         f = open(filename, 'wb')
         print(u.read(), file=f)
@@ -741,7 +740,7 @@ def list_all_index(path):
         for filename in fnmatch.filter(filenames, 'index.html'):
             if root.split('/')[-2] == parentdir:
                 link_d[root.split('/')[-1]] = "../" + root.split('/')[-1] + "/index.html"
-    link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
+    link_d = OrderedDict(sorted(list(link_d.items()), key=lambda key_value: key_value[0]))
 
     ###
 

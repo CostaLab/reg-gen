@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import GenomeData
@@ -130,7 +130,7 @@ for i, rg in enumerate(bed):
             name_id = seqrec.id.partition(" ")[0].partition(".")[0]
             #print(name_id)
             seqrec.id = organisms[ name_id ]
-            if seqrec.id in organisms.values():
+            if seqrec.id in list(organisms.values()):
                 seqs.append(seqrec)
         except:
             continue

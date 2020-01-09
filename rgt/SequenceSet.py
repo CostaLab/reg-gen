@@ -1,5 +1,5 @@
 # Python Libraries
-from __future__ import print_function
+
 import copy
 
 # External
@@ -200,9 +200,9 @@ class SequenceSet:
                               "CA": 0, "CT": 0, "CC": 0, "CG": 0,
                               "GA": 0, "GT": 0, "GC": 0, "GG": 0}
         for s in self:
-            for nt1 in self.motif_statistics_1.keys():
+            for nt1 in list(self.motif_statistics_1.keys()):
                 self.motif_statistics_1[nt1] += s.seq.count(nt1)
-            for nt2 in motif_statistics_2.keys():
+            for nt2 in list(motif_statistics_2.keys()):
                 motif_statistics_2[nt2] += s.seq.count(nt2)
 
         # motif2 = {"AA": motif_statistics_2["AA"],

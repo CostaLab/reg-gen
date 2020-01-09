@@ -94,7 +94,7 @@ def LMatchFind(i, L, l, u, b, x):
     return u, l, b
 
 def maxIndex(lowerBound):
-    for j in reversed(range(len(seq))):
+    for j in reversed(list(range(len(seq)))):
         if width(j, len(seq)-1) >= lowerBound:
             return j
 

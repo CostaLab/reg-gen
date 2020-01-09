@@ -22,18 +22,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import sys
 import string
 import numpy as np
 from scipy.stats import binom
 from hmmlearn.hmm import _BaseHMM
-from help_hmm import _valid_posteriors
+from .help_hmm import _valid_posteriors
 
 def get_init_parameters(s1, s2, **info):
     n_ = np.array([info['count'], info['count']])
     #get observation that occurs most often:
-    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
+    m_ =[float(np.argmax(np.bincount([x[0] for x in s1]))), float(np.argmax(np.bincount([x[1] for x in s2]))) ]
     p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
     
     p_[0][0] = 1. / n_[0]
@@ -76,10 +76,10 @@ class BinomialHMM(_BaseHMM):
             for i in range(self.n_components): #over number of HMM's state
                 r_sum = 0
                 for j in range(self.n_features): #over dim
-                    it = range(self.dim[0]) if j == 0 else range(self.dim[0], self.dim[0] + self.dim[1]) #grab proper observation
+                    it = list(range(self.dim[0])) if j == 0 else list(range(self.dim[0], self.dim[0] + self.dim[1])) #grab proper observation
                     for k in it:
                         index = (int(x[k]), self.p[j][i], self.n[j])
-                        if not self.lookup_logpmf.has_key( index ):
+                        if index not in self.lookup_logpmf:
                             self.lookup_logpmf[index] = binom.logpmf(x[k], self.n[j], self.p[j][i])
                         r_sum += self.lookup_logpmf[index]
                 row.append(r_sum)
@@ -105,7 +105,7 @@ class BinomialHMM(_BaseHMM):
     
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
         for t, symbol in enumerate(obs):
-            pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
+            pot_it = [list(range(self.dim[0])), list(range(self.dim[0], self.dim[0] + self.dim[1]))] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
                     stats['post'] += posteriors[t]

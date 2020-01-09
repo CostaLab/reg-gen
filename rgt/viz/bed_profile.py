@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import division
-from __future__ import print_function
+
+
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -199,13 +199,13 @@ class BedProfile:
                 bottom = [0] * len(self.bednames)
                 bars = []
                 for j, y in enumerate(ptable):
-                    bar = ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
+                    bar = ax.bar(list(range(len(self.bednames))), y, width=width, bottom=bottom, color=color_list[j],
                                  edgecolor="none", align='center')
                     bars.append(bar)
                     bottom = [x + y for x, y in zip(bottom, y)]
                 ax.set_title("Composition")
                 ax.yaxis.tick_left()
-                ax.set_xticks(range(len(self.bednames)))
+                ax.set_xticks(list(range(len(self.bednames))))
                 ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
                 ax.set_ylabel("Percentage %")
                 # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom=True)
@@ -241,8 +241,8 @@ class BedProfile:
                 plt.colorbar(mappable=hp, cax=None, ax=ax)
                 # ax.xaxis.tick_top()
                 ax.set_aspect('equal')
-                ax.set_xticks(range(4), minor=False)
-                ax.set_yticks(range(4), minor=False)
+                ax.set_xticks(list(range(4)), minor=False)
+                ax.set_yticks(list(range(4)), minor=False)
                 ticks = ["A", "G", "C", "T"]
                 ax.set_xticklabels(ticks, minor=False)
                 ax.set_yticklabels(ticks[::-1], minor=False)
@@ -433,12 +433,12 @@ class BedProfile:
                     ptable.append([x[j] for x in proportion])
                 width = 0.6
                 for j, y in enumerate(ptable):
-                    ax.bar(range(len(bottom)), y, width=width, bottom=bottom, color=color_list[j],
+                    ax.bar(list(range(len(bottom))), y, width=width, bottom=bottom, color=color_list[j],
                            edgecolor="none", align='center')
                     bottom = [x + y for x, y in zip(bottom, y)]
                 ax.set_title(tag)
                 ax.yaxis.tick_left()
-                ax.set_xticks(range(len(xlabels)))
+                ax.set_xticks(list(range(len(xlabels))))
                 ax.set_xticklabels(xlabels, fontsize=7, rotation=20, ha="right")
                 ax.set_ylabel("Percentage %")
                 # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom=True)
@@ -495,7 +495,7 @@ class BedProfile:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                              border_list=None, sortable=True, clean=True)
-        html.add_figure("figure_" + title + ".png", align=50, width=str(300 * (2 + len(self.ind_col.keys()))))
+        html.add_figure("figure_" + title + ".png", align=50, width=str(300 * (2 + len(list(self.ind_col.keys())))))
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))
 

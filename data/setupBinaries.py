@@ -5,8 +5,6 @@
 ###################################################################################################
 
 # Import
-from __future__ import print_function
-
 from optparse import OptionParser
 from os import system, path, mkdir
 from sys import platform

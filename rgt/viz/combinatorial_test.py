@@ -12,7 +12,7 @@ from ..ExperimentalMatrix import ExperimentalMatrix
 ###########################################################################################
 
 def posi2region(regions, p):
-    all = range(len(regions))
+    all = list(range(len(regions)))
     new_r = GenomicRegionSet(name="")
     for r in p:
         new_r.combine(regions[r])
@@ -40,7 +40,7 @@ class Combinatorial:
             sys.exit(1)
 
     def posi2set(self, regions, p):
-        all_len = range(len(regions))
+        all_len = list(range(len(regions)))
         inter_r = copy.deepcopy(regions[p[0]])
 
         for i in all_len:
@@ -66,13 +66,13 @@ class Combinatorial:
         ref_names = []
         self.comb_ref_infor = {}
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
 
             for i in range(1, n):
-                new_refsp[ty].append(itertools.combinations(range(n), i))
+                new_refsp[ty].append(itertools.combinations(list(range(n)), i))
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
 
@@ -82,10 +82,10 @@ class Combinatorial:
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
                     self.comb_ref_infor[pr.name] = p2sign(p, n)
-            all_int = self.posi2set(self.groupedreference[ty], range(n))
+            all_int = self.posi2set(self.groupedreference[ty], list(range(n)))
             new_refs[ty].append(all_int)
             ref_names.append(all_int.name)
-            self.comb_ref_infor[all_int.name] = p2sign(range(n), n)
+            self.comb_ref_infor[all_int.name] = p2sign(list(range(n)), n)
             """
             # Background
             unions = GenomicRegionSet(name="")
@@ -108,16 +108,16 @@ class Combinatorial:
         new_refs = OrderedDict()
         ref_names = []
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
             for i in range(1, n):
-                new_refsp[ty].append(itertools.combinations(range(n), i))
+                new_refsp[ty].append(itertools.combinations(list(range(n)), i))
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
                 for p in posi:
-                    print("   " + str(p))
+                    print(("   " + str(p)))
                     pr = posi2region(self.groupedreference[ty], p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)

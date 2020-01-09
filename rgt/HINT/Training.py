@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from collections import Counter
-from sklearn.externals import joblib
+import joblib
 from scipy import linalg
 from argparse import SUPPRESS
 
@@ -63,7 +63,7 @@ def semi_supervised(args):
     signal_list = list()
     with open(args.signal_file) as f:
         for line in f.readlines():
-            signal_list.append(map(float, line.strip().split("\t")))
+            signal_list.append(list(map(float, line.strip().split("\t"))))
 
     states_prior = np.zeros(len(signal_list[0]))
     for i in range(495, 505):
@@ -138,7 +138,7 @@ def supervised(args):
 
     # Transition
     trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
-    for (x, y), c in Counter(zip(state_list, state_list[1:])).items():
+    for (x, y), c in list(Counter(list(zip(state_list, state_list[1:]))).items()):
         trans_matrix[x, y] = c
 
     for i in range(hmm_model.states):

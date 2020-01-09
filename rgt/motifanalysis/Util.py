@@ -3,10 +3,6 @@
 # Libraries
 ###################################################################################################
 
-# Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
-
 # Python
 import os
 

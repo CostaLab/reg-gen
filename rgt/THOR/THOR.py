@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # Python
-from __future__ import print_function
+
 import sys
 
 # Internal
@@ -72,8 +72,8 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
                               save_input=options.save_input, m_threshold=options.m_threshold,
                               a_threshold=options.a_threshold, rmdup=options.rmdup)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
-            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
-            tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
+            tracker.write(text=" ".join([str(x) for x in exp_data.exts]), header="Extension size (rep1, rep2, input1, input2)")
+            tracker.write(text=[str(x) for x in exp_data.scaling_factors_ip], header="Scaling factors")
             break
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
@@ -128,10 +128,9 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         
         states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
         
-        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data,
+        inst_ratios, inst_pvalues, inst_output = get_peaks(states=states, DCS=exp_data,
                                                            distr=distr, merge=options.merge, exts=exp_data.exts,
-                                                           pcutoff=options.pcutoff, debug=options.debug, p=options.par,
-                                                           no_correction=options.no_correction,
+                                                           p=options.par,
                                                            merge_bin=options.merge_bin, deadzones=options.deadzones)
         # if not inst_output:
         output += inst_output

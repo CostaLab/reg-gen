@@ -343,7 +343,7 @@ def estimate_bias_vom(args):
 
     shutil.copy(test_fa, args.output_location)
     os.chdir(args.output_location)
-    print(os.getcwd())
+    print((os.getcwd()))
 
     output_fname_f_obs = os.path.join(args.output_location, "{}_f_obs.fa".format(str(args.k_nb)))
     output_fname_f_exp = os.path.join(args.output_location, "{}_f_exp.fa".format(str(args.k_nb)))
@@ -461,16 +461,16 @@ def create_signal(args, regions):
     output_file_r_obs = open(output_fname_r_obs, "w")
     output_file_r_exp = open(output_fname_r_exp, "w")
 
-    for kmer in r_obs_dict.keys():
+    for kmer in list(r_obs_dict.keys()):
         if f_obs_dict[kmer] > 0:
             output_file_f_obs.write(kmer + "\t" + str(f_obs_dict[kmer]) + "\n")
-    for kmer in r_obs_dict.keys():
+    for kmer in list(r_obs_dict.keys()):
         if f_exp_dict[kmer] > 0:
             output_file_f_exp.write(kmer + "\t" + str(f_exp_dict[kmer]) + "\n")
-    for kmer in r_obs_dict.keys():
+    for kmer in list(r_obs_dict.keys()):
         if r_obs_dict[kmer] > 0:
             output_file_r_obs.write(kmer + "\t" + str(r_obs_dict[kmer]) + "\n")
-    for kmer in r_obs_dict.keys():
+    for kmer in list(r_obs_dict.keys()):
         if r_exp_dict[kmer] > 0:
             output_file_r_exp.write(kmer + "\t" + str(r_exp_dict[kmer]) + "\n")
 
@@ -483,13 +483,13 @@ def create_signal(args, regions):
 def write_table(output_location, output_prefix, table):
     output_fname = os.path.join(output_location, "{}_F.txt".format(output_prefix))
     f = open(output_fname, "w")
-    for t in table[0].keys():
+    for t in list(table[0].keys()):
         f.write(t + "\t" + str(table[0][t]) + "\n")
     f.close()
 
     output_fname = os.path.join(output_location, "{}_R.txt".format(output_prefix))
     f = open(output_fname, "w")
-    for t in table[1].keys():
+    for t in list(table[1].keys()):
         f.write(t + "\t" + str(table[1][t]) + "\n")
     f.close()
 
@@ -646,24 +646,24 @@ def read_model(input_fname, k_nb):
                 ll = lines[idx + 2]  # read P_0
                 setting_dict["P_0(c=0)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 3]  # read P_0
-                setting_dict["P_0(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_0(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                 ll = lines[idx + 6]  # read P_1
                 setting_dict["P_1(c=0)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 7]  # read P_1
-                setting_dict["P_1(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 9]  # read P_1
                 setting_dict["P_1(c=1)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 10]  # read P_1
-                setting_dict["P_1(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 11]  # read P_1
-                setting_dict["P_1(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 12]  # read P_1
-                setting_dict["P_1(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 13]  # read P_1
-                setting_dict["P_1(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 14]  # read P_1
-                setting_dict["P_1(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_1(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                 if k_nb == 2:
                     model_list.append(setting_dict)
@@ -671,36 +671,36 @@ def read_model(input_fname, k_nb):
                 ll = lines[idx + 17]  # read P_2
                 setting_dict["P_2(c=0)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 18]  # read P_2
-                setting_dict["P_2(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 20]  # read P_2
                 setting_dict["P_2(c=1)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 21]  # read P_2
-                setting_dict["P_2(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 22]  # read P_2
-                setting_dict["P_2(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 23]  # read P_2
-                setting_dict["P_2(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 24]  # read P_2
-                setting_dict["P_2(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 25]  # read P_2
-                setting_dict["P_2(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_2(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                 ll = lines[idx + 28]  # read P_3
                 setting_dict["P_3(c=0)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 29]  # read P_3
-                setting_dict["P_3(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 31]  # read P_3
                 setting_dict["P_3(c=1)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 32]  # read P_3
-                setting_dict["P_3(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 33]  # read P_3
-                setting_dict["P_3(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 34]  # read P_3
-                setting_dict["P_3(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 35]  # read P_3
-                setting_dict["P_3(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 36]  # read P_3
-                setting_dict["P_3(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_3(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                 if k_nb == 4:
                     model_list.append(setting_dict)
@@ -709,19 +709,19 @@ def read_model(input_fname, k_nb):
                 ll = lines[idx + 39]  # read P_4
                 setting_dict["P_4(c=0)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 40]  # read P_4
-                setting_dict["P_4(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 42]  # read P_4
                 setting_dict["P_4(c=1)"] = float(ll.split("=")[-1])
                 ll = lines[idx + 43]  # read P_4
-                setting_dict["P_4(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 44]  # read P_4
-                setting_dict["P_4(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 45]  # read P_4
-                setting_dict["P_4(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 46]  # read P_4
-                setting_dict["P_4(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                 ll = lines[idx + 47]  # read P_4
-                setting_dict["P_4(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                setting_dict["P_4(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                 if k_nb == 5:
                     model_list.append(setting_dict)
@@ -730,19 +730,19 @@ def read_model(input_fname, k_nb):
                     ll = lines[idx + 50]  # read P_5
                     setting_dict["P_5(c=0)"] = float(ll.split("=")[-1])
                     ll = lines[idx + 51]  # read P_5
-                    setting_dict["P_5(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                     ll = lines[idx + 53]  # read P_5
                     setting_dict["P_5(c=1)"] = float(ll.split("=")[-1])
                     ll = lines[idx + 54]  # read P_5
-                    setting_dict["P_5(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                     ll = lines[idx + 55]  # read P_5
-                    setting_dict["P_5(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                     ll = lines[idx + 56]  # read P_5
-                    setting_dict["P_5(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                     ll = lines[idx + 57]  # read P_5
-                    setting_dict["P_5(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                     ll = lines[idx + 58]  # read P_5
-                    setting_dict["P_5(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                    setting_dict["P_5(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                     if k_nb == 6:
                         model_list.append(setting_dict)
@@ -751,19 +751,19 @@ def read_model(input_fname, k_nb):
                         ll = lines[idx + 61]  # read P_6
                         setting_dict["P_6(c=0)"] = float(ll.split("=")[-1])
                         ll = lines[idx + 62]  # read P_6
-                        setting_dict["P_6(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                         ll = lines[idx + 64]  # read P_6
                         setting_dict["P_6(c=1)"] = float(ll.split("=")[-1])
                         ll = lines[idx + 65]  # read P_6
-                        setting_dict["P_6(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                         ll = lines[idx + 66]  # read P_6
-                        setting_dict["P_6(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                         ll = lines[idx + 67]  # read P_6
-                        setting_dict["P_6(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                         ll = lines[idx + 68]  # read P_6
-                        setting_dict["P_6(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                         ll = lines[idx + 69]  # read P_6
-                        setting_dict["P_6(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                        setting_dict["P_6(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                         if k_nb == 7:
                             model_list.append(setting_dict)
@@ -772,19 +772,19 @@ def read_model(input_fname, k_nb):
                             ll = lines[idx + 72]  # read P_7
                             setting_dict["P_7(c=0)"] = float(ll.split("=")[-1])
                             ll = lines[idx + 73]  # read P_7
-                            setting_dict["P_7(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                             ll = lines[idx + 75]  # read P_7
                             setting_dict["P_7(c=1)"] = float(ll.split("=")[-1])
                             ll = lines[idx + 76]  # read P_7
-                            setting_dict["P_7(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                             ll = lines[idx + 77]  # read P_7
-                            setting_dict["P_7(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                             ll = lines[idx + 78]  # read P_7
-                            setting_dict["P_7(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                             ll = lines[idx + 79]  # read P_7
-                            setting_dict["P_7(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                             ll = lines[idx + 80]  # read P_7
-                            setting_dict["P_7(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                            setting_dict["P_7(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                             if k_nb == 8:
                                 model_list.append(setting_dict)
@@ -793,19 +793,19 @@ def read_model(input_fname, k_nb):
                                 ll = lines[idx + 83]  # read P_8
                                 setting_dict["P_8(c=0)"] = float(ll.split("=")[-1])
                                 ll = lines[idx + 84]  # read P_8
-                                setting_dict["P_8(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                 ll = lines[idx + 86]  # read P_8
                                 setting_dict["P_8(c=1)"] = float(ll.split("=")[-1])
                                 ll = lines[idx + 87]  # read P_8
-                                setting_dict["P_8(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                 ll = lines[idx + 88]  # read P_8
-                                setting_dict["P_8(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                 ll = lines[idx + 89]  # read P_8
-                                setting_dict["P_8(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                 ll = lines[idx + 90]  # read P_8
-                                setting_dict["P_8(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                 ll = lines[idx + 91]  # read P_8
-                                setting_dict["P_8(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                setting_dict["P_8(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                                 if k_nb == 9:
                                     model_list.append(setting_dict)
@@ -814,19 +814,19 @@ def read_model(input_fname, k_nb):
                                     ll = lines[idx + 94]  # read P_9
                                     setting_dict["P_9(c=0)"] = float(ll.split("=")[-1])
                                     ll = lines[idx + 95]  # read P_9
-                                    setting_dict["P_9(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                     ll = lines[idx + 97]  # read P_9
                                     setting_dict["P_9(c=1)"] = float(ll.split("=")[-1])
                                     ll = lines[idx + 98]  # read P_9
-                                    setting_dict["P_9(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                     ll = lines[idx + 99]  # read P_9
-                                    setting_dict["P_9(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                     ll = lines[idx + 100]  # read P_9
-                                    setting_dict["P_9(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                     ll = lines[idx + 101]  # read P_9
-                                    setting_dict["P_9(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                     ll = lines[idx + 102]  # read P_9
-                                    setting_dict["P_9(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                    setting_dict["P_9(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                                     if k_nb == 10:
                                         model_list.append(setting_dict)
@@ -835,19 +835,19 @@ def read_model(input_fname, k_nb):
                                         ll = lines[idx + 105]  # read P_10
                                         setting_dict["P_10(c=0)"] = float(ll.split("=")[-1])
                                         ll = lines[idx + 106]  # read P_10
-                                        setting_dict["P_10(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                         ll = lines[idx + 108]  # read P_10
                                         setting_dict["P_10(c=1)"] = float(ll.split("=")[-1])
                                         ll = lines[idx + 109]  # read P_10
-                                        setting_dict["P_10(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                         ll = lines[idx + 110]  # read P_10
-                                        setting_dict["P_10(x|y=A,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(x|y=A,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                         ll = lines[idx + 111]  # read P_10
-                                        setting_dict["P_10(x|y=C,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(x|y=C,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                         ll = lines[idx + 112]  # read P_10
-                                        setting_dict["P_10(x|y=G,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(x|y=G,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                         ll = lines[idx + 113]  # read P_10
-                                        setting_dict["P_10(x|y=T,c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                        setting_dict["P_10(x|y=T,c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
 
                                         if k_nb == 11:
                                             model_list.append(setting_dict)
@@ -856,23 +856,23 @@ def read_model(input_fname, k_nb):
                                             ll = lines[idx + 116]  # read P_11
                                             setting_dict["P_11(c=0)"] = float(ll.split("=")[-1])
                                             ll = lines[idx + 117]  # read P_11
-                                            setting_dict["P_11(x|c=0)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(x|c=0)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                             ll = lines[idx + 119]  # read P_11
                                             setting_dict["P_11(c=1)"] = float(ll.split("=")[-1])
                                             ll = lines[idx + 120]  # read P_11
-                                            setting_dict["P_11(p|c=1)"] = map(float, ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(p|c=1)"] = list(map(float, ll.split("=")[-1][1:-2].split(",")))
                                             ll = lines[idx + 121]  # read P_11
-                                            setting_dict["P_11(x|y=A,c=1)"] = map(float,
-                                                                                  ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(x|y=A,c=1)"] = list(map(float,
+                                                                                  ll.split("=")[-1][1:-2].split(",")))
                                             ll = lines[idx + 122]  # read P_11
-                                            setting_dict["P_11(x|y=C,c=1)"] = map(float,
-                                                                                  ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(x|y=C,c=1)"] = list(map(float,
+                                                                                  ll.split("=")[-1][1:-2].split(",")))
                                             ll = lines[idx + 123]  # read P_11
-                                            setting_dict["P_11(x|y=G,c=1)"] = map(float,
-                                                                                  ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(x|y=G,c=1)"] = list(map(float,
+                                                                                  ll.split("=")[-1][1:-2].split(",")))
                                             ll = lines[idx + 124]  # read P_11
-                                            setting_dict["P_11(x|y=T,c=1)"] = map(float,
-                                                                                  ll.split("=")[-1][1:-2].split(","))
+                                            setting_dict["P_11(x|y=T,c=1)"] = list(map(float,
+                                                                                  ll.split("=")[-1][1:-2].split(",")))
 
                                             model_list.append(setting_dict)
     return model_list

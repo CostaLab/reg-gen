@@ -12,7 +12,7 @@ conditions. Please see LICENSE file for details.
 """
 
 # Python
-from __future__ import print_function
+
 import os
 import sys
 import pysam
@@ -55,7 +55,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
 
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
-            files = filter(lambda x: isfile(x), files)
+            files = [x for x in files if isfile(x)]
             t = ['bigWigMerge'] + files + [temp_bed]
             c = " ".join(t)
             os.system(c)
@@ -149,7 +149,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
         assert len(m) == len(n)
 
-        data_rep.append(zip(m, n))
+        data_rep.append(list(zip(m, n)))
         data_rep[i].append((0,0))
         data_rep[i] = np.asarray(data_rep[i])
         
@@ -174,8 +174,8 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
         res = []
         for i in range(2):
             try:
-                m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
-                v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
+                m = np.asarray([x[0] for x in data_rep[i]]) #means list
+                v = np.asarray([x[1] for x in data_rep[i]]) #vars list
                 
                 if len(m) > 0 and len(v) > 0: 
                     try:
@@ -234,19 +234,19 @@ def _get_log_ratio(l1, l2):
     try:
         res = l1/l2
     except:
-        return sys.maxint
+        return sys.maxsize
     
     if res > 0:
         try:
             res = log(res)
             if np.isinf(res):
-                return sys.maxint
+                return sys.maxsize
             return res
         except:
             print('error to compute log ratio', l1, l2, file=sys.stderr)
-            return sys.maxint
+            return sys.maxsize
     else:
-        return sys.maxint
+        return sys.maxsize
 
 def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     """Merge consecutive peaks and compute p-value. Return list
@@ -266,8 +266,8 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
         #merge bins
         while merge and i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
-            v1 = map(add, v1, tmp_peaks[i+1][3])
-            v2 = map(add, v2, tmp_peaks[i+1][4])
+            v1 = list(map(add, v1, tmp_peaks[i+1][3]))
+            v2 = list(map(add, v2, tmp_peaks[i+1][4]))
             tmp_pos.append(tmp_peaks[i+1][6])
             tmp_neg.append(tmp_peaks[i+1][7])
             i += 1
@@ -279,7 +279,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
         peaks.append((c, s, e, v1, v2, strand, ratio))
         i += 1
 
-    pvalues = map(_compute_pvalue, pvalues)
+    pvalues = list(map(_compute_pvalue, pvalues))
     assert len(pvalues) == len(peaks)
 
     return pvalues, peaks
@@ -292,14 +292,14 @@ def _get_covs(DCS, i, as_list=False):
         cov2 = int(np.mean(DCS.overall_coverage[1][:, DCS.indices_of_interest[i]]))
     else:
         cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
-        cov1 = map(lambda x: x[0], np.asarray((cov1)))
+        cov1 = [x[0] for x in np.asarray((cov1))]
         cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
-        cov2 = map(lambda x: x[0], np.asarray((cov2)))
+        cov2 = [x[0] for x in np.asarray((cov2))]
     
     return cov1, cov2
 
 
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
+def get_peaks(DCS, states, exts, merge, distr, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
@@ -325,7 +325,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
         print('no data', file=sys.stderr)
         return [], [], []
     
-    tmp_pvalues = map(_compute_pvalue, tmp_data)
+    tmp_pvalues = list(map(_compute_pvalue, tmp_data))
     per = np.percentile(tmp_pvalues, p)
     
     tmp = []
@@ -369,8 +369,8 @@ def _output_ext_data(ext_data_list, bamfiles):
         f.close()
     
     for i, ext_data in enumerate(ext_data_list):
-        d1 = map(lambda x: x[0], ext_data)
-        d2 = map(lambda x: x[1], ext_data)
+        d1 = [x[0] for x in ext_data]
+        d2 = [x[1] for x in ext_data]
         ax = plt.subplot(111)
         plt.xlabel('shift')
         plt.ylabel('convolution')
@@ -456,11 +456,11 @@ class HelpfulOptionParser(OptionParser):
 
 
 def _callback_list(option, opt, value, parser):
-    setattr(parser.values, option.dest, map(lambda x: int(x), value.split(',')))
+    setattr(parser.values, option.dest, [int(x) for x in value.split(',')])
 
 
 def _callback_list_float(option, opt, value, parser):
-    setattr(parser.values, option.dest, map(lambda x: float(x), value.split(',')))
+    setattr(parser.values, option.dest, [float(x) for x in value.split(',')])
 
 
 def handle_input():
@@ -607,7 +607,7 @@ def handle_input():
     if options.outputdir:
         options.outputdir = npath(options.outputdir)
         if isdir(options.outputdir) and sum(
-                map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
+                [x.startswith(options.name) for x in os.listdir(options.outputdir)]) > 0:
             parser.error("Output directory exists and contains files with names starting with your chosen experiment "
                          "name! Do nothing to prevent file overwriting!")
         if not exists(options.outputdir):
