@@ -72,7 +72,7 @@ class ExperimentalMatrix:
             elif line[0] == "#":
                 continue
 
-            # Read further information    
+            # Read further information
             else:
                 line = line.split()
                 if len(line) < 3:  # Skip the row which has insufficient information
