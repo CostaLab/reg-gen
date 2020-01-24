@@ -2,10 +2,6 @@
 # Libraries
 ###################################################################################################
 
-# Python 3 compatibility
-
-
-
 # Python
 import os
 from glob import glob

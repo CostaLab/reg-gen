@@ -7,9 +7,6 @@ AnnotationSet represent genomic annotation from genes.
 
 """
 
-# Python 3 compatibility
-
-
 # Python
 import os
 
@@ -401,14 +398,16 @@ class AnnotationSet:
         """Comming soon!"""
         pass  # TODO
 
-    def fix_gene_names(self, gene_set, output_dict=False, mute_warn=False):
-        """Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set
+    def fix_gene_names(self, gene_set, output_dict=False, mute_warn=True):
+        """
+        Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be
+        converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set.
         
         *Keyword arguments:*
 
             - gene_set -- A GeneSet object.
             - output_dict -- Also output the mapping dictionary (default = False).
-            - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = False).
+            - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = True).
         
         *Return:*
 
@@ -440,8 +439,8 @@ class AnnotationSet:
                     alias_list = self.alias_dict[gene_name.upper()]
                     if len(alias_list) > 1:
                         if not mute_warn:
-                            print(
-                                "Warning: The gene " + gene_name + " contains more than one matching IDs, both will be used.")
+                            print("Warning: The gene " + gene_name +
+                                  " contains more than one matching IDs, both will be used.")
                     for e in alias_list:
                         mapped_gene_list.append(e)
                         if output_dict and e and gene_name:
