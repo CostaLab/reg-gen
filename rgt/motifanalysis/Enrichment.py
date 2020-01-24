@@ -119,13 +119,9 @@ def main(args):
     results_header_text = "\t".join(
         ["FACTOR", "P-VALUE", "CORR.P-VALUE", "A", "B", "C", "D", "FREQ", "BACK.FREQ.", "GENES"])
     html_header = ["FACTOR", "MOTIF", "P-VALUE", "CORRECTED P-VALUE", "A", "B", "C", "D", "FREQUENCY",
-                   "BACKGROUND FREQUENCY", "GO"]
+                   "BACKGROUND FREQUENCY"]
     html_type_list = "sissssssssl"
     logo_width = 200
-    if "hg" in args.organism:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
-    else:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
     html_col_size = [300, logo_width, 100, 100, 50, 50, 50, 50, 100, 100, 50]
 
     filter_values = parse_filter(args.filter)
@@ -623,10 +619,9 @@ def main(args):
 
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
-                         str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
+                         str(r.c), str(r.d), str(r.percent), str(r.back_percent)])
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
@@ -774,9 +769,8 @@ def main(args):
 
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
-                                   str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
+                                   str(r.c), str(r.d), str(r.percent), str(r.back_percent)])
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
