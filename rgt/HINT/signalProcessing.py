@@ -73,19 +73,10 @@ class GenomicSignal:
         """
 
         # Fetch raw signal
-        pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if ps_version == "0.7.5":
-            self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
-        else:
-            iter = self.bam.fetch(reference=ref, start=start, end=end)
-            for alignment in iter: pileup_region.__call__(alignment)
-        raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
-
-        # Tag count
-        try:
-            tag_count = sum(raw_signal)
-        except Exception:
-            tag_count = 0
+        tag_count = 0.0
+        iter = self.bam.fetch(reference=ref, start=start, end=end)
+        for alignment in iter:
+            tag_count += 1
 
         return tag_count
 
