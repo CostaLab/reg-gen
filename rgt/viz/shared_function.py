@@ -47,8 +47,13 @@ def print2(parameter, string):
 
 
 def unique(a):
-    seen = set()
-    return [seen.add(x) or x for x in a if x not in seen]
+    try:
+        b = [matplotlib.colors.to_hex(x) for x in a]
+        seen = set()
+        return [seen.add(x) or x for x in b if x not in seen]
+    except:
+        seen = set()
+        return [seen.add(x) or x for x in a if x not in seen]
 
 
 def purge(directory, pattern):
@@ -154,14 +159,20 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             else:
                 n = len(list(exps.fieldsDict[colorby].keys()))
             # print(n)
-            if n < 8:
-                indn = np.linspace(0, 32, 256)
-                color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
-            else:
-                set1 = plt.get_cmap('Set1')
-                cNorm = colormat.Normalize(vmin=0, vmax=n)
-                scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
-                color_res = [scalarMap.to_rgba(d) for d in range(n)]
+
+            cmap = plt.cm.get_cmap('jet')
+            print(cmap)
+            sys.exit()
+            color_res = cmap(numpy.arange(n))
+
+            # if n < 8:
+            #     indn = np.linspace(0, 32, 256)
+            #     color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
+            # else:
+            #     set1 = plt.get_cmap('Set1')
+            #     cNorm = colormat.Normalize(vmin=0, vmax=n)
+            #     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
+            #     color_res = [scalarMap.to_rgba(d) for d in range(n)]
 
             # color_res = plt.cm.Set1(numpy.linspace(0.1, 0.9, n)).tolist()
             # print(len(plt.cm.Set1().tolist()))
