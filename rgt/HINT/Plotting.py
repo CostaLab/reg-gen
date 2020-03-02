@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 ###################################################################################################
 # Libraries
@@ -147,9 +147,9 @@ def seq_logo(args):
     ax.spines['left'].set_position(('outward', 15))
     ax.tick_params(direction='out')
 
-    ax.xaxis.set_ticks(map(int, x))
-    x1 = map(int, x)
-    ax.set_xticklabels(map(str, x1), rotation=90)
+    ax.xaxis.set_ticks(list(map(int, x)))
+    x1 = list(map(int, x))
+    ax.set_xticklabels(list(map(str, x1)), rotation=90)
     ax.set_xlabel("Coordinates from Read Start", fontweight='bold')
 
     ax.set_ylim([0, args.y_lim])
@@ -251,10 +251,10 @@ def bias_raw_bc_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, mean_signal_bias_f))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bias_r))) + "\n")
-    f.write("\t".join((map(str, mean_signal_raw))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_r)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc)))) + "\n")
     f.close()
 
     # Output PWM and create logo
@@ -458,8 +458,8 @@ def raw_bc_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, mean_signal_raw))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc)))) + "\n")
     f.close()
 
     # Output PWM and create logo
@@ -595,10 +595,10 @@ def bias_raw_bc_strand_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, mean_signal_bias_f))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bias_r))) + "\n")
-    f.write("\t".join((map(str, mean_signal_raw))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_r)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc)))) + "\n")
     f.close()
 
     # Output PWM and create logo
@@ -772,14 +772,14 @@ def bias_raw_bc_strand_line2(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, mean_signal_bias_f))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bias_r))) + "\n")
-    f.write("\t".join((map(str, mean_signal_raw))) + "\n")
-    f.write("\t".join((map(str, mean_signal_raw_f))) + "\n")
-    f.write("\t".join((map(str, mean_signal_raw_r))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc_f))) + "\n")
-    f.write("\t".join((map(str, mean_signal_bc_r))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bias_r)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_raw_r)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_signal_bc_r)))) + "\n")
     f.close()
 
     # Output PWM and create logo
@@ -999,10 +999,10 @@ def strand_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, mean_norm_signal_f))) + "\n")
-    f.write("\t".join((map(str, mean_slope_signal_f))) + "\n")
-    f.write("\t".join((map(str, mean_norm_signal_r))) + "\n")
-    f.write("\t".join((map(str, mean_slope_signal_r))) + "\n")
+    f.write("\t".join((list(map(str, mean_norm_signal_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_slope_signal_f)))) + "\n")
+    f.write("\t".join((list(map(str, mean_norm_signal_r)))) + "\n")
+    f.write("\t".join((list(map(str, mean_slope_signal_r)))) + "\n")
     f.close()
 
     # Output PWM and create logo
@@ -1117,7 +1117,7 @@ def unstrand_line(args):
                 signal = np.flip(signal)
 
             name = "{}_{}_{}".format(region.chrom, str(region.initial), str(region.final))
-            output_f.write(name + "\t" + "\t".join(map(str, map(int, signal))) + "\n")
+            output_f.write(name + "\t" + "\t".join(map(str, list(map(int, signal)))) + "\n")
             num_sites += 1
 
             mean_signal = np.add(mean_signal, signal)
@@ -1280,14 +1280,14 @@ def fragment_size_raw_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, signal_f))) + "\n")
-    f.write("\t".join((map(str, signal_r))) + "\n")
-    f.write("\t".join((map(str, signal_f_max_145))) + "\n")
-    f.write("\t".join((map(str, signal_r_max_145))) + "\n")
-    f.write("\t".join((map(str, signal_f_146_307))) + "\n")
-    f.write("\t".join((map(str, signal_r_146_307))) + "\n")
-    f.write("\t".join((map(str, signal_f_min_307))) + "\n")
-    f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+    f.write("\t".join((list(map(str, signal_f)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_max_145)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_max_145)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_146_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_146_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_min_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_min_307)))) + "\n")
     f.close()
 
     # find out the linker position
@@ -1404,14 +1404,14 @@ def fragment_size_bc_line(args):
     # Output the norm and slope signal
     output_fname = os.path.join(args.output_location, "{}.txt".format(args.output_prefix))
     f = open(output_fname, "w")
-    f.write("\t".join((map(str, signal_f))) + "\n")
-    f.write("\t".join((map(str, signal_r))) + "\n")
-    f.write("\t".join((map(str, signal_f_max_145))) + "\n")
-    f.write("\t".join((map(str, signal_r_max_145))) + "\n")
-    f.write("\t".join((map(str, signal_f_146_307))) + "\n")
-    f.write("\t".join((map(str, signal_r_146_307))) + "\n")
-    f.write("\t".join((map(str, signal_f_min_307))) + "\n")
-    f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+    f.write("\t".join((list(map(str, signal_f)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_max_145)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_max_145)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_146_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_146_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_f_min_307)))) + "\n")
+    f.write("\t".join((list(map(str, signal_r_min_307)))) + "\n")
     f.close()
 
     # find out the linker position
@@ -1457,7 +1457,7 @@ def update_axes_for_fragment_size_line(ax, x, x_ticks, start, end, signal_f, sig
     ax.spines['left'].set_position(('outward', 15))
     ax.tick_params(direction='out')
     ax.set_xticks(x_ticks)
-    ax.set_xticklabels(map(str, x_ticks))
+    ax.set_xticklabels(list(map(str, x_ticks)))
     ax.set_xlim(start, end)
     ax.set_yticks([min_signal, max_signal])
     ax.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
@@ -1611,9 +1611,9 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, mean_signal_raw))) + "\n")
-        f.write("\t".join((map(str, mean_signal_bc1))) + "\n")
-        f.write("\t".join((map(str, mean_signal_bc2))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_raw)))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_bc1)))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_bc2)))) + "\n")
         f.close()
 
         # Output PWM and create logo
@@ -1778,8 +1778,8 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, mean_signal_raw_f))) + "\n")
-        f.write("\t".join((map(str, mean_signal_raw_r))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_raw_f)))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_raw_r)))) + "\n")
         f.close()
 
         # Output PWM and create logo
@@ -1915,8 +1915,8 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, mean_signal_atac))) + "\n")
-        f.write("\t".join((map(str, mean_signal_dnase))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_atac)))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_dnase)))) + "\n")
         f.close()
 
         # Output PWM and create logo
@@ -1993,7 +1993,7 @@ class Plot:
         # Initialization
         fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
+        k_nb = len(list(fBiasDict.keys())[0])
         p1 = start
         p2 = end
         p1_w = p1 - (window / 2)
@@ -2135,8 +2135,8 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, mean_signal_atac))) + "\n")
-        f.write("\t".join((map(str, mean_signal_dnase))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_atac)))) + "\n")
+        f.write("\t".join((list(map(str, mean_signal_dnase)))) + "\n")
         f.close()
 
         # Output PWM and create logo
@@ -2276,14 +2276,14 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, signal_f))) + "\n")
-        f.write("\t".join((map(str, signal_r))) + "\n")
-        f.write("\t".join((map(str, signal_f_max_145))) + "\n")
-        f.write("\t".join((map(str, signal_r_max_145))) + "\n")
-        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+        f.write("\t".join((list(map(str, signal_f)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_max_145)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_max_145)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_min_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_min_307)))) + "\n")
         f.close()
 
         # find out the linker position
@@ -2399,14 +2399,14 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, signal_f))) + "\n")
-        f.write("\t".join((map(str, signal_r))) + "\n")
-        f.write("\t".join((map(str, signal_f_max_145))) + "\n")
-        f.write("\t".join((map(str, signal_r_max_145))) + "\n")
-        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+        f.write("\t".join((list(map(str, signal_f)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_max_145)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_max_145)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_min_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_min_307)))) + "\n")
         f.close()
 
         # find out the linker position
@@ -2492,14 +2492,14 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
-        f.write("\t".join((map(str, smooth_signal_f_146_307))) + "\n")
-        f.write("\t".join((map(str, smooth_signal_r_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
-        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
-        f.write("\t".join((map(str, smooth_signal_f_min_307))) + "\n")
-        f.write("\t".join((map(str, smooth_signal_r_min_307))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, smooth_signal_f_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, smooth_signal_r_146_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_f_min_307)))) + "\n")
+        f.write("\t".join((list(map(str, signal_r_min_307)))) + "\n")
+        f.write("\t".join((list(map(str, smooth_signal_f_min_307)))) + "\n")
+        f.write("\t".join((list(map(str, smooth_signal_r_min_307)))) + "\n")
         f.close()
 
         start = -(self.window_size / 2)
@@ -2547,7 +2547,7 @@ class Plot:
         ax2.axvline(x=id_max_f_1)
         ax2.axvline(x=id_max_r_1)
         x_tick_labels = [str(start), str(id_max_f_1), 0, str(id_max_r_1), str(end)]
-        ax2.set_xticks(map(int, x_tick_labels))
+        ax2.set_xticks(list(map(int, x_tick_labels)))
         ax2.set_xticklabels(x_tick_labels, rotation=90)
 
         min_signal = min(min(signal_f_min_307), min(signal_r_min_307))
@@ -2591,7 +2591,7 @@ class Plot:
         ax4.axvline(x=id_max_f_2)
         ax4.axvline(x=id_max_r_2)
         x_tick_labels = [str(start), str(id_max_f_2), 0, str(id_max_r_2), str(end)]
-        ax4.set_xticks(map(int, x_tick_labels))
+        ax4.set_xticks(list(map(int, x_tick_labels)))
         ax4.set_xticklabels(x_tick_labels, rotation=90)
 
         figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
@@ -2731,10 +2731,10 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_slope)))) + "\n")
 
         # Output signal of class a
         signal_bc_f_max_145 = signal.boyle_norm(signal_bc_f_max_145)
@@ -2751,10 +2751,10 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_a.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
 
         # Output signal of class b
         signal_bc_f_min_145 = signal.boyle_norm(signal_bc_f_min_145)
@@ -2771,14 +2771,14 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_b.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_145_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_145_slope)))) + "\n")
 
         # Output signal of class c
         signal_bc_f_145_307 = signal.boyle_norm(signal_bc_f_145_307)
@@ -2795,14 +2795,14 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_c.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307_slope)))) + "\n")
 
         # Output signal of class d
         signal_bc_f_min_307 = signal.boyle_norm(signal_bc_f_min_307)
@@ -2819,18 +2819,18 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_d.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_307_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_307_slope)))) + "\n")
 
         # Output signal of class e
         signal_bc_f_307_500 = signal.boyle_norm(signal_bc_f_307_500)
@@ -2847,18 +2847,18 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_e.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_307_500_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_307_500_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_307_500_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_307_500_slope)))) + "\n")
 
         # Output signal of class f
         signal_bc_f_min_500 = signal.boyle_norm(signal_bc_f_min_500)
@@ -2875,22 +2875,22 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_f.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_f_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_307_500_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_307_500_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_f_min_500_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_r_min_500_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_307_500_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_307_500_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_f_min_500_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_r_min_500_slope)))) + "\n")
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -3151,8 +3151,8 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc))) + "\n")
-            f.write("\t".join((map(str, signal_bc_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_slope)))) + "\n")
 
         # Output signal of class a
         signal_bc_max_145 = signal.boyle_norm(signal_bc_max_145)
@@ -3163,8 +3163,8 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_a.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
 
         # Output signal of class b
         signal_bc_min_145 = signal.boyle_norm(signal_bc_min_145)
@@ -3175,10 +3175,10 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_b.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_145_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_145_slope)))) + "\n")
 
         # Output signal of class c
         signal_bc_145_307 = signal.boyle_norm(signal_bc_145_307)
@@ -3189,10 +3189,10 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_c.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307_slope)))) + "\n")
 
         # Output signal of class d
         signal_bc_min_307 = signal.boyle_norm(signal_bc_min_307)
@@ -3203,12 +3203,12 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_d.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_307_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_307_slope)))) + "\n")
 
         # Output signal of class e
         signal_bc_307_500 = signal.boyle_norm(signal_bc_307_500)
@@ -3219,12 +3219,12 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_e.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_307_500_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_307_500_slope)))) + "\n")
 
         # Output signal of class f
         signal_bc_min_500 = signal.boyle_norm(signal_bc_min_500)
@@ -3235,14 +3235,14 @@ class Plot:
 
         output_fname = os.path.join(self.output_loc, "{}_f.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
-            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
-            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_307_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_307_500_slope))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_500))) + "\n")
-            f.write("\t".join((map(str, signal_bc_min_500_slope))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_max_145_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_145_307_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_307_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_307_500_slope)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_500)))) + "\n")
+            f.write("\t".join((list(map(str, signal_bc_min_500_slope)))) + "\n")
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -3431,7 +3431,7 @@ class Plot:
         # output the plot
         unique, counts = np.unique(lengths, return_counts=True)
         count_list = list()
-        length_dict = dict(zip(unique, counts))
+        length_dict = dict(list(zip(unique, counts)))
         sort_keys = sorted(length_dict.keys())
         txt_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(txt_fname, "w") as f:
@@ -3552,9 +3552,9 @@ class Plot:
         fig.savefig(figure_fname, format="pdf", dpi=300)
 
         unique, counts = np.unique(lengths_forward, return_counts=True)
-        length_f_dict = dict(zip(unique, counts))
+        length_f_dict = dict(list(zip(unique, counts)))
         unique, counts = np.unique(lengths_reverse, return_counts=True)
-        length_r_dict = dict(zip(unique, counts))
+        length_r_dict = dict(list(zip(unique, counts)))
         sort_keys = sorted(length_f_dict.keys())
         txt_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(txt_fname, "w") as f:
@@ -3880,7 +3880,7 @@ class Plot:
         # output the plot
         unique, counts = np.unique(lengths, return_counts=True)
         count_list = list()
-        length_dict = dict(zip(unique, counts))
+        length_dict = dict(list(zip(unique, counts)))
         sort_keys = sorted(length_dict.keys())
         txt_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(txt_fname, "w") as f:
@@ -4092,7 +4092,7 @@ class Plot:
         ax.spines['left'].set_position(('outward', 15))
         ax.tick_params(direction='out')
         ax.set_xticks(x_ticks)
-        ax.set_xticklabels(map(str, x_ticks))
+        ax.set_xticklabels(list(map(str, x_ticks)))
         ax.set_xlim(start, end)
         ax.set_yticks([min_signal, max_signal])
         ax.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
@@ -4151,7 +4151,7 @@ class Plot:
         ax.spines['left'].set_position(('outward', 15))
         ax.tick_params(direction='out')
         ax.set_xticks(x_ticks)
-        ax.set_xticklabels(map(str, x_ticks))
+        ax.set_xticklabels(list(map(str, x_ticks)))
         ax.set_xlim(start, end)
         ax.set_yticks([min_signal, max_signal])
         ax.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)

@@ -10,7 +10,7 @@ GeneSet describes genes and their expression.
 ###############################################################################
 
 # Python
-from __future__ import print_function
+
 
 # Internal
 from .Util import GenomeData

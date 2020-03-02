@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import sys
 import pickle
@@ -101,7 +101,7 @@ class Input(object):
                 if self.pars.bg and self.pars.bg.endswith(".txt"):
                     self.nde_genes.read(self.pars.bg)
                 else:
-                    self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
+                    self.nde_genes.genes = [g for g in list(ann.symbol_dict.values()) if g not in self.de_genes]
 
                 self.nontarget_regions = ann.get_promoters(promoter_length=self.pars.pl,
                                                            gene_set=self.nde_genes, unmaplist=False)

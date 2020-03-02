@@ -6,11 +6,7 @@ matrix:
     - os: linux
       dist: xenial
       language: python
-      python: "2.7"
-    - os: linux
-      dist: xenial
-      language: python
-      python: "3.7"
+      python: "3.6"
     - os: osx
       language: generic
       addons:
@@ -19,14 +15,14 @@ matrix:
             - llvm
             - boost
   allow_failures:
-    - python: "3.7"
+    - python: "3.6"
 before_install:
-  - pip install --upgrade pip
+  - pip3 install --upgrade pip
 install:
-  - pip install cython
-  - pip install numpy scipy
-  - pip install coveralls
-  - pip install .
+  - pip3 install cython
+  - pip3 install numpy scipy
+  - pip3 install coveralls
+  - pip3 install .
 # command to run tests
 script:
   - coverage run --source ./ -m unittest discover unittest/ -p "*" -v

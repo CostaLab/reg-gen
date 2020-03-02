@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import sys
 
 from ..GenomicRegion import GenomicRegion

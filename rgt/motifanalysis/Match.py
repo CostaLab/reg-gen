@@ -3,8 +3,8 @@
 ###################################################################################################
 
 # Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
+
+
 
 # Python
 import os
@@ -32,7 +32,7 @@ from MOODS import tools, scan
 
 def options(parser):
     # Parameters Options
-    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
+    parser.add_argument("--organism", type=str, metavar="STRING", required=True,
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
     parser.add_argument("--fpr", type=float, metavar="FLOAT", default=0.0001,
@@ -242,7 +242,7 @@ def main(args):
     regions_to_match = []
 
     # Iterating on experimental matrix objects
-    for k in genomic_regions_dict.keys():
+    for k in list(genomic_regions_dict.keys()):
 
         curr_genomic_region = genomic_regions_dict[k]
 

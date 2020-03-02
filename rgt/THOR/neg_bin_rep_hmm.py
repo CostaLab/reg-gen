@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 import string
 from hmmlearn.hmm import _BaseHMM
 
@@ -50,8 +50,8 @@ def get_init_parameters(s0, s1, s2, **info):
     """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
-        var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+        mu = np.matrix([np.mean([x[i] for x in s]) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+        var = np.matrix([np.var([x[i] for x in s]) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
 
     alpha = (var - mu) / np.square(mu)
 
@@ -177,10 +177,10 @@ class NegBinRepHMM(_BaseHMM):
             for i in range(self.n_components): #over number of HMM's state
                 r_sum = 0
                 for j in range(self.n_features): #over dim
-                    it = range(self.dim[0]) if j == 0 else range(self.dim[0], self.dim[0] + self.dim[1]) #grab proper ob
+                    it = list(range(self.dim[0])) if j == 0 else list(range(self.dim[0], self.dim[0] + self.dim[1])) #grab proper ob
                     for k in it:
                         index = (int(x[k]), i, j)
-                        if lookup.has_key( index ):
+                        if index in lookup:
                             r_sum += lookup[index]
                         else:
                             y = float(self.neg_distr[j,i].logpdf(x[k]))
@@ -212,7 +212,7 @@ class NegBinRepHMM(_BaseHMM):
             stats['post'][0] += posteriors[t]
             stats['post'][1] += posteriors[t]
             
-            pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
+            pot_it = [list(range(self.dim[0])), list(range(self.dim[0], self.dim[0] + self.dim[1]))] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
@@ -292,7 +292,7 @@ class NegBinRepHMM(_BaseHMM):
             self.mu[0,2] = self.mu[1,1]
             self.mu[1,0] = self.mu[0,0]
         
-        self.alpha = np.matrix([map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)])
+        self.alpha = np.matrix([[self.get_alpha(m) for m in np.asarray(self.mu[i])[0]] for i in range(self.n_features)])
         self._update_distr(self.mu, self.alpha)
        
     def merge_distr(self):

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from rgt.GenomicRegionSet import *
 from rgt.GeneSet import *
 from rgt.AnnotationSet import AnnotationSet
@@ -50,7 +50,7 @@ if os.path.isfile(args.i):
 
 
         print()
-        nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
+        nde_ensembl = [ g for g in list(ann.symbol_dict.keys()) if g not in de_ensembl ]
         print("\tBackground genes:\t"+str(len(nde_ensembl)))
         nde_gene = GeneSet("nde genes")
         nde_gene.genes = nde_ensembl

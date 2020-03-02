@@ -2,10 +2,6 @@
 # Libraries
 ###################################################################################################
 
-# Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
-
 # Python
 import os
 from glob import glob
@@ -19,8 +15,8 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.AnnotationSet import AnnotationSet
-from Motif import Motif
-from Util import bed_to_bb
+from .Motif import Motif
+from .Util import bed_to_bb
 
 # External
 from pysam import Fastafile

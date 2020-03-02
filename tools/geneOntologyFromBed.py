@@ -21,7 +21,7 @@ Create *.data file for each row in M.
 @Author: Ivan Costa, Manuel Allhoff
 
 """
-from __future__ import print_function
+
 import sys
 from optparse import OptionParser
 import os.path
@@ -58,9 +58,9 @@ def mode_2(exp_matrix):
         region_set = GenomicRegionSet("")
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, thresh_dist=2000)
         
-        for k in gene_peaks_mapping.keys():
+        for k in list(gene_peaks_mapping.keys()):
             chr, raw_positions = k.split(':')
-            start, end = map(lambda x: int(x), raw_positions.split('-'))
+            start, end = [int(x) for x in raw_positions.split('-')]
             
             #if peak is not assigned, an empty string occurs
             if "" in gene_peaks_mapping[k]:
@@ -89,7 +89,7 @@ def mode_3(exp_matrix):
         avg_score = {} #score per peak
         genes = {}
         
-        for peak, gene_list in gene_peaks_mapping.items():
+        for peak, gene_list in list(gene_peaks_mapping.items()):
             for gen in gene_list: #reverse mapping peak -> gene to gene -> peak
                 if not gen:
                     continue
@@ -98,8 +98,8 @@ def mode_3(exp_matrix):
                 avg_score[gen] = avg_score.get(gen, [])
                 avg_score[gen].append(score[peak]) #join all scores of peaks assigned to a gen
         
-        for gen in genes.keys():
-            avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
+        for gen in list(genes.keys()):
+            avg = sum([float(x) for x in avg_score[gen]])/ float(len(avg_score[gen]))
             print(gen, avg, ", ".join(str(t) for t in genes[gen]), sep='\t', file = f)
                
         f.close()

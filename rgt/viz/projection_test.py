@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy
@@ -13,7 +13,7 @@ from ..ExperimentalMatrix import *
 from .shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
 
 # Local test
-# dir = os.getcwd()
+current_dir = os.getcwd()
 
 
 ###########################################################################################
@@ -51,13 +51,13 @@ class Projection:
 
     def ref_union(self):
         self.background = OrderedDict()
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             self.background[ty] = GenomicRegionSet("union of references")
             for r in self.groupedreference[ty]:
                 self.background[ty].combine(r)
             self.background[ty].merge()
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             rlist = [r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
             self.groupedreference[ty] = rlist
             qlist = [q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
@@ -67,7 +67,7 @@ class Projection:
         bg = GenomicRegionSet("background")
         bg.read(bed_path)
         self.background = OrderedDict()
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             self.background[ty] = bg
             # rlist = [r.trim_by(background=bg) for r in self.groupedreference[ty]]
             # self.groupedreference[ty] = rlist
@@ -85,7 +85,7 @@ class Projection:
         # print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
 
         all_p = {}
-        for ty in self.groupedquery.keys():
+        for ty in list(self.groupedquery.keys()):
             # print(ty)
             self.bglist[ty] = OrderedDict()
             self.qlist[ty] = OrderedDict()
@@ -123,7 +123,7 @@ class Projection:
         # multiple test correction
         multiple_correction(self.plist)
 
-        for ty in self.groupedquery.keys():
+        for ty in list(self.groupedquery.keys()):
             for i, r in enumerate(self.groupedreference[ty]):
                 for j, q in enumerate(self.groupedquery[ty]):
                     # if r.name == q.name: continue
@@ -131,7 +131,7 @@ class Projection:
                     # bg = self.bglist[ty][r.name][q.name]
                     # ratio = self.qlist[ty][r.name][q.name]
                     # p = self.plist[ty][r.name][q.name]
-                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name].values()[0]
+                    self.qlist[ty][r.name]['Background'] = list(self.bglist[ty][r.name].values())[0]
 
     def output_interq(self, directory):
         """Output the intersected query to the reference in BED format"""
@@ -143,20 +143,20 @@ class Projection:
             os.stat(directory)
         except:
             os.mkdir(directory)
-        for ty in self.interq_list.keys():
+        for ty in list(self.interq_list.keys()):
             if ty:
                 g = ty + "_"
             else:
                 g = ""
-            for r in self.interq_list[ty].keys():
-                for q in self.interq_list[ty][r].keys():
+            for r in list(self.interq_list[ty].keys()):
+                for q in list(self.interq_list[ty][r].keys()):
                     self.interq_list[ty][r][q].write_bed(os.path.join(directory, g + q + "_intersected_" + r + ".bed"))
 
     def plot(self, logt=None, pw=3, ph=3):
 
         tw = pw
-        th = len(self.qlist.keys()) * ph
-        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300, figsize=(tw, th))
+        th = len(list(self.qlist.keys())) * ph
+        f, ax = plt.subplots(len(list(self.qlist.keys())), 1, dpi=300, figsize=(tw, th))
 
         # f, ax = plt.subplots(len(self.qlist.keys()),1)
         try:
@@ -173,7 +173,7 @@ class Projection:
             r_label = []
             for ind_r, r in enumerate(self.qlist[ty].keys()):
                 r_label.append(r)
-                width = 0.8 / (len(self.qlist[ty][r].keys()) + 1)  # Plus one background
+                width = 0.8 / (len(list(self.qlist[ty][r].keys())) + 1)  # Plus one background
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_r + ind_q * width + 0.1
                     y = self.qlist[ty][r][q]
@@ -210,7 +210,7 @@ class Projection:
         self.fig = f
 
     def heatmap(self):
-        f, ax = plt.subplots(1, len(self.plist.keys()))
+        f, ax = plt.subplots(1, len(list(self.plist.keys())))
         try:
             ax = ax.reshape(-1)
         except:
@@ -335,9 +335,9 @@ class Projection:
 
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
-        for ty in self.plist.keys():
-            for r in self.plist[ty].keys():
-                for q in self.plist[ty][r].keys():
+        for ty in list(self.plist.keys()):
+            for r in list(self.plist[ty].keys()):
+                for q in list(self.plist[ty][r].keys()):
                     ar = numpy.array(
                         [[r, q, self.qlist[ty][r]['Background'], self.qlist[ty][r][q], self.plist[ty][r][q]]])
                     arr = numpy.vstack((arr, ar))
@@ -355,7 +355,7 @@ class Projection:
         # self.distriDict = OrderedDict()
         self.disperDict = OrderedDict()
 
-        for ty in self.groupedreference.keys():
+        for ty in list(self.groupedreference.keys()):
             # self.distriDict[ty] = OrderedDict()
             self.disperDict[ty] = OrderedDict()
             # Reference
@@ -394,12 +394,12 @@ class Projection:
 
         self.fig = []
 
-        for ty in self.disperDict.keys():
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.disperDict[ty].keys()))).tolist()
+        for ty in list(self.disperDict.keys()):
+            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(list(self.disperDict[ty].keys())))).tolist()
 
             f, ax = plt.subplots()
             f.set_size_inches(10.5, 30)
-            width = 0.9 / len(self.disperDict[ty].keys())
+            width = 0.9 / len(list(self.disperDict[ty].keys()))
             ind = np.arange(len(self.chrom_list))
             coverage = self.disperDict[ty]
 
@@ -414,7 +414,7 @@ class Projection:
             ax.set_yticklabels(self.chrom_list, rotation=0, ha="right")
             ax.tick_params(axis='y', which='both', top=False, bottom=False, labelbottom=True)
 
-            ax.legend(self.disperDict[ty].keys(), loc='center left', handlelength=1, handletextpad=1,
+            ax.legend(list(self.disperDict[ty].keys()), loc='center left', handlelength=1, handletextpad=1,
                       columnspacing=2, borderaxespad=0., prop={'size': 10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right', 'left', 'bottom']:
                 ax.spines[spine].set_visible(False)
@@ -422,9 +422,9 @@ class Projection:
             self.fig.append(f)
 
     def gen_html_distribution(self, outputname, title, align=50):
-        fp = os.path.join(dir, outputname, title)
+        fp = os.path.join(current_dir, outputname, title)
         link_d = {title: "distribution.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir, outputname, "fig"),
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(current_dir, outputname, "fig"),
                     other_logo="viz", homepage="../index.html")
         for i, f in enumerate(self.fig):
             html.add_figure("distribution_test_" + str(i) + ".png", align="center")
@@ -437,13 +437,13 @@ class Projection:
                          10, 10]
         data_table = []
         for ind_ty, ty in enumerate(self.disperDict.keys()):
-            header_list = ["Chromosome"] + self.disperDict[ty].keys()
+            header_list = ["Chromosome"] + list(self.disperDict[ty].keys())
             html.add_heading(ty, size=4, bold=False)
             for i, ch in enumerate(self.chrom_list):
                 # for ind_r,r in enumerate(self.disperDict[ty].keys()):
 
                 data_table.append(
-                    [ch] + ["{:.3f} %".format(100 * self.disperDict[ty][r][i]) for r in self.disperDict[ty].keys()])
+                    [ch] + ["{:.3f} %".format(100 * self.disperDict[ty][r][i]) for r in list(self.disperDict[ty].keys())])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align)
 

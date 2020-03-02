@@ -24,7 +24,6 @@ fi
 
 # Run test script
 cd ${DIR}/TDF_examples/FENDRR_mm9/
-#rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/ -l 15
 rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/ -l 20
 rgt-TDF integrate -path promoter_test
 

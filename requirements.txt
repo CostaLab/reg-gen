@@ -15,3 +15,4 @@ natsort
 moods-python
 pandas
 logomaker
+joblib

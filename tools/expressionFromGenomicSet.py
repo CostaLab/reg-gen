@@ -11,7 +11,7 @@ It recieves as input a experimental matrix with a list of bed files and outputs 
 
 """
 
-from __future__ import print_function
+
 from optparse import OptionParser
 import sys
 from rgt.ExperimentalMatrix import *

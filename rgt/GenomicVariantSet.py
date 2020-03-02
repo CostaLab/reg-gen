@@ -5,7 +5,7 @@ GenomicVariantSet represents list of GenomicVariant.
 
 """
 
-from __future__ import print_function
+
 from .GenomicVariant import GenomicVariant
 from .GenomicRegionSet import GenomicRegionSet
 import vcf
@@ -30,7 +30,7 @@ class GenomicVariantSet(GenomicRegionSet):
         .. note:: By default, the genomic position is used as sorting criteria.
         
         """
-        self.sequences.sort(cmp=GenomicVariant.__cmp__)
+        self.sequences.sort()
         self.sorted = True
 
     def read_vcf(self, vcf_path):
@@ -88,7 +88,7 @@ class GenomicVariantSet(GenomicRegionSet):
         
         """
 
-        self.sequences = filter(lambda x: 'DB' not in x.info.keys(), self.sequences)
+        self.sequences = [x for x in self.sequences if 'DB' not in list(x.info.keys())]
 
     def filter(self, at, op, t):
         """
@@ -115,7 +115,7 @@ class GenomicVariantSet(GenomicRegionSet):
             .. note:: operation <op> and threhold <t> depend on the filtering tag <at>
         
         """
-        self.sequences = filter(lambda x: eval(str(x.info[at]) + op + str(t)), self.sequences)
+        self.sequences = [x for x in self.sequences if eval(str(x.info[at]) + op + str(t))]
 
     def _reconstruct_info(self, GenomicRegionSet):
         """Reconstruct all information for GenomicVariantSet that get lost when using a GenomicRegionSet method"""
@@ -186,7 +186,7 @@ class GenomicVariantSet(GenomicRegionSet):
             if b.sorted == False: b.sort()
 
             iter_a = iter(a)
-            s = iter_a.next()
+            s = next(iter_a)
             last_j = len(b) - 1
             j = 0
             cont_loop = True
@@ -199,13 +199,13 @@ class GenomicVariantSet(GenomicRegionSet):
                     z.add(s)
 
                     try:
-                        s = iter_a.next()
+                        s = next(iter_a)
                     except:
                         cont_loop = False
 
                 elif s < b[j]:
                     try:
-                        s = iter_a.next()
+                        s = next(iter_a)
                     except:
                         cont_loop = False
                 elif s > b[j]:
@@ -215,7 +215,7 @@ class GenomicVariantSet(GenomicRegionSet):
                         j = j + 1
                 else:
                     try:
-                        s = iter_a.next()
+                        s = next(iter_a)
                     except:
                         cont_loop = False
 

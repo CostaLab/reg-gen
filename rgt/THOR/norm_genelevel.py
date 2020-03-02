@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 # from optparse import OptionParser
 import sys
 from ..ExperimentalMatrix import ExperimentalMatrix
@@ -31,6 +31,7 @@ import numpy as np
 import os
 from ..GenomicRegionSet import GenomicRegionSet
 from copy import deepcopy
+from functools import reduce
 
 def get_experimental_matrix(bams, bed):
     """Load artificially experimental matrix. Only genes in BED file are needed."""
@@ -69,7 +70,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
             data = np.delete(data, i, 1) #remove gene i
             f = get_factors(data)
             assert len(f) == len(original_f)
-            res = sum(map(lambda x: (x[0]-x[1])**2, zip(original_f, f))) / float(len(f))
+            res = sum([(x[0]-x[1])**2 for x in zip(original_f, f)]) / float(len(f))
             
             if report:
                 print(colnames[i], res, file=f_gene)
@@ -89,7 +90,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
             tmp = deepcopy(original_f)
             del tmp[i]
             assert len(f) == len(tmp)
-            res = sum(map(lambda x: (x[0]-x[1])**2, zip(tmp, f))) / float(len(f))
+            res = sum([(x[0]-x[1])**2 for x in zip(tmp, f)]) / float(len(f))
             
             if report:
                 print(samples[i], res, file=f_sample)
@@ -109,7 +110,7 @@ def output_R_file(name, res, colnames):
     #everthing in one vector
     
     #if res.shape[1] > 0:
-    l = reduce(lambda x, y: x+y, [map(lambda x: str(x), list(np.array(res[:,i]).reshape(-1,))) for i in range(res.shape[1])])
+    l = reduce(lambda x, y: x+y, [[str(x) for x in list(np.array(res[:,i]).reshape(-1,))] for i in range(res.shape[1])])
     #else:
     #    l = list(np.array(res.reshape(-1,)))
     
@@ -134,8 +135,8 @@ def get_factors(data):
 def norm_gene_level(bams, bed, name, verbose, folder, report):
     """Normalize bam files on a gene level. Give out list of normalization factors."""
     m = get_experimental_matrix(bams, bed)
-    d = zip(m.types, m.names)
-    d = map(lambda x: x[1], filter(lambda x: x[0] == 'reads', d)) #list of names which are reads
+    d = list(zip(m.types, m.names))
+    d = [x[1] for x in [x for x in d if x[0] == 'reads']] #list of names which are reads
     
     regions = m.objectsDict['housekeep'] #GenomicRegionSet containing housekeeping genes
          
@@ -154,7 +155,7 @@ def norm_gene_level(bams, bed, name, verbose, folder, report):
     
     colnames = gene_names
     d = np.matrix(signals, dtype=float)
-    samples = map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)
+    samples = [os.path.splitext(os.path.basename(x))[0] for x in bams]
     #print("samples: %s" %",".join(map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)))
     if verbose:
         print("-Housekeeping gene matrix (columns-genes, rows-samples)", file=sys.stderr)

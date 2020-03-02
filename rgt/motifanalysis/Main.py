@@ -3,7 +3,7 @@
 ###################################################################################################
 
 # Python 3 compatibility
-from __future__ import print_function
+
 
 # Python
 import time
@@ -13,9 +13,9 @@ import argparse
 
 # Internal
 from .. import __version__
-import Match
-import Enrichment
-import Mapper
+from . import Match
+from . import Enrichment
+from . import Mapper
 
 """
 Motif matching and enrichment based on motif PSSM. Can perform either Matching (finds all putative

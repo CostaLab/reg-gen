@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Python Libraries
-from __future__ import print_function
+
 import os
 import re
 import sys
@@ -500,7 +500,7 @@ if __name__ == "__main__":
             # there will probably only be one subparser_action,but better save than sorry
             for subparsers_action in subparsers_actions:
                 # get all subparsers and print help
-                for choice, subparser in subparsers_action.choices.items():
+                for choice, subparser in list(subparsers_action.choices.items()):
                     if choice == sys.argv[1]:
                         print("\nYou need more arguments.")
                         print("\nSubparser '{}'".format(choice))
@@ -1033,7 +1033,7 @@ if __name__ == "__main__":
                 except:
                     print("Error: indexing error. Please check -f argument.")
                     sys.exit(1)
-        print(len(genes.keys()))
+        print(len(list(genes.keys())))
 
         with open(args.i) as fi, open(args.o, "w") as fo:
             c_add = 0
@@ -1203,7 +1203,7 @@ if __name__ == "__main__":
             with open(args.o, "w") as f:
                 print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave", "proportion_in_window",
                                  "polyA_reads_on_transcript_ave", "all_reads_on_transcript_ave", "proportion_on_transcript"]), file=f)
-                for gene, l in col_res.items():
+                for gene, l in list(col_res.items()):
                     print("\t".join([ gene ] + [ str(x) for x in l ]), file=f)
         print()
 
@@ -1992,7 +1992,7 @@ if __name__ == "__main__":
 
         for file in os.listdir(args.o):
             id = os.path.basename(file).split(".")[0]
-            if id in name_dict.keys():
+            if id in list(name_dict.keys()):
                 # print(file)
                 formatf = file.split(".")[1]
                 if file.endswith("gz"):

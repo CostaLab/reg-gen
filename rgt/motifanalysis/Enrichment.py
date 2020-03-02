@@ -2,10 +2,6 @@
 # Libraries
 ###################################################################################################
 
-# Python 3 compatibility
-from __future__ import print_function
-from __future__ import division
-
 # Python
 import base64
 import os
@@ -33,7 +29,7 @@ from fisher import pvalue
 ###################################################################################################
 
 def options(parser):
-    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
+    parser.add_argument("--organism", type=str, metavar="STRING", required=True,
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
     parser.add_argument("--matching-location", type=str, metavar="PATH",
@@ -123,13 +119,9 @@ def main(args):
     results_header_text = "\t".join(
         ["FACTOR", "P-VALUE", "CORR.P-VALUE", "A", "B", "C", "D", "FREQ", "BACK.FREQ.", "GENES"])
     html_header = ["FACTOR", "MOTIF", "P-VALUE", "CORRECTED P-VALUE", "A", "B", "C", "D", "FREQUENCY",
-                   "BACKGROUND FREQUENCY", "GO"]
+                   "BACKGROUND FREQUENCY"]
     html_type_list = "sissssssssl"
     logo_width = 200
-    if "hg" in args.organism:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
-    else:
-        gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
     html_col_size = [300, logo_width, 100, 100, 50, 50, 50, 50, 100, 100, 50]
 
     filter_values = parse_filter(args.filter)
@@ -217,7 +209,7 @@ def main(args):
     if args.filter:
         motif_set = motif_set.filter(filter_values, search=args.filter_type)
 
-    motif_names = motif_set.motifs_map.keys()
+    motif_names = list(motif_set.motifs_map.keys())
 
     print(">> motifs loaded:", len(motif_names))
 
@@ -282,7 +274,7 @@ def main(args):
     if flag_gene:  # Genelist and full site analysis will be performed
 
         # Iterating on experimental matrix fields
-        for g in exp_matrix_fields_dict.keys():
+        for g in list(exp_matrix_fields_dict.keys()):
 
             # Create input which will contain all regions associated with such gene group
             curr_input = Input(None, [])
@@ -328,7 +320,7 @@ def main(args):
         single_input = Input(None, [])
 
         # Iterating on experimental matrix objects
-        for k in genomic_regions_dict.keys():
+        for k in list(genomic_regions_dict.keys()):
 
             curr_object = genomic_regions_dict[k]
 
@@ -551,14 +543,14 @@ def main(args):
 
                 # filtering out MPBS with low corr. p-value
                 ev_mpbs_grs_filtered = GenomicRegionSet("ev_mpbs_filtered")
-                for m, ev_mpbs_grs in ev_mpbs_dict.items():
+                for m, ev_mpbs_grs in list(ev_mpbs_dict.items()):
                     for region in ev_mpbs_grs:
                         if corr_pvalue_dict[m] <= args.print_thresh:
                             ev_mpbs_grs_filtered.add(region)
                 del ev_mpbs_dict
 
                 nev_mpbs_grs_filtered = GenomicRegionSet("nev_mpbs_filtered")
-                for m, nev_mpbs_grs in nev_mpbs_dict.items():
+                for m, nev_mpbs_grs in list(nev_mpbs_dict.items()):
                     for region in nev_mpbs_grs:
                         if corr_pvalue_dict[m] <= args.print_thresh:
                             nev_mpbs_grs_filtered.add(region)
@@ -627,10 +619,9 @@ def main(args):
 
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
-                         str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
+                         str(r.c), str(r.d), str(r.percent), str(r.back_percent)])
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
@@ -714,7 +705,7 @@ def main(args):
                 # filtering out MPBS with low corr. p-value,
                 ev_mpbs_grs_filtered = GenomicRegionSet("ev_mpbs_filtered")
 
-                for m, ev_mpbs_grs in ev_mpbs_dict.items():
+                for m, ev_mpbs_grs in list(ev_mpbs_dict.items()):
                     for region in ev_mpbs_grs:
                         if corr_pvalue_dict[m] <= args.print_thresh:
                             ev_mpbs_grs_filtered.add(region)
@@ -778,9 +769,8 @@ def main(args):
 
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
-                                   str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
+                                   str(r.c), str(r.d), str(r.percent), str(r.back_percent)])
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")

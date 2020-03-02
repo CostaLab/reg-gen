@@ -1,6 +1,6 @@
 # Python Libraries
-from __future__ import print_function
-from __future__ import division
+
+
 import os
 import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -67,7 +67,7 @@ class Statistics(object):
         self.tpx_de.remove_duplicates()
         self.tpx_de.merge_rbs(rm_duplicate=True, cutoff=self.pars.ccf,
                               region_set=target_regions, name_replace=target_regions)
-        self.rbss = self.tpx_de.merged_dict.keys()
+        self.rbss = list(self.tpx_de.merged_dict.keys())
 
         for rbs in self.rbss:
             # DE
@@ -305,7 +305,7 @@ class Statistics(object):
 
     def uniq_motif(self, tpx, rnalen):
         tpx.uniq_motif_statistics(rnalen=rnalen)
-        for k, v in tpx.uniq_motifs.iteritems():
+        for k, v in tpx.uniq_motifs.items():
             self.stat[k] = sum(v)
             self.stat["uniq_" + k] = sum([1 for x in v if x > 0])
 
@@ -402,7 +402,7 @@ class Statistics(object):
             for l in self.region_matrix:
                 print("\t".join([str(x) for x in l]), file=f)
         with open(os.path.join(self.pars.o, "counts_dbs.txt"), "w") as f:
-            print("\t".join([str(x) for x in self.counts_dbs.values()]), file=f)
+            print("\t".join([str(x) for x in list(self.counts_dbs.values())]), file=f)
 
         # Integarte distances
         self.stat["background_in_trans"] = float(sum([v[2]["in_trans"] for v in mp_output])) / len(mp_output)
@@ -413,7 +413,7 @@ class Statistics(object):
         # self.stat["DBSs_target_all"] = str(len(self.txpf))
         tpx.merge_rbs(rm_duplicate=True, region_set=target_regions,
                       asgene_organism=self.pars.organism, cutoff=self.pars.ccf)
-        self.rbss = tpx.merged_dict.keys()
+        self.rbss = list(tpx.merged_dict.keys())
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
 

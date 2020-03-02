@@ -7,9 +7,6 @@ AnnotationSet represent genomic annotation from genes.
 
 """
 
-# Python 3 compatibility
-from __future__ import print_function
-
 # Python
 import os
 
@@ -231,13 +228,13 @@ class AnnotationSet:
                 pass
 
             addt_list = line_list[8].split(";")
-            addt_list = filter(None, addt_list)
+            addt_list = [_f for _f in addt_list if _f]
 
             # Processing additional list of options
             addt_dict = dict()
             for addt_element in addt_list:
                 addt_element_list = addt_element.split(" ")
-                addt_element_list = filter(None, addt_element_list)
+                addt_element_list = [_f for _f in addt_element_list if _f]
                 # Removing " symbol from string options
                 addt_element_list[1] = addt_element_list[1].replace("\"", "")
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
@@ -401,14 +398,16 @@ class AnnotationSet:
         """Comming soon!"""
         pass  # TODO
 
-    def fix_gene_names(self, gene_set, output_dict=False, mute_warn=False):
-        """Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set
+    def fix_gene_names(self, gene_set, output_dict=False, mute_warn=True):
+        """
+        Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be
+        converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set.
         
         *Keyword arguments:*
 
             - gene_set -- A GeneSet object.
             - output_dict -- Also output the mapping dictionary (default = False).
-            - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = False).
+            - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = True).
         
         *Return:*
 
@@ -440,8 +439,8 @@ class AnnotationSet:
                     alias_list = self.alias_dict[gene_name.upper()]
                     if len(alias_list) > 1:
                         if not mute_warn:
-                            print(
-                                "Warning: The gene " + gene_name + " contains more than one matching IDs, both will be used.")
+                            print("Warning: The gene " + gene_name +
+                                  " contains more than one matching IDs, both will be used.")
                     for e in alias_list:
                         mapped_gene_list.append(e)
                         if output_dict and e and gene_name:
@@ -487,11 +486,11 @@ class AnnotationSet:
         if isinstance(query, dict):
 
             # Iterating over query elements
-            for query_key in query.keys():
+            for query_key in list(query.keys()):
 
                 # O(n) operation if a single value is being queried.
                 if not isinstance(query[query_key], list):
-                    current_list = filter(lambda k: k[query_key] == query[query_key], current_list)
+                    current_list = [k for k in current_list if k[query_key] == query[query_key]]
 
                 # O(n log n) operation if multiple values are being queried.
                 else:

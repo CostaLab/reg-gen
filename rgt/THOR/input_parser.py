@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
-from __future__ import print_function
+
 from ..Util import npath
 
 
@@ -51,10 +51,10 @@ def get_data_block(filepath, feature):
 
 def input_parser(filepath):
     bamfiles_1 = get_data_block(filepath, "rep1")
-    bamfiles_1 = map(npath, bamfiles_1)
+    bamfiles_1 = list(map(npath, bamfiles_1))
 
     bamfiles_2 = get_data_block(filepath, "rep2")
-    bamfiles_2 = map(npath, bamfiles_2)
+    bamfiles_2 = list(map(npath, bamfiles_2))
 
     # genome is optional, so if we get an empty list
     # we set it to None, otherwise we normalise the path
@@ -68,10 +68,10 @@ def input_parser(filepath):
     chrom_sizes = npath(chrom_sizes) if chrom_sizes else chrom_sizes
 
     inputs1 = get_data_block(filepath, "inputs1")
-    inputs1 = map(npath, inputs1)
+    inputs1 = list(map(npath, inputs1))
 
     inputs2 = get_data_block(filepath, "inputs2")
-    inputs2 = map(npath, inputs2)
+    inputs2 = list(map(npath, inputs2))
 
     dims = [len(bamfiles_1), len(bamfiles_2)]
     

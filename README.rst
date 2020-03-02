@@ -5,7 +5,7 @@ RGT - Regulatory Genomics Toolbox
 
 |pypi| |dev_build| |coverage|
 
-RGT is an open source python library for analysis of regulatory
+RGT is an open source Python 3.6+ library for analysis of regulatory
 genomics. RGT is programmed in an oriented object fashion and its core
 classes provide functionality for handling regulatory genomics data.
 
@@ -24,6 +24,8 @@ The toolbox is made of a `core library <http://www.regulatory-genomics.org/rgt/>
 
 Installation
 ============
+
+**Python 2 is no longer supported.**
 
 The quickest and easiest way to get RGT is to to use pip. First some dependencies:
 

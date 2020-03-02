@@ -2,9 +2,9 @@
 # Libraries
 ###################################################################################################
 
-from __future__ import division
+
 # Python 3 compatibility
-from __future__ import print_function
+
 
 # Python
 from os.path import basename

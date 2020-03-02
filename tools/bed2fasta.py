@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData
 from Bio.Seq import Seq
@@ -52,8 +52,8 @@ def load_exon_sequence(bed, directory, genome_path):
                     #print(data)
                     n = int(data[4])
                     
-                    blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
-                    starts = [ int(s) for s in filter(None, data[6].split(",")) ]
+                    blocks = [ int(b) for b in [_f for _f in data[5].split(",") if _f] ]
+                    starts = [ int(s) for s in [_f for _f in data[6].split(",") if _f] ]
                     printstr = []
 
                     for i in range(n):
