@@ -269,6 +269,8 @@ def get_raw_signal(arguments):
                 if p1 <= cut_site < p2:
                     signal[cut_site - p1] += 1.0
 
+    signal = smooth(signal)
+
     return signal
 
 
@@ -295,6 +297,8 @@ def get_bc_signal(arguments):
 
         # smooth the signal
         signal = np.add(signal, np.array(_signal))
+
+    signal = smooth(signal)
 
     return signal
 
@@ -630,3 +634,21 @@ def output_profiles(mpbs_name_list, signals, conditions, output_location):
             output_filename = os.path.join(output_location, "{}_{}.txt".format(condition, mpbs_name))
             with open(output_filename, "w") as f:
                 f.write("\t".join(map(str, signals[i][j])) + "\n")
+
+
+def smooth(signal, window_size=5, rank=5):
+    k = len(signal)
+    zscore = stats.zscore(signal)
+    order = zscore.argsort()
+    ranks = order.argsort()
+
+    signal[ranks > (k - rank)] = np.nan
+
+    smooth_signal = np.zeros(k)
+
+    for i in range(k):
+        a = max(0, i - round(window_size / 2))
+        b = min(k, ceil(i + window_size / 2))
+        smooth_signal[i] = np.nanmean(signal[a:b])
+
+    return smooth_signal
