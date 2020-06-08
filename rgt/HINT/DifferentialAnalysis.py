@@ -10,6 +10,7 @@ import logging
 
 from scipy.stats import zscore
 from scipy.stats import norm
+from scipy import stats
 from argparse import SUPPRESS
 
 from multiprocessing import Pool, cpu_count
