@@ -274,14 +274,14 @@ genome = "zv9"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv9_ensembl_release_79.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv9\n"))
-data_config_file.write("gene_regions: " + path.join(genome, "genes_zv9.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome, "genes_zv9.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.Zv9.79.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
 genome = "zv10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv10_ensembl_release_84.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv10\n"))
-data_config_file.write("gene_regions: " + path.join(genome, "genes_zv10.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome, "genes_zv10.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
 
@@ -327,7 +327,8 @@ if not os.path.isfile(user_config_file_name):
     user_config_file.write("#[" + genome + "]\n")
     user_config_file.write("#genome: undefined\n")
     user_config_file.write("#chromosome_sizes: undefined\n")
-    user_config_file.write("#gene_regions: undefined\n")
+    user_config_file.write("#genes_Gencode: undefined\n")
+    user_config_file.write("#genes_RefSeq: undefined\n")
     user_config_file.write("#annotation: undefined\n")
     user_config_file.write("#gene_alias: undefined\n\n")
 
