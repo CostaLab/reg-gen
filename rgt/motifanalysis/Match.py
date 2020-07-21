@@ -139,6 +139,7 @@ def main(args):
     else:
         output_location = npath(matching_folder_name)
     print(">> output location:", output_location)
+    print()
 
     # Default genomic data
     genome_data = GenomeData(args.organism)
@@ -146,6 +147,7 @@ def main(args):
     print(">> genome:", genome_data.organism)
     print(">> pseudocounts:", args.pseudocounts)
     print(">> fpr threshold:", args.fpr)
+    print()
 
     ###################################################################################################
     # Reading Input Regions
@@ -162,7 +164,8 @@ def main(args):
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
 
-            print(">>> experimental matrix loaded")
+            print(">> experimental matrix loaded")
+            print()
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
@@ -177,7 +180,8 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-            print(">>>", name, ",", len(regions), "regions")
+            print(">>> ", name, ", ", len(regions), " regions", sep="")
+        print()
 
     # we put this here because we don't want to create the output directory unless we
     # are sure the initialisation (including loading input files) worked
@@ -208,7 +212,8 @@ def main(args):
 
         genomic_regions_dict[target_regions.name] = target_regions
 
-        print(">>>", len(target_regions), "regions")
+        print(">>> ", len(target_regions), " regions", sep="")
+        print()
 
     # we make a background in case it's requested, but also in case a list of target genes has not been
     # provided
@@ -234,7 +239,8 @@ def main(args):
 
         genomic_regions_dict[background_regions.name] = background_regions
 
-        print(">>>", len(background_regions), "regions")
+        print(">>> ", len(background_regions), " regions", sep="")
+        print()
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
@@ -304,7 +310,8 @@ def main(args):
             except Exception:
                 err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
-        print(">>>", len(rand_region), "regions")
+        print(">>> ", len(rand_region), " regions", sep="")
+        print()
 
     ###################################################################################################
     # Creating PWMs
@@ -328,6 +335,7 @@ def main(args):
 
     for db in motif_set.motif_data.get_repositories_list():
         print(">>>", db)
+    print()
 
     # applying filtering pattern, taking a subset of the motif set
     if args.filter:
@@ -335,8 +343,8 @@ def main(args):
         motif_set = motif_set.filter(filter_values, search=args.filter_type)
 
     motif_list = motif_set.get_motif_list(args.pseudocounts, args.fpr)
-
     print(">> motifs loaded:", len(motif_list))
+    print()
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:
@@ -371,8 +379,6 @@ def main(args):
 
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
-
-    print()
 
     # Iterating on list of genomic region sets
     for grs in regions_to_match:
@@ -449,7 +455,6 @@ def main(args):
 
         secs = time.time() - start
         print("[", "%02.3f" % secs, " seconds]", sep="")
-
 
 # TODO must double-check/fix the normalisation.
 def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):

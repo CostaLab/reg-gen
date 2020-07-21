@@ -135,12 +135,20 @@ def main(args):
         output_location = args.output_location
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
+    print(">> output location:", output_location)
 
     # Matching folder
     if args.matching_location:
         match_location = args.matching_location
     else:
         match_location = os.path.join(os.getcwd(), matching_folder_name)
+    print(">> match location:", match_location)
+    print()
+
+    # Default genomic data
+    genome_data = GenomeData(args.organism)
+    print(">> genome:", genome_data.organism)
+    print()
 
     # the matching directory must exist, for obvious reasons
     if not os.path.isdir(match_location):
@@ -188,12 +196,8 @@ def main(args):
 
     background = GenomicRegionSet("background")
     background.read(background_filename)
-    print(">>>", background_name, ",", len(background), "regions")
-
-    # Default genomic data
-    genome_data = GenomeData(args.organism)
-
-    print(">> genome:", genome_data.organism)
+    print(">>> ", background_name, ", ", len(background), " regions", sep="")
+    print()
 
     # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
@@ -213,6 +217,7 @@ def main(args):
 
     for db in motif_set.motif_data.get_repositories_list():
         print(">>>", db)
+    print()
 
     # applying filtering pattern, taking a subset of the motif set
     if args.filter:
@@ -220,8 +225,8 @@ def main(args):
         motif_set = motif_set.filter(filter_values, search=args.filter_type)
 
     motif_names = list(motif_set.motifs_map.keys())
-
     print(">> motifs loaded:", len(motif_names))
+    print()
 
     # Default image data
     image_data = ImageData()
@@ -255,6 +260,7 @@ def main(args):
             del exp_matrix
 
             print(">> experimental matrix loaded")
+            print()
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
@@ -269,7 +275,8 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-            print(">>>", name, ",", len(regions), "regions")
+            print(">>> ", name, ", ", len(regions), " regions", sep="")
+            print()
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
@@ -358,8 +365,6 @@ def main(args):
     except Exception:
         err.throw_error("ME_OUT_FOLDER_CREATION")
 
-    print()
-
     start = time.time()
     print(">> collecting background statistics...", sep="", end="")
     sys.stdout.flush()
@@ -403,8 +408,6 @@ def main(args):
             else:
                 link_name = grs.name
                 sitetest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_fulltest + ".html")
-
-    print()
 
     # Iterating on each input object
     for curr_input in input_list:
