@@ -90,8 +90,7 @@ class GenomeData(ConfigurationFile):
         self.organism = organism
         self.genome = os.path.join(self.data_dir, self.config.get(organism, 'genome'))
         self.chromosome_sizes = os.path.join(self.data_dir, self.config.get(organism, 'chromosome_sizes'))
-        self.genes_gencode = os.path.join(self.data_dir, self.config.get(organism, 'genes_Gencode'))
-        self.genes_refseq = os.path.join(self.data_dir, self.config.get(organism, 'genes_RefSeq'))
+        self.gene_regions = os.path.join(self.data_dir, self.config.get(organism, 'gene_regions'))
         self.annotation = os.path.join(self.data_dir, self.config.get(organism, 'annotation'))
         self.annotation_dump_dir = os.path.dirname(os.path.join(self.data_dir, self.annotation))
         self.gene_alias = os.path.join(self.data_dir, self.config.get(organism, 'gene_alias'))
@@ -114,15 +113,7 @@ class GenomeData(ConfigurationFile):
 
     def get_gene_regions(self):
         """Returns the current path to the gene_regions BED file."""
-        return self.genes_gencode
-
-    def get_genes_gencode(self):
-        """Returns the current path to the gene_regions BED file."""
-        return self.genes_gencode
-
-    def get_genes_refseq(self):
-        """Returns the current path to the gene_regions BED file."""
-        return self.genes_refseq
+        return self.gene_regions
 
     def get_annotation(self):
         """
