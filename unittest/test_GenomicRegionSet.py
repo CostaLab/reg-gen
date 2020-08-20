@@ -732,6 +732,7 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1', 6, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
+
         """
         A :    ------
         B : none
@@ -743,6 +744,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 6)
         self.assertEqual(result[0].final, 15)
+
         """
         A : ------
         B :    ------
@@ -754,6 +756,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 1)
         self.assertEqual(result[0].final, 6)
+
         """
         A :    ------
         B : ------
@@ -765,6 +768,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].initial, 10)
         self.assertEqual(result[0].final, 15)
+
         """
         A :    ---
         B : ---------
@@ -774,6 +778,7 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1', 1, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
+
         """
         A : ---------
         B :    ---
@@ -787,6 +792,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[0].final, 6)
         self.assertEqual(result[1].initial, 10)
         self.assertEqual(result[1].final, 15)
+
         """
         A :    ------
         B :    ------
@@ -796,6 +802,7 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1', 6, 15]])
         result = self.setA.subtract(self.setB)
         self.assertEqual(len(result), 0)
+
         """
         A :   ----------              ------
         B :          ----------                    ----
@@ -809,6 +816,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[0].final, 20)
         self.assertEqual(result[1].initial, 70)
         self.assertEqual(result[1].final, 85)
+
         """
         A :        ------   -----
         B :    ------
@@ -822,6 +830,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[0].final, 30)
         self.assertEqual(result[1].initial, 35)
         self.assertEqual(result[1].final, 55)
+
         """
         A :   ch1     ---------------------
               ch2     -------------------------
@@ -840,6 +849,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result[1].final, 30000)
         self.assertEqual(result[2].initial, 0)
         self.assertEqual(result[2].final, 31000)
+
         """
         A :   -----------------------------------------------------------
         B :    ---    ---------         ----           ----
@@ -863,7 +873,6 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB)
         res_list = [(r.initial, r.final) for r in result]
-
         self.assertListEqual(res_list, [(5, 10), (15, 30), (70, 120), (140, 150), (180, 200)])
 
         """
@@ -879,7 +888,6 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1', 10, 15], ['chr1', 30, 70], ['chr1', 120, 140], ['chr1', 200, 240]])
         result = self.setA.subtract(self.setB, merge=False)
         res_list = [(r.initial, r.final) for r in result]
-
         self.assertListEqual(res_list, [(5, 10), (15, 30), (70, 100), (20, 30),
                                         (70, 80), (95, 120), (140, 150), (180, 200)])
 
@@ -896,115 +904,229 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(len(result), 15)
 
         # test exact subtraction
+        # the arguments merge and whole_region must be ignored, so we set their defaults in the most disrupting way:
+        # whole_region=False: allows partial subtraction (unless exact=True)
+        # merge=True: any overlapping regions in the two GRSs are merged (unless exact=True)
 
-        # only one region to subtract, 2 regions before that one, 1 region after it, region is duplicated
-        self.region_sets([['chr1', 10, 13], ['chr1', 10, 15], ['chr1', 10, 20], ['chr1', 10, 20], ['chr1', 12, 30]],
-                         [['chr1', 10, 20]])
-        result = self.setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 10)
-        self.assertEqual(result[0].final, 13)
-        self.assertEqual(result[1].chrom, 'chr1')
-        self.assertEqual(result[1].initial, 10)
-        self.assertEqual(result[1].final, 15)
-        self.assertEqual(result[2].chrom, 'chr1')
-        self.assertEqual(result[2].initial, 12)
-        self.assertEqual(result[2].final, 30)
-
-        # subtract two different but overlapping regions, one duplicate region in GRS
-        self.region_sets([['chr1', 10, 13], ['chr1', 10, 13], ['chr1', 10, 15], ['chr1', 10, 20], ['chr1', 12, 30],
-                          ['chr5', 4, 64]], [['chr1', 10, 20], ['chr1', 12, 30]])
-        result = self.setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 10)
-        self.assertEqual(result[0].final, 13)
-        self.assertEqual(result[1].chrom, 'chr1')
-        self.assertEqual(result[1].initial, 10)
-        self.assertEqual(result[1].final, 15)
-        self.assertEqual(result[2].chrom, 'chr5')
-        self.assertEqual(result[2].initial, 4)
-        self.assertEqual(result[2].final, 64)
-
-        # subtract two different but not overlapping regions, one duplicate region in GRS
-        self.region_sets([['chr1', 10, 13], ['chr1', 10, 13], ['chr1', 10, 15], ['chr1', 10, 20], ['chr2', 12, 30],
-                          ['chr5', 4, 64]], [['chr1', 10, 20], ['chr2', 12, 30]])
-        result = self.setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 10)
-        self.assertEqual(result[0].final, 13)
-        self.assertEqual(result[1].chrom, 'chr1')
-        self.assertEqual(result[1].initial, 10)
-        self.assertEqual(result[1].final, 15)
-        self.assertEqual(result[2].chrom, 'chr5')
-        self.assertEqual(result[2].initial, 4)
-        self.assertEqual(result[2].final, 64)
-
-
-        # subtract "same" region but on different chromosome
-        self.region_sets([['chr4', 6, 97]], [['chr7', 6, 97]])
-        result = self.setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].chrom, 'chr4')
-        self.assertEqual(result[0].initial, 6)
-        self.assertEqual(result[0].final, 97)
-
-        # subtract one duplicated region and test ordering of resulting GRS
-        self.region_sets([['chr2', 10, 13], ['chr2', 10, 13], ['chr1', 10, 15], ['chr1', 10, 20], ['chr1', 12, 30]],
-                         [['chr1', 10, 20], ['chr1', 10, 20]])
-        result = self.setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 10)
-        self.assertEqual(result[0].final, 15)
-        self.assertEqual(result[1].chrom, 'chr1')
-        self.assertEqual(result[1].initial, 12)
-        self.assertEqual(result[1].final, 30)
-        self.assertEqual(result[2].chrom, 'chr2')
-        self.assertEqual(result[2].initial, 10)
-        self.assertEqual(result[2].final, 13)
-
-        # subtract region that is not included in GRS
-        self.region_sets([['chr1', 7, 15], ['chr3', 8, 46], ['chr9', 3, 38]], [['chr3', 7, 19]])
-        result = self. setA.subtract(self.setB, exact=True)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 7)
-        self.assertEqual(result[0].final, 15)
-        self.assertEqual(result[1].chrom, 'chr3')
-        self.assertEqual(result[1].initial, 8)
-        self.assertEqual(result[1].final, 46)
-        self.assertEqual(result[2].chrom, 'chr9')
-        self.assertEqual(result[2].initial, 3)
-        self.assertEqual(result[2].final, 38)
-
-        # subtract three different regions from one GRS of length 1
         """
-        first region        -----------
-        second region         -----
-        third region            -----
-        GRS                     -----
+        Subtracting one region (and its duplicate), ignoring regions before/after and overlapping
+        
+        A :   --- 
+                  -----
+                  ----------
+                  ----------
+                    ------------------
+                             -----
+        B :       ----------
+        R :   --- 
+                  -----
+                    ------------------
+                             -----
         """
-        self.region_sets([['chr4', 46, 94]], [['chr4', 2, 100], ['chr4', 29, 80], ['chr4', 46, 94]])
-        result = self.setA.subtract(self.setB, exact=True)
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 13, 23],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr1', 13, 23]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 4)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(10, 13), (13, 18), (15, 35), (25, 30)])
+
+        """
+        Subtracting two different but overlapping regions, and one duplicate region gets removed
+
+        A :   --- 
+                  -----
+                  ----------
+                  ----------
+                    ------------------
+                             -----
+        B :       -----
+                    ------------------
+        R :   --- 
+                  ----------
+                             -----
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 13, 23],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr1', 13, 18], ['chr1', 15, 35]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 3)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(10, 13), (13, 23), (25, 30)])
+
+        """
+        Subtracting two different but overlapping regions that are on different chromosomes,
+        and one duplicate region gets removed
+
+        A :   --- 
+                  -----
+                  ----------
+                  ----------
+                    ------------------
+                             -----
+        B :       ----- (chr5)
+                    ------------------ (chr9)
+        R :   --- 
+                  -----
+                  ----------
+                    ------------------
+                             -----
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 13, 23],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr5', 13, 18], ['chr9', 15, 35]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 5)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(10, 13), (13, 18), (13, 23), (15, 35), (25, 30)])
+
+        """
+        Subtracting two different but not overlapping regions, and one duplicate region gets removed
+
+        A :   --- 
+                  -----
+                  ----------
+                    ------------------
+                    ------------------
+                             -----
+        B :   ---            -----
+        R :       -----
+                  ----------
+                    ------------------
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 15, 35],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr1', 10, 13], ['chr1', 25, 30]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 3)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(13, 18), (13, 23), (15, 35)])
+
+        """
+        Subtracting two different but not overlapping regions that are on different chromosomes,
+        and one duplicate region gets removed
+
+        A :   --- 
+                  -----
+                  ----------
+                    ------------------
+                    ------------------
+                             -----
+        B :   ---            -----
+              chr7            chr3
+        R :       -----
+                  ----------
+                    ------------------
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 15, 35],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr7', 10, 13], ['chr3', 25, 30]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 5)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(10, 13), (13, 18), (13, 23), (15, 35), (25, 30)])
+
+        """
+        Start from unsorted GRS. Subtracting the same region twice. Verify that output GRS is sorted.
+
+        A :   ---            -----
+                  ----------
+                    ------------------ (chr2)
+                    ------------------
+                  -----
+                             
+        B :       ----------
+                  ----------
+        R :   --- 
+                  -----
+                    ------------------
+                             -----
+                    ------------------ (chr2)
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 25, 30],
+                          ['chr1', 13, 23], ['chr2', 15, 35],
+                          ['chr1', 15, 35], ['chr1', 13, 18]],
+                         [['chr1', 13, 23], ['chr1', 13, 23]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 5)
+        res_list = [(r.chrom, r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [('chr1', 10, 13), ('chr1', 13, 18), ('chr1', 15, 35), ('chr1', 25, 30),
+                                        ('chr2', 15, 35)])
+
+        """
+        Subtracting one region that is on same chromosome, but not in A
+
+        A :   --- 
+                  -----
+                  ----------
+                  ----------
+                    ------------------
+                             -----
+        B :                            -----
+        R :   --- 
+                  -----
+                  ----------
+                    ------------------
+                             -----
+        """
+        self.region_sets([['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 13, 23],
+                          ['chr1', 15, 35], ['chr1', 25, 30]],
+                         [['chr1', 36, 41]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
+        self.assertEqual(len(result), 5)
+        res_list = [(r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [(10, 13), (13, 18), (13, 23), (15, 35), (25, 30)])
+
+        """
+        Subtracting multiple regions from a 1-sized GRS
+
+        A :         ------------------
+        B :   --- 
+                  -----
+                  ----------
+                  ----------
+                    ------------------
+                             -----
+        R :
+        """
+        self.region_sets([['chr1', 15, 35]],
+                         [['chr1', 10, 13], ['chr1', 13, 18],
+                          ['chr1', 13, 23], ['chr1', 13, 23],
+                          ['chr1', 15, 35], ['chr1', 25, 30]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
         self.assertEqual(len(result), 0)
 
-        # subtract unordered
-        self.region_sets([['chr12', 75, 117], ['chr1', 3, 8], ['chr1', 48, 56], ['chr1', 20, 36], ['chr12', 8, 15]],
-                        [['chr12', 8, 15], ['chr6', 17, 42], ['chr1', 48, 56], ['chr4', 75, 117]])
-        result = self.setA.subtract(self.setB, exact=True)
+        """
+        Start from unsorted GRS. Subtract a few regions (also unsorted). Verify that output GRS is sorted
+
+        A :                  -----
+                  ----------
+                    ------------------ (chr2)
+                    ------------------
+                  -----
+             ---
+
+        B :       ----------
+                             -----
+                    ------------------
+        R :  --- 
+                  -----
+                    ------------------ (chr2)
+        """
+        self.region_sets([['chr1', 25, 30], ['chr1', 13, 23],
+                          ['chr2', 15, 35], ['chr1', 15, 35],
+                          ['chr1', 13, 18], ['chr1', 10, 13]],
+                         [['chr1', 13, 23], ['chr1', 25, 30], ['chr1', 15, 35]])
+        result = self.setA.subtract(self.setB, exact=True, merge=True, whole_region=False)
         self.assertEqual(len(result), 3)
-        self.assertEqual(result[0].chrom, 'chr1')
-        self.assertEqual(result[0].initial, 3)
-        self.assertEqual(result[0].final, 8)
-        self.assertEqual(result[1].chrom, 'chr1')
-        self.assertEqual(result[1].initial, 20)
-        self.assertEqual(result[1].final, 36)
-        self.assertEqual(result[2].chrom, 'chr12')
-        self.assertEqual(result[2].initial, 75)
-        self.assertEqual(result[2].final, 117)
+        res_list = [(r.chrom, r.initial, r.final) for r in result]
+        self.assertListEqual(res_list, [('chr1', 10, 13), ('chr1', 13, 18), ('chr2', 15, 35)])
 
     def test_merge(self):
         """

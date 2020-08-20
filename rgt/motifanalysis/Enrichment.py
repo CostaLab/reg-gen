@@ -135,18 +135,27 @@ def main(args):
         output_location = args.output_location
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
+    print(">> output location:", output_location)
 
     # Matching folder
     if args.matching_location:
         match_location = args.matching_location
     else:
         match_location = os.path.join(os.getcwd(), matching_folder_name)
+    print(">> match location:", match_location)
+    print()
+
+    # Default genomic data
+    genome_data = GenomeData(args.organism)
+    print(">> genome:", genome_data.organism)
+    print()
 
     # the matching directory must exist, for obvious reasons
     if not os.path.isdir(match_location):
         err.throw_error("ME_MATCH_NOTFOUND")
 
     # Background file must exist
+    print(">> loading background file..")
     background_original_filename = background_filename
     if not os.path.isfile(background_filename):
         err.throw_error("DEFAULT_ERROR", add_msg="Background file does not exist or is not readable.")
@@ -159,9 +168,10 @@ def main(args):
 
     # Background MPBS file must exist
     path, ext = os.path.splitext(background_filename)
+    background_name = os.path.basename(path)
 
     # first we check at matching folder location
-    background_mpbs_filename = os.path.join(match_location, os.path.basename(path) + "_mpbs" + ext)
+    background_mpbs_filename = os.path.join(match_location, background_name + "_mpbs" + ext)
 
     if not os.path.isfile(background_mpbs_filename):
         # if not found, we search at background file location
@@ -184,13 +194,14 @@ def main(args):
     else:
         err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file must be in either BED or BigBed format.")
 
-    # Default genomic data
-    genome_data = GenomeData(args.organism)
-
-    print(">> genome:", genome_data.organism)
+    background = GenomicRegionSet("background")
+    background.read(background_filename)
+    print(">>> ", background_name, ", ", len(background), " regions", sep="")
+    print()
 
     # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
+        print(">> loading external motif databases..")
         # args.motif_dbs is a list of paths to pwm files
         motif_set = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
 
@@ -198,20 +209,24 @@ def main(args):
         if 'database' in filter_values:
             del filter_values['database']
     else:
+        print(">> loading motif databases..")
         if 'database' in filter_values:
             motif_set = MotifSet(preload_motifs=filter_values['database'])
         else:
             motif_set = MotifSet(preload_motifs="default")
 
-    print(">> used database(s):", ",".join([str(db) for db in motif_set.motif_data.repositories_list]))
+    for db in motif_set.motif_data.get_repositories_list():
+        print(">>>", db)
+    print()
 
     # applying filtering pattern, taking a subset of the motif set
     if args.filter:
+        print(">> applying motif filter..")
         motif_set = motif_set.filter(filter_values, search=args.filter_type)
 
     motif_names = list(motif_set.motifs_map.keys())
-
     print(">> motifs loaded:", len(motif_names))
+    print()
 
     # Default image data
     image_data = ImageData()
@@ -245,10 +260,12 @@ def main(args):
             del exp_matrix
 
             print(">> experimental matrix loaded")
+            print()
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
     elif input_files:
+        print(">> loading input files..")
         # get input files, if available
         for input_filename in input_files:
             name, _ = os.path.splitext(os.path.basename(input_filename))
@@ -258,7 +275,8 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-        print(">> input regions BED files loaded")
+            print(">>> ", name, ", ", len(regions), " regions", sep="")
+            print()
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
@@ -347,13 +365,9 @@ def main(args):
     except Exception:
         err.throw_error("ME_OUT_FOLDER_CREATION")
 
-    print()
-
     start = time.time()
     print(">> collecting background statistics...", sep="", end="")
     sys.stdout.flush()
-    background = GenomicRegionSet("background")
-    background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
     background_mpbs.read(background_mpbs_filename)
 
@@ -394,8 +408,6 @@ def main(args):
             else:
                 link_name = grs.name
                 sitetest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_fulltest + ".html")
-
-    print()
 
     # Iterating on each input object
     for curr_input in input_list:

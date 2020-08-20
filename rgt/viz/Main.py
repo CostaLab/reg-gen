@@ -8,7 +8,7 @@ import argparse
 import datetime
 import matplotlib
 
-matplotlib.use('Agg', warn=False)
+matplotlib.use('Agg')
 
 from .boxplot import Boxplot
 from .lineplot import Lineplot

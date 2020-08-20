@@ -9,7 +9,6 @@ import argparse
 import datetime
 import subprocess
 import matplotlib
-matplotlib.use('Agg', warn=False)
 from collections import OrderedDict
 
 # Local Libraries
@@ -31,7 +30,7 @@ from ..tdf.Report import Report
 current_dir = os.getcwd()
 
 """
-Triplex Domain Finder (TDF) provides statistical tests and plotting tools for 
+Triplex Domain Finder (TDF) provides statistical tests and plotting tools for
 triplex binding site analysis
 
 Author: Joseph C.C. Kuo
@@ -52,9 +51,9 @@ def main():
                                                   Author: Chao-Chung Kuo',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--version', action='version', version=version_message)
-    
+
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
-    
+
     ################### Promoter test ##########################################
 
     h_promotor = "Promoter test evaluates the association between the given lncRNA to the target promoters."
@@ -67,12 +66,12 @@ def main():
     parser_promotertest.add_argument('-bg', default=False, metavar='  ', help="Input BED file of the promoter regions of background genes")
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results")
     parser_promotertest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default is RNA name)")
-    
+
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism')
     parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
     parser_promotertest.add_argument('-tss', type=int, default=0, metavar='  ', help="Define the distance between the promoter regions and TSS along gene body (default: %(default)s)")
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (default: %(default)s)")
-    
+
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
@@ -101,7 +100,7 @@ def main():
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexes] Merge overlapping features into a cluster and report the spanning region.")
     parser_promotertest.add_argument('-rm', type=int, default=2, metavar='  ', help="[Triplexes] Set the multiprocessing")
     parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexes] Define other parameters for Triplexes")
-    
+
     ################### Genomic Region Test ##########################################
     h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
     parser_randomtest = subparsers.add_parser('regiontest', help=h_region)
@@ -111,12 +110,12 @@ def main():
     parser_randomtest.add_argument('-bed', metavar='  ', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
     parser_randomtest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. (default is RNA name)")
-    
-    parser_randomtest.add_argument('-n', type=int, default=10000, metavar='  ', 
+
+    parser_randomtest.add_argument('-n', type=int, default=10000, metavar='  ',
                                    help="Number of times for randomization (default: %(default)s)")
 
     parser_randomtest.add_argument('-organism', metavar='  ', help='Define the organism')
- 
+
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
     parser_randomtest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (default: %(default)s)")
@@ -130,7 +129,7 @@ def main():
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     parser_randomtest.add_argument('-mp', type=int, default=1, metavar='  ', help="Define the number of threads for multiprocessing")
     parser_randomtest.add_argument('-nofile', action="store_true", default=False, help="Don't save any files in the output folder, except the statistics.")
-    
+
     parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexes] Define the minimum length of triplex (default: %(default)s)")
     parser_randomtest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexes] Set the maximal error-rate in %% tolerated (default: %(default)s)")
     parser_randomtest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexes] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (default: %(default)s)")
@@ -167,7 +166,7 @@ def main():
                                     help="[Triplexes] Autobinding offset. Maximum offset between autobinding regions (must be positive, >= 0), e.g., 1 for regions to be at least adjacent, 2 if there can be 1 bp space between segments, etc. (default: %(default)s)")
 
     ##########################################################################
-    # rgt-TDF integrate -path 
+    # rgt-TDF integrate -path
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     parser_integrate.add_argument('-exp', action="store_true", default=False, help='Include expression score for ranking.')

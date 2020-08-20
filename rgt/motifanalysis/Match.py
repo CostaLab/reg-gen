@@ -139,6 +139,7 @@ def main(args):
     else:
         output_location = npath(matching_folder_name)
     print(">> output location:", output_location)
+    print()
 
     # Default genomic data
     genome_data = GenomeData(args.organism)
@@ -146,6 +147,7 @@ def main(args):
     print(">> genome:", genome_data.organism)
     print(">> pseudocounts:", args.pseudocounts)
     print(">> fpr threshold:", args.fpr)
+    print()
 
     ###################################################################################################
     # Reading Input Regions
@@ -162,11 +164,13 @@ def main(args):
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
 
-            print(">>> experimental matrix loaded")
+            print(">> experimental matrix loaded")
+            print()
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
     elif args.input_files:
+        print(">> loading input files..")
         # get input files, if available
         for input_filename in args.input_files:
             name, _ = os.path.splitext(os.path.basename(input_filename))
@@ -176,7 +180,8 @@ def main(args):
 
             genomic_regions_dict[name] = regions
 
-            print(">>> input file", name, "loaded:", len(regions), "regions")
+            print(">>> ", name, ", ", len(regions), " regions", sep="")
+        print()
 
     # we put this here because we don't want to create the output directory unless we
     # are sure the initialisation (including loading input files) worked
@@ -191,6 +196,7 @@ def main(args):
     # get promoter regions from list of genes (both target and background)
     # TODO: should be more clever, allow precomputed regions etc
     if args.target_genes_filename:
+        print(">> creating target promoter file..")
         annotation = AnnotationSet(args.organism, alias_source=args.organism,
                                    protein_coding=True, known_only=True)
 
@@ -206,11 +212,13 @@ def main(args):
 
         genomic_regions_dict[target_regions.name] = target_regions
 
-        print(">>> target promoter file created:", len(target_regions), "regions")
+        print(">>> ", len(target_regions), " regions", sep="")
+        print()
 
     # we make a background in case it's requested, but also in case a list of target genes has not been
     # provided
     if args.promoter_make_background or (args.promoters_only and not args.target_genes_filename):
+        print(">> creating background promoter file..")
         if not annotation:
             annotation = AnnotationSet(args.organism, alias_source=args.organism,
                                        protein_coding=True, known_only=True)
@@ -231,7 +239,8 @@ def main(args):
 
         genomic_regions_dict[background_regions.name] = background_regions
 
-        print(">>> background promoter file created:", len(background_regions), "regions")
+        print(">>> ", len(background_regions), " regions", sep="")
+        print()
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
@@ -265,14 +274,13 @@ def main(args):
                 max_region_len = curr_len
                 max_region = curr_genomic_region
 
-    print(">> all files loaded")
-
     ###################################################################################################
     # Creating random regions
     ###################################################################################################
 
     # if a random proportion is set, create random regions
     if args.rand_proportion:
+        print(">> creating random regions file..")
 
         # Create random coordinates and name it random_regions
         rand_region = max_region.random_regions(args.organism, multiply_factor=args.rand_proportion, chrom_X=True)
@@ -302,32 +310,41 @@ def main(args):
             except Exception:
                 err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
-        print(">> random regions file created:", len(rand_region), "regions")
+        print(">>> ", len(rand_region), " regions", sep="")
+        print()
 
     ###################################################################################################
     # Creating PWMs
     ###################################################################################################
 
+    # Load motif_set (includes MotifData object), is either customized or default
     if args.motif_dbs:
-        ms = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
+        print(">> loading external motif databases..")
+        # args.motif_dbs is a list of paths to pwm files
+        motif_set = MotifSet(preload_motifs=args.motif_dbs, motif_dbs=True)
+
         # filter for dbs only if --motif_dbs is not set
         if 'database' in filter_values:
             del filter_values['database']
     else:
+        print(">> loading motif databases..")
         if 'database' in filter_values:
-            ms = MotifSet(preload_motifs=filter_values['database'])
+            motif_set = MotifSet(preload_motifs=filter_values['database'])
         else:
-            ms = MotifSet(preload_motifs="default")
+            motif_set = MotifSet(preload_motifs="default")
 
-    print(">> used database(s):", ",".join([str(db) for db in ms.motif_data.repositories_list]))
+    for db in motif_set.motif_data.get_repositories_list():
+        print(">>>", db)
+    print()
 
     # applying filtering pattern, taking a subset of the motif set
     if args.filter:
-        ms = ms.filter(filter_values, search=args.filter_type)
+        print(">> applying motif filter..")
+        motif_set = motif_set.filter(filter_values, search=args.filter_type)
 
-    motif_list = ms.get_motif_list(args.pseudocounts, args.fpr)
-
+    motif_list = motif_set.get_motif_list(args.pseudocounts, args.fpr)
     print(">> motifs loaded:", len(motif_list))
+    print()
 
     # Performing normalized threshold strategy if requested
     if args.norm_threshold:
@@ -362,8 +379,6 @@ def main(args):
 
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
-
-    print()
 
     # Iterating on list of genomic region sets
     for grs in regions_to_match:
@@ -440,7 +455,6 @@ def main(args):
 
         secs = time.time() - start
         print("[", "%02.3f" % secs, " seconds]", sep="")
-
 
 # TODO must double-check/fix the normalisation.
 def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):

@@ -853,8 +853,7 @@ def post_processing(footprints, original_regions, fp_min_size, fp_ext, genome_da
     footprints_overlap.write(output_file_name)
 
     # the number of reads
-    lines = pysam.idxstats(reads_file.file_name).splitlines()
-    num_reads = sum(map(int, [x.split("\t")[2] for x in lines if not x.startswith("#")]))
+    num_reads = pysam.AlignmentFile(reads_file.file_name).count(until_eof=True)
 
     # the number of peaks and tag count within peaks
     num_peaks = 0

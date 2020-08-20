@@ -1135,12 +1135,13 @@ class GenomicRegionSet:
         return extended_self.intersect(y)
 
     def subtract(self, y, whole_region=False, merge=True, exact=False):
-        """Return a GenomicRegionSet excluded the overlapping regions with y.
+        """Return a copy of this GenomicRegionSet minus all the regions overlapping with y.
 
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to subtract by
             - whole_region -- subtract the whole region, not partially
+            - merge -- before subtracting, it merges any overlapping sequence within self or y
             - exact --  only regions which match exactly with a region within y are subtracted
                         if set, whole_region and merge are completely ignored
                         if set, the returned GRS is sorted and does not contain duplicates
@@ -1273,10 +1274,11 @@ class GenomicRegionSet:
             if len(self) == 0 or len(y) == 0:
                 return self
 
-            # If there is overlap within self or y, they should be merged first.
             if not self.sorted:
                 self.sort()
 
+            # if there is overlap within self or y, and the `merge` option is set,
+            # we merge any overlapping sequence and create two different GenomicRegionSets
             if merge:
                 a = self.merge(w_return=True)
                 b = y.merge(w_return=True)

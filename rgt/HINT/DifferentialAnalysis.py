@@ -10,6 +10,7 @@ import logging
 
 from scipy.stats import zscore
 from scipy.stats import norm
+from scipy import stats
 from argparse import SUPPRESS
 
 from multiprocessing import Pool, cpu_count
@@ -64,6 +65,8 @@ def diff_analysis_args(parser):
                         help="The prefix for results files. DEFAULT: differential")
     parser.add_argument("--standardize", action="store_true", default=False,
                         help="If set, the signal will be rescaled to (0, 1) for plotting.")
+    parser.add_argument("--no-lineplots", default=False, action='store_true',
+                        help="If set, the footprint line plots will not be generated. DEFAULT: False")
     parser.add_argument("--output-profiles", default=False, action='store_true',
                         help="If set, the footprint profiles will be writen into a text, in which each row is a "
                              "specific instance of the given motif. DEFAULT: False")
@@ -205,7 +208,7 @@ def diff_analysis_run(args):
 
     print("signal generation is done!\n")
 
-    # compute normalization facotr for each condition
+    # compute normalization factor for each condition
     factors = compute_factors(signals)
     output_factor(args, factors, conditions)
 
@@ -217,18 +220,19 @@ def diff_analysis_run(args):
     if args.output_profiles:
         output_profiles(mpbs_name_list, signals, conditions, args.output_location)
 
-    print("generating line plot for each motif...\n")
-    if args.nc == 1:
-        for i, mpbs_name in enumerate(mpbs_name_list):
-            output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-                              args.window_size, colors))
-    else:
-        with Pool(processes=args.nc) as pool:
-            arguments_list = list()
+    if not args.no_lineplots:
+        print("generating line plot for each motif...\n")
+        if args.nc == 1:
             for i, mpbs_name in enumerate(mpbs_name_list):
-                arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
-                                       args.window_size, colors))
-            pool.map(output_line_plot, arguments_list)
+                output_line_plot((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+                                  args.window_size, colors))
+        else:
+            with Pool(processes=args.nc) as pool:
+                arguments_list = list()
+                for i, mpbs_name in enumerate(mpbs_name_list):
+                    arguments_list.append((mpbs_name, motif_num[i], signals[:, i, :], conditions, motif_pwm[i], output_location,
+                                           args.window_size, colors))
+                pool.map(output_line_plot, arguments_list)
 
     ps_tc_results = list()
     for i, mpbs_name in enumerate(mpbs_name_list):
@@ -269,6 +273,8 @@ def get_raw_signal(arguments):
                 if p1 <= cut_site < p2:
                     signal[cut_site - p1] += 1.0
 
+    signal = smooth(signal)
+
     return signal
 
 
@@ -295,6 +301,8 @@ def get_bc_signal(arguments):
 
         # smooth the signal
         signal = np.add(signal, np.array(_signal))
+
+    signal = smooth(signal)
 
     return signal
 
@@ -630,3 +638,21 @@ def output_profiles(mpbs_name_list, signals, conditions, output_location):
             output_filename = os.path.join(output_location, "{}_{}.txt".format(condition, mpbs_name))
             with open(output_filename, "w") as f:
                 f.write("\t".join(map(str, signals[i][j])) + "\n")
+
+
+def smooth(signal, window_size=5, rank=5):
+    k = len(signal)
+    zscore = stats.zscore(signal)
+    order = zscore.argsort()
+    ranks = order.argsort()
+
+    signal[ranks > (k - rank)] = np.nan
+
+    smooth_signal = np.zeros(k)
+
+    for i in range(k):
+        a = max(0, i - round(window_size / 2))
+        b = min(k, ceil(i + window_size / 2))
+        smooth_signal[i] = np.nanmean(signal[a:b])
+
+    return smooth_signal
