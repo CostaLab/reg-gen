@@ -464,7 +464,8 @@ def get_pwm(fasta, regions, window_size):
 
 def compute_factors(signals):
     signals = np.sum(signals, axis=2)
-    signals_log = np.log(signals)
+    # avoid to get a NA value
+    signals_log = np.log(signals + 0.01)
     signals_log = signals_log[:, ~np.isnan(signals_log).any(axis=0)]
     signals_log = signals_log - np.mean(signals_log, axis=0, keepdims=True)
     factors = np.exp(np.median(signals_log, axis=1))
