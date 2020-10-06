@@ -13,7 +13,6 @@ import argparse
 import natsort
 from operator import attrgetter
 import matplotlib
-matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 from os.path import expanduser
 home = expanduser("~")
@@ -67,8 +66,8 @@ if __name__ == "__main__":
     version_message = "rgt-tools - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
     parser = argparse.ArgumentParser(description='RGT-tools is for converting various data format in bioinformatic research\
                                                   Author: Joseph Chao-Chung Kuo',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter, version=version_message)
-    
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--version', action='version', version=version_message)
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
     ############### GTF add transcripts ######################################
