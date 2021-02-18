@@ -31,13 +31,13 @@ The quickest and easiest way to get RGT is to to use pip. First some dependencie
 
 ::
 
-    pip install --user cython numpy scipy
+    pip3 install --user cython numpy scipy
 
 Then install the full RGT suite with all other dependencies:
 
 ::
 
-    pip install --user RGT
+    pip3 install --user RGT
 
 
 Alternatively (but not recommended), you can clone this repository:
@@ -53,7 +53,7 @@ to manual installation:
 ::
 
     cd reg-gen
-    python setup.py install --user
+    python3 setup.py install --user
 
 Detailed installation instructions and basic problem solving can be
 found `on our website <http://www.regulatory-genomics.org/rgt/download-installation>`__.
