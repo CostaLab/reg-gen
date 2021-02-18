@@ -97,9 +97,9 @@ def diff_analysis_run(args):
                   "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666",
                   "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#666666"]
 
-    assert len(mpbs_files) == len(reads_files) == len(conditions), \
-        "Number of motif, read and condition names are not same: {}, {}, {}".format(len(mpbs_files), len(reads_files),
-                                                                                    len(conditions))
+    assert len(reads_files) == len(conditions), \
+        "Number of bam file and condition names are not same: {}, {}, {}".format(len(reads_files),
+                                                                                 len(conditions))
 
     # Check if the index file exists
     for reads_file in reads_files:
