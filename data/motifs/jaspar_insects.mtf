@@ -1,0 +1,143 @@
+MA0010	MA0010.1.br	1	br	Other factors with up to three adjacent zinc fingers	Q01295	COMPILED	insects	Drosophila melanogaster	3.7795,6.893,8.0365,10.3905,11.273,13.094
+MA0011	MA0011.1.br	1	br	Other factors with up to three adjacent zinc fingers	Q01295	COMPILED	insects	Drosophila melanogaster	4.96,7.225,8.24,9.5355,10.1875,11.256709931422208
+MA0012	MA0012.1.br	1	br	Other factors with up to three adjacent zinc fingers	Q01295	COMPILED	insects	Drosophila melanogaster	4.617,7.3135,8.274,10.152,10.779,12.0015
+MA0013	MA0013.1.br	1	br	Other factors with up to three adjacent zinc fingers	Q24206	COMPILED	insects	Drosophila melanogaster	4.5325,7.172,8.143,10.1735,10.952,12.4
+MA0015	MA0015.1.Cf2	1	Cf2	Factors with multiple dispersed zinc fingers	P20385	SELEX	insects	Drosophila melanogaster	2.827,6.4575,7.906,10.5335,11.5055,13.7845
+MA0016	MA0016.1.usp	1	usp	.	P20153	SELEX	insects	Drosophila melanogaster	0.658,5.2,6.842,9.893,11.718,14.0185
+MA0022	MA0022.1.dl	1	dl	.	P15330	SELEX	insects	Drosophila melanogaster	3.1955,6.5915,7.865,10.4665,11.3535,13.3885
+MA0023	MA0023.1.dl	1	dl	.	P15330	SELEX	insects	Drosophila melanogaster	3.2,6.535,8.058,10.7315,11.346,13.454
+MA0026	MA0026.1.Eip74EF	1	Eip74EF	Ets-related factors	P20105	SELEX	insects	Drosophila melanogaster	3.536,7.3165,8.539,10.867,11.348977218945329,11.348977218945329
+MA0049	MA0049.1.hb	1	hb	Factors with multiple dispersed zinc fingers	P05084	COMPILED	insects	Drosophila melanogaster	3.992,7.1515,8.343,10.596,11.2565,12.6925
+MA0085	MA0085.1.Su(H)	1	Su(H)	.	P28159	COMPILED	insects	Drosophila melanogaster	1.5975,5.4425,6.9765,10.0875,11.1995,13.7355
+MA0086	MA0086.2.sna	2	sna	More than 3 adjacent zinc finger factors	P08044	SMiLE-seq	insects	Drosophila melanogaster	-0.047,4.813,6.555,10.1855,11.646,14.2835
+MA0094	MA0094.2.Ubx	2	Ubx	HOX-related factors	P83949	bacterial 1-hybrid	insects	Drosophila melanogaster	3.2675,6.0475,7.3715,11.1985,12.0155,12.796050508619922
+MA0126	MA0126.1.ovo	1	ovo	More than 3 adjacent zinc finger factors	P51521	SELEX	insects	Drosophila melanogaster	3.947,7.5605,8.682,10.4615,11.0835,12.102
+MA0165	MA0165.1.Abd-B	1	Abd-B	HOX-related factors	P09087	bacterial 1-hybrid	insects	Drosophila melanogaster	3.856,7.5565,8.886,10.7415,11.057640416899243,11.057640416899243
+MA0166	MA0166.1.Antp	1	Antp	HOX-related factors	P02833	bacterial 1-hybrid	insects	Drosophila melanogaster	2.82,6.429,7.242,12.1,12.274575895467333,12.274575895467333
+MA0167	MA0167.1.Awh	1	Awh	.	Q8IRC7	bacterial 1-hybrid	insects	Drosophila melanogaster	2.97,7.019,8.594,11.6045,11.797715492039334,11.797715492039334
+MA0168	MA0168.1.B-H1	1	B-H1	HOX-related factors	Q24255	bacterial 1-hybrid	insects	Drosophila melanogaster	3.643,6.6485,9.026,10.853,11.193999676923875,11.193999676923875
+MA0169	MA0169.1.B-H2	1	B-H2	HOX-related factors	Q24256	bacterial 1-hybrid	insects	Drosophila melanogaster	3.3505,7.159,8.6975,11.0195,11.503930581626033,11.503930581626033
+MA0170	MA0170.1.C15	1	C15	.	Q7KS72	bacterial 1-hybrid	insects	Drosophila melanogaster	4.4375,7.618,8.995,10.5565,10.63003311680588,10.63003311680588
+MA0171	MA0171.1.CG11085	1	CG11085	.	Q9VYL0	bacterial 1-hybrid	insects	Drosophila melanogaster	4.4915,6.8065,8.6325,10.507,11.335086578254826,11.335086578254826
+MA0172	MA0172.1.CG11294	1	CG11294	.	Q9W3C6	bacterial 1-hybrid	insects	Drosophila melanogaster	1.4505,7.065,7.065,11.0815,12.039181923505781,12.039181923505781
+MA0173	MA0173.1.CG11617	1	CG11617	.	Q9VPL4	bacterial 1-hybrid	insects	Drosophila melanogaster	1.654,6.6245,6.7105,11.463,12.098022509757325,12.098022509757325
+MA0174	MA0174.1.Dbx	1	Dbx	.	Q9W064	bacterial 1-hybrid	insects	Drosophila melanogaster	4.493,7.8525,8.641,10.5155,10.71471549412226,10.71471549412226
+MA0175	MA0175.1.lms	1	lms	.	Q8MZ02	bacterial 1-hybrid	insects	Drosophila melanogaster	3.748,7.4075,9.046,10.841,11.157269928546292,11.157269928546292
+MA0176	MA0176.1.CG15696-RA	1	CG15696-RA	.	Q9VDH9	bacterial 1-hybrid	insects	Drosophila melanogaster	4.403,7.6825,8.532,10.547647455560648,10.547647455560648,10.547647455560648
+MA0177	MA0177.1.CG18599	1	CG18599	.	Q9VEA3	bacterial 1-hybrid	insects	Drosophila melanogaster	3.841,6.033,8.281,11.159859685939104,11.159859685939104,11.159859685939104
+MA0178	MA0178.1.CG32105	1	CG32105	.	Q9VTW5	bacterial 1-hybrid	insects	Drosophila melanogaster	3.8225,6.761,8.4015,10.629,11.448416893269393,11.448416893269393
+MA0179	MA0179.1.CG32532	1	CG32532	.	Q9VWH1	bacterial 1-hybrid	insects	Drosophila melanogaster	3.641,6.016,8.574,11.5565,11.685340054451578,11.685340054451578
+MA0180	MA0180.1.Vsx2	1	Vsx2	Paired-related HD factors	Q9W4B3	bacterial 1-hybrid	insects	Drosophila melanogaster	2.4815,6.8915,7.3965,10.58,11.6545,13.2845
+MA0181	MA0181.1.Vsx1	1	Vsx1	Paired-related HD factors	Q5U1D9	bacterial 1-hybrid	insects	Drosophila melanogaster	3.5595,7.3125,8.599,11.3215,11.606813807544386,11.606813807544386
+MA0182	MA0182.1.CG4328-RA	1	CG4328-RA	.	Q9VTW3	bacterial 1-hybrid	insects	Drosophila melanogaster	3.8195,7.9735,8.3835,9.944575518674847,9.944575518674847,9.944575518674847
+MA0183	MA0183.1.HHEX	1	HHEX	.	Q9VDF0	bacterial 1-hybrid	insects	Drosophila melanogaster	4.6565,7.434,8.409,10.0735,10.8345,11.482571708932143
+MA0184	MA0184.1.CG9876	1	CG9876	.	Q7YU61	bacterial 1-hybrid	insects	Drosophila melanogaster	3.9235,6.6385,8.544,11.207,11.489483940644048,11.489483940644048
+MA0185	MA0185.1.Deaf1	1	Deaf1	DEAF	Q24180	DNaseI footprinting	insects	Drosophila melanogaster	3.796,7.7365,8.267,8.460315999632515,8.460315999632515,8.460315999632515
+MA0186	MA0186.1.Dfd	1	Dfd	HOX-related factors	P07548	bacterial 1-hybrid	insects	Drosophila melanogaster	3.6155,6.182,8.09,10.6565,11.62375084429744,11.62375084429744
+MA0187	MA0187.1.Dll	1	Dll	.	P20009	bacterial 1-hybrid	insects	Drosophila melanogaster	4.306,7.5755,8.608,10.868,10.941783965117658,10.941783965117658
+MA0188	MA0188.1.Dr	1	Dr	NK-related factors	Q03372	bacterial 1-hybrid	insects	Drosophila melanogaster	2.7665,6.1725,6.5595,11.498,12.039189485424846,12.039189485424846
+MA0189	MA0189.1.E5	1	E5	.	Q9VFQ3	bacterial 1-hybrid	insects	Drosophila melanogaster	3.694,7.395,8.9335,10.822,10.910121836915714,10.910121836915714
+MA0190	MA0190.1.Gsc	1	Gsc	Paired-related HD factors	P54366	bacterial 1-hybrid	insects	Drosophila melanogaster	3.4055,4.5945,8.407,10.475668520459644,10.475668520459644,10.475668520459644
+MA0191	MA0191.1.HGTX	1	HGTX	NK-related factors	Q9NHP8	bacterial 1-hybrid	insects	Drosophila melanogaster	3.8855,6.9535,8.8885,10.68,11.2216568081487,11.2216568081487
+MA0192	MA0192.1.Hmx	1	Hmx	NK-related factors	Q9VEI9	bacterial 1-hybrid	insects	Drosophila melanogaster	2.9705,6.585,7.9635,10.7585,11.725922186843473,11.725922186843473
+MA0193	MA0193.1.schlank	1	schlank	.	Q9W423	bacterial 1-hybrid	insects	Drosophila melanogaster	4.224,7.2215,8.805,10.9415,11.014385824375502,11.014385824375502
+MA0194	MA0194.1.Lim1	1	Lim1	HD-LIM factors	Q9V472	bacterial 1-hybrid	insects	Drosophila melanogaster	1.133,7.1555,7.1555,10.493,11.91830106430854,11.91830106430854
+MA0195	MA0195.1.Lim3	1	Lim3	HD-LIM factors	Q9VJ02	bacterial 1-hybrid	insects	Drosophila melanogaster	4.669,7.599,8.7565,10.6915,10.784659056811046,10.784659056811046
+MA0196	MA0196.1.NK7.1	1	NK7	NK-related factors	O61640	bacterial 1-hybrid	insects	Drosophila melanogaster	4.272,7.526,8.8315,10.6635,11.036628863787035,11.036628863787035
+MA0197	MA0197.2.nub	2	nub	POU domain factors	P31368	bacterial 1-hybrid	insects	Drosophila melanogaster	0.7875,5.0975,6.716,10.0275,11.2755,13.8465
+MA0198	MA0198.1.OdsH	1	OdsH	Paired-related HD factors	O96616	bacterial 1-hybrid	insects	Drosophila melanogaster	4.0535,5.458,7.123,11.2995,11.61657096272472,11.61657096272472
+MA0199	MA0199.1.Optix	1	Optix	HD-SINE factors	Q95RW8	bacterial 1-hybrid	insects	Drosophila melanogaster	2.983,7.3755,8.41604930858146,8.41604930858146,8.41604930858146,8.41604930858146
+MA0200	MA0200.1.Pph13	1	Pph13	.	Q8T0V5	bacterial 1-hybrid	insects	Drosophila melanogaster	4.041,6.7845,8.1285,11.134,11.333438026104142,11.333438026104142
+MA0201	MA0201.1.Ptx1	1	Ptx1	Paired-related HD factors	O18400	bacterial 1-hybrid	insects	Drosophila melanogaster	1.3275,6.713,6.713,11.6125,12.332418314138454,12.332418314138454
+MA0202	MA0202.1.Rx	1	Rx	Paired-related HD factors	Q9W2Q1	bacterial 1-hybrid	insects	Drosophila melanogaster	3.231,5.2585,5.9185,11.791,11.907848401706008,11.907848401706008
+MA0203	MA0203.1.Scr	1	Scr	HOX-related factors	P09077	bacterial 1-hybrid	insects	Drosophila melanogaster	3.3275,5.7325,7.69,11.318,11.853110440352813,11.853110440352813
+MA0204	MA0204.1.Six4	1	Six4	HD-SINE factors	Q9Y1P6	bacterial 1-hybrid	insects	Drosophila melanogaster	4.142,6.1855,9.36,10.305999195939098,10.305999195939098,10.305999195939098
+MA0205	MA0205.2.Trl	2	Trl	.	Q08605	ChIP-seq	insects	Drosophila melanogaster	0.4555,5.0495,6.6905,10.2005,11.582,14.123
+MA0206	MA0206.1.abd-A	1	abd-A	HOX-related factors	P29555	bacterial 1-hybrid	insects	Drosophila melanogaster	3.7785,6.541,8.4225,11.1835,11.667959162134153,11.667959162134153
+MA0207	MA0207.1.achi	1	achi	.	A1Z916	bacterial 1-hybrid	insects	Drosophila melanogaster	4.5535,5.5375,8.7075,10.19520595147858,10.19520595147858,10.19520595147858
+MA0208	MA0208.1.al	1	al	Paired-related HD factors	Q06453	bacterial 1-hybrid	insects	Drosophila melanogaster	0.803,6.9115,6.9115,10.8435,12.04733470131145,12.04733470131145
+MA0209	MA0209.1.ap	1	ap	.	P29673	bacterial 1-hybrid	insects	Drosophila melanogaster	3.93,6.252,8.4395,11.346,11.594742284217666,11.594742284217666
+MA0210	MA0210.1.ara	1	ara	TALE-type homeo domain factors	Q24248	bacterial 1-hybrid	insects	Drosophila melanogaster	5.5315,8.0195,8.068653651128592,8.068653651128592,8.068653651128592,8.068653651128592
+MA0211	MA0211.1.bap	1	bap	NK-related factors	P22809	bacterial 1-hybrid	insects	Drosophila melanogaster	1.1785,6.497,6.56,11.8715,12.453539005394841,12.453539005394841
+MA0212	MA0212.1.bcd	1	bcd	Paired-related HD factors	P09081	bacterial 1-hybrid	insects	Drosophila melanogaster	4.1875,5.105,7.3575,9.859497930995987,9.859497930995987,9.859497930995987
+MA0213	MA0213.1.brk	1	brk	.	Q9XTN4	DNaseI footprinting	insects	Drosophila melanogaster	4.0955,6.8705,8.496,11.2185,11.5235,11.92711429431131
+MA0214	MA0214.1.bsh	1	bsh	NK-related factors	Q04787	bacterial 1-hybrid	insects	Drosophila melanogaster	4.315,7.6455,8.803,10.5975,10.703524850594057,10.703524850594057
+MA0215	MA0215.1.btn	1	btn	.	Q9U984	bacterial 1-hybrid	insects	Drosophila melanogaster	3.8055,7.03,8.4085,10.975,11.417319702819537,11.417319702819537
+MA0216	MA0216.2.cad	2	cad	HOX-related factors	P09085	ChIP-chip	insects	Drosophila melanogaster	-5.5745,1.44,4.9515,10.372,11.7865,14.369
+MA0217	MA0217.1.caup	1	caup	TALE-type homeo domain factors	P54269	bacterial 1-hybrid	insects	Drosophila melanogaster	5.3465,7.112,7.874695504495408,7.874695504495408,7.874695504495408,7.874695504495408
+MA0218	MA0218.1.ct	1	ct	HD-CUT factors	P10180	bacterial 1-hybrid	insects	Drosophila melanogaster	4.6605,6.856,8.6055,9.653324165607355,9.653324165607355,9.653324165607355
+MA0219	MA0219.1.ems	1	ems	NK-related factors	P18488	bacterial 1-hybrid	insects	Drosophila melanogaster	4.2825,7.728,8.9785,10.4875,10.561571646518482,10.561571646518482
+MA0220	MA0220.1.en	1	en	NK-related factors	P02836	bacterial 1-hybrid	insects	Drosophila melanogaster	2.9595,5.759,8.4515,11.3205,11.50587800144205,11.50587800144205
+MA0221	MA0221.1.eve	1	eve	HOX-related factors	P06602	bacterial 1-hybrid	insects	Drosophila melanogaster	4.3635,7.243,8.6175,10.773,10.846590884597669,10.846590884597669
+MA0222	MA0222.1.exd	1	exd	TALE-type homeo domain factors	P40427	bacterial 1-hybrid	insects	Drosophila melanogaster	3.3305,6.2985,8.048,11.254,12.102,12.254040902198351
+MA0224	MA0224.1.exex	1	exex	.	Q9VSC2	bacterial 1-hybrid	insects	Drosophila melanogaster	2.4905,5.6295,7.5815,11.669,11.918905178279184,11.918905178279184
+MA0225	MA0225.1.ftz	1	ftz	HOX-related factors	P02835	bacterial 1-hybrid	insects	Drosophila melanogaster	3.3225,6.3845,8.13,11.0428726702125,11.0428726702125,11.0428726702125
+MA0226	MA0226.1.hbn	1	hbn	.	Q9W2P8	bacterial 1-hybrid	insects	Drosophila melanogaster	3.624,5.946,9.167,11.703,11.878717550502595,11.878717550502595
+MA0227	MA0227.1.hth	1	hth	TALE-type homeo domain factors	O46339	bacterial 1-hybrid	insects	Drosophila melanogaster	3.9715,5.717,8.629,10.28285159622916,10.28285159622916,10.28285159622916
+MA0228	MA0228.1.ind	1	ind	.	O96620	bacterial 1-hybrid	insects	Drosophila melanogaster	2.732,5.829,7.7765,11.557,11.758790080966829,11.758790080966829
+MA0229	MA0229.1.inv	1	inv	NK-related factors	P05527	bacterial 1-hybrid	insects	Drosophila melanogaster	2.092,6.202,7.3015,11.6365,12.202,13.040097574800019
+MA0230	MA0230.1.lab	1	lab	HOX-related factors	P10105	bacterial 1-hybrid	insects	Drosophila melanogaster	3.066,6.3585,7.0235,11.6675,12.023382642235942,12.023382642235942
+MA0231	MA0231.1.lbe	1	lbe	.	Q9VDA1	bacterial 1-hybrid	insects	Drosophila melanogaster	5.0445,7.9975,8.3025,9.193669786993617,9.193669786993617,9.193669786993617
+MA0232	MA0232.1.lbl	1	lbl	.	P91626	bacterial 1-hybrid	insects	Drosophila melanogaster	3.4815,8.1065,8.556,9.642395864276734,9.642395864276734,9.642395864276734
+MA0233	MA0233.1.mirr	1	mirr	.	O01667	bacterial 1-hybrid	insects	Drosophila melanogaster	4.5745,8.275,8.311062520216813,8.311062520216813,8.311062520216813,8.311062520216813
+MA0234	MA0234.1.oc	1	oc	Paired-related HD factors	P22810	bacterial 1-hybrid	insects	Drosophila melanogaster	4.6285,5.245,7.567,9.88332677934384,9.88332677934384,9.88332677934384
+MA0235	MA0235.1.onecut	1	onecut	HD-CUT factors	Q9NJB5	bacterial 1-hybrid	insects	Drosophila melanogaster	3.285,5.981,8.0625,11.66,11.786483338206384,11.786483338206384
+MA0236	MA0236.1.otp	1	otp	Paired-related HD factors	P56672	bacterial 1-hybrid	insects	Drosophila melanogaster	3.7105,7.2895,8.724,11.046,11.469443908075423,11.469443908075423
+MA0237	MA0237.2.pan	2	pan	.	Q8IMA8	ChIP-chip	insects	Drosophila melanogaster	-2.2365,3.6415,5.4335,9.5445,11.4965,14.3035
+MA0238	MA0238.1.pb	1	pb	HOX-related factors	P31264	bacterial 1-hybrid	insects	Drosophila melanogaster	3.708,5.1125,5.9845,11.4765,11.59431075428868,11.59431075428868
+MA0239	MA0239.1.prd	1	prd	.	P23758	bacterial 1-hybrid	insects	Drosophila melanogaster	3.947,7.5605,8.682,10.4615,11.0835,12.102
+MA0240	MA0240.1.repo	1	repo	.	Q24477	bacterial 1-hybrid	insects	Drosophila melanogaster	2.7245,6.0415,8.221,11.1155,11.89151107723395,11.89151107723395
+MA0241	MA0241.1.ro	1	ro	.	P10181	bacterial 1-hybrid	insects	Drosophila melanogaster	3.1045,5.943,8.1895,11.5265,11.90487970258495,11.90487970258495
+MA0242	MA0242.1.Bgb::run	1	Bgb::run	Runt-related factors	Q24040	bacterial 1-hybrid	insects	Drosophila melanogaster	1.01,5.188,7.132,9.99,11.1205,14.4885
+MA0243	MA0243.1.sd	1	sd	.	P30052	DNaseI footprinting	insects	Drosophila melanogaster	4.9455,7.386,8.2115,9.7865,10.343,11.317
+MA0244	MA0244.1.slbo	1	slbo	C/EBP-related factors	Q02637	DNaseI footprinting	insects	Drosophila melanogaster	4.8985,7.2205,8.32,9.829,10.108,11.390695979938483
+MA0245	MA0245.1.slou	1	slou	NK-related factors	P22807	bacterial 1-hybrid	insects	Drosophila melanogaster	4.2265,7.648,8.496,10.490177090974505,10.490177090974505,10.490177090974505
+MA0246	MA0246.1.so	1	so	HD-SINE factors	Q27350	bacterial 1-hybrid	insects	Drosophila melanogaster	4.479,5.89,6.855,10.417910338696988,10.417910338696988,10.417910338696988
+MA0247	MA0247.2.tin	2	tin	.	P22711	ChIP-chip	insects	Drosophila melanogaster	-3.1185,2.202,4.6015,10.8195,12.043,14.2915
+MA0248	MA0248.1.tup	1	tup	HD-LIM factors	Q9VJ37	bacterial 1-hybrid	insects	Drosophila melanogaster	4.6715,7.499,8.4565,10.9925,11.084684466467323,11.084684466467323
+MA0249	MA0249.2.twi	2	twi	.	P10627	ChIP-seq	insects	Drosophila melanogaster	2.28,6.48,7.6565,10.7405,12.1305,13.6445
+MA0250	MA0250.1.unc-4	1	unc-4	Paired-related HD factors	O77215	bacterial 1-hybrid	insects	Drosophila melanogaster	3.389,5.983,8.305,11.134,11.727685973507285,11.727685973507285
+MA0251	MA0251.1.unpg	1	unpg	.	Q4V5A3	bacterial 1-hybrid	insects	Drosophila melanogaster	4.1305,6.522,7.9995,11.0965,11.452382132892698,11.452382132892698
+MA0252	MA0252.1.vis	1	vis	.	A1Z913	bacterial 1-hybrid	insects	Drosophila melanogaster	3.285,4.242,8.843,10.239323013600979,10.239323013600979,10.239323013600979
+MA0253	MA0253.1.vnd	1	vnd	NK-related factors	P22808	bacterial 1-hybrid	insects	Drosophila melanogaster	2.4415,6.0995,8.073,11.4015,11.634,14.34
+MA0254	MA0254.1.vvl	1	vvl	POU domain factors	P16241	DNaseI footprinting	insects	Drosophila melanogaster	4.5865,7.5425,7.8865,9.103846474724131,9.103846474724131,9.103846474724131
+MA0255	MA0255.1.z	1	z	.	P09956	DNaseI footprinting	insects	Drosophila melanogaster	4.378,7.5065,8.531,10.381,10.9725,12.0255
+MA0256	MA0256.1.zen	1	zen	.	P09089	bacterial 1-hybrid	insects	Drosophila melanogaster	4.14,6.1795,6.71,11.385,11.792337666923427,11.792337666923427
+MA0257	MA0257.1.zen2	1	zen2	.	P09090	bacterial 1-hybrid	insects	Drosophila melanogaster	3.8765,7.1155,8.9955,10.818,11.133719775415031,11.133719775415031
+MA0443	MA0443.1.btd	1	btd	Other factors with up to three adjacent zinc fingers	Q24266	bacterial 1-hybrid	insects	Drosophila melanogaster	1.602,5.894,7.246,10.855,12.171,13.769
+MA0444	MA0444.1.CG34031	1	CG34031	.	M9NDG6	bacterial 1-hybrid	insects	Drosophila melanogaster	3.1185,6.408,8.3355,11.302,11.926382148617673,11.926382148617673
+MA0445	MA0445.1.D	1	D	.	Q24533	bacterial 1-hybrid	insects	Drosophila melanogaster	1.908,5.9475,7.5365,10.6125,11.6945,13.87
+MA0446	MA0446.1.fkh	1	fkh	Forkhead box (FOX) factors	P14734	bacterial 1-hybrid	insects	Drosophila melanogaster	2.3445,6.282,7.6875,10.7365,11.872,13.6135
+MA0447	MA0447.1.gt	1	gt	.	P39572	bacterial 1-hybrid	insects	Drosophila melanogaster	0.231,4.9425,6.376,10.05,11.1815,13.6885
+MA0448	MA0448.1.H2.0	1	H2	NK-related factors	P10035	bacterial 1-hybrid	insects	Drosophila melanogaster	4.827,7.791,8.545,10.168,10.261683058201085,10.261683058201085
+MA0449	MA0449.1.h	1	h	Helix-Loop-Helix	P14003	bacterial 1-hybrid	insects	Drosophila melanogaster	3.873,6.957,8.247,10.2105,10.8855,13.114
+MA0450	MA0450.1.hkb	1	hkb	.	Q9VN10	bacterial 1-hybrid	insects	Drosophila melanogaster	0.349,5.2635,6.6075,10.189,11.7445,14.317
+MA0451	MA0451.1.kni	1	kni	.	P10734	bacterial 1-hybrid	insects	Drosophila melanogaster	1.5655,5.685,7.2105,10.359,11.5215,13.8615
+MA0452	MA0452.2.Kr	2	Kr	More than 3 adjacent zinc finger factors	P07247	ChIP-chip	insects	Drosophila melanogaster	-5.036,1.7465,4.6865,9.9675,11.4975,14.183
+MA0454	MA0454.1.odd	1	odd	More than 3 adjacent zinc finger factors	P23803	bacterial 1-hybrid	insects	Drosophila melanogaster	0.8615,5.0345,6.6015,10.091,11.056,14.1075
+MA0456	MA0456.1.opa	1	opa	More than 3 adjacent zinc finger factors	P39768	bacterial 1-hybrid	insects	Drosophila melanogaster	1.6245,5.5685,7.021,10.044,11.267,13.61
+MA0457	MA0457.1.PHDP	1	PHDP	.	Q9W1H7	bacterial 1-hybrid	insects	Drosophila melanogaster	4.113,7.169,9.2645,10.778,10.884516222639265,10.884516222639265
+MA0458	MA0458.1.slp1	1	slp1	Forkhead box (FOX) factors	P32030	bacterial 1-hybrid	insects	Drosophila melanogaster	2.3065,6.249,7.7955,10.89,11.859,13.556
+MA0459	MA0459.1.tll	1	tll	.	P18102	bacterial 1-hybrid	insects	Drosophila melanogaster	-0.1835,4.007,6.024,9.917,10.765,14.561
+MA0460	MA0460.1.ttk	1	ttk	Other factors with up to three adjacent zinc fingers	P17789	bacterial 1-hybrid	insects	Drosophila melanogaster	1.029,5.759,7.1375,10.148,11.897,13.9345
+MA0529	MA0529.2.BEAF-32	2	BEAF-32	.	Q94513	ChIP-seq	insects	Drosophila melanogaster	1.2205,5.5025,6.9875,10.1825,11.52,14.4
+MA0530	MA0530.1.cnc::maf-S	1	cnc::maf-S	Jun-related factors;Maf-related factors	P20482;Q4QPP9	ChIP-chip	insects	Drosophila melanogaster	-3.56,2.6075,5.2215,10.181,11.611,14.245
+MA0531	MA0531.1.CTCF	1	CTCF	More than 3 adjacent zinc finger factors	Q9VS55	ChIP-chip	insects	Drosophila melanogaster	-2.398,3.8505,6.0165,9.965,11.3165,13.9105
+MA0532	MA0532.1.Stat92E	1	Stat92E	STAT factors	Q24151	ChIP-chip	insects	Drosophila melanogaster	-1.238,3.9405,5.8445,9.728,11.2255,14.096
+MA0533	MA0533.1.su(Hw)	1	su(Hw)	Factors with multiple dispersed zinc fingers	P08970	ChIP-chip	insects	Drosophila melanogaster	-2.169,2.7625,4.6175,8.445,9.9195,13.0115
+MA0534	MA0534.1.EcR::usp	1	EcR::usp	.	P34021;P20153	ChIP-seq	insects	Drosophila melanogaster	-2.111,3.561,5.547,9.873,11.4425,14.162
+MA0535	MA0535.1.Mad	1	Mad	SMAD factors	P42003	ChIP-chip	insects	Drosophila melanogaster	0.122,4.8575,7.039,10.877,11.947,13.8245
+MA0536	MA0536.1.pnr	1	pnr	GATA-type zinc fingers	Q9VEZ8	ChIP-chip	insects	Drosophila melanogaster	-5.7575,1.172,3.5265,10.025,11.792,14.4185
+MA0915	MA0915.1.dve	1	dve	.	Q9W268	PBM	insects	Drosophila melanogaster	-3.9895,1.064,1.1055,12.157,12.5715,12.799005525443059
+MA0916	MA0916.1.Ets21C	1	Ets21C	Ets-related factors	P29776	PBM	insects	Drosophila melanogaster	-4.5455,3.7795,4.3635,10.272,12.422,14.235954588907973
+MA0917	MA0917.1.gcm2	1	gcm2	GCM factors	Q9VLA2	PBM	insects	Drosophila melanogaster	1.583,7.0005,8.553,10.9315,11.2675,13.10116655261472
+MA1455	MA1455.1.dmrt99B	1	dmrt99B	DMRT factors	Q9VAI8	HT-SELEX	insects	Drosophila melanogaster	-1.4425,3.407,5.237,9.0095,10.456,13.4625
+MA1456	MA1456.1.Dref	1	Dref	BED zinc finger factors	O96083	ChIP-seq	insects	Drosophila melanogaster	-11.804,-1.081,0.5305,10.628,12.1495,14.564
+MA1457	MA1457.1.grh	1	grh	Grainyhead-related factors	P13002	ChIP-seq	insects	Drosophila melanogaster	1.191,5.3855,7.008,10.1265,11.414,14.019
+MA1458	MA1458.1.Hsf	1	Hsf	HSF factors	P22813	ChIP-seq	insects	Drosophila melanogaster	2.1965,5.675,7.736,9.848,10.8995,14.2725
+MA1459	MA1459.1.M1BP	1	M1BP	.	Q9VHM3	ChIP-seq	insects	Drosophila melanogaster	-1.9865,3.0675,4.9705,8.889,10.3885,13.4885
+MA1460	MA1460.1.pho	1	pho	.	Q8ST83	ChIP-seq	insects	Drosophila melanogaster	3.7255,7.1585,8.2295,10.054,11.8935,13.2235
+MA1461	MA1461.1.sv	1	sv	.	O16804	HT-SELEX	insects	Drosophila melanogaster	-7.2285,-0.8485,1.5525,6.508,8.41,12.3395
+MA1462	MA1462.1.vfl	1	vfl	.	Q9VWC6	ChIP-seq	insects	Drosophila melanogaster	1.9625,5.882,7.194,11.1065,12.262,13.5485
+MA1700	MA1700.1.Clamp	1	Clamp	.	Q8IGP5	ChIP-seq	insects	Drosophila melanogaster	-0.042,4.3805,6.056,9.525,10.853,13.625
+MA1702	MA1702.1.Pdp1	1	Pdp1	.	Q24217	ChIP-seq	insects	Drosophila melanogaster	2.0745,5.5835,7.526,10.108,11.0555,14.2675

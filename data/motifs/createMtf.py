@@ -40,6 +40,7 @@ parser.add_option("--all", dest="all", action="store_true", default=False, help=
 parser.add_option("--hoc", dest="hoc", action="store_true", default=False, help="Create hocomoco.mtf")
 parser.add_option("--jv", dest="jv", action="store_true", default=False, help="Create jaspar_vertebrates.mtf")
 parser.add_option("--jp", dest="jp", action="store_true", default=False, help="Create jaspar_plants.mtf")
+parser.add_option("--ji", dest="ji", action="store_true", default=False, help="Create jaspar_insects.mtf")
 parser.add_option("--t", dest="t", action="store_true", default=False, help="Create transfac.mtf")
 parser.add_option("--up", dest="up", action="store_true", default=False, help="Create uniprobe_primary.mtf")
 parser.add_option("--us", dest="us", action="store_true", default=False, help="Create uniprobe_secondary.mtf")
@@ -50,6 +51,7 @@ if options.all:
     options.hoc = True
     options.jv = True
     options.jp = True
+    options.ji = True
     options.t = True
     options.up = True
     options.us = True
@@ -177,6 +179,62 @@ if options.jv:
 if options.jp:
     # Fetching file names
     source = "jaspar_plants"
+    inputLocation = dataLocation + source + "/"
+    resultMatrix = []
+    jaspar_anno = {}
+    with open("jaspar_anno.csv", "r") as f:
+        csvf = csv.reader(f, dialect="unix")
+        for l in csvf:
+            if not l:
+                continue
+            jaspar_anno[l[0]] = l[1:]
+    for inputFileName in glob(inputLocation + "*.pwm"):
+        raw_name = inputFileName.split("/")[-1]
+        full_name, pwm_name, _, _ = re.match("((.+?)(\(var\.(\d+)\))?).pwm", raw_name).groups()
+        name_fields = pwm_name.split(".")
+        matrix_id = name_fields[0]
+        version = name_fields[1]
+        gene_names = name_fields[2]
+        group = jaspar_anno[full_name][1]
+        if not group:
+            group = "."
+        uniprot = jaspar_anno[full_name][2]
+        data_source = jaspar_anno[full_name][3]
+        taxGroup = jaspar_anno[full_name][4]
+        species = jaspar_anno[full_name][5]
+
+        # Creating PSSM
+        pfm = parsers.pfm(inputFileName)
+        bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+        pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
+        threshold_list = []
+
+        # Evaluating thresholds
+        for fpr in fprList:
+            # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+            # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+            threshold = tools.threshold_from_p(pssm, bg, fpr)
+            threshold_list.append(str(threshold))
+        threshold = ",".join(threshold_list)
+
+        resultMatrix.append([matrix_id, pwm_name, version, gene_names, group, uniprot, data_source, taxGroup,
+                             species, threshold])
+    # Sorting results by ID
+    resultMatrix = sorted(resultMatrix, key=lambda x: x[0])
+
+    # Writing to output file
+    outputFileName = dataLocation + source + ".mtf"
+    outputFile = open(outputFileName, "w")
+    for resultVec in resultMatrix:
+        outputFile.write("\t".join(resultVec) + "\n")
+    outputFile.close()
+
+###################################################################################################
+# JASPAR INSECTS
+###################################################################################################
+if options.ji:
+    # Fetching file names
+    source = "jaspar_insects"
     inputLocation = dataLocation + source + "/"
     resultMatrix = []
     jaspar_anno = {}
