@@ -331,6 +331,13 @@ if not os.path.isfile(user_config_file_name):
     user_config_file.write("#annotation: undefined\n")
     user_config_file.write("#gene_alias: undefined\n\n")
 
+    user_config_file.write("# Here you can change your motif database preset. Use the parameter --filter\n"
+                           "# in the 'rgt-motifanalysis matching' tool to subset only certain species, \n"
+                           "# for specific experiments.\n"
+                           "# Uncomment the following section and modify the list at will.\n")
+    user_config_file.write("#[MotifData]\n")
+    user_config_file.write("#repositories: jaspar_vertebrates, jaspar_plants, jaspar_insects\n\n")
+
 script_dir = path.dirname(path.abspath(__file__))
 
 # Copying data from package folder to installation folder
