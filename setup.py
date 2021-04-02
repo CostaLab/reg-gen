@@ -355,8 +355,8 @@ copy_files_dictionary = {
                 "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
                 "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
     "motifs": ["createMtf.py", "createPwm.py",
-               "jaspar_vertebrates", "jaspar_plants", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
-               "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
+               "jaspar_vertebrates", "jaspar_plants", "jaspar_insects", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
+               "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "jaspar_insects.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
             "tdf_logo.png", "viz_logo.png"],
 }
