@@ -163,6 +163,8 @@ class AnnotationSet:
                                     protein_coding=protein_coding,
                                     known_only=known_only)
             else:  # The string may represent an organism which points to a gtf file within data.config.
+                # TODO Gencode doesn't use anymore gene_status and transcript_status, so known_only becomes useless
+                known_only = False
                 genome_data = GenomeData(gene_source)
                 self.load_gene_list(genome_data.get_annotation(),
                                     filter_havana=filter_havana,
