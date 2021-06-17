@@ -302,7 +302,7 @@ def get_bc_signal(arguments):
         # smooth the signal
         signal = np.add(signal, np.array(_signal))
 
-    signal = smooth(signal)
+    # signal = smooth(signal)
 
     return signal
 
