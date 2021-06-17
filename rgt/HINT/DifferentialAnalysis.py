@@ -273,7 +273,7 @@ def get_raw_signal(arguments):
                 if p1 <= cut_site < p2:
                     signal[cut_site - p1] += 1.0
 
-    signal = smooth(signal)
+    # signal = smooth(signal)
 
     return signal
 
