@@ -306,15 +306,16 @@ class AnnotationSet:
         # Iterating over alias file entries
         for line in alias_file:
             ll = line.strip().split("\t")
-            ensembl_id = ll[0]
-            official_name = ll[1]
-            alias_vec = ll[2].split("&")
-            self.symbol_dict[ensembl_id] = official_name
-            for e in alias_vec:
-                try:
-                    self.alias_dict[e].append(ensembl_id)
-                except Exception:
-                    self.alias_dict[e] = [ensembl_id]
+            if len(ll) > 2:
+                ensembl_id = ll[0]
+                official_name = ll[1]
+                alias_vec = ll[2].split("&")
+                self.symbol_dict[ensembl_id] = official_name
+                for e in alias_vec:
+                    try:
+                        self.alias_dict[e].append(ensembl_id)
+                    except Exception:
+                        self.alias_dict[e] = [ensembl_id]
 
         # Termination
         alias_file.close()
