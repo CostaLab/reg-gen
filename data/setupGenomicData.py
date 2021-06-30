@@ -166,12 +166,12 @@ if args.hg38:
         system("ln -s " + args.hg38_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
-        gen_root_url = gencode_url + "Gencode_human/release_24/GRCh38.primary_assembly.genome.fa.gz"
+        gen_root_url = gencode_url + "Gencode_human/release_21/GRCh38.genome.fa.gz"
         # chr_list = ["chr"+str(e) for e in range(1,23)+["X","Y","M"]]
         output_genome_file = open(output_genome_file_name, "w")
         # for chr_name in chr_list:
         print("Downloading hg38 genome")
-        gz_file_name = path.join(output_location, "GRCh38.primary_assembly.genome.fa.gz")
+        gz_file_name = path.join(output_location, "GRCh38.genome.fa.gz")
         # if(path.isfile(gz_file_name)): remove(gz_file_name)
         download(gen_root_url, output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
@@ -182,14 +182,14 @@ if args.hg38:
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location, "gencode.v24.annotation.gtf")
+    gtf_output_file_name = path.join(output_location, "gencode.v21.annotation.gtf")
     if args.hg38_gtf_path:
         print("Creating symbolic link to HG38 GTF")
         system("ln -s " + args.hg38_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
-        gtf_url = gencode_url + "Gencode_human/release_24/gencode.v24.annotation.gtf.gz"
-        gtf_output_file_name_gz = path.join(output_location, "gencode.v24.annotation.gtf.gz")
+        gtf_url = gencode_url + "Gencode_human/release_21/gencode.v21.annotation.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "gencode.v21.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading hg19 GTF (gene annotation) from genode")
         download(gtf_url, output_location)
@@ -275,7 +275,7 @@ if args.mm10:
         system("ln -s " + args.mm10_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
-        gen_root_url = gencode_url + "Gencode_mouse/release_M11/GRCm38.primary_assembly.genome.fa.gz"
+        gen_root_url = gencode_url + "Gencode_mouse/release_M25/GRCm38.primary_assembly.genome.fa.gz"
         output_genome_file = open(output_genome_file_name, "w")
         print("Downloading mm10 genome")
         gz_file_name = path.join(output_location, "GRCm38.primary_assembly.genome.fa.gz")
@@ -288,14 +288,14 @@ if args.mm10:
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location, "gencode.vM20.annotation.gtf")
+    gtf_output_file_name = path.join(output_location, "gencode.vM25.annotation.gtf")
     if args.mm10_gtf_path:
         print("Creating symbolic link to MM10 GTF")
         system("ln -s " + args.mm10_gtf_path + " " + gtf_output_file_name)
         print("OK")
     else:
-        gtf_url = gencode_url + "Gencode_mouse/release_M20/gencode.vM20.annotation.gtf.gz"
-        gtf_output_file_name_gz = path.join(output_location, "gencode.vM20.annotation.gtf.gz")
+        gtf_url = gencode_url + "Gencode_mouse/release_M25/gencode.vM25.annotation.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "gencode.vM25.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM10 GTF (gene annotation)")
         download(gtf_url, output_location)

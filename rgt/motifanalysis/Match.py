@@ -197,8 +197,7 @@ def main(args):
     # TODO: should be more clever, allow precomputed regions etc
     if args.target_genes_filename:
         print(">> creating target promoter file..")
-        annotation = AnnotationSet(args.organism, alias_source=args.organism,
-                                   protein_coding=True, known_only=True)
+        annotation = AnnotationSet(args.organism, alias_source=args.organism, protein_coding=True)
 
         target_genes = GeneSet("target_genes")
         target_genes.read(args.target_genes_filename)
@@ -220,8 +219,7 @@ def main(args):
     if args.promoter_make_background or (args.promoters_only and not args.target_genes_filename):
         print(">> creating background promoter file..")
         if not annotation:
-            annotation = AnnotationSet(args.organism, alias_source=args.organism,
-                                       protein_coding=True, known_only=True)
+            annotation = AnnotationSet(args.organism, alias_source=args.organism, protein_coding=True)
 
         # background is made of all known genes minus the target genes (if any)
         background_genes = GeneSet("background_genes")

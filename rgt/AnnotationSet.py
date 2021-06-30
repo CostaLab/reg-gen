@@ -163,6 +163,8 @@ class AnnotationSet:
                                     protein_coding=protein_coding,
                                     known_only=known_only)
             else:  # The string may represent an organism which points to a gtf file within data.config.
+                # TODO Gencode doesn't use anymore gene_status and transcript_status, so known_only becomes useless
+                known_only = False
                 genome_data = GenomeData(gene_source)
                 self.load_gene_list(genome_data.get_annotation(),
                                     filter_havana=filter_havana,
@@ -304,15 +306,16 @@ class AnnotationSet:
         # Iterating over alias file entries
         for line in alias_file:
             ll = line.strip().split("\t")
-            ensembl_id = ll[0]
-            official_name = ll[1]
-            alias_vec = ll[2].split("&")
-            self.symbol_dict[ensembl_id] = official_name
-            for e in alias_vec:
-                try:
-                    self.alias_dict[e].append(ensembl_id)
-                except Exception:
-                    self.alias_dict[e] = [ensembl_id]
+            if len(ll) > 2:
+                ensembl_id = ll[0]
+                official_name = ll[1]
+                alias_vec = ll[2].split("&")
+                self.symbol_dict[ensembl_id] = official_name
+                for e in alias_vec:
+                    try:
+                        self.alias_dict[e].append(ensembl_id)
+                    except Exception:
+                        self.alias_dict[e] = [ensembl_id]
 
         # Termination
         alias_file.close()

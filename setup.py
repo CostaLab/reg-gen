@@ -250,7 +250,7 @@ data_config_file.write("genome: " + path.join(genome, "genome_mm10.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm10\n"))
 data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm10.bed\n"))
 data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm10.bed # alternative to Gencode\n"))
-data_config_file.write("annotation: " + path.join(genome, "gencode.vM20.annotation.gtf\n"))
+data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
@@ -267,7 +267,7 @@ data_config_file.write("genome: " + path.join(genome, "genome_hg38.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.hg38\n"))
 data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_hg38.bed\n"))
 data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_hg38.bed # alternative to Gencode\n"))
-data_config_file.write("annotation: " + path.join(genome, "gencode.v24.annotation.gtf\n"))
+data_config_file.write("annotation: " + path.join(genome, "gencode.v21.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
 genome = "zv9"
@@ -331,6 +331,13 @@ if not os.path.isfile(user_config_file_name):
     user_config_file.write("#annotation: undefined\n")
     user_config_file.write("#gene_alias: undefined\n\n")
 
+    user_config_file.write("# Here you can change your motif database preset. Use the parameter --filter\n"
+                           "# in the 'rgt-motifanalysis matching' tool to subset only certain species, \n"
+                           "# for specific experiments.\n"
+                           "# Uncomment the following section and modify the list at will.\n")
+    user_config_file.write("#[MotifData]\n")
+    user_config_file.write("#repositories: jaspar_vertebrates, jaspar_plants, jaspar_insects\n\n")
+
 script_dir = path.dirname(path.abspath(__file__))
 
 # Copying data from package folder to installation folder
@@ -355,8 +362,8 @@ copy_files_dictionary = {
                 "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
                 "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
     "motifs": ["createMtf.py", "createPwm.py",
-               "jaspar_vertebrates", "jaspar_plants", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
-               "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
+               "jaspar_vertebrates", "jaspar_plants", "jaspar_insects", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
+               "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "jaspar_insects.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
             "tdf_logo.png", "viz_logo.png"],
 }

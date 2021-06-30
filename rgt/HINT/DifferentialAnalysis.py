@@ -97,9 +97,9 @@ def diff_analysis_run(args):
                   "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#e6ab02", "#a6761d", "#666666",
                   "#7fc97f", "#beaed4", "#fdc086", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#666666"]
 
-    assert len(mpbs_files) == len(reads_files) == len(conditions), \
-        "Number of motif, read and condition names are not same: {}, {}, {}".format(len(mpbs_files), len(reads_files),
-                                                                                    len(conditions))
+    assert len(reads_files) == len(conditions), \
+        "Number of bam file and condition names are not same: {}, {}, {}".format(len(reads_files),
+                                                                                 len(conditions))
 
     # Check if the index file exists
     for reads_file in reads_files:
@@ -273,7 +273,7 @@ def get_raw_signal(arguments):
                 if p1 <= cut_site < p2:
                     signal[cut_site - p1] += 1.0
 
-    signal = smooth(signal)
+    # signal = smooth(signal)
 
     return signal
 
@@ -302,7 +302,7 @@ def get_bc_signal(arguments):
         # smooth the signal
         signal = np.add(signal, np.array(_signal))
 
-    signal = smooth(signal)
+    # signal = smooth(signal)
 
     return signal
 
@@ -464,7 +464,8 @@ def get_pwm(fasta, regions, window_size):
 
 def compute_factors(signals):
     signals = np.sum(signals, axis=2)
-    signals_log = np.log(signals)
+    # avoid to get a NA value
+    signals_log = np.log(signals + 0.01)
     signals_log = signals_log[:, ~np.isnan(signals_log).any(axis=0)]
     signals_log = signals_log - np.mean(signals_log, axis=0, keepdims=True)
     factors = np.exp(np.median(signals_log, axis=1))
