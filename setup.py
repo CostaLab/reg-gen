@@ -295,7 +295,9 @@ genome = "tair10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_tair10_ensembl_release_51.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.tair10\n"))
+data_config_file.write("gene_regions: " + path.join(genome, "genes_tair10.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n\n"))
+data_config_file.write("gene_alias: " + path.join(genome, "alias_tair10.txt\n\n"))
 
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
