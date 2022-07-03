@@ -5,7 +5,6 @@ numpy
 scipy
 pysam
 pyBigWig
-pyVCF
 fisher
 HTSeq
 hmmlearn
