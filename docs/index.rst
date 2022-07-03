@@ -1,51 +1,16 @@
-.. RGT documentation master file, created by
-   sphinx-quickstart on Wed Jan  6 15:14:11 2016.
+.. rgt documentation master file, created by
+   sphinx-quickstart on Sun Jul  3 23:07:25 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to RGT's documentation!
+Welcome to rgt's documentation!
 ===============================
-
-Contents:
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
-.. automodule:: GenomicRegion
-    :members:
 
-.. automodule:: GenomicRegionSet
-    :members:
-
-.. automodule:: CoverageSet
-    :members:
-
-.. automodule:: MultiCoverageSet
-    :members:
-
-.. automodule:: GenomicVariant
-    :members:
-
-.. automodule:: GenomicVariantSet
-    :members:
-
-.. automodule:: AnnotationSet
-    :members:
-
-.. automodule:: ExperimentalMatrix
-    :members:
-
-.. automodule:: GeneSet
-    :members:
-
-.. automodule:: SequenceSet
-    :members:
-
-.. automodule:: Util
-    :members:
-
-.. automodule:: MotifSet
-    :members:
 
 Indices and tables
 ==================
@@ -53,4 +18,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
