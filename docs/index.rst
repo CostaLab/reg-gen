@@ -6,6 +6,10 @@
 RGT - Regulatory Genomics Toolbox
 ===================================
 
+.. image:: _static/rgt_logo.png
+   :width: 175px
+   :align: left
+
 RGT is an open source Python 3.6+ library for analysis of regulatory genomics. 
 It is programmed in an oriented object fashion and its core classes provide functionality for handling regulatory genomics data.
 
