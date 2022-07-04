@@ -36,6 +36,7 @@ The toolbox is made of a core library and several tools:
    
    hint/introduction.md
    hint/tutorial-dc.md
+   hint/tutorial-single-cell.md
 
 .. toctree::
    :caption: THOR

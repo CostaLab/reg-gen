@@ -16,7 +16,6 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Mapping, Optional, Union
 
 from sphinx.application import Sphinx
 from sphinx.ext import autosummary
