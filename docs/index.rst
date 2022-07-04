@@ -44,6 +44,7 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    motif_analysis/introduction.md
+   motif_analysis/additional_motif_data.md
 
 .. toctree::
    :caption: THOR
