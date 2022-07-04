@@ -35,8 +35,8 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    hint/introduction.md
-   hint/tutorial-dendritic-cell.md
    hint/tutorial-single-cell.md
+   hint/tutorial-dendritic-cell.md
 
 .. toctree::
    :caption: Motif analysis
