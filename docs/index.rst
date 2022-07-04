@@ -14,11 +14,11 @@ If you have any questions/comments/problems, please open an issue on `Github <ht
 
 The toolbox is made of a core library and several tools:
 
-- `HINT <http://www.regulatory-genomics.org/hint/>`__: ATAC-seq/DNase-seq footprinting method
-- `THOR <http://www.regulatory-genomics.org/thor-2/>`__: ChIP-Seq differential peak caller
-- `Motif Analysis <http://www.regulatory-genomics.org/motif-analysis/>`__: TBFS match and enrichment
-- `RGT-Viz <http://www.regulatory-genomics.org/rgt-viz/>`__: Visualization tool
-- `TDF <http://www.regulatory-genomics.org/tdf/>`__: DNA/RNA triplex domain finder
+- `HINT <https://reg-gen.readthedocs.io/en/latest/hint/introduction.html>`__: ATAC-seq/DNase-seq footprinting method
+- `THOR <https://reg-gen.readthedocs.io/en/latest/thor/introduction.html/>`__: ChIP-Seq differential peak caller
+- `Motif Analysis <https://reg-gen.readthedocs.io/en/latest/motif_analysis/introduction.html>`__: TBFS match and enrichment
+- `RGT-Viz <https://reg-gen.readthedocs.io/en/latest/rgt-viz/introduction.html>`__: Visualization tool
+- `TDF <https://reg-gen.readthedocs.io/en/latest/tdf/introduction.html>`__: DNA/RNA triplex domain finder
 
 
 .. toctree::
@@ -26,41 +26,41 @@ The toolbox is made of a core library and several tools:
    :maxdepth: 2
    :hidden:
 
-   RGT/installation.md
-   RGT/setup_data.md
+   rgt/installation.md
+   rgt/setup_data.md
 
 .. toctree::
    :caption: HINT
    :maxdepth: 2
    :hidden:
    
-   HINT/introduction.md
-   HINT/tutorial-dc.md
+   hint/introduction.md
+   hint/tutorial-dc.md
 
 .. toctree::
    :caption: THOR
    :maxdepth: 2
    :hidden:
    
-   THOR/introduction.md
+   thor/introduction.md
 
 .. toctree::
    :caption: Motif analysis
    :maxdepth: 2
    :hidden:
    
-   MotifAnalysis/introduction.md
+   motif_analysis/introduction.md
 
 .. toctree::
    :caption: TDF
    :maxdepth: 2
    :hidden:
    
-   TDF/introduction.md
+   tdf/introduction.md
 
 .. toctree::
-   :caption: RGT-Viz
+   :caption: RGT-VIZ
    :maxdepth: 2
    :hidden:
    
-   RGT-Viz/introduction.md
+   rgt-viz/introduction.md
