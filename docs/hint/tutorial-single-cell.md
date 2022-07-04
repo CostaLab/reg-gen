@@ -103,4 +103,4 @@ After the command is done, a new folder **DiffFootprinting** will be created. Un
 
 <img src="../_static/hint/heatmap.png" width="650" class="center">
 
-Based this result, we can identify more cell-type-specific TFs. The code for generating the heatmap is found here.
+Based this result, we can identify more cell-type-specific TFs. The code for generating the heatmap is found [here](../_static/hint/plot_heatmap.html).
