@@ -68,3 +68,5 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    rgt-viz/introduction.md
+   rgt-viz/method.md
+   rgt-viz/tool_usage.md

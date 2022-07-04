@@ -83,7 +83,7 @@ html_show_sphinx = True
 html_static_path = ['_static']
 # html_logo = "_static/rgt_logo.png"
 html_theme_options = {
-    'navigation_depth': 2,
+    'navigation_depth': 1,
     'titles_only': False,
     'logo_only': True,
 }
