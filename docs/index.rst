@@ -35,15 +35,8 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    hint/introduction.md
-   hint/tutorial-dc.md
+   hint/tutorial-dendritic-cell.md
    hint/tutorial-single-cell.md
-
-.. toctree::
-   :caption: THOR
-   :maxdepth: 2
-   :hidden:
-   
-   thor/introduction.md
 
 .. toctree::
    :caption: Motif analysis
@@ -51,6 +44,13 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    motif_analysis/introduction.md
+
+.. toctree::
+   :caption: THOR
+   :maxdepth: 2
+   :hidden:
+   
+   thor/introduction.md
 
 .. toctree::
    :caption: TDF

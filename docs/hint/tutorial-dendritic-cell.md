@@ -62,4 +62,4 @@ Each point represents a factor, but we only label TFs with a significant change 
 
 In addition,  a folder called lineplot can be found, which contains the ATAC-seq profile for each of the motifs found in the mpbs bed files. Let’s check the profiles of these two factors,  you will see that BATF has a higher number of ATAC-seq counts in cDC1 cells, while Zeb1 has more ATAC-seq in pDC cells. Higher ATAC-seq signal indicates the higher activity of the factor in that particular cell. Other known DC factors identified by HINT-ATAC include [Spi1](https://academic.oup.com/nar/article/43/20/9680/1396036?login=false) (also referred as PU.1 or SFPI1), which is a master regulator of DC differentiation and mostly active in cDC.
 
-<img src="../_static/hint/batf.png" width="350"/> <img src="../_static/hint/zeb1.png" width="350"/> 
+<img src="../_static/hint/batf.png" width="300"/> <img src="../_static/hint/zeb1.png" width="300"/> 
