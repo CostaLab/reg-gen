@@ -3,7 +3,7 @@
 # Introduction
 
 ## Method
-HINT (Hmm-based IdeNtification of Transcription factor footprints) is a framework that uses open chromatin data to identify the active transcription factor binding sites. This method is originally proposed to model the active binding sites by simultaneous analysis of DNase-seq and the ChIP-seq profiles of histone modifications on a genome-wide level (paper). 
+HINT (**H**mm-based **I**de**N**tification of **T**ranscription factor footprints) is a framework that uses open chromatin data to identify the active transcription factor binding sites. This method is originally proposed to model the active binding sites by simultaneous analysis of DNase-seq and the ChIP-seq profiles of histone modifications on a genome-wide level (paper). 
 
 The HMM has as input a normalized and a slope signal of DNase-seq and one of the histone marks. It can, therefore, detect the increase, top, and decrease regions of either histone modification and DNase signals. And we next modified HINT to allow only DNase-seq data by removing the three histone-level states and the use of bias-corrected DNase-seq signal before normalization steps. 
 

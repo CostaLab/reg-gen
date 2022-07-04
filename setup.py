@@ -74,8 +74,7 @@ common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=1.0.0",
                "pysam>=0.12.0",
-               "pyBigWig",
-               "PyVCF"]
+               "pyBigWig"]
 
 if platform.startswith("darwin"):
     bin_dir = "mac"
