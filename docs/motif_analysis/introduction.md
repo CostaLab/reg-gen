@@ -1,5 +1,7 @@
 # Introduction
 
+<img src="../_static/motif_analysis/logo.png" width="175" align="right">
+
 ## Method
 We provide a flexible framework to perform operations related to motif analyses. Currently, the following analyses are available:
 

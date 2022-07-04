@@ -1,5 +1,8 @@
 # Introduction
 
+<img src="../_static/rgt-viz/logo.png" width="175" align="right">
+
+
 RGT-Viz is a collection of tests for association analysis and tools for visualizaiton of genomic data such as genomic regions and genomic signals. RGT-Viz allows the integrative analyses of the multiple regulatory genomic data, i.e. ChIP-Seq from several histone modifications,  over distinct biological conditions. A crucial aspect is the definition of a experiment matrix describing the experimental design of the underlying data.  RGT-Viz results are displayed by graphics and statistics, which allow you to find association between your genomic data.
 
 RGT-Viz’s functionality can be divided in two main categories as following:

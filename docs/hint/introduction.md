@@ -1,6 +1,6 @@
-<!--<img src="../_static/hint_logo.png" width="150">-->
-
 # Introduction
+
+<img src="../_static/hint/logo.png" width="175" align="right">
 
 ## Method
 HINT (**H**mm-based **I**de**N**tification of **T**ranscription factor footprints) is a framework that uses open chromatin data to identify the active transcription factor binding sites. This method is originally proposed to model the active binding sites by simultaneous analysis of DNase-seq and the ChIP-seq profiles of histone modifications on a genome-wide level (paper). 
