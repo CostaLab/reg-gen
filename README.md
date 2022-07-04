@@ -9,7 +9,7 @@ RGT is an open source Python 3.6+ library for analysis of regulatory genomics. R
 
 The toolbox is made of a core library and several tools:
 
-* [HINT](https://reg-gen.readthedocs.io/en/latest/HINT/introduction.html): ATAC-seq/DNase-seq footprinting method
+* [HINT](https://reg-gen.readthedocs.io/en/latest/hint/introduction.html): ATAC-seq/DNase-seq footprinting method
 * [THOR](https://reg-gen.readthedocs.io/en/latest/thor/introduction.html):
 ChIP-Seq differential peak caller
 * [Motif Analysis](https://reg-gen.readthedocs.io/en/latest/motif_analysis/introduction.html): TBFS match and enrichment
