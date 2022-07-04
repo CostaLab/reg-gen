@@ -36,3 +36,31 @@ The toolbox is made of a core library and several tools:
    
    HINT/introduction.md
    HINT/tutorial-dc.md
+
+.. toctree::
+   :caption: THOR
+   :maxdepth: 2
+   :hidden:
+   
+   THOR/introduction.md
+
+.. toctree::
+   :caption: Motif analysis
+   :maxdepth: 2
+   :hidden:
+   
+   MotifAnalysis/introduction.md
+
+.. toctree::
+   :caption: TDF
+   :maxdepth: 2
+   :hidden:
+   
+   TDF/introduction.md
+
+.. toctree::
+   :caption: RGT-Viz
+   :maxdepth: 2
+   :hidden:
+   
+   RGT-Viz/introduction.md
