@@ -37,6 +37,15 @@ The data.config file contains the default data set names (inside RGT data path) 
 ### GenomeData
 For each genome assembly, there are five fields targeting to the relevant files. You can customize these paths by yourself. Below is the example for hg19:
 
+| Field Name      | Default Value | Description |
+| ----------- | ----------- | ----------- |
+|genome       |genome_hg19.fa|  Sequence of assembly hg19 in FASTA format. This data set is not available upon installation. See instructions above on how to obtain this data set.|
+|chromosome_sizes| chrom.sizes.hg19 |Chromosome sizes file of assembly hg19.|
+|gene_regions|genes_hg19.bed|Gene locations in BED format (from Gencode annotation file in GTF format).|
+|annotation|gencode.v19.annotation.gtf	|Gene annotation from Gencode version 19 for human in GTF format. This data set is not available upon installation. See instructions above on how to obtain this data set.|
+|gene_alias|alias_human.txt|Alias file which allows for translation between multiple different gene IDs.|
+
+
 **You should never modify the data.config file!** This is due to the fact that every RGT installation will overwrite it. You can however customize the data.config.user file, by copying a similar section from the data.config file and modifying it to your wishes. For example, to use data from the organisms the user is interested in studying you simply create a section with the genome name and define all the relevant paths.
 
 For example, here is a customized genome for Arabis thaliana (TAIR10):
