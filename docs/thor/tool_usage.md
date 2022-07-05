@@ -15,38 +15,38 @@ rgt-THOR [option] CONFIG
 
 | **Option Name** | **Type** | **Default** | **Description** |
 | :--------------- | :-------- | :----------- | :--------------- |
-| -\-name | string | none | Experiment’s name and prefix for all files that are created. |
-| -\-merge | boolean | False |  	Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). | 
-| -\-no-merge-bin | boolean | True | Merge the overlapping bin before filtering by p-value. |
-| -\-housekeeping-genes | file (bed format) | none | Define housekeeping genes (BED format) used for normalizing. |
-| -\-output-dir | string | none | Store files in output directory. |
-| -\-report | boolean | False | Generate HTML report about experiment. |
-| -\-deadzones | file (bed format) | none | Define blacklisted genomic regions avoided for analysis (BED format). |
-| -\-no-correction | boolean | False | Do not use multipe test correction for p-values (Benjamini/Hochberg). |
-| -\-pvalue | float | 0.1 | P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. | 
-| -\-exts | interger1,interger2,... | estimate | Read’s extension size for BAM files (comma separated list for each BAM file in config file). If option is not chosen, estimate extension sizes from reads. |
-| -\-factors-inputs | float1,float2, ... | estimate | Normalization factors for input-DNA (comma separated list for each BAM file in config file). If option is not chosen, estimate factors. |
-| -\-scaling-factors | float1,float2, ... | estimate | Scaling factor for each BAM file (not control input-DNA) as comma separated list for each BAM file in config file. If option is not chosen, follow normalization strategy (TMM or HK approach) |
-| -\-save-input | boolean | False | Save input DNA bigwig (if input was provided). |
+| \-\-name | string | none | Experiment’s name and prefix for all files that are created. |
+| \-\-merge | boolean | False |  	Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). | 
+| \-\-no-merge-bin | boolean | True | Merge the overlapping bin before filtering by p-value. |
+| \-\-housekeeping-genes | file (bed format) | none | Define housekeeping genes (BED format) used for normalizing. |
+| \-\-output-dir | string | none | Store files in output directory. |
+| \-\-report | boolean | False | Generate HTML report about experiment. |
+| \-\-deadzones | file (bed format) | none | Define blacklisted genomic regions avoided  for analysis (BED format). |
+| \-\-no-correction | boolean | False | Do not use multipe test correction for p-values  (Benjamini/Hochberg). |
+| \-\-pvalue | float | 0.1 | P-value cutoff for peak detection. Call only peaks  with p-value lower than cutoff. | 
+| \-\-exts | interger1,interger2,... | estimate | Read’s extension size for BAM files (comma separated list  for each BAM file in config file). If option is not chosen, estimate extension sizes from reads. |
+| \-\-factors-inputs | float1,float2, ... | estimate | Normalization factors for input-DNA (comma separated list  for each BAM file in config file). If option is not chosen, estimate factors. |
+| \-\-scaling-factors | float1,float2, ... | estimate | Scaling factor for each BAM file (not control input-DNA)  as comma separated list for each BAM file in config file. If option is not chosen,  follow normalization strategy (TMM or HK approach) |
+| \-\-save-input | boolean | False | Save input DNA bigwig (if input was provided). |
 
 ### Advanced options
 
 | **Option Name** | **Type** | **Default** | **Description** |
 | :--------------- | :-------- | :----------- | :--------------- |
-| -\-regions | file (bed format) | none | Define regions (BED format) to restrict the analysis, that is, where to train the HMM and search for DPs. It is faster, but less precise. |
-| -\-binsize | integer | 100 | Size of bins for creating the signal. | 
-| -\-step | integer | 50 | Stepsize with which the window consecutively slides across the genome to create the signal. |
-| -\-debug | boolean | False | Output debug information. Warning: space consuming! |
-| -\-no-gc-content | boolean | False | Do not normalize towards GC content. | 
-| -\-norm-regions | file (bed format) | none | Restrict normalization to particular regions (BED format). |
-| -\-threshold | float | 95 | Minimum signal support for differential peaks to define training set as percentage (t<sub>2</sub>, see [paper](http://nar.oxfordjournals.org/content/early/2016/08/01/nar.gkw680.abstract)). |
-| -\-size | integer | 10000 | Number of bins the HMM's training set constists of. |
-| -\-par | integer | 1 | Percentile for p-value postprocessing filter. |
-| -\-poisson | boolean | False | Use binomial distribution as emmission. |
-| -\-single-strand | boolean | False | Allow single strand BAM file as input. | 
-| -\-m\_threshold | integer | 80 | Define the M threshold of percentile for training TMM. |
-| -\-a\_threshold | integer | 95 | Define the A threshold of percentile for training TMM. | 
-| -\-rmdup | boolean | False | Remove the duplicate reads. |
+| \-\-regions | file (bed format) | none | Define regions (BED format) to restrict the analysis, that is, where to train  the HMM and search for DPs. It is faster, but less precise. |
+| \-\-binsize | integer | 100 | Size of bins for creating the signal. | 
+| \-\-step | integer | 50 | Stepsize with which the window consecutively slides across the genome  to create the signal. |
+| \-\-debug | boolean | False | Output debug information. Warning: space consuming! |
+| \-\-no-gc-content | boolean | False | Do not normalize towards GC content. | 
+| \-\-norm-regions | file (bed format) | none | Restrict normalization to particular regions (BED format). |
+| \-\-threshold | float | 95 | Minimum signal support for differential peaks to define training set  as percentage (t<sub>2</sub>, see [paper](http://nar.oxfordjournals.org/content/early/2016/08/01/nar.gkw680.abstract)). |
+| \-\-size | integer | 10000 | Number of bins the HMM's training set constists of. |
+| \-\-par | integer | 1 | Percentile for p-value postprocessing filter. |
+| \-\-poisson | boolean | False | Use binomial distribution as emmission. |
+| \-\-single-strand | boolean | False | Allow single strand BAM file as input. | 
+| \-\-m\_threshold | integer | 80 | Define the M threshold of percentile for training TMM. |
+| \-\-a\_threshold | integer | 95 | Define the A threshold of percentile for training TMM. | 
+| \-\-rmdup | boolean | False | Remove the duplicate reads. |
 
 ### Config File 
 
@@ -65,19 +65,19 @@ The headers are:
 
 The headers #inputs1, #inputs2 and #genome are optional. All other headers are required. An example for a config file is given [here](https://reg-gen.readthedocs.io/en/latest/thor/introduction.html).
 
-\#rep
+**\#rep **
 
 Headers #rep1 and #rep2 give all BAM files to be analysed. All files are listed line by line for the first (#rep1) and second (#rep2) biological condition.
 
-\#chrom\_sizes
+**\#chrom\_sizes **
 
 The chromosome sizes is a tab limited file with the chromosome name and the size of the chromosome. To download the chromosome size file of an organism, follow these [instructions](http://wiki.bits.vib.be/index.php/FetchChromSizes).
 
-\#inputs
+**\#inputs **
 
 For each BAM file, we can also provide control input-DNA BAM files by using headers #inputs1 and #inputs2. Input-DNA helps to handle bias in ChIP-seq profiles and can therefore improve the differential peak estimation.
 
-\#genome
+**\#genome **
 
 Input-DNA and the genome (in [fasta](http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml) format) is necessary to correct for GC-content. GC-content correction can lead to more precise DP estimates. For instance, to download the human genome hg19.fa, run
 
@@ -159,6 +159,6 @@ The following command finds differential peaks in the two conditions MPP and CDP
 rgt-THOR THOR_DC.config --report --housekeeping-genes hk_genes_new_promotor_mm9.bed --no-correction --output-dir ~/my_MPP_CDP_exp -n THOR_DC
 ```
 
-THOR\_DC.config contains all information necessary to run THOR. With *-\-output-dir* we determine the working directory <em>~/my\_MPP\_CDP\_exp</em>. THOR stops, if the folder already exists. All files created in <em>~/my\_MPP\_CDP\_exp</em> have the prefix *THOR\_DC* (specific by the option *-n*). The p-value is not corrected (option *-\-no-correction*). Instead of using a TMM based approach to normalize the ChIP-seq profiles (default), we use a housekeeping genes approach. For that, please [download](http://www.regulatory-genomics.org/wp-content/uploads/2015/07/hk_THOR.tar.gz) the housekeeping genes and use the option *-\-house-keeping-genes*.
+THOR\_DC.config contains all information necessary to run THOR. With *\-\-output-dir* we determine the working directory <em>~/my\_MPP\_CDP\_exp</em>. THOR stops, if the folder already exists. All files created in <em>~/my\_MPP\_CDP\_exp</em> have the prefix *THOR\_DC* (specific by the option *-n*). The p-value is not corrected (option *\-\-no-correction*). Instead of using a TMM based approach to normalize the ChIP-seq profiles (default), we use a housekeeping genes approach. For that, please [download](http://www.regulatory-genomics.org/wp-content/uploads/2015/07/hk_THOR.tar.gz) the housekeeping genes and use the option *\-\-house-keeping-genes*.
 
 Moreover, we create a HTML report of our experiment (option *-\-report*). The HTML report contains useful information about our experiment, such as, the the experimental configuration (also described by _\*-setup.info_), the function THOR is using to model the mean-variance relationship, the function used to estimate the fragmentation size, and the quality check of the house-keeping-gene normalization approach.
