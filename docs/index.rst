@@ -58,6 +58,7 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    thor/introduction.md
+   thor/tool_usage.md
 
 .. toctree::
    :caption: TDF
