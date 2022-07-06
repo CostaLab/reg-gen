@@ -29,8 +29,10 @@ parser.add_argument("--hg19", dest="hg19", action="store_true", default=False, h
 parser.add_argument("--hg38", dest="hg38", action="store_true", default=False, help="Fetch human genome files.")
 parser.add_argument("--mm9", dest="mm9", action="store_true", default=False, help="Fetch mouse files.")
 parser.add_argument("--mm10", dest="mm10", action="store_true", default=False, help="Fetch mouse files.")
+parser.add_argument("--mm39", dest="mm39", action="store_true", default=False, help="Fetch mouse files.")
 parser.add_argument("--zv9", dest="zv9", action="store_true", default=False, help="Fetch zebrafish files.")
 parser.add_argument("--zv10", dest="zv10", action="store_true", default=False, help="Fetch zebrafish files.")
+parser.add_argument("--tair10", dest="tair10", action="store_true", default=False, help="Fetch Arabidopsis files.")
 
 parser.add_argument("--hg19-genome-path", type=str, metavar="STRING", dest="hg19_genome_path", default=None,
                     help="Path to an already existing hg19 genome (all chromosomes in the same file).")
@@ -39,11 +41,16 @@ parser.add_argument("--hg38-genome-path", type=str, metavar="STRING", dest="hg38
 parser.add_argument("--mm9-genome-path", type=str, metavar="STRING", dest="mm9_genome_path", default=None,
                     help="Path to an already existing mm9 genome (all chromosomes in the same file).")
 parser.add_argument("--mm10-genome-path", type=str, metavar="STRING", dest="mm10_genome_path", default=None,
-                    help="Path to an already existing mm9 genome (all chromosomes in the same file).")
+                    help="Path to an already existing mm10 genome (all chromosomes in the same file).")
+parser.add_argument("--mm39-genome-path", type=str, metavar="STRING", dest="mm39_genome_path", default=None,
+                    help="Path to an already existing mm39 genome (all chromosomes in the same file).")
 parser.add_argument("--zv9-genome-path", type=str, metavar="STRING", dest="zv9_genome_path", default=None,
                     help="Path to an already existing zv9 genome (all chromosomes in the same file).")
 parser.add_argument("--zv10-genome-path", type=str, metavar="STRING", dest="zv10_genome_path", default=None,
                     help="Path to an already existing zv10 genome (all chromosomes in the same file).")
+parser.add_argument("--tair10-genome-path", type=str, metavar="STRING", dest="tair10_genome_path", default=None,
+                    help="Path to an already existing tair10 genome (all chromosomes in the same file).")
+
 
 parser.add_argument("--hg19-gtf-path", type=str, metavar="STRING", dest="hg19_gtf_path", default=None,
                     help="Path to an already existing hg19 GTF file.")
@@ -53,10 +60,14 @@ parser.add_argument("--mm9-gtf-path", type=str, metavar="STRING", dest="mm9_gtf_
                     help="Path to an already existing mm9 GTF file.")
 parser.add_argument("--mm10-gtf-path", type=str, metavar="STRING", dest="mm10_gtf_path", default=None,
                     help="Path to an already existing mm10 GTF file.")
+parser.add_argument("--mm39-gtf-path", type=str, metavar="STRING", dest="mm39_gtf_path", default=None,
+                    help="Path to an already existing mm39 GTF file.")
 parser.add_argument("--zv9-gtf-path", type=str, metavar="STRING", dest="zv9_gtf_path", default=None,
                     help="Path to an already existing zv9 GTF file.")
 parser.add_argument("--zv10-gtf-path", type=str, metavar="STRING", dest="zv10_gtf_path", default=None,
                     help="Path to an already existing zv10 GTF file.")
+parser.add_argument("--tair10-gtf-path", type=str, metavar="STRING", dest="tair10_gtf_path", default=None,
+                    help="Path to an already existing tair10 GTF file.")
 
 # Repeat masker
 parser.add_argument("--hg38-rm", dest="hg38_rm", action="store_true", default=False,
@@ -68,7 +79,7 @@ parser.add_argument("--mm9-rm", dest="mm9_rm", action="store_true", default=Fals
 
 args = parser.parse_args()
 
-if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.zv9, args.zv10]):
+if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.mm39, args.zv9, args.zv10, args.tair10]):
     parser.print_help()
     exit(1)
 
@@ -77,8 +88,10 @@ if args.all:
     args.hg38 = True
     args.mm9 = True
     args.mm10 = True
+    args.mm39 = True
     args.zv9 = True
     args.zv10 = True
+    args.tair10 = True
 
 ###################################################################################################
 # Parameters
@@ -308,6 +321,55 @@ if args.mm10:
         print("OK")
 
 ###################################################################################################
+# Genomic Data MM39
+###################################################################################################
+
+if args.mm39:
+
+    output_location = path.join(curr_dir, "mm39")
+    if not path.exists(output_location):
+        mkdir(output_location)
+
+    # Fetching genome
+    output_genome_file_name = path.join(output_location, "genome_mm39.fa")
+    if args.mm39_genome_path:
+        print("Creating symbolic link to MM10 genome")
+        system("ln -s " + args.mm39_genome_path + " " + output_genome_file_name)
+        print("OK")
+    else:
+        gen_root_url = gencode_url + "Gencode_mouse/release_M27/GRCm39.primary_assembly.genome.fa.gz"
+        output_genome_file = open(output_genome_file_name, "w")
+        print("Downloading mm39 genome")
+        gz_file_name = path.join(output_location, "GRCm39.primary_assembly.genome.fa.gz")
+        download(gen_root_url, output_location)
+        gz_file = gzip.open(gz_file_name, 'rb')
+        output_genome_file.write(gz_file.read().decode("utf-8"))
+        gz_file.close()
+        remove(gz_file_name)
+        print("OK")
+        output_genome_file.close()
+
+    # Fetching GTF
+    gtf_output_file_name = path.join(output_location, "gencode.vM27.annotation.gtf")
+    if args.mm39_gtf_path:
+        print("Creating symbolic link to MM39 GTF")
+        system("ln -s " + args.mm39_gtf_path + " " + gtf_output_file_name)
+        print("OK")
+    else:
+        gtf_url = gencode_url + "Gencode_mouse/release_M27/gencode.vM27.annotation.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "gencode.vM27.annotation.gtf.gz")
+        if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
+        print("Downloading MM39 GTF (gene annotation)")
+        download(gtf_url, output_location)
+        gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
+        gtf_output_file = open(gtf_output_file_name, "w")
+        gtf_output_file.write(gz_file.read().decode("utf-8"))
+        gz_file.close()
+        remove(gtf_output_file_name_gz)
+        gtf_output_file.close()
+        print("OK")
+
+###################################################################################################
 # Genomic Data ZV9
 ###################################################################################################
 
@@ -406,6 +468,59 @@ if args.zv10:
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.GRCz10.84.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading ZV10 GTF (gene annotation)")
+        download(gtf_url, output_location)
+        gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
+        gtf_output_file = open(gtf_output_file_name, "w")
+        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read().decode("utf-8"), flags=re.MULTILINE))
+        gz_file.close()
+        remove(gtf_output_file_name_gz)
+        gtf_output_file.close()
+        print("OK")
+
+###################################################################################################
+# Genomic Data TAIR10
+###################################################################################################
+
+if args.tair10:
+    output_location = path.join(curr_dir, "tair10")
+    if not path.exists(output_location):
+        mkdir(output_location)
+
+    # Fetching genome
+    output_genome_file_name = path.join(output_location, "genome_tair10_ensembl_release_51.fa")
+    if args.tair10_genome_path:
+        print("Creating symbolic link to TAIR10 genome")
+        system("ln -s " + args.tair10_genome_path + " " + output_genome_file_name)
+        print("OK")
+    else:
+        gen_root_url = "http://ftp.ebi.ac.uk/ensemblgenomes/pub/release-51/plants/fasta/arabidopsis_thaliana/dna/"
+        chr_list = [str(e) for e in range(1, 6)] + ["Mt"] + ["Pt"]
+        output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
+        for chr_name in chr_list:
+            print("Downloading TAIR10 genome (chromosome " + chr_name + ")")
+            gz_file_name = path.join(output_location, "Arabidopsis_thaliana.TAIR10.dna.chromosome." + chr_name + ".fa.gz")
+            download(gen_root_url + "Arabidopsis_thaliana.TAIR10.dna.chromosome." + chr_name + ".fa.gz", output_location)
+            gz_file = gzip.open(gz_file_name, 'rb')
+            output_genome_file.write(re.sub("^>.*", ">chr" + chr_name, gz_file.read().decode("utf-8"), flags=re.MULTILINE))
+            gz_file.close()
+            to_remove.append(gz_file_name)
+            print("OK")
+        output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
+
+    # Fetching GTF
+    gtf_output_file_name = path.join(output_location, "Arabidopsis_thaliana.TAIR10.51.gtf")
+    if args.zv10_gtf_path:
+        print("Creating symbolic link to TAIR10 GTF")
+        system("ln -s " + args.zv10_gtf_path + " " + gtf_output_file_name)
+        print("OK")
+    else:
+        gtf_url = "http://ftp.ebi.ac.uk/ensemblgenomes/pub/release-51/plants/gtf/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.51.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "Arabidopsis_thaliana.TAIR10.51.gtf.gz")
+        if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
+        print("Downloading TAIR10 GTF (gene annotation)")
         download(gtf_url, output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
