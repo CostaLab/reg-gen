@@ -19,11 +19,10 @@ If you have any questions/comments/problems, please open an issue on `Github <ht
 The toolbox is made of a core library and several tools:
 
 - `HINT <https://reg-gen.readthedocs.io/en/latest/hint/introduction.html>`__: ATAC-seq/DNase-seq footprinting method
-- `THOR <https://reg-gen.readthedocs.io/en/latest/thor/introduction.html>`__: ChIP-Seq differential peak caller
 - `Motif Analysis <https://reg-gen.readthedocs.io/en/latest/motif_analysis/introduction.html>`__: TBFS match and enrichment
-- `RGT-Viz <https://reg-gen.readthedocs.io/en/latest/rgt-viz/introduction.html>`__: Visualization tool
+- `THOR <https://reg-gen.readthedocs.io/en/latest/thor/introduction.html>`__: ChIP-Seq differential peak caller
 - `TDF <https://reg-gen.readthedocs.io/en/latest/tdf/introduction.html>`__: DNA/RNA triplex domain finder
-
+- `RGT-Viz <https://reg-gen.readthedocs.io/en/latest/rgt-viz/introduction.html>`__: Visualization tool
 
 .. toctree::
    :caption: RGT
