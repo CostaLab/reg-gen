@@ -6,7 +6,7 @@ Command:
 rgt-THOR [option] CONFIG
 ```
 
-### Required Input
+## Required Input
 | **Option Name** | **Type** | **Description** |
 | :-------------- |:-------- | :--------------- |
 | CONFIG          | File     | Configuration file for the experiment |

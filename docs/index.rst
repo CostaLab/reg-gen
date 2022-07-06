@@ -66,6 +66,10 @@ The toolbox is made of a core library and several tools:
    :hidden:
    
    tdf/introduction.md
+   tdf/method_description.md
+   tdf/tutorial_for_genomic_region_test.md
+   tdf/tutorial_promoter_test.md
+   tdf/tool_usage.md
 
 .. toctree::
    :caption: RGT-VIZ
