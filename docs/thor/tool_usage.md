@@ -65,19 +65,19 @@ The headers are:
 
 The headers #inputs1, #inputs2 and #genome are optional. All other headers are required. An example for a config file is given [here](https://reg-gen.readthedocs.io/en/latest/thor/introduction.html).
 
-**\#rep **
+<b>\#rep</b>
 
 Headers #rep1 and #rep2 give all BAM files to be analysed. All files are listed line by line for the first (#rep1) and second (#rep2) biological condition.
 
-**\#chrom\_sizes **
+<b>\#chrom\_sizes</b>
 
 The chromosome sizes is a tab limited file with the chromosome name and the size of the chromosome. To download the chromosome size file of an organism, follow these [instructions](http://wiki.bits.vib.be/index.php/FetchChromSizes).
 
-**\#inputs **
+<b>\#inputs</b>
 
 For each BAM file, we can also provide control input-DNA BAM files by using headers #inputs1 and #inputs2. Input-DNA helps to handle bias in ChIP-seq profiles and can therefore improve the differential peak estimation.
 
-**\#genome **
+<b>\#genome</b>
 
 Input-DNA and the genome (in [fasta](http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml) format) is necessary to correct for GC-content. GC-content correction can lead to more precise DP estimates. For instance, to download the human genome hg19.fa, run
 
