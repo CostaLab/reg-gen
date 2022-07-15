@@ -21,6 +21,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
 
 import matplotlib.pyplot as plt
+from bioinfokit import visuz
 
 """
 Perform differential footprints analysis based on the prediction of transcription factor binding sites.
@@ -50,6 +51,9 @@ def diff_analysis_args(parser):
 
     parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.05,
                         help="The false discovery rate. DEFAULT: 0.05")
+    parser.add_argument("--lfc", type=float, metavar="FLOAT", default=0.1,
+                        help="The log2 fold change threshold. DEFAULT: 0.1")
+    
     parser.add_argument("--bc", action="store_true", default=False,
                         help="If set, all analysis will be based on bias corrected signal. DEFAULT: False")
     parser.add_argument("--nc", type=int, metavar="INT", default=1,
@@ -241,6 +245,7 @@ def diff_analysis_run(args):
     # find the significant motifs and generate a scatter plot if two conditions are given
     if len(conditions) == 2:
         ps_tc_results = scatter_plot(args, ps_tc_results, mpbs_name_list, conditions)
+        volcano_plot(args, ps_tc_results, mpbs_name_list, conditions)
 
     output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args)
 
@@ -576,6 +581,52 @@ def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
 
     return ps_tc_results
 
+def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
+    tf_activity_score1 = np.zeros(len(mpbs_name_list))
+    tf_activity_score2 = np.zeros(len(mpbs_name_list))
+
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        tf_activity_score1[i] = float(ps_tc_results[i][0][0]) + float(ps_tc_results[i][1][0])
+        tf_activity_score2[i] = float(ps_tc_results[i][0][1]) + float(ps_tc_results[i][1][1])
+    
+    foldchanges = np.log2(tf_activity_score2) - np.log2(tf_activity_score1)
+    
+    p_values = np.zeros(len(mpbs_name_list))
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        p_values[i] = float(ps_tc_results[i][2][2])
+    
+    df = pd.DataFrame(columns=['log2FC', 'p-value', 'TF_names'])
+    df['log2FC'] = foldchanges
+    df['p-value'] = p_values
+    df['TF_names'] = mpbs_name_list
+    df = df.fillna(0)
+    selected_labels = df.loc[ (np.abs(df.log2FC) >= args.lfc) & (df['p-value'] <= args.fdr)]['TF_names'].values
+    
+    filename = os.path.join(args.output_location, "{}_log2foldChange".format(args.output_prefix))
+    visuz.GeneExpression.volcano(df = df, 
+                                  lfc = 'log2FC',
+                                  pv = 'p-value', 
+                                  lfc_thr = (-args.lfc, args.lfc),
+                                  pv_thr = (args.fdr, args.fdr), 
+                                  show = False, 
+                                  geneid = "TF_names",
+                                  plotlegend = True,
+                                  legendlabels = ["Higher scores in {}".format(conditions[1]), 
+                                                  'not significant', "Higher scores in {}".format(conditions[0])],
+                                  color = ("#00239CFF", "grey", "#E10600FF"),
+                                  dotsize = 50,
+                                  axlabelfontsize = 16,
+                                  axlabelfontname = 'DejaVu Sans',
+                                  genenames = tuple(selected_labels),
+                                  gstyle = 1,
+                                  gfont = 16,
+                                  xlm = (-round(np.max(np.abs(df['log2FC']))), 
+                                          round(np.max(np.abs(df['log2FC']))), 0.5),
+                                  ylm = (0, 
+                                          round(-np.log10(np.min(df['p-value']))), 0.5), 
+                                  dim = (20, 20), figtype = 'pdf',
+                                  ar = 0, axtickfontname = 'DejaVu Sans', axtickfontsize=16,
+                                  figname = filename)
 
 def output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args):
     output_filename = os.path.join(args.output_location, "{}_statistics.txt".format(args.output_prefix))
@@ -657,3 +708,4 @@ def smooth(signal, window_size=5, rank=5):
         smooth_signal[i] = np.nanmean(signal[a:b])
 
     return smooth_signal
+
