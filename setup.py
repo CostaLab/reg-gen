@@ -74,8 +74,7 @@ common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=1.0.0",
                "pysam>=0.12.0",
-               "pyBigWig",
-               "PyVCF"]
+               "pyBigWig"]
 
 if platform.startswith("darwin"):
     bin_dir = "mac"
@@ -104,7 +103,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib"],
+        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "bioinfokit"],
         []
     ),
     "THOR": (
@@ -252,6 +251,13 @@ data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm10.
 data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm10.bed # alternative to Gencode\n"))
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
+genome = "mm39"
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome, "genome_mm39.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm39\n"))
+data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm39.bed\n"))
+data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_hg19.fa\n"))
@@ -284,6 +290,13 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv1
 data_config_file.write("gene_regions: " + path.join(genome, "genes_zv10.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
+genome = "tair10"
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome, "genome_tair10_ensembl_release_51.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.tair10\n"))
+data_config_file.write("gene_regions: " + path.join(genome, "genes_tair10.bed\n"))
+data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n\n"))
+data_config_file.write("gene_alias: " + path.join(genome, "alias_tair10.txt\n\n"))
 
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
@@ -354,6 +367,7 @@ copy_files_dictionary = {
     "hg38": ["genes_Gencode_hg38.bed", "chrom.sizes.hg38", "alias_human.txt", "genes_RefSeq_hg38.bed"],
     "mm9": ["genes_Gencode_mm9.bed", "chrom.sizes.mm9", "alias_mouse.txt", "genes_RefSeq_mm9.bed"],
     "mm10": ["genes_Gencode_mm10.bed", "chrom.sizes.mm10", "alias_mouse.txt", "genes_RefSeq_mm10.bed"],
+    "mm39": ["genes_Gencode_mm39.bed", "chrom.sizes.mm39", "alias_mouse.txt"],
     "zv9": ["genes_zv9.bed", "chrom.sizes.zv9", "alias_zebrafish.txt"],
     "zv10": ["genes_zv10.bed", "chrom.sizes.zv10", "alias_zebrafish.txt"],
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
@@ -469,3 +483,4 @@ if current_user:
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
                           default_path_permission)
+
