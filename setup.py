@@ -103,7 +103,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib"],
+        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "bioinfokit"],
         []
     ),
     "THOR": (
@@ -483,3 +483,4 @@ if current_user:
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
                           default_path_permission)
+
