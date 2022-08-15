@@ -30,6 +30,7 @@ The toolbox is made of a core library and several tools:
    :maxdepth: 2
    :hidden:
 
+   rgt/introduction.md
    rgt/installation.md
    rgt/setup_data.md
    rgt/tool_usage.md
