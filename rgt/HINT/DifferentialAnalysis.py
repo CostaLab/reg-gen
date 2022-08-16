@@ -116,7 +116,7 @@ def diff_analysis_run(args):
         mpbs.read(mpbs_file)
 
     mpbs.sort()
-    mpbs.remove_duplicates()
+    # mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signals = np.zeros(shape=(len(conditions), len(mpbs_name_list), args.window_size), dtype=np.float32)
@@ -142,6 +142,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+                    
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift, bias_table)
                     try:
@@ -162,6 +166,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+                        
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift, bias_table)
                         arguments_list.append(arguments)
@@ -181,6 +189,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift)
                     signals[i, j, :] = get_raw_signal(arguments)
@@ -198,6 +210,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+                        
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift)
                         arguments_list.append(arguments)
