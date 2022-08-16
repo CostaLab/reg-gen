@@ -33,6 +33,7 @@ parser.add_argument("--mm39", dest="mm39", action="store_true", default=False, h
 parser.add_argument("--zv9", dest="zv9", action="store_true", default=False, help="Fetch zebrafish files.")
 parser.add_argument("--zv10", dest="zv10", action="store_true", default=False, help="Fetch zebrafish files.")
 parser.add_argument("--tair10", dest="tair10", action="store_true", default=False, help="Fetch Arabidopsis files.")
+parser.add_argument("--bt8", dest="bt8", action="store_true", default=False, help="Fetch Bos taurus files.")
 
 parser.add_argument("--hg19-genome-path", type=str, metavar="STRING", dest="hg19_genome_path", default=None,
                     help="Path to an already existing hg19 genome (all chromosomes in the same file).")
@@ -50,6 +51,8 @@ parser.add_argument("--zv10-genome-path", type=str, metavar="STRING", dest="zv10
                     help="Path to an already existing zv10 genome (all chromosomes in the same file).")
 parser.add_argument("--tair10-genome-path", type=str, metavar="STRING", dest="tair10_genome_path", default=None,
                     help="Path to an already existing tair10 genome (all chromosomes in the same file).")
+parser.add_argument("--bt8-genome-path", type=str, metavar="STRING", dest="bt8_genome_path", default=None,
+                    help="Path to an already existing bt8 genome (all chromosomes in the same file).")
 
 
 parser.add_argument("--hg19-gtf-path", type=str, metavar="STRING", dest="hg19_gtf_path", default=None,
@@ -68,6 +71,8 @@ parser.add_argument("--zv10-gtf-path", type=str, metavar="STRING", dest="zv10_gt
                     help="Path to an already existing zv10 GTF file.")
 parser.add_argument("--tair10-gtf-path", type=str, metavar="STRING", dest="tair10_gtf_path", default=None,
                     help="Path to an already existing tair10 GTF file.")
+parser.add_argument("--bt8-gtf-path", type=str, metavar="STRING", dest="bt8_gtf_path", default=None,
+                    help="Path to an already existing bt8 GTF file.")
 
 # Repeat masker
 parser.add_argument("--hg38-rm", dest="hg38_rm", action="store_true", default=False,
@@ -79,7 +84,7 @@ parser.add_argument("--mm9-rm", dest="mm9_rm", action="store_true", default=Fals
 
 args = parser.parse_args()
 
-if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.mm39, args.zv9, args.zv10, args.tair10]):
+if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.mm39, args.zv9, args.zv10, args.tair10, args.bt8]):
     parser.print_help()
     exit(1)
 
@@ -92,6 +97,7 @@ if args.all:
     args.zv9 = True
     args.zv10 = True
     args.tair10 = True
+    args.bt8 = True
 
 ###################################################################################################
 # Parameters
@@ -529,6 +535,61 @@ if args.tair10:
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
         print("OK")
+
+
+###################################################################################################
+# Genomic Data BT8
+###################################################################################################
+
+if args.bt8:
+    output_location = path.join(curr_dir, "bt8")
+    if not path.exists(output_location):
+        mkdir(output_location)
+
+    # Fetching genome
+    output_genome_file_name = path.join(output_location, "genome_bt8_ensembl_release_107.fa")
+    if args.tair10_genome_path:
+        print("Creating symbolic link to Bos taurus genome")
+        system("ln -s " + args.tair10_genome_path + " " + output_genome_file_name)
+        print("OK")
+    else:
+        gen_root_url = "http://ftp.ensembl.org/pub/release-107/fasta/bos_taurus/dna/"
+        chr_list = [str(e) for e in range(1, 29)] + ["MT"] + ["X"]
+        output_genome_file = open(output_genome_file_name, "w")
+        to_remove = []
+        for chr_name in chr_list:
+            print("Downloading Bos taurus genome (chromosome " + chr_name + ")")
+            gz_file_name = path.join(output_location, "Bos_taurus.ARS-UCD1.2.dna.primary_assembly." + chr_name + ".fa.gz")
+            download(gen_root_url + "Bos_taurus.ARS-UCD1.2.dna.primary_assembly." + chr_name + ".fa.gz", output_location)
+            gz_file = gzip.open(gz_file_name, 'rb')
+            output_genome_file.write(re.sub("^>.*", ">chr" + chr_name, gz_file.read().decode("utf-8"), flags=re.MULTILINE))
+            gz_file.close()
+            to_remove.append(gz_file_name)
+            print("OK")
+        output_genome_file.close()
+        for gz_file_name in to_remove:
+            remove(gz_file_name)
+
+    # Fetching GTF
+    gtf_output_file_name = path.join(output_location, "bosTau8.refGene.gtf")
+    if args.zv10_gtf_path:
+        print("Creating symbolic link to Bos taurus GTF")
+        system("ln -s " + args.zv10_gtf_path + " " + gtf_output_file_name)
+        print("OK")
+    else:
+        gtf_url = "https://hgdownload.soe.ucsc.edu/goldenPath/bosTau8/bigZips/genes/bosTau8.refGene.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location, "bosTau8.refGene.gtf.gz")
+        if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
+        print("Downloading Bos taurus GTF (gene annotation)")
+        download(gtf_url, output_location)
+        gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
+        gtf_output_file = open(gtf_output_file_name, "w")
+        gtf_output_file.write(re.sub("^([0-9a-zA-Z_\\\.]+\t)", "chr\\1", gz_file.read().decode("utf-8"), flags=re.MULTILINE))
+        gz_file.close()
+        remove(gtf_output_file_name_gz)
+        gtf_output_file.close()
+        print("OK")
+
 
 ###################################################################################################
 # Repeat Maskers
