@@ -547,12 +547,20 @@ if args.bt8:
         mkdir(output_location)
 
     # Fetching genome
-    output_genome_file_name = path.join(output_location, "genome_bt8_ensembl_release_107.fa")
+    output_genome_file_name = path.join(output_location, "bosTau8.fa")
     if args.tair10_genome_path:
         print("Creating symbolic link to Bos taurus genome")
         system("ln -s " + args.tair10_genome_path + " " + output_genome_file_name)
         print("OK")
     else:
+        gz_file_name = path.join(output_location, "bosTau8.fa.gz")
+        url = "https://hgdownload.soe.ucsc.edu/goldenPath/bosTau8/bigZips/bosTau8.fa.gz"
+        print("Downloading Bos taurus genome")
+        download(url, output_location)
+
+
+        gz_file = gzip.open(gz_file_name, 'rb')
+
         gen_root_url = "http://ftp.ensembl.org/pub/release-107/fasta/bos_taurus/dna/"
         chr_list = [str(e) for e in range(1, 29)] + ["MT"] + ["X"]
         output_genome_file = open(output_genome_file_name, "w")
