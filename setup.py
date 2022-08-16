@@ -441,7 +441,7 @@ for tool_option in options.param_rgt_tool:
         external_scripts.append(e)
 
 # Fetching Additional Structural Files
-readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.rst")
+readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 
 # Fetching Long Description
 readme_file = open(readme_file_name, "r")
