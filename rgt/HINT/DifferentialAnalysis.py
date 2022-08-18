@@ -21,7 +21,10 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.HINT.biasTable import BiasTable
 
 import matplotlib.pyplot as plt
-from bioinfokit import visuz
+
+import seaborn as sns
+from adjustText import adjust_text
+from matplotlib.lines import Line2D
 
 """
 Perform differential footprints analysis based on the prediction of transcription factor binding sites.
@@ -246,7 +249,7 @@ def diff_analysis_run(args):
     if len(conditions) == 2:
         ps_tc_results = scatter_plot(args, ps_tc_results, mpbs_name_list, conditions)
         volcano_plot(args, ps_tc_results, mpbs_name_list, conditions)
-
+        
     output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args)
 
 
@@ -581,7 +584,26 @@ def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
 
     return ps_tc_results
 
+def map_color(a, fc_thr, pv_thr):
+    log2FoldChange, symbol, nlog10 = a
+
+    if log2FoldChange >= fc_thr and nlog10 >= pv_thr:
+        return 'very higher'
+    if log2FoldChange <= -fc_thr and nlog10 >= pv_thr:
+        return 'very lower'
+    if log2FoldChange >= fc_thr and nlog10 < pv_thr:
+        return 'higher'
+    if log2FoldChange <= -fc_thr and nlog10 < pv_thr:
+        return 'lower'
+    if abs(log2FoldChange) < fc_thr and nlog10 >= pv_thr:
+        return 'mix'
+    else:
+        return 'no'
+
 def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
+    """
+    plot volcano plot of p-values and fold changes
+    """
     tf_activity_score1 = np.zeros(len(mpbs_name_list))
     tf_activity_score2 = np.zeros(len(mpbs_name_list))
 
@@ -595,38 +617,67 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
     for i, mpbs_name in enumerate(mpbs_name_list):
         p_values[i] = float(ps_tc_results[i][2][2])
     
-    df = pd.DataFrame(columns=['log2FC', 'p-value', 'TF_names'])
-    df['log2FC'] = foldchanges
-    df['p-value'] = p_values
-    df['TF_names'] = mpbs_name_list
+    pv_thr = -np.log10(args.fdr)
+    
+    df = pd.DataFrame(columns=['log2FoldChange', 'nlog10', 'symbol'])
+    df['log2FoldChange'] = foldchanges
+    df['nlog10'] = -np.log10(p_values)
+    df['symbol'] = mpbs_name_list
     df = df.fillna(0)
-    selected_labels = df.loc[ (np.abs(df.log2FC) >= args.lfc) & (df['p-value'] <= args.fdr)]['TF_names'].values
+    
+
+    df['color'] = df[['log2FoldChange', 'symbol', 'nlog10']].apply(map_color, fc_thr = args.lfc, pv_thr = pv_thr, axis = 1)
+    df['baseMean'] = df.nlog10*10
     
     filename = os.path.join(args.output_location, "{}_log2foldChange".format(args.output_prefix))
-    visuz.GeneExpression.volcano(df = df, 
-                                  lfc = 'log2FC',
-                                  pv = 'p-value', 
-                                  lfc_thr = (-args.lfc, args.lfc),
-                                  pv_thr = (args.fdr, args.fdr), 
-                                  show = False, 
-                                  geneid = "TF_names",
-                                  plotlegend = True,
-                                  legendlabels = ["Higher scores in {}".format(conditions[1]), 
-                                                  'not significant', "Higher scores in {}".format(conditions[0])],
-                                  color = ("#00239CFF", "grey", "#E10600FF"),
-                                  dotsize = 50,
-                                  axlabelfontsize = 16,
-                                  axlabelfontname = 'DejaVu Sans',
-                                  genenames = tuple(selected_labels),
-                                  gstyle = 1,
-                                  gfont = 16,
-                                  xlm = (-round(np.max(np.abs(df['log2FC']))), 
-                                          round(np.max(np.abs(df['log2FC']))), 0.5),
-                                  ylm = (0, 
-                                          round(-np.log10(np.min(df['p-value']))), 0.5), 
-                                  dim = (20, 20), figtype = 'pdf',
-                                  ar = 0, axtickfontname = 'DejaVu Sans', axtickfontsize=16,
-                                  figname = filename)
+    
+    plt.figure(figsize = (10,12), frameon=False, dpi=100)
+
+    ax = sns.scatterplot(data = df, x = 'log2FoldChange', y = 'nlog10', 
+                         hue = 'color', hue_order = ['no', 'very higher', 'higher', 'mix', 'very lower', 'lower'],
+                         palette = ['lightgrey', '#d62a2b', '#D62A2B7A', '#8172b3', '#1f77b4', '#1F77B47D'],
+                         size = 'baseMean', sizes = (40, 400)
+                        )
+    
+    ax.axhline(pv_thr, zorder = 0, c = 'k', lw = 2, ls = '--')
+    ax.axvline(args.lfc, zorder = 0, c = 'k', lw = 2, ls = '--')
+    ax.axvline(-args.lfc, zorder = 0, c = 'k', lw = 2, ls = '--')
+          
+    texts = []
+    for i in range(len(df)):
+        if df.iloc[i].nlog10 >= pv_thr and abs(df.iloc[i].log2FoldChange) >= args.lfc:
+            texts.append(plt.text(x = df.iloc[i].log2FoldChange, y = df.iloc[i].nlog10, s = df.iloc[i].symbol,
+                                 fontsize = 16, weight = 'normal', family = 'sans-serif'))
+    adjust_text(texts, arrowprops = dict(arrowstyle = '-', color = 'k', lw=0.5))
+    
+    
+    custom_lines = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#d62a2b', markersize=15),
+                   Line2D([0], [0], marker='o', color='w', markerfacecolor='#1f77b4', markersize=15)]
+    
+    plt.legend(custom_lines, ["Higher scores in {}".format(conditions[1]), "Higher scores in {}".format(conditions[0])],loc = 1,
+               bbox_to_anchor = (1,1), frameon = False, prop = {'weight': 'normal', 'size': 16})
+    
+    for axis in ['bottom', 'left']:
+        ax.spines[axis].set_linewidth(2)
+        
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    ax.tick_params(width = 2)
+    
+    plt.title("Activity Score", fontsize=20)
+    
+    plt.xlim(-round(np.max(np.abs(df['log2FoldChange']))), round(np.max(np.abs(df['log2FoldChange']))))
+    plt.ylim(0, round(-np.log10(np.min(df['nlog10']))))
+    
+    plt.xticks(size = 15, weight = 'bold')
+    plt.yticks(size = 15, weight = 'bold')
+    
+    plt.xlabel("$log_{2}$ (Fold Change)", size = 15)
+    plt.ylabel("-$log_{10}$ (P-value)", size = 15)
+    
+    plt.savefig(filename, dpi = 100, bbox_inches = 'tight', facecolor = 'white')
+    
 
 def output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args):
     output_filename = os.path.join(args.output_location, "{}_statistics.txt".format(args.output_prefix))
@@ -708,4 +759,3 @@ def smooth(signal, window_size=5, rank=5):
         smooth_signal[i] = np.nanmean(signal[a:b])
 
     return smooth_signal
-
