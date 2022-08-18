@@ -103,7 +103,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "bioinfokit"],
+        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "seaborn", "adjustText"],
         []
     ),
     "THOR": (
@@ -453,16 +453,16 @@ for tool_option in options.param_rgt_tool:
 readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 
 # Fetching Long Description
-readme_file = open(readme_file_name, "r")
-long_description = readme_file.read()
-readme_file.close()
+# readme_file = open(readme_file_name, "r")
+# long_description = readme_file.read()
+# readme_file.close()
 
 # Setup Function
 
 setup(name="RGT",
       version=current_version,
       description=short_description,
-      long_description=long_description,
+      long_description='',
       classifiers=classifiers_list,
       keywords=", ".join(keywords_list),
       author=", ".join(author_list),
@@ -492,4 +492,3 @@ if current_user:
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
                           default_path_permission)
-
