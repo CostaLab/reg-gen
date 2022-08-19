@@ -417,8 +417,8 @@ for copy_folder in list(copy_files_dictionary.keys()):
 short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
-keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+keywords_list = ["ChIP-seq", "ATAC-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
+author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
@@ -473,7 +473,7 @@ setup(name="RGT",
       install_requires=current_install_requires,
       scripts=external_scripts,
       python_requires='>=3.6',
-      url="http://www.regulatory-genomics.org",
+      url="https://reg-gen.readthedocs.io/",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
 
