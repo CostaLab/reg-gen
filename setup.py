@@ -113,12 +113,6 @@ tools_dictionary = {
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
     ),
-    "filterVCF": (
-        "rgt-filterVCF",
-        "rgt.filterVCF.filterVCF:main",
-        [],
-        []
-    ),
     "viz": (
         "rgt-viz",
         "rgt.viz.Main:main",
@@ -318,8 +312,6 @@ data_config_file.write("default_bias_table_F_DH: fp_hmms/double_hit_bias_table_F
 data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R.txt\n")
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n")
-data_config_file.write("dependency_model: fp_hmms/LearnDependencyModel.jar\n")
-data_config_file.write("slim_dimont_predictor: fp_hmms/SlimDimontPredictor.jar\n")
 data_config_file.write("default_test_fa: fp_hmms/test.fa\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + triplexes_file + "\n")
@@ -373,8 +365,7 @@ copy_files_dictionary = {
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
                 "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac_paired.pkl", "atac_single.pkl",
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
-                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
-                "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
+                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm", "test.fa"],
     "motifs": ["createMtf.py", "createPwm.py",
                "jaspar_vertebrates", "jaspar_plants", "jaspar_insects", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
                "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "jaspar_insects.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
@@ -409,7 +400,7 @@ short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
@@ -464,7 +455,7 @@ setup(name="RGT",
       install_requires=current_install_requires,
       scripts=external_scripts,
       python_requires='>=3.6',
-      url="http://www.regulatory-genomics.org",
+      url="https://reg-gen.readthedocs.io",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
 
