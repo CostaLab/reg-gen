@@ -103,7 +103,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "bioinfokit"],
+        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "seaborn", "adjustText"],
         []
     ),
     "THOR": (
@@ -289,8 +289,17 @@ data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_tair10_ensembl_release_51.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.tair10\n"))
 data_config_file.write("gene_regions: " + path.join(genome, "genes_tair10.bed\n"))
-data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n\n"))
+data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_tair10.txt\n\n"))
+
+genome = "bt8"
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome, "bosTau8.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.bt8\n"))
+data_config_file.write("gene_regions: " + path.join(genome, "genes_bt8.bed\n"))
+data_config_file.write("annotation: " + path.join(genome, "bosTau8.refGene.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome, "alias_bt8\n\n"))
+
 
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
@@ -399,8 +408,16 @@ for copy_folder in list(copy_files_dictionary.keys()):
 short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
+<<<<<<< HEAD
 keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
 author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+||||||| 12d12cb6
+keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
+author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+=======
+keywords_list = ["ChIP-seq", "ATAC-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
+author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+>>>>>>> develop
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
@@ -435,16 +452,16 @@ for tool_option in options.param_rgt_tool:
 readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 
 # Fetching Long Description
-readme_file = open(readme_file_name, "r")
-long_description = readme_file.read()
-readme_file.close()
+# readme_file = open(readme_file_name, "r")
+# long_description = readme_file.read()
+# readme_file.close()
 
 # Setup Function
 
 setup(name="RGT",
       version=current_version,
       description=short_description,
-      long_description=long_description,
+      long_description='',
       classifiers=classifiers_list,
       keywords=", ".join(keywords_list),
       author=", ".join(author_list),
@@ -455,7 +472,13 @@ setup(name="RGT",
       install_requires=current_install_requires,
       scripts=external_scripts,
       python_requires='>=3.6',
+<<<<<<< HEAD
       url="https://reg-gen.readthedocs.io",
+||||||| 12d12cb6
+      url="http://www.regulatory-genomics.org",
+=======
+      url="https://reg-gen.readthedocs.io/",
+>>>>>>> develop
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
 
@@ -474,4 +497,3 @@ if current_user:
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
                           default_path_permission)
-
