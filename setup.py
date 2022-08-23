@@ -408,16 +408,8 @@ for copy_folder in list(copy_files_dictionary.keys()):
 short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
-<<<<<<< HEAD
-keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
-||||||| 12d12cb6
-keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
-=======
 keywords_list = ["ChIP-seq", "ATAC-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
 author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
->>>>>>> develop
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
@@ -448,16 +440,6 @@ for tool_option in options.param_rgt_tool:
     for e in tools_dictionary[tool_option][3]:
         external_scripts.append(e)
 
-# Fetching Additional Structural Files
-readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
-
-# Fetching Long Description
-# readme_file = open(readme_file_name, "r")
-# long_description = readme_file.read()
-# readme_file.close()
-
-# Setup Function
-
 setup(name="RGT",
       version=current_version,
       description=short_description,
@@ -472,13 +454,7 @@ setup(name="RGT",
       install_requires=current_install_requires,
       scripts=external_scripts,
       python_requires='>=3.6',
-<<<<<<< HEAD
       url="https://reg-gen.readthedocs.io",
-||||||| 12d12cb6
-      url="http://www.regulatory-genomics.org",
-=======
-      url="https://reg-gen.readthedocs.io/",
->>>>>>> develop
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
 

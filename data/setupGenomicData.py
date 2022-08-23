@@ -339,22 +339,19 @@ if args.mm39:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm39.fa")
-    if args.mm39_genome_path:
-        print("Creating symbolic link to MM10 genome")
-        system("ln -s " + args.mm39_genome_path + " " + output_genome_file_name)
-        print("OK")
-    else:
-        gen_root_url = gencode_url + "Gencode_mouse/release_M27/GRCm39.primary_assembly.genome.fa.gz"
-        output_genome_file = open(output_genome_file_name, "w")
-        print("Downloading mm39 genome")
-        gz_file_name = path.join(output_location, "GRCm39.primary_assembly.genome.fa.gz")
-        download(gen_root_url, output_location)
-        gz_file = gzip.open(gz_file_name, 'rb')
-        output_genome_file.write(gz_file.read().decode("utf-8"))
-        gz_file.close()
-        remove(gz_file_name)
-        print("OK")
-        output_genome_file.close()
+
+    gen_root_url = gencode_url + "Gencode_mouse/release_M27/GRCm39.primary_assembly.genome.fa.gz"
+    output_genome_file = open(output_genome_file_name, "w")
+    print("Downloading mm39 genome")
+    gz_file_name = path.join(output_location, "GRCm39.primary_assembly.genome.fa.gz")
+    download(gen_root_url, output_location)
+
+    with gzip.open(gz_file_name, "rb") as f_in:
+        with open(output_genome_file_name, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    remove(gz_file_name)
+    print("OK")
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.vM27.annotation.gtf")
