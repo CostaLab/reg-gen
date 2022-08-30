@@ -65,7 +65,7 @@ Let’s explore the motif enrichment output in the cDC\_PU1 folder:
 You can observe that, as expected, PU.1 motifs were ranked in the top (UP00085\_1\_Sfpi1\_primary and MA0080.3.Spi1). Furthermore, we observed that other transcription factors were also enriched in these regions, such as Erg, IRF1, Ets1, ETF1, EHF and many others. These transcription factors are putative co-binding or regulatory partners of PU.1 and are connected with PU.1 in its regulatory network within the cDC cell type.
 
 ## Full-site Test
-[Download here](http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_FullSiteTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
+[Download here](https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_FullSiteTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
 
 ```shell
 cd RGT_MotifAnalysis_FullSiteTest
@@ -94,7 +94,7 @@ You should also look into the metadata files – [read here](https://reg-gen.rea
 
 ## Promoter Test
 
-[Download here](http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_PromoterTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
+[Download here](https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_PromoterTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
 ```shell
 cd RGT_MotifAnalysis_PromoterTest
 rgt-motifanalysis matching --target-genes input/genes.txt --input-files input/background.bed
@@ -104,7 +104,7 @@ rgt-motifanalysis enrichment input/background.bed match/target_regions.bed
 In the enrichment step, the order of the bed files matters. The background must always come first.
 
 ### Gene association Test
-[Download here](http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_GeneAssocTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
+[Download here](https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_GeneAssocTest.tar.gz). Execute the following commands in order to perform a motif matching followed by motif enrichment:
 
 ```
 cd RGT_MotifAnalysis_GeneAssocTest
