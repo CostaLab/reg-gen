@@ -9,34 +9,24 @@ mkdir -p $DIR
 cd ${DIR}
 
 echo "**********************************************"
-echo "Testing Viz"
+echo "******** Testing RGT-Viz *********************"
+echo "**********************************************"
 
 # Download the data
-file="${DIR}/viz_examples/scripts.sh"
-if [ -f "$file" ]
+DEST="${DIR}/rgt_viz_examples"
+if [ -f "$DEST" ]
 then
-    echo "Example data are loaded."
+    echo "dir found."
 else
+    echo "$DEST not found."
     echo "Downloading example files for rgt-viz"
-    wget --no-check-certificate -qO- -O viz_examples.zip http://www.regulatory-genomics.org/wp-content/uploads/2016/09/rgt_viz_example.zip
-    unzip -o viz_examples.zip
-    rm viz_examples.zip
-    mv zip viz_examples
-fi
-
-# Download the BW files
-file="${DIR}/viz_examples/data/cDC_H3K4me1.bw"
-if [ -f "$file" ]
-then
-    echo "Example data exist."
-else
-    echo "Downloading BW files for rgt-viz"
-    cd viz_examples/
-    sh download_examples_RGT-viz.sh
+    wget --no-check-certificate -qO- -O rgt_viz_examples.zip https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip
+    unzip -o rgt_viz_examples.zip
+    rm rgt_viz_examples.zip
 fi
 
 # Run test script
-cd ${DIR}/viz_examples/
+cd ${DIR}/rgt_viz_examples/
 # Basic lineplot
 rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP -test
 # Add one more cell type

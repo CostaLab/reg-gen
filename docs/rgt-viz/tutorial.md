@@ -10,7 +10,7 @@ We will use the epigenetic data from dendritic cell development study [1] as exa
 
 Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
 
-1. Download the folder “example\_RGT-Viz” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
+1. Download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
 2. Execute the script “download\_examples\_RGT-viz.sh”
 
 ```shell
