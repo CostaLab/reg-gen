@@ -440,6 +440,15 @@ for tool_option in options.param_rgt_tool:
     for e in tools_dictionary[tool_option][3]:
         external_scripts.append(e)
 
+# Fetching Additional Structural Files
+readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
+
+# Fetching Long Description
+readme_file = open(readme_file_name, "r")
+long_description = readme_file.read()
+readme_file.close()
+
+# Setup Function
 setup(name="RGT",
       version=current_version,
       description=short_description,

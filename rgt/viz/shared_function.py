@@ -160,24 +160,10 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(list(exps.fieldsDict[colorby].keys()))
             # print(n)
 
-            cmap = plt.cm.get_cmap('jet')
-            print(cmap)
-            sys.exit()
-            color_res = cmap(numpy.arange(n))
-
-            # if n < 8:
-            #     indn = np.linspace(0, 32, 256)
-            #     color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
-            # else:
-            #     set1 = plt.get_cmap('Set1')
-            #     cNorm = colormat.Normalize(vmin=0, vmax=n)
-            #     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
-            #     color_res = [scalarMap.to_rgba(d) for d in range(n)]
-
-            # color_res = plt.cm.Set1(numpy.linspace(0.1, 0.9, n)).tolist()
-            # print(len(plt.cm.Set1().tolist()))
-            #
-            # np.linspace(0, 1, 9)
+            # cmap = plt.cm.get_cmap('Set1')
+            # print(cmap)
+            # sys.exit()
+            color_res = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
 
     color_res = unique(color_res)
     return color_res
