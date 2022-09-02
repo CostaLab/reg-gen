@@ -1,7 +1,3 @@
-```python
-import numpy as np
-```
-
 # Introduction
 
 <img src="../_static/thor/rgt_logo.png" width="175" align="right">
@@ -68,3 +64,4 @@ Here, we provide a screenshot of the results based on [IGV](http://www.broadinst
 ## Citation
 
 Allhoff, M., Sere K., Freitas, J., Zenke, M.,  Costa, I.G. [Differential Peak Calling of ChIP-seq Signals with Replicates with THOR](http://nar.oxfordjournals.org/content/early/2016/08/01/nar.gkw680.abstract). Nucleic Acids Research, 44(20):e153, 2016.
+
