@@ -3,7 +3,9 @@
 <img src="../_static/thor/rgt_logo.png" width="175" align="right">
 
 ## Method
-THOR is an Hidden Markov Model based approach to detect and analyze differential peaks in two sets of ChIP-seq data from distinct biological conditions with replicates. THOR performs genomic signal processing, peak calling and p-value calculation in an integrated framework.-
+THOR is an Hidden Markov Model based approach to detect and analyze differential peaks in two sets of ChIP-seq data from distinct biological conditions with replicates. THOR performs genomic signal processing, peak calling and p-value calculation in an integrated framework. See below the overall workflow of THOR.
+
+<img src="../_static/thor/overview_THOR.png" width="500" align="center">
 
 ## Basic Usage
 You can find [here](https://costalab.ukaachen.de/open_data/RGT/THOR/THOR_example_data.tar.gz) example files containing reads aligned to selected genomic regions from a B Cell lymphoma [study](http://www.sciencedirect.com/science/article/pii/S1074761314004889). These files are from two donors with follicular lymphoma (FL) and two control samples (CC). We are interested in the differential peaks between the biological conditions FL and CC. The files are based on our experiment LYMP-FL-CC described in our paper.
