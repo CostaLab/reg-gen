@@ -11,6 +11,7 @@ import argparse
 from os import system, path, remove, mkdir
 from sys import platform
 import re
+import shutil
 
 
 def download(url, prefix, output=None):
@@ -33,6 +34,7 @@ parser.add_argument("--mm39", dest="mm39", action="store_true", default=False, h
 parser.add_argument("--zv9", dest="zv9", action="store_true", default=False, help="Fetch zebrafish files.")
 parser.add_argument("--zv10", dest="zv10", action="store_true", default=False, help="Fetch zebrafish files.")
 parser.add_argument("--tair10", dest="tair10", action="store_true", default=False, help="Fetch Arabidopsis files.")
+parser.add_argument("--bt8", dest="bt8", action="store_true", default=False, help="Fetch Bos taurus files.")
 
 parser.add_argument("--hg19-genome-path", type=str, metavar="STRING", dest="hg19_genome_path", default=None,
                     help="Path to an already existing hg19 genome (all chromosomes in the same file).")
@@ -50,6 +52,8 @@ parser.add_argument("--zv10-genome-path", type=str, metavar="STRING", dest="zv10
                     help="Path to an already existing zv10 genome (all chromosomes in the same file).")
 parser.add_argument("--tair10-genome-path", type=str, metavar="STRING", dest="tair10_genome_path", default=None,
                     help="Path to an already existing tair10 genome (all chromosomes in the same file).")
+parser.add_argument("--bt8-genome-path", type=str, metavar="STRING", dest="bt8_genome_path", default=None,
+                    help="Path to an already existing bt8 genome (all chromosomes in the same file).")
 
 
 parser.add_argument("--hg19-gtf-path", type=str, metavar="STRING", dest="hg19_gtf_path", default=None,
@@ -68,6 +72,8 @@ parser.add_argument("--zv10-gtf-path", type=str, metavar="STRING", dest="zv10_gt
                     help="Path to an already existing zv10 GTF file.")
 parser.add_argument("--tair10-gtf-path", type=str, metavar="STRING", dest="tair10_gtf_path", default=None,
                     help="Path to an already existing tair10 GTF file.")
+parser.add_argument("--bt8-gtf-path", type=str, metavar="STRING", dest="bt8_gtf_path", default=None,
+                    help="Path to an already existing bt8 GTF file.")
 
 # Repeat masker
 parser.add_argument("--hg38-rm", dest="hg38_rm", action="store_true", default=False,
@@ -79,7 +85,7 @@ parser.add_argument("--mm9-rm", dest="mm9_rm", action="store_true", default=Fals
 
 args = parser.parse_args()
 
-if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.mm39, args.zv9, args.zv10, args.tair10]):
+if not any([args.all, args.hg19, args.hg38, args.mm9, args.mm10, args.mm39, args.zv9, args.zv10, args.tair10, args.bt8]):
     parser.print_help()
     exit(1)
 
@@ -92,6 +98,7 @@ if args.all:
     args.zv9 = True
     args.zv10 = True
     args.tair10 = True
+    args.bt8 = True
 
 ###################################################################################################
 # Parameters
@@ -332,22 +339,19 @@ if args.mm39:
 
     # Fetching genome
     output_genome_file_name = path.join(output_location, "genome_mm39.fa")
-    if args.mm39_genome_path:
-        print("Creating symbolic link to MM10 genome")
-        system("ln -s " + args.mm39_genome_path + " " + output_genome_file_name)
-        print("OK")
-    else:
-        gen_root_url = gencode_url + "Gencode_mouse/release_M27/GRCm39.primary_assembly.genome.fa.gz"
-        output_genome_file = open(output_genome_file_name, "w")
-        print("Downloading mm39 genome")
-        gz_file_name = path.join(output_location, "GRCm39.primary_assembly.genome.fa.gz")
-        download(gen_root_url, output_location)
-        gz_file = gzip.open(gz_file_name, 'rb')
-        output_genome_file.write(gz_file.read().decode("utf-8"))
-        gz_file.close()
-        remove(gz_file_name)
-        print("OK")
-        output_genome_file.close()
+
+    gen_root_url = gencode_url + "Gencode_mouse/release_M27/GRCm39.primary_assembly.genome.fa.gz"
+    output_genome_file = open(output_genome_file_name, "w")
+    print("Downloading mm39 genome")
+    gz_file_name = path.join(output_location, "GRCm39.primary_assembly.genome.fa.gz")
+    download(gen_root_url, output_location)
+
+    with gzip.open(gz_file_name, "rb") as f_in:
+        with open(output_genome_file_name, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    remove(gz_file_name)
+    print("OK")
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location, "gencode.vM27.annotation.gtf")
@@ -529,6 +533,53 @@ if args.tair10:
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
         print("OK")
+
+
+###################################################################################################
+# Genomic Data BT8
+###################################################################################################
+
+if args.bt8:
+    output_location = path.join(curr_dir, "bt8")
+    if not path.exists(output_location):
+        mkdir(output_location)
+
+    # Fetching genome
+    genom_url = "https://hgdownload.soe.ucsc.edu/goldenPath/bosTau8/bigZips/bosTau8.fa.gz"
+
+    genome_output_file_name = path.join(output_location, "bosTau8.fa")
+    genome_output_file_name_gz = path.join(output_location, "bosTau8.fa.gz")
+
+    if path.isfile(genome_output_file_name_gz): 
+        remove(genome_output_file_name_gz)
+
+    print("Downloading Bos taurus genome")
+    download(genom_url, output_location)
+    
+    with gzip.open(genome_output_file_name_gz, "rb") as f_in:
+        with open(genome_output_file_name, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+            
+    remove(genome_output_file_name_gz)
+
+    # Fetching GTF
+    gtf_url = "https://hgdownload.soe.ucsc.edu/goldenPath/bosTau8/bigZips/genes/bosTau8.refGene.gtf.gz"
+
+    gtf_output_file_name = path.join(output_location, "bosTau8.refGene.gtf")
+    gtf_output_file_name_gz = path.join(output_location, "bosTau8.refGene.gtf.gz")
+
+    if path.isfile(gtf_output_file_name_gz): 
+        remove(gtf_output_file_name_gz)
+
+    print("Downloading Bos taurus GTF (gene annotation)")
+    download(gtf_url, output_location)
+    with gzip.open(gtf_output_file_name_gz, "rb") as f_in:
+        with open(gtf_output_file_name, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    remove(gtf_output_file_name_gz)
+    print("OK")
+
 
 ###################################################################################################
 # Repeat Maskers

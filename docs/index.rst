@@ -29,8 +29,11 @@ The toolbox is made of a core library and several tools:
    :maxdepth: 2
    :hidden:
 
+   rgt/introduction.md
    rgt/installation.md
    rgt/setup_data.md
+   rgt/tool_usage.md
+   rgt/tutorial-peak-calling.md
 
 .. toctree::
    :caption: HINT
@@ -78,3 +81,5 @@ The toolbox is made of a core library and several tools:
    rgt-viz/introduction.md
    rgt-viz/method.md
    rgt-viz/tool_usage.md
+   rgt-viz/tutorial.md
+
