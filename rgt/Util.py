@@ -248,8 +248,6 @@ class HmmData(ConfigurationFile):
                                                       self.config.get('HmmData', 'default_bias_table_F_ATAC'))
         self.default_bias_table_R_ATAC = os.path.join(self.data_dir,
                                                       self.config.get('HmmData', 'default_bias_table_R_ATAC'))
-        self.dependency_model = os.path.join(self.data_dir, self.config.get('HmmData', 'dependency_model'))
-        self.default_test_fa = os.path.join(self.data_dir, self.config.get('HmmData', 'default_test_fa'))
 
     def get_default_hmm_dnase(self):
         """Returns the current default DNase only hmm."""
@@ -310,12 +308,6 @@ class HmmData(ConfigurationFile):
     def get_default_bias_table_R_ATAC(self):
         """Returns the ATAC-seq default bias table for the reverse strand."""
         return self.default_bias_table_R_ATAC
-
-    def get_dependency_model(self):
-        return self.dependency_model
-
-    def get_default_test_fa(self):
-        return self.default_test_fa
 
 
 class ImageData(ConfigurationFile):
