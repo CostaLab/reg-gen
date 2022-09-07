@@ -85,7 +85,7 @@ This command will generate a directory “<em>results</em>” with figures and h
 You can check the result by opening <em>results/index.html</em>
 
 <p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP.png" width="450" height="343" align="center">
+<img src="../_static/rgt-viz/lineplot_CDP.png" width="450" height="350" align="center">
 </p>
 
 This lineplot shows the genomic signals of different histone modifications on the PU.1 genomic regions. The histone modifications are shown in different colors, and the window is centered by the midpoint of each genomic regions from PU.1 peaks.
@@ -104,7 +104,7 @@ rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC -col cell -ro
 - -sx shares the y-axis for the plots in the same row.
 
 <p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP_cDC.png" width="450" height="350" align="center">
+<img src="../_static/rgt-viz/lineplot_CDP_cDC.png" width="900" height="350" align="center">
 </p>
 
 This lineplot shows the difference of histone signatures on the PU.1 peaks among two cells. This plot indicates an increase in PU.1 and H3K4me3 levels on cDC cells compared to CDP cells.

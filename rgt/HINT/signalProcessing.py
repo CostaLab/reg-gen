@@ -29,7 +29,7 @@ class GenomicSignal:
     2. Call load_sg_coefs once.
     3. Call get_signal as many times as needed.
 
-    Authors: Eduardo G. Gusmao.
+    Authors: Zhijian Li, Eduardo G. Gusmao.
     """
 
     def __init__(self, file_name=None):
