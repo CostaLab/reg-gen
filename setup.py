@@ -5,6 +5,7 @@ import re
 from shutil import copy
 from pwd import getpwnam
 from sys import platform, exit
+import subprocess
 from distutils import dir_util
 from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
@@ -76,9 +77,20 @@ common_deps = ["cython",
                "pysam>=0.12.0",
                "pyBigWig"]
 
+def is_apple_m1():
+    chip = subprocess.check_output(['sysctl','-n','machdep.cpu.brand_string']).decode('utf-8')
+    if chip in ['Apple M1\n', 'Apple M1 Pro\n']:
+        return True
+    else:
+        return False
+
 if platform.startswith("darwin"):
     bin_dir = "mac"
-    libRGT = "librgt_mac.so"
+    # check if being installed on Apple M1 chip
+    if is_apple_m1():
+        libRGT = "librgt_mac_m1.so"
+    else:
+        libRGT = "librgt_mac.so"
     triplexes_file = "lib/libtriplexator.dylib"
 else:
     bin_dir = "linux"
@@ -237,6 +249,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm9.
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM1.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "mm10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_mm10.fa\n"))
@@ -245,6 +258,7 @@ data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm10.
 data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm10.bed # alternative to Gencode\n"))
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
+
 genome = "mm39"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_mm39.fa\n"))
@@ -252,6 +266,7 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm3
 data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm39.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
+
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_hg19.fa\n"))
@@ -261,6 +276,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_hg19
 data_config_file.write("annotation: " + path.join(genome, "gencode.v19.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "hg38"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_hg38.fa\n"))
@@ -270,6 +286,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_hg38
 data_config_file.write("annotation: " + path.join(genome, "gencode.v21.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "zv9"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv9_ensembl_release_79.fa\n"))
@@ -277,6 +294,7 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv9
 data_config_file.write("gene_regions: " + path.join(genome, "genes_zv9.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.Zv9.79.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
+
 genome = "zv10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv10_ensembl_release_84.fa\n"))
@@ -284,6 +302,7 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv1
 data_config_file.write("gene_regions: " + path.join(genome, "genes_zv10.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
+
 genome = "tair10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_tair10_ensembl_release_51.fa\n"))
@@ -322,6 +341,7 @@ data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n")
 data_config_file.write("default_test_fa: fp_hmms/test.fa\n\n")
+
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + triplexes_file + "\n")
 data_config_file.write("path_c_rgt: " + path.join("lib", libRGT) + "\n")
