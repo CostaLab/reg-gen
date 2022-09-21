@@ -1,12 +1,28 @@
-# Tutorial
+# Tutorial of regions versus signals
+
+In this tutorial, we will demonstrate how we can use RGT-Viz to visualize signlas in different regions.
+
+## Download the example files
+We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are as follows:
+
+* H3K4me1 is enriched at active and primed enhancers;
+* H3K4me3 is highly enriched at active promoters near Transcription start site (TSS);
+* H3K9me3 is a marker of heterochromatin which has pivotal role during lineage commitement;
+* H3K27me3 is associated with the downregulation of nearby genes via the formation of heterochromatic regions;
+* H3K27ac is accociated with the higher activation of transcription and defined as an active enhancer marker.
+
+For simplicity, here we only look at data from the differentiation transition CDP to cDC.
+
+Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
+
+Download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
+
 
 ## Creating Line Plots with RGT-Viz
 
 Here we demonstrate how we can use RGT-Viz for drawing a lineplots. This allows for example to inspect the ChIP-Seq signals around particular genomic regions, as PU.1. peaks. Before you proceed, please [install RGT-Viz](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
 
 ### Download the example files
-
-We will use the epigenetic data from dendritic cell development study [1] as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and histone modifications **H3K4me3**, **H3K4me1** and **H3K27me3** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). For simplicity, here we only look at data from the differentiation transition CDP to cDC.
 
 Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
 

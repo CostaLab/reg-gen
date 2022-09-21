@@ -10,7 +10,8 @@
 import argparse
 from os import path, mkdir, listdir, walk
 from sys import platform, exit
-
+from tqdm import tqdm
+import logomaker
 from Bio import motifs
 
 # Initializing Option Parser
@@ -78,10 +79,11 @@ for repo in repositories:
 
         print(">>", repo)
 
-        for pwm_file_name in file_list:
+        for pwm_file_name in tqdm(file_list):
             pwm_full_file_name = path.join(dir_name, pwm_file_name)
             if pwm_file_name.split(".")[-1] != "pwm":
                 continue
+
             pwm_file = open(pwm_full_file_name, "r")
             logo_file_name = path.join(output_dir, ".".join(pwm_file_name.split(".")[:-1]) + ".png")
             pwm = motifs.read(pwm_file, "pfm")
