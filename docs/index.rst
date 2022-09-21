@@ -82,5 +82,6 @@ The toolbox is made of a core library and several tools:
    rgt-viz/introduction.md
    rgt-viz/method.md
    rgt-viz/tool_usage.md
-   rgt-viz/tutorial.md
+   rgt-viz/tutorial_regions_vs_signals.md
+   rgt-viz/tutorial_regions_vs_regions.md
 
