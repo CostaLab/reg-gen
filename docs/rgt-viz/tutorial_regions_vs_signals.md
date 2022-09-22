@@ -4,7 +4,7 @@ In this tutorial, we will demonstrate how we can use RGT-Viz to visualize signla
 
 ## Download the data
 
-We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are as follows:
+We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are showed as follows:
 
 * H3K4me1 is enriched at active and primed enhancers;
 * H3K4me3 is highly enriched at active promoters near Transcription start site (TSS);
@@ -12,13 +12,14 @@ We will use the epigenetic data from dendritic cell development study as example
 * H3K27me3 is associated with the downregulation of nearby genes via the formation of heterochromatic regions;
 * H3K27ac is accociated with the higher activation of transcription and defined as an active enhancer marker.
 
-Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
-
-Download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
+Next, please download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
 
 ```shell
+unzip rgt_viz_example
 cd rgt_viz_example
 ```
+
+Now you have the files as described below:
 
 ```shell
 └── data
@@ -50,7 +51,7 @@ For example “<em>Matrix_CDP.txt</em>”  includes the files, which we need for
 
 | name       	 | type	   | file			                        | factor   | cell |
 | :------------- | :------ | :--------------------------------------| :------- | :--- |
-| CDP\_PU1\_peaks| regions | ./data/peaks/PU1/CDP\_peaks.narrowPeak | PU1      | CDP  |
+| CDP\_PU1\_peaks| regions | ./data/peaks/PU1/CDP.bed               | PU1      | CDP  |
 | CDP\_PU1       | reads   | ./data/bw/PU1/CDP.bw		            | PU.1     | CDP  |
 | CDP\_H3K4me1   | reads   | ./data/bw/H3K4me1/CDP.bw               | H3K4me1  | CDP  |
 | CDP\_H3K4me3   | reads   | ./data/bw/H3K4me3/CDP.bw               | H3K4me3  | CDP  |
@@ -106,9 +107,8 @@ This lineplot shows the difference of histone signatures on the PU.1 peaks among
 For better comparison of each genomic signal, we can also plot them in different way, such as:
 
 ```shell
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions -sx
+rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions
 ```
-
 
 - -c defines the way to color the lines, here we use “cell” as the tag to show different cells in different colors;
 - -row defines the way to group data in rows, here we use “reads”;
@@ -121,6 +121,11 @@ rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -ro
 This design offer better comparison between cells by separating different histone modification and show cells in different colors.
 
 Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
+
+### Heatmap
+
+
+
 
 ## References
 

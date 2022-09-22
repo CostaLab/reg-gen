@@ -11,7 +11,6 @@ import argparse
 from os import path, mkdir, listdir, walk
 from sys import platform, exit
 from tqdm import tqdm
-import logomaker
 from Bio import motifs
 
 # Initializing Option Parser
