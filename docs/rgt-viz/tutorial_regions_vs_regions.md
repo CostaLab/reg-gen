@@ -1,6 +1,6 @@
 # Tutorial of regions versus signals
 
-In this tutorial, we will demonstrate how we can use RGT-Viz to visualize signlas in different regions.
+In this tutorial, we will demonstrate how we can use RGT-Viz to visualize association among different region sets.
 
 ## Download the example files
 We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are as follows:

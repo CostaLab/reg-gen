@@ -51,15 +51,15 @@ For example “<em>Matrix_CDP.txt</em>”  includes the files, which we need for
 
 | name       	 | type	   | file			                        | factor   | cell |
 | :------------- | :------ | :--------------------------------------| :------- | :--- |
-| CDP\_PU1\_peaks| regions | ./data/peaks/PU1/CDP.bed               | PU1      | CDP  |
-| CDP\_PU1       | reads   | ./data/bw/PU1/CDP.bw		            | PU.1     | CDP  |
-| CDP\_H3K4me1   | reads   | ./data/bw/H3K4me1/CDP.bw               | H3K4me1  | CDP  |
-| CDP\_H3K4me3   | reads   | ./data/bw/H3K4me3/CDP.bw               | H3K4me3  | CDP  |
-| CDP\_H3K9me3   | reads   | ./data/bw/H3K9me3/CDP.bw               | H3K9me3  | CDP  |
-| CDP\_H3K27me3   | reads   | ./data/bw/H3K27me3/CDP.bw               | H3K27me3  | CDP  |
-| CDP\_H3K27ac   | reads   | ./data/bw/H3K27ac/CDP.bw               | H3K27ac  | CDP  |
+| CDP\_PU1\_peaks| regions | ./data/peaks/PU1_CDP_peaks.narrowPeak  | PU1      | CDP  |
+| CDP\_PU1       | reads   | ./data/bw/PU1_CDP.bw		            | PU.1     | CDP  |
+| CDP\_H3K4me1   | reads   | ./data/bw/H3K4me1_CDP.bw               | H3K4me1  | CDP  |
+| CDP\_H3K4me3   | reads   | ./data/bw/H3K4me3_CDP.bw               | H3K4me3  | CDP  |
+| CDP\_H3K9me3   | reads   | ./data/bw/H3K9me3_CDP.bw               | H3K9me3  | CDP  |
+| CDP\_H3K27me3  | reads   | ./data/bw/H3K27me3_CDP.bw               | H3K27me3  | CDP  |
+| CDP\_H3K27ac   | reads   | ./data/bw/H3K27ac_CDP.bw               | H3K27ac  | CDP  |
 
-The first column (name) is a unique name for labeling the data; the second column indicate the type of experiment. Here we have either  “regions” (genomic regions in bed format) or “reads” (genomic signals in bigwig or bam format). The third column is the file path to the data. You can include additional columns to annotate your data.  In our example, the 4th column (factor) indicates the protein measured by the ChIP-Seq and the 5th collumn indicates the cell, where experiments were performed. You can add any more columns and the column names identify the feature.
+The first column (name) is a unique name for labeling the data; the second column indicate the type of experiment. Here we have either “regions” (genomic regions in bed format) or “reads” (genomic signals in bigwig or bam format). The third column is the file path to the data. You can include additional columns to annotate your data.  In our example, the 4th column (factor) indicates the protein measured by the ChIP-Seq and the 5th collumn indicates the cell, where experiments were performed. You can add any more columns and the column names identify the feature.
 
 ### Run RGT-Viz
 
@@ -122,10 +122,15 @@ This design offer better comparison between cells by separating different histon
 
 Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
 
-### Heatmap
+### More complicated setting
 
+Here we want to demonstrate the capacity to visulize the signals in a more complicated setting. This matrix now has 2 peaks of interest, 4 cell types, and 6 ChIP-Seq signals. Please check the file <em>Matrix\_all\_cells.txt</em> and run the command below:
 
+```shell
+rgt-viz lineplot Matrix_all_cells.txt -o results -t lineplot_all -c cell -row reads -col regions
+```
 
+You will get this result:
 
 ## References
 
