@@ -1,156 +1,93 @@
-# Tutorial of regions versus signals
+# Tutorial of regions versus regions
 
 In this tutorial, we will demonstrate how we can use RGT-Viz to visualize association among different region sets.
 
 ## Download the example files
-We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are as follows:
 
-* H3K4me1 is enriched at active and primed enhancers;
-* H3K4me3 is highly enriched at active promoters near Transcription start site (TSS);
-* H3K9me3 is a marker of heterochromatin which has pivotal role during lineage commitement;
-* H3K27me3 is associated with the downregulation of nearby genes via the formation of heterochromatic regions;
-* H3K27ac is accociated with the higher activation of transcription and defined as an active enhancer marker.
+This tutorial will use the same dataset as another tutorial. Please check the explanation and download it according to [Tutorial of regions versus signals](https://reg-gen.readthedocs.io/en/latest/rgt-viz/tutorial_regions_vs_signals.html).
 
-For simplicity, here we only look at data from the differentiation transition CDP to cDC.
-
-Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
-
-Download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
-
-
-## Creating Line Plots with RGT-Viz
-
-Here we demonstrate how we can use RGT-Viz for drawing a lineplots. This allows for example to inspect the ChIP-Seq signals around particular genomic regions, as PU.1. peaks. Before you proceed, please [install RGT-Viz](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
-
-### Download the example files
-
-Please follow the following steps to download the necessary example files: genomic signals in bigwig (bw) format for histone modifications and PU.1, as well as peaks from PU.1 (bed files).
-
-Download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
-
-```shell
-cd rgt_viz_example
-```
-
-Now you have the files as described below:
-
+Below are the related files for this tutorial:
 ```shell
 rgt_viz_example
-    ├── Matrix_CDP.txt
-    ├── Matrix_CDP_cDC.txt
-    ├── Matrix_H3K4me3.txt
-    ├── Matrix_PU1.txt
-    ├── data
-    │   ├── CDP_H3K27me3.bw
-    │   ├── CDP_H3K4me1.bw
-    │   ├── CDP_H3K4me3.bw
-    │   ├── CDP_PU1.bw
-    │   ├── CDP_PU1_peaks.bed
-    │   ├── CDP_WT_H3K27me3.bw
-    │   ├── CDP_WT_H3K4me1.bw
-    │   ├── CDP_WT_H3K4me3.bw
-    │   ├── H3K4me3
-    │   │   ├── CDP_WT_peaks.bed
-    │   │   ├── MPP_WT_peaks.bed
-    │   │   ├── cDC_WT_peaks.bed
-    │   │   └── pDC_WT_peaks.bed
-    │   ├── cDC_H3K27me3.bw
-    │   ├── cDC_H3K4me1.bw
-    │   ├── cDC_H3K4me3.bw
-    │   ├── cDC_PU1.bw
-    │   ├── cDC_PU1_peaks.bed
-    │   ├── cDC_WT_H3K27me3.bw
-    │   ├── cDC_WT_H3K4me1.bw
-    │   └── cDC_WT_H3K4me3.bw
+├── data
+│   ├── bw
+│   └── peaks
+│       ├── H3K4me3_cDC_WT_peaks.bed
+│       ├── H3K4me3_CDP_WT_peaks.bed
+│       ├── H3K4me3_MPP_WT_peaks.bed
+│       ├── H3K4me3_pDC_WT_peaks.bed
+│       ├── PU1_cDC_peaks.narrowPeak
+│       ├── PU1_CDP_peaks.narrowPeak
+│       ├── PU1_MPP_peaks.narrowPeak
+│       └── PU1_pDC_peaks.narrowPeak
+├── Matrix_H3K4me3.txt
+└── Matrix_PU1.txt
 ```
 
-These files include the genomic signals of histone modifications (files with a .bw ending) and the genomic regions of PU.1 peaks (files with .bed endings).
+The idea is to investigate the association of PU1 peaks and H3K4me3 peaks in each cell type quantitively.
+
+## Installing RGT
+
+Here we demonstrate how we can use RGT-Viz for investigate the association among region sets. Before you proceed, please [install RGT-Viz](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
 
 ### Understand experimental matrix
 
 Before we use the RGT-Viz, you must define an experimental matrix. This tab separated file includes information necessary for RGT to understand your data, i.e. file paths, protein measured in the ChIP-Seq experiment, type of file and so on.
 
-For example “<em>Matrix_CDP.txt</em>”  includes the files, which we need for finding the association of genomic signals on the genomic peaks of PU.1 transcription factor.
+For example “<em>Matrix_PU1.txt</em>”  includes the BED files of the genomic peaks of PU.1 transcription factor.
 
 | name       	 | type	   | file			| factor   | cell |
-| :------------- | :------ | :------------------------- | :------- | :--- |
-| CDP\_PU1\_peaks| regions | ./data/CDP\_PU1\_peaks.bed | PU1      | CDP  |
-| CDP\_PU1       | reads   | ./data/CDP\_PU1.bw		| PU.1     | CDP  |
-| CDP\_H3K4me1   | reads   | ./data/CDP\_H3K4me1.bw	| H3K4me1  | CDP  |
-| CDP\_H3K4me3   | reads   | ./data/CDP\_H3K4me3.bw	| H3K4me3  | CDP  |
-| CDP\_H3K27me3  | reads   | ./data/CDP\_H3K27me3.bw 	| H3K27me3 | CDP  |
+| MPP\_PU1\_peaks | regions	| ./data/peaks/PU1\_MPP\_peaks.narrowPeak | PU1 | MPP |
+| CDP\_PU1\_peaks | regions	| ./data/peaks/PU1\_CDP\_peaks.narrowPeak | PU1 | CDP |
+| cDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_cDC\_peaks.narrowPeak | PU1 | cDC |
+| pDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_pDC\_peaks.narrowPeak | PU1 | pDC |
 
-The first column (name) is a unique name for labeling the data; the second column indicate the type of experiment. Here we have either  “regions” (genomic regions in bed format) or “reads” (genomic signals in bigwig or bam format). The third column is the file path to the data. You can include additional columns to annotate your data.  In our example, the 4th column (factor) indicates the protein measured by the ChIP-Seq and the 5th collumn indicates the cell, where experiments were performed. You can add any more columns and the column names identify the feature.
 
-### Run RGT-Viz
+See [Tutorial of regions versus signals](https://reg-gen.readthedocs.io/en/latest/rgt-viz/tutorial_regions_vs_signals.html) for more details.
 
-After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory by:
+After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory with the following examples.
+
+## Projection test
+
+Projection test evaluates the association level by comparing to the random binomial model.
 
 ```shell
-rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP
+rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t projection -g cell -organism mm9
 ```
 
-- Matrix\_CDP.txt is the experimental matrix which contains the design of the data;
+- -r is reference region set as the base for statistics;
+- -q is query region set for testing its association with the reference regions;
 - -o indicates the output directory;
-- -t defines the title of this experiment.
+- -t defines the title of this experiment;
+- -g defines the group tag for grouping the test. Group cell means we test the regions according to their cell feature without mixing them;
+- -organism defines the genome assembly used here.
 
-This command will generate a directory “<em>results</em>” with figures and html pages.
+This command will generate a directory “<em>results/projection</em>” with figures and html pages.
 
-### Line plot
+## Jaccard test
 
-You can check the result by opening <em>results/index.html</em>
-
-<p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP.png" width="450" height="350" align="center">
-</p>
-
-This lineplot shows the genomic signals of different histone modifications on the PU.1 genomic regions. The histone modifications are shown in different colors, and the window is centered by the midpoint of each genomic regions from PU.1 peaks.
-
-### Add one more cell type
-
-Lineplot is designed to compare more categories of data. Here we show another example to include one more cell type, cDC.
+Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.
 
 ```shell
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC -col cell -row regions -srow
+rgt-viz jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t jaccard -g cell -organism mm9 
 ```
 
-- <em>Matrix\_CDP\_cDC.txt</em> is the experimental matrix which contains the design of the data;
-- -col defines the way to group data in columns, here we use “cell”, which is one of the headers in <em>Matrix\_CDP\_cDC.txt</em>;
-- -row defines the way to group data in rows, here we use “regions”;
-- -sx shares the y-axis for the plots in the same row.
+This command will generate a directory “<em>results/jaccard</em>” with figures and html pages.
 
-<p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP_cDC.png" width="900" height="350" align="center">
-</p>
+## Intersection test
 
-This lineplot shows the difference of histone signatures on the PU.1 peaks among two cells. This plot indicates an increase in PU.1 and H3K4me3 levels on cDC cells compared to CDP cells.
+Intersection test provides various modes of intersection to test the association between references and queries.
 
-For better comparison of each genomic signal, we can also plot them in different way, such as:
+Firstly, you can run intersection test without statistical test. This mode is faster to get a descriptive result:
 
 ```shell
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions -sx
+rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection -g cell -organism mm9
 ```
 
+However, you can also run it with statistical test by randomization of query regions. This take more compuational resources.
 
-- -c defines the way to color the lines, here we use “cell” as the tag to show different cells in different colors;
-- -row defines the way to group data in rows, here we use “reads”;
-- -col defines the way to group data in columns, here we use “regions”.
+```shell
+rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection_stest -g cell -organism mm9 -stest 100
+```
 
-<p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP_cDC_2.png" width="450" height="540" align="center">
-</p>
-
-This design offer better comparison between cells by separating different histone modification and show cells in different colors.
-
-Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
-
-## References
-
-1. Lin Q, Chauvistre H, Costa IG, Mitzka S, Gusmao EG, Haenzelmann S, Baying B, Hennuy B, Smeets H, Hoffmann K, Benes V, Sere K, Zenke M, Epigenetic and Transcriptional Architecture of Dendritic Cell Development, Nucleic Acids Research, 43:9680-9693, [[paper]](http://nar.oxfordjournals.org/content/early/2015/10/15/nar.gkv1056.full)[[data]](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE64767)[[genome tracks]](http://www.molcell.rwth-aachen.de/dc/)
-
-
-
-
-
-
-
+- -stest defines the repitition times of random subregion test between reference and query. The more repitition times are, the more reliable the result is. However, it take time to run.

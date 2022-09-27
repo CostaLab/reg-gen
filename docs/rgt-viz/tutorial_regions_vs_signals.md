@@ -107,15 +107,15 @@ This lineplot shows the difference of histone signatures on the PU.1 peaks among
 For better comparison of each genomic signal, we can also plot them in different way, such as:
 
 ```shell
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions
+rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row regions -col reads 
 ```
 
 - -c defines the way to color the lines, here we use “cell” as the tag to show different cells in different colors;
-- -row defines the way to group data in rows, here we use “reads”;
-- -col defines the way to group data in columns, here we use “regions”.
+- -row defines the way to group data in rows, here we use “regions”;
+- -col defines the way to group data in columns, here we use “reads”.
 
 <p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP_cDC_2.png" width="450" height="540" align="center">
+<img src="../_static/rgt-viz/lineplot_CDP_cDC_2.png" align="center">
 </p>
 
 This design offer better comparison between cells by separating different histone modification and show cells in different colors.
@@ -127,10 +127,13 @@ Therefore, by changing the experimental matrix or the way to present, you can ge
 Here we want to demonstrate the capacity to visulize the signals in a more complicated setting. This matrix now has 2 peaks of interest, 4 cell types, and 6 ChIP-Seq signals. Please check the file <em>Matrix\_all\_cells.txt</em> and run the command below:
 
 ```shell
-rgt-viz lineplot Matrix_all_cells.txt -o results -t lineplot_all -c cell -row reads -col regions
+rgt-viz lineplot Matrix_all_cells.txt -o results -t lineplot_all -c cell -row regions -col reads
 ```
 
 You will get this result:
+<p align="center">
+<img src="../_static/rgt-viz/lineplot_all.png" align="center">
+</p>
 
 ## References
 
