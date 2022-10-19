@@ -597,7 +597,9 @@ class Lineplot:
 
             for bi, g in enumerate(self.data[t].keys()):
                 for bj, c in enumerate(self.data[t][g].keys()):
-                    max_value = numpy.amax(self.data[t][g][c])
+                    print([t, g, c])
+                    print(self.data[t][g][c])
+                    max_value = numpy.amax(self.data[t][g][c]).list()
                     max_value = int(max_value)
                     axs[bi, bj] = plt.subplot2grid(shape=(rows * ratio + 1, columns), loc=(bi * ratio, bj),
                                                    rowspan=ratio)

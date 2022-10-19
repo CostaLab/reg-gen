@@ -61,9 +61,45 @@ For example “<em>Matrix_CDP.txt</em>”  includes the files, which we need for
 
 The first column (name) is a unique name for labeling the data; the second column indicate the type of experiment. Here we have either “regions” (genomic regions in bed format) or “reads” (genomic signals in bigwig or bam format). The third column is the file path to the data. You can include additional columns to annotate your data.  In our example, the 4th column (factor) indicates the protein measured by the ChIP-Seq and the 5th collumn indicates the cell, where experiments were performed. You can add any more columns and the column names identify the feature.
 
-### Run RGT-Viz
+### Boxplot
 
-After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory by:
+After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory by: 
+
+```shell
+rgt-viz boxplot Matrix_CDP.txt -o results -t boxplot_CDP -g None -c reads -s regions
+```
+
+Boxplot is used to show the signal on the regions and present their association by p-values. The above command includes the parameters such as:
+- Matrix\_CDP.txt is the experimental matrix which contains the design of the data;
+- -o indicates the output directory;
+- -t defines the title of this experiment;
+- -g defines how we group the analyses;
+- -c defines how we want to color the bars in the boxplot;
+- -s defines how we sort the data on the axis of row.
+
+This command generates the following result:
+
+<p align="center">
+<img src="../_static/rgt-viz/boxplot_CDP.png" align="center">
+</p>
+
+<p align="center">
+<img src="../_static/rgt-viz/boxplot_plist.png" align="center">
+</p>
+
+We can also combine another cell type in the experimental matrix for a more complicated result:
+
+```shell
+rgt-viz boxplot Matrix_CDP_cDC.txt -o results -t boxplot_CDP -g None -c reads -s regions
+```
+
+<p align="center">
+<img src="../_static/rgt-viz/boxplot_CDP_cDC.png" align="center">
+</p>
+
+### Line plot
+
+The next example is to generate lineplot which shows the average of the signal across the defined regions by a sliding window. You can run it with the command below:
 
 ```shell
 rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP
@@ -73,11 +109,7 @@ rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP
 - -o indicates the output directory;
 - -t defines the title of this experiment.
 
-This command will generate a directory “<em>results</em>” with figures and html pages.
-
-### Line plot
-
-You can check the result by opening <em>results/index.html</em>
+This command will generate a directory “<em>results</em>” with figures and html pages. You can check the result by opening <em>results/index.html</em>
 
 <p align="center">
 <img src="../_static/rgt-viz/lineplot_CDP.png" width="450" height="350" align="center">
@@ -134,6 +166,15 @@ You will get this result:
 <p align="center">
 <img src="../_static/rgt-viz/lineplot_all.png" align="center">
 </p>
+
+<!-- ### Heatmap
+
+We also have another way to present the data with heatmap. Here are the example commands and their results.
+
+```shell
+rgt-viz lineplot Matrix_CDP.txt -o results -t heatmap_CDP -heatmap
+
+``` -->
 
 ## References
 

@@ -353,34 +353,35 @@ def value2str(value):
         return r
 
 
-def multiple_correction(dic):
+def multiple_correction(plist):
     """
-    dic[ty][r][q] = p
+    plist[ty][r][q] = p
     """
-    for ty in list(dic.keys()):
+
+    for ty in list(plist.keys()):
         all_p = []
-        rn = len(list(dic[ty].keys()))
-        qn = len(list(dic[ty].values())[0].keys())
+        rn = len(list(plist[ty].keys()))
+        qn = len(list(list(plist[ty].values())[0].keys()))
         cue = {}
         i = 0
         if rn == 1 and qn == 1: return
         # get all p values from the dictionary
-        for r in list(dic[ty].keys()):
-            for q in list(dic[ty][r].keys()):
+        for r in list(plist[ty].keys()):
+            for q in list(plist[ty][r].keys()):
 
-                if isinstance(dic[ty][r][q], str):
+                if isinstance(plist[ty][r][q], str):
                     pass
                 else:
-                    all_p.append(dic[ty][r][q])
+                    all_p.append(plist[ty][r][q])
                     cue[ty + r + q] = i
                     i = i + 1
         # correction
         reject, pvals_corrected = multiple_test_correction(all_p, alpha=0.05, method='indep')
         # modify all p values
-        for ir, r in enumerate(dic[ty].keys()):
-            for iq, q in enumerate(dic[ty][r].keys()):
+        for ir, r in enumerate(plist[ty].keys()):
+            for iq, q in enumerate(plist[ty][r].keys()):
                 try:
-                    dic[ty][r][q] = pvals_corrected[cue[ty + r + q]]
+                    plist[ty][r][q] = pvals_corrected[cue[ty + r + q]]
                 except:
                     pass
 
