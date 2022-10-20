@@ -61,7 +61,7 @@ For example “<em>Matrix_CDP.txt</em>”  includes the files, which we need for
 
 The first column (name) is a unique name for labeling the data; the second column indicate the type of experiment. Here we have either “regions” (genomic regions in bed format) or “reads” (genomic signals in bigwig or bam format). The third column is the file path to the data. You can include additional columns to annotate your data.  In our example, the 4th column (factor) indicates the protein measured by the ChIP-Seq and the 5th collumn indicates the cell, where experiments were performed. You can add any more columns and the column names identify the feature.
 
-### Boxplot
+## Boxplot
 
 After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory by: 
 
@@ -97,7 +97,7 @@ rgt-viz boxplot Matrix_CDP_cDC.txt -o results -t boxplot_CDP -g None -c reads -s
 <img src="../_static/rgt-viz/boxplot_CDP_cDC.png" align="center">
 </p>
 
-### Line plot
+## Lineplot
 
 The next example is to generate lineplot which shows the average of the signal across the defined regions by a sliding window. You can run it with the command below:
 
@@ -167,14 +167,33 @@ You will get this result:
 <img src="../_static/rgt-viz/lineplot_all.png" align="center">
 </p>
 
-<!-- ### Heatmap
+## Heatmap
 
-We also have another way to present the data with heatmap. Here are the example commands and their results.
+We also have another way to present the data with heatmap. Heatmap is a feature of lineplot command with a parameter `-heatmap`. Here are the example commands and their results.
 
 ```shell
-rgt-viz lineplot Matrix_CDP.txt -o results -t heatmap_CDP -heatmap
+rgt-viz lineplot Matrix_CDP.txt -o results -t heatmap_CDP -heatmap -row reads -col cell -c regions
+```
 
-``` -->
+<p align="center">
+<img src="../_static/rgt-viz/heatmap_CDP.png" align="center">
+</p>
+
+```shell
+rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t heatmap_CDP_cDC -heatmap -row reads -col cell -c regions
+```
+
+<p align="center">
+<img src="../_static/rgt-viz/heatmap_CDP_cDC.png" align="center">
+</p>
+
+```shell
+rgt-viz lineplot Matrix_all_cells.txt -o results -t heatmap_all -heatmap -row reads -col cell -c regions
+```
+
+<p align="center">
+<img src="../_static/rgt-viz/heatmap_all.png" align="center">
+</p>
 
 ## References
 

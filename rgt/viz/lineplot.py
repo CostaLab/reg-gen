@@ -589,7 +589,7 @@ class Lineplot:
             # fig, axs = plt.subplots(rows,columns, sharey=True, dpi=300)
             # matplotlib.pyplot.subplots_adjust(left=1, right=2, top=2, bottom=1)
             fig = plt.figure(t)
-            plt.suptitle("Heatmap: " + t, y=1.05)
+            # plt.suptitle("Heatmap: " + t, y=1.05)
             rows = len(list(self.data[t].keys()))
 
             # gs = gridspec.GridSpec(rows*ratio,columns)
@@ -597,80 +597,52 @@ class Lineplot:
 
             for bi, g in enumerate(self.data[t].keys()):
                 for bj, c in enumerate(self.data[t][g].keys()):
-                    print([t, g, c])
-                    print(self.data[t][g][c])
-                    max_value = numpy.amax(self.data[t][g][c]).list()
-                    max_value = int(max_value)
+                    # Prepare ax
                     axs[bi, bj] = plt.subplot2grid(shape=(rows * ratio + 1, columns), loc=(bi * ratio, bj),
                                                    rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
-                    # print(self.data[t][g][c])
-                    # print(self.colors)
-                    # print(bj)
-                    # im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
-                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
-
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0, 1], aspect='auto',
-                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=plt.get_cmap("Blues"))
-
-                    # for bi, g in enumerate(self.data[t].keys()):
-                    #    for bj, c in enumerate(self.data[t][g].keys()):
-
-                    # im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
-                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
-                    axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
-                    # axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
                     plt.setp(axs[bi, bj].get_xticklabels(), fontsize=tickfontsize, rotation=0)
                     # plt.setp(axs[bi, bj].get_yticklabels(), fontsize=10)
                     # axs[bi, bj].locator_params(axis = 'x', nbins = 2)
                     # axs[bi, bj].locator_params(axis = 'y', nbins = 4)
                     for spine in ['top', 'right', 'left', 'bottom']:
                         axs[bi, bj].spines[spine].set_visible(False)
-                    axs[bi, bj].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
+                    axs[bi, bj].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
                     axs[bi, bj].tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
-
-                    # if bj > 0:
-                    #    plt.setp(axs[bi, bj].get_yticklabels(),visible=False)
-                    # plt.setp(axarr[i].get_yticks(),visible=False)
-                    axs[bi, bj].minorticks_off()
-                    if bj == 0:
-                        # nregion = len(self.exps.objectsDict[g])
-                        # axs[bi, bj].set_ylabel(self.exps.get_type(g,'factor')+" ("+str(nregion) + ")", fontsize=7)
-                        axs[bi, bj].set_ylabel(g, fontsize=7)
                     if bi == rows - 1:
-                        # divider = make_axes_locatable(axs[bi,bj])
-                        # cax = divider.append_axes("bottom", size="5%", pad=0.5)
-                        cbar_ax = plt.subplot2grid((rows * ratio + 4, columns), (rows * ratio + 3, bj))
-                        # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-
-                        # cbar = grid.cbar_axes[i//2].colorbar(im)
-                        # cbar = plt.colorbar(im, cax = axs[rows,bj], ticks=[0, max_value], orientation='horizontal')
-                        # cbar = axs[rows,bj].imshow(range(int(max_value)), extent=[0, int(max_value),0,0], aspect=10, extent=[-self.extend, self.extend,0,0]
-                        #                           vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
-                        # cbar = axs[rows,bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
-                        #                    vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
-                        # cbar = axs[rows,bj].imshow([range(2*self.extend),range(2*self.extend),range(2*self.extend)],
-                        #                           aspect='auto', vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj] )
-                        # cbar.outline.set_linewidth(0.5)
-                        # axs[rows,bj].set_ticks_position('none')
-                        # axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
-                        # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-
-                        # cbar.set_label('Amplitute of signal')
+                        axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
+                        axs[bi, bj].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=True)
+                        
                         max_value = int(max_value)
-                        # width = 0.4/rows
-                        # cbar_ax = fig.add_axes([0.01 + bj/columns, 0, width, 0.01])
+                        width = 0.7/columns
+                        cbargap = (1/columns-width)/2
+                        cbarleft = cbargap + bj*(width+2*cbargap)
+                        # print(cbarleft)
+                        cbar_ax = fig.add_axes([cbarleft, 0, width, 0.01])
                         cbar = plt.colorbar(im, cax=cbar_ax, ticks=[0, max_value], orientation='horizontal')
                         cbar.ax.set_xticklabels([0, int(max_value)])
                         if logt:
                             cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)],
                                                     fontsize=tickfontsize)  # horizontal colorbar
                             cbar.set_label('log10', fontsize=tickfontsize)
-                            # else:
-                            # cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
-                            # pass
-                            # cbar.outline.set_linewidth(0.1)
+                    if bj == 0:
+                        axs[bi, bj].set_ylabel(g, fontsize=7)
+                    # Prepare data
+                    cc = list(self.data[t][g][c].keys())[0]
+                    dd = list(self.data[t][g][c][cc].keys())[0]
+                    print([t, g, c, cc, dd])
+                    print(self.data[t][g][c][cc][dd].values())
+                    if not self.data[t][g][c][cc][dd].values():
+                        continue
+                    fig_data = list(self.data[t][g][c][cc][dd].values())[0]
+                    max_value = numpy.amax(fig_data)
+                    max_value = int(max_value)
+            
+                    im = axs[bi, bj].imshow(fig_data, extent=[-self.extend, self.extend, 0, 1], aspect='auto',
+                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=plt.get_cmap("Blues"))
+
+                    axs[bi, bj].minorticks_off()
 
             # fig.tight_layout()
             # fig.tight_layout(pad=1.08, h_pad=None, w_pad=None)
