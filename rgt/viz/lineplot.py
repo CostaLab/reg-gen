@@ -631,8 +631,8 @@ class Lineplot:
                     # Prepare data
                     cc = list(self.data[t][g][c].keys())[0]
                     dd = list(self.data[t][g][c][cc].keys())[0]
-                    print([t, g, c, cc, dd])
-                    print(self.data[t][g][c][cc][dd].values())
+                    # print([t, g, c, cc, dd])
+                    # print(self.data[t][g][c][cc][dd].values())
                     if not self.data[t][g][c][cc][dd].values():
                         continue
                     fig_data = list(self.data[t][g][c][cc][dd].values())[0]
