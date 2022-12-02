@@ -34,13 +34,14 @@ Here we demonstrate how we can use RGT-Viz for investigate the association among
 
 Before we use the RGT-Viz, you must define an experimental matrix. This tab separated file includes information necessary for RGT to understand your data, i.e. file paths, protein measured in the ChIP-Seq experiment, type of file and so on.
 
-For example “<em>Matrix_PU1.txt</em>”  includes the BED files of the genomic peaks of PU.1 transcription factor.
+For example “<em>Matrix\_PU1.txt</em>”  includes the BED files of the genomic peaks of PU.1 transcription factor.
 
-| name       	 | type	   | file			| factor   | cell |
-| MPP\_PU1\_peaks | regions	| ./data/peaks/PU1\_MPP\_peaks.narrowPeak | PU1 | MPP |
-| CDP\_PU1\_peaks | regions	| ./data/peaks/PU1\_CDP\_peaks.narrowPeak | PU1 | CDP |
-| cDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_cDC\_peaks.narrowPeak | PU1 | cDC |
-| pDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_pDC\_peaks.narrowPeak | PU1 | pDC |
+| name            | type    | file                                    | factor | cell |
+| :-------------- | :------ | :---------------------------------------| :----- | :--- |
+| MPP\_PU1\_peaks | regions	| ./data/peaks/PU1\_MPP\_peaks.narrowPeak |  PU1   |  MPP |
+| CDP\_PU1\_peaks | regions	| ./data/peaks/PU1\_CDP\_peaks.narrowPeak |  PU1   |  CDP |
+| cDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_cDC\_peaks.narrowPeak |  PU1   |  cDC |
+| pDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_pDC\_peaks.narrowPeak |  PU1   |  pDC |
 
 
 See [Tutorial of regions versus signals](https://reg-gen.readthedocs.io/en/latest/rgt-viz/tutorial_regions_vs_signals.html) for more details.
@@ -52,27 +53,35 @@ After defining the experiment matrix, now you can simply run RGT-Viz under “<e
 Projection test evaluates the association level by comparing to the random binomial model.
 
 ```shell
-rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t projection -g cell -organism mm9
+rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t projection -c cell -organism mm9
 ```
 
 - -r is reference region set as the base for statistics;
 - -q is query region set for testing its association with the reference regions;
 - -o indicates the output directory;
 - -t defines the title of this experiment;
-- -g defines the group tag for grouping the test. Group cell means we test the regions according to their cell feature without mixing them;
+- -c defines the color tag for cloring the test.
 - -organism defines the genome assembly used here.
 
 This command will generate a directory “<em>results/projection</em>” with figures and html pages.
+
+<p align="center">
+<img src="../_static/rgt-viz/projection_test.png" height=500 align="center">
+</p>
 
 ## Jaccard test
 
 Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.
 
 ```shell
-rgt-viz jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t jaccard -g cell -organism mm9 
+rgt-viz jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t jaccard  -organism mm9 
 ```
 
 This command will generate a directory “<em>results/jaccard</em>” with figures and html pages.
+
+<p align="center">
+<img src="../_static/rgt-viz/jaccard_test1.png" width=500 align="center">
+</p>
 
 ## Intersection test
 
@@ -81,13 +90,18 @@ Intersection test provides various modes of intersection to test the association
 Firstly, you can run intersection test without statistical test. This mode is faster to get a descriptive result:
 
 ```shell
-rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection -g cell -organism mm9
+rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection -c cell -organism mm9
 ```
+
+<p align="center">
+<img src="../_static/rgt-viz/intersection_bar.png" width=500 align="center">
+</p>
+
 
 However, you can also run it with statistical test by randomization of query regions. This take more compuational resources.
 
 ```shell
-rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection_stest -g cell -organism mm9 -stest 100
+rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o results -t intersection_stest -c cell -organism mm9 -stest 100
 ```
 
 - -stest defines the repitition times of random subregion test between reference and query. The more repitition times are, the more reliable the result is. However, it take time to run.
