@@ -162,7 +162,7 @@ rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t lineplot_cDC_pDC -col reads -c
 - -scol shares the y-axis for the plots in the same columns.
 
 <p align="center">
-<img src="../_static/rgt-viz/lineplot_CDP_cDC.png" align="center">
+<img src="../_static/rgt-viz/lineplot_cDC_pDC.png" align="center">
 </p>
 
 This lineplot shows the difference of histone signatures on the PU.1 peaks among two cells. This plot indicates an increase in PU.1 and H3K4me3 levels on cDC cells compared to CDP cells.
