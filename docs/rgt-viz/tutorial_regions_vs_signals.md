@@ -124,7 +124,7 @@ Boxplot is used to show the signal on the regions and present their association 
 This command generates the following result:
 
 <p align="center">
-<img src="../_static/rgt-viz/boxplot_cDC.png" align="center">
+<img src="../_static/rgt-viz/boxplot_cDC.png" height=500 align="center">
 </p>
 
 ## Lineplot
