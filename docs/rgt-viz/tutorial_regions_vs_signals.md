@@ -177,6 +177,22 @@ This design offer better comparison between cells by separating different histon
 
 Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
 
+## Heatmap
+
+We also have another way to present the data with heatmap. Heatmap is a feature of lineplot command with a parameter `-heatmap`. Here are the example commands and their results.
+
+```shell
+rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t heatmap_cDC_pDC -heatmap -row reads -col regions -g cell -c None
+```
+<p align="center">
+<img src="../_static/rgt-viz/heatmap_cDC.png" align="center">
+</p>
+
+<p align="center">
+<img src="../_static/rgt-viz/heatmap_pDC.png" align="center">
+</p>
+
+
 ## References
 
 1. Lin Q, Chauvistre H, Costa IG, Mitzka S, Gusmao EG, Haenzelmann S, Baying B, Hennuy B, Smeets H, Hoffmann K, Benes V, Sere K, Zenke M, Epigenetic and Transcriptional Architecture of Dendritic Cell Development, Nucleic Acids Research, 43:9680-9693, [[paper]](http://nar.oxfordjournals.org/content/early/2015/10/15/nar.gkv1056.full)[[data]](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE64767)[[genome tracks]](http://www.molcell.rwth-aachen.de/dc/)
