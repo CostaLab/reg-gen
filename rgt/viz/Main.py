@@ -200,8 +200,8 @@ def main():
     parser_combinatorial.add_argument('-log', action="store_true",
                                       help='Set y axis of the plot in log scale. (default: %(default)s)')
     parser_combinatorial.add_argument('-color', action="store_true", help=help_define_color)
-    parser_combinatorial.add_argument('-venn', action="store_true",
-                                      help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
+    # parser_combinatorial.add_argument('-venn', action="store_true",
+    #                                   help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
     parser_combinatorial.add_argument('-show', action="store_true",
                                       help='Show the figure in the screen. (default: %(default)s)')
     parser_combinatorial.add_argument('-stest', type=int, default=0,
@@ -673,8 +673,8 @@ def main():
 
             output(f=inter.sbar, directory=args.o, folder=args.t, filename="intersection_stackedbar",
                    extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
-            if args.venn:
-                inter.comb_venn(directory=os.path.join(args.o, args.t))
+            # if args.venn:
+            #     inter.comb_venn(directory=os.path.join(args.o, args.t))
 
             # if args.lineplot:
             #    inter.comb_lineplot()

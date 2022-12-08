@@ -110,3 +110,15 @@ rgt-viz intersect -r Matrix_H3K4me3_cDC_pDC.txt -q Matrix_cDC_pDC.txt -o results
 ```
 
 - -stest defines the repitition times of random subregion test between reference and query. The more repitition times are, the more reliable the result is. However, it take time to run.
+
+## Combinatorial test
+
+Another variant of intersection test is combinatorial test which check all the combinations of the given query regions and calcuate their intersections to the reference. This test is useful in exploring the unknown association between region sets.
+
+```shell
+rgt-viz combinatorial -o results -q Matrix_H3K4me3_cDC_pDC.txt -r Matrix_PU1_IRF8_peaks.txt -t combinatorial -organism mm9 -g cell -c factor
+```
+
+<p align="center">
+<img src="../_static/rgt-viz/intersection_stackedbar.png" width=500 align="center">
+</p>
