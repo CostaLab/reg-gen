@@ -2,55 +2,80 @@
 
 In this tutorial, we will demonstrate how we can use RGT-Viz to visualize association among different region sets.
 
-## Download the example files
+## Download the data
 
-This tutorial will use the same dataset as another tutorial. Please check the explanation and download it according to [Tutorial of regions versus signals](https://reg-gen.readthedocs.io/en/latest/rgt-viz/tutorial_regions_vs_signals.html).
+We will use the epigenetic data from dendritic cell development study as example. There, we have ChIP-Seq data from the transcription factor **PU.1** and **IRF8**, and histone modifications **H3K4me1**, **H3K4me3**, **H3K9me3**, **H3K27me3**, and **H3K27ac** on four cellular states: multipotent progenitors (MPP), dendritic cell progenitors (CDP), common dendritic cells (cDC) and plamatocyte dendritic cells (pDC). The functional annotation of these histone markers are showed as follows:
 
-Below are the related files for this tutorial:
+* H3K4me1 is enriched at active and primed enhancers;
+* H3K4me3 is highly enriched at active promoters near Transcription start site (TSS);
+* H3K9me3 is a marker of heterochromatin which has pivotal role during lineage commitement;
+* H3K27me3 is associated with the downregulation of nearby genes via the formation of heterochromatic regions;
+* H3K27ac is accociated with the higher activation of transcription and defined as an active enhancer marker.
+
+The peaks of **PU.1** and **IRF8** are further processed into 3 groups: overlapping peaks of PU.1 and IRF8, PU.1 peaks (no IRF8), and IRF8 peaks (no PU.1). Those files are listed below:
+* PU1_IRF8_pDC_overlap_peaks.bed
+* PU1_pDC_noIRF8_peaks.bed
+* IRF8_pDC_noPU1_peaks.bed
+* PU1_IRF8_cDC_overlap_peaks.bed
+* PU1_cDC_noIRF8_peaks.bed
+* IRF8_cDC_noPU1_peaks.bed
+
+Next, please download the folder “rgt_viz_example” from [here](https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip).
+
 ```shell
-rgt_viz_example
-├── data
-│   ├── bw
-│   └── peaks
-│       ├── H3K4me3_cDC_WT_peaks.bed
-│       ├── H3K4me3_CDP_WT_peaks.bed
-│       ├── H3K4me3_MPP_WT_peaks.bed
-│       ├── H3K4me3_pDC_WT_peaks.bed
-│       ├── PU1_cDC_peaks.narrowPeak
-│       ├── PU1_CDP_peaks.narrowPeak
-│       ├── PU1_MPP_peaks.narrowPeak
-│       └── PU1_pDC_peaks.narrowPeak
-├── Matrix_H3K4me3.txt
-└── Matrix_PU1.txt
+unzip rgt_viz_example
+cd rgt_viz_example
 ```
 
-The idea is to investigate the association of PU1 peaks and H3K4me3 peaks in each cell type quantitively.
+Now you have the files as described below:
 
-## Installing RGT
+```shell
+data/
+├── bw
+│   ├── H3K27ac_cDC.bw
+│   ├── H3K27ac_CDP.bw
+│   ├── H3K27ac_MPP.bw
+│   ├── H3K27ac_pDC.bw
+│   ├── H3K27me3_cDC.bw
+│   ├── H3K27me3_CDP.bw
+│   ├── H3K27me3_MPP.bw
+│   ├── H3K27me3_pDC.bw
+│   ├── H3K4me1_cDC.bw
+│   ├── H3K4me1_CDP.bw
+│   ├── H3K4me1_MPP.bw
+│   ├── H3K4me1_pDC.bw
+│   ├── H3K4me3_cDC.bw
+│   ├── H3K4me3_CDP.bw
+│   ├── H3K4me3_MPP.bw
+│   ├── H3K4me3_pDC.bw
+│   ├── H3K9me3_cDC.bw
+│   ├── H3K9me3_CDP.bw
+│   ├── H3K9me3_MPP.bw
+│   ├── H3K9me3_pDC.bw
+│   ├── IRF8_cDC.bw
+│   ├── IRF8_pDC.bw
+│   ├── PU1_cDC.bw
+│   ├── PU1_CDP.bw
+│   ├── PU1_MPP.bw
+│   └── PU1_pDC.bw
+└── peaks
+    ├── H3K4me3_cDC_WT_peaks.bed
+    ├── H3K4me3_CDP_WT_peaks.bed
+    ├── H3K4me3_MPP_WT_peaks.bed
+    ├── H3K4me3_pDC_WT_peaks.bed
+    ├── PU1_IRF8_cDC_overlap_peaks.bed
+    ├── IRF8_cDC_noPU1_peaks.bed
+    ├── PU1_cDC_noIRF8_peaks.bed
+    ├── PU1_IRF8_pDC_overlap_peaks.bed
+    ├── IRF8_pDC_noPU1_peaks.bed
+    └── PU1_pDC_noIRF8_peaks.bed
+```
 
-Here we demonstrate how we can use RGT-Viz for investigate the association among region sets. Before you proceed, please [install RGT-Viz](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
-
-### Understand experimental matrix
-
-Before we use the RGT-Viz, you must define an experimental matrix. This tab separated file includes information necessary for RGT to understand your data, i.e. file paths, protein measured in the ChIP-Seq experiment, type of file and so on.
-
-For example “<em>Matrix\_PU1.txt</em>”  includes the BED files of the genomic peaks of PU.1 transcription factor.
-
-| name            | type    | file                                    | factor | cell |
-| :-------------- | :------ | :---------------------------------------| :----- | :--- |
-| MPP\_PU1\_peaks | regions	| ./data/peaks/PU1\_MPP\_peaks.narrowPeak |  PU1   |  MPP |
-| CDP\_PU1\_peaks | regions	| ./data/peaks/PU1\_CDP\_peaks.narrowPeak |  PU1   |  CDP |
-| cDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_cDC\_peaks.narrowPeak |  PU1   |  cDC |
-| pDC\_PU1\_peaks | regions	| ./data/peaks/PU1\_pDC\_peaks.narrowPeak |  PU1   |  pDC |
-
-
-See [Tutorial of regions versus signals](https://reg-gen.readthedocs.io/en/latest/rgt-viz/tutorial_regions_vs_signals.html) for more details.
-
-After defining the experiment matrix, now you can simply run RGT-Viz under “<em>rgt\_viz\_example</em>” directory with the following examples.
+These directories include the genomic signals of histone modifications (files with a .bw ending as generated by [bamCoverage](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html)) and the genomic regions of PU.1 and IRF8 peaks (files with .narrowPeak endings as generated by [MACS2](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2008-9-9-r137)) in different DC cells.
 
 ## Projection test
 
-Projection test evaluates the association level by comparing to the random binomial model.
+Projection test evaluates the association between a set of region sets (peaks of Irf8, PU1 and Irf8/PU1) vs. a background regions (H3K4me3 peaks in cDC cells) by evaluating intersection counts with a random binomial model.
 
 ```shell
 rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_cDC_pDC.txt -o results -t projection -c factor -organism mm9 -g cell
@@ -69,6 +94,8 @@ This command will generate a directory “<em>results/projection</em>” with fi
 <p align="center">
 <img src="../_static/rgt-viz/projection_test.png" height=500 align="center">
 </p>
+
+These results indicates 
 
 ## Jaccard test
 
