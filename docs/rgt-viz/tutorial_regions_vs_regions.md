@@ -95,7 +95,7 @@ This command will generate a directory “<em>results/projection</em>” with fi
 <img src="../_static/rgt-viz/projection_test.png" height=500 align="center">
 </p>
 
-These results indicates 
+These results indicates the majority of peaks associated with H3K4me3 in cDC are of PU.1 and Irf8 co-binding, while H34me3 pekas are associated with Irf8 peaks.
 
 ## Jaccard test
 
