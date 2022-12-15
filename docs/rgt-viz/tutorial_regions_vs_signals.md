@@ -119,6 +119,8 @@ This command generates the following result:
 <img src="../_static/rgt-viz/boxplot_cDC.png" height=500 align="center">
 </p>
 
+This plot can give some intersting insights on the data. For example, while we observe that cobinding peaks (Irf8+PU.1) have higher Irf8 signals that non-cobinding Irf8 peaks. The same pattern is observed for PU.1. signals. This indicates that there is synergistic event, i.e. more problable binding, when both factors are present in cDC cells. 
+
 ## Lineplot
 
 The next example is to generate lineplot which shows the average of the signal across the defined regions by a sliding window. You can run it with the command below:
@@ -138,11 +140,11 @@ This command will generate a directory “<em>results</em>” with figures and h
 <img src="../_static/rgt-viz/lineplot_cDC.png" align="center">
 </p>
 
-This lineplot shows the genomic signals of different histone modifications on the PU.1/IRF8 peaks in cDC.
+This lineplot shows the genomic signals of different histone modifications on the PU.1/IRF8 peaks in cDC. This plot is somewhat analogous to the previous boxplot, while providing nuances about the location of the reads around the mid point of the peaks. One interesting read out is the fact Irf8-PU1 co-binding is highly associated with enhancers (higher H3K4me1), while PU.1. alone has higher promoter markers (H3K4me3). This suggests Irf8 binding (without PU.1.) is preferential promoter related, while Irf8+PU.1 are enhancer related. 
 
 ### Add one more cell type
 
-Lineplot is designed to compare more categories of data. Here we show another example to include one more cell type, cDC.
+Lineplot is designed to compare more categories of data. Here we show another example to include one more cell type (pDC and cDC). This allow us to inspect if patterns related to Irf8/PU.1 are cell specific. 
 
 ```shell
 rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t lineplot_cDC_pDC -col reads -c regions -row cell -scol
@@ -157,9 +159,9 @@ rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t lineplot_cDC_pDC -col reads -c
 <img src="../_static/rgt-viz/lineplot_cDC_pDC.png" align="center">
 </p>
 
-This lineplot shows the difference of histone signatures on the PU.1 peaks among two cells. This plot indicates an increase in PU.1 and H3K4me3 levels on cDC cells compared to CDP cells.
+This lineplot shows the difference of histone signatures of Irf8 and PU.1 peaks among cDC and pDC cells. It indicates for examples stronger Irf8 signals (with or without PU.1.) in cDC than pDC. Moreover, there is no signs of promoter associated binding of Irf8 (or PU.1) in pDCs in contrast to cDC cells. 
 
-For better comparison of each genomic signal, we can also plot them in different way, such as:
+One can also reoganize results, to contrast the signals across cells. 
 
 ```shell
 rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t lineplot_cDC_pDC_2 -col reads -c cell -row regions
@@ -173,9 +175,7 @@ rgt-viz lineplot Matrix_cDC_pDC.txt -o results -t lineplot_cDC_pDC_2 -col reads 
 <img src="../_static/rgt-viz/lineplot_cDC_pDC_2.png" align="center">
 </p>
 
-This design offer better comparison between cells by separating different histone modification and show cells in different colors.
-
-Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
+This makes the distinct of Irf8 signals in pDC vs. cDCs more clear than previous vizualisation.  Therefore, by changing the experimental matrix or the way to present, you can generate more complicated lineplot for comparison of your data across cell types, treatments, histone modification, or any other designs. RGT-Viz allows several other plots variants.
 
 ## Heatmap
 
