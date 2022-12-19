@@ -96,13 +96,13 @@ rgt-viz intersect -r Matrix_PU1.txt -q Matrix_IRF8.txt -o results -t PU1_IRF8_in
 This command will generate a directory “<em>results/PU1_IRF8_intersection</em>” with figures and html pages.
 
 <p align="center">
-<img src="../_static/rgt-viz/intersection_bar.png" height=500 align="center">
+<img src="../_static/rgt-viz/intersection_bar.png" height=350 align="center">
 </p>
 
 The exact numbers of intersected regions between PU.1 and IRF8, and p-values are shown in below table:
 
 <p align="center" style="margin-left: 50">
-<table id="sortable" class="tablesorter">
+<table border="1" id="sortable" class="tablesorter">
 	<thead>
 		<tr>
     		<th scope="col" width="10" align="center">Reference<br>name</th>
