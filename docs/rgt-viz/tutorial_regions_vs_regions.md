@@ -92,7 +92,7 @@ rgt-viz intersect -r Matrix_PU1.txt -q Matrix_IRF8.txt -o results -t PU1_IRF8_in
 This command will generate a directory “<em>results/PU1_IRF8_intersection</em>” with figures and html pages.
 
 <p align="center">
-<img src="../_static/rgt-viz/intersection_bar.png" height=350 align="center">
+<img src="../_static/rgt-viz/intersection_bar.png" width=500 align="center">
 </p>
 
 The exact numbers of intersected regions between PU.1 and IRF8, and p-values are shown in below table:
@@ -215,10 +215,10 @@ Run the command:
 rgt-viz jaccard -r Matrix_PU1.txt -q Matrix_IRF8.txt -o results -t PU1_IRF8_jaccard -organism mm9
 ```
 
-This command will generate a directory “<em>results/jaccard</em>” with figures and html pages.
+This command will generate a directory “<em>results/PU1_IRF8_jaccard</em>” with figures and html pages.
 
 <p align="center">
-<img src="../_static/rgt-viz/jaccard_test.png" width=500 align="center">
+<img src="../_static/rgt-viz/jaccard_test.png" width=350 align="center">
 </p>
 
 We can also look at the statistic numbers and p-values as shown below:
@@ -344,46 +344,6 @@ This command will generate a directory “<em>results/projection</em>” with fi
 
 These results indicates the majority of peaks associated with H3K4me3 in cDC are of PU.1 and Irf8 co-binding, while H34me3 pekas are associated with Irf8 peaks.
 
-## Jaccard test
-
-Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.
-
-```shell
-rgt-viz jaccard -r Matrix_H3K4me3_cDC_pDC.txt -q Matrix_cDC_pDC.txt -o results -t jaccard -organism mm9 -g cell
-```
-
-This command will generate a directory “<em>results/jaccard</em>” with figures and html pages.
-
-<p align="center">
-<img src="../_static/rgt-viz/jaccard_test1.png" width=500 align="center">
-</p>
-
-<p align="center">
-<img src="../_static/rgt-viz/jaccard_test2.png" width=500 align="center">
-</p>
-
-## Intersection test
-
-Intersection test provides various modes of intersection to test the association between references and queries.
-
-Firstly, you can run intersection test without statistical test. This mode is faster to get a descriptive result:
-
-```shell
-rgt-viz intersect -r Matrix_H3K4me3_cDC_pDC.txt -q Matrix_cDC_pDC.txt -o results -t intersection -organism mm9
-```
-
-<p align="center">
-<img src="../_static/rgt-viz/intersection_bar.png" width=500 align="center">
-</p>
-
-
-However, you can also run it with statistical test by randomization of query regions. This take more compuational resources.
-
-```shell
-rgt-viz intersect -r Matrix_H3K4me3_cDC_pDC.txt -q Matrix_cDC_pDC.txt -o results -t intersection -organism mm9 -stest 100
-```
-
-- -stest defines the repitition times of random subregion test between reference and query. The more repitition times are, the more reliable the result is. However, it take time to run.
 
 ## Combinatorial test
 
