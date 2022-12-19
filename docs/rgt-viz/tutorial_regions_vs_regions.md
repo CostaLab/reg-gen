@@ -110,7 +110,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
     		<th scope="col" width="10" align="center">Reference<br>number</th>
     		<th scope="col" width="10" align="center">Query<br>number</th>
     		<th scope="col" width="10" align="center">Intersect.</th>
-    		<th scope="col" width="10" align="center">Proportion<br>of Reference</th>
     		<th scope="col" width="10" align="center">Average<br>intersect.</th>
     		<th scope="col" width="10" align="center">Chi-square<br>statistic</th>
     		<th scope="col" width="10" align="center">Positive<br>Association<br>p-value</th>
@@ -124,7 +123,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >6212</td>
 			<td align="center" >34003</td>
 			<td align="center" >4412</td>
-			<td align="center" >71.02%</td>
 			<td align="center" >1163</td>
 			<td align="center" >3359</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -136,7 +134,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >6212</td>
 			<td align="center" >6467</td>
 			<td align="center" >1745</td>
-			<td align="center" >28.09%</td>
 			<td align="center" >848.5</td>
 			<td align="center" >351.3</td>
 			<td align="center" ><font color="red">5.1e-77</font></td>
@@ -148,7 +145,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >20237</td>
 			<td align="center" >34003</td>
 			<td align="center" >14003</td>
-			<td align="center" >69.20%</td>
 			<td align="center" >6574</td>
 			<td align="center" >4438</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -160,7 +156,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >20237</td>
 			<td align="center" >6467</td>
 			<td align="center" >4078</td>
-			<td align="center" >20.15%</td>
 			<td align="center" >1494</td>
 			<td align="center" >1979</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -172,7 +167,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >20054</td>
 			<td align="center" >34003</td>
 			<td align="center" >13973</td>
-			<td align="center" >69.68%</td>
 			<td align="center" >6538</td>
 			<td align="center" >4489</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -184,7 +178,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >20054</td>
 			<td align="center" >6467</td>
 			<td align="center" >4066</td>
-			<td align="center" >20.28%</td>
 			<td align="center" >1497</td>
 			<td align="center" >1955</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -196,7 +189,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >21050</td>
 			<td align="center" >34003</td>
 			<td align="center" >14307</td>
-			<td align="center" >67.97%</td>
 			<td align="center" >6757</td>
 			<td align="center" >4367</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -208,7 +200,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >21050</td>
 			<td align="center" >6467</td>
 			<td align="center" >4137</td>
-			<td align="center" >19.65%</td>
 			<td align="center" >1478</td>
 			<td align="center" >2100</td>
 			<td align="center" ><font color="red">0</font></td>
@@ -218,6 +209,7 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 </table>
 </p>
 
+The intersection test shows that PU.1 and IRF8 are associated significantly in all cell types.Though there are many overlaps between IRF8 and PU.1 in all cell types, the table shows that the highest number of overlaps appears between PU.1 and IRF8 in cDC.
 
 ## Projection test
 
