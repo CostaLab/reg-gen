@@ -319,6 +319,17 @@ We can also look at the statistic numbers and p-values as shown below:
 		</tr>
 </tbody></table></p>
 
+## Combinatorial test
+We next ask if co-binding of PU.1 and IRF8 relates to different histone modifications. For this, we use [combinatorial test](https://reg-gen.readthedocs.io/en/latest/rgt-viz/method.html#combinatorial-test). This is another variant of intersection test that checks all the combinations of the given query regions and calcuate their intersections to the reference. This test is useful in exploring the unknown association between region sets.
+
+
+```shell
+rgt-viz combinatorial -o results -q Matrix_H3K4me3_cDC_pDC.txt -r Matrix_PU1_IRF8_peaks.txt -t combinatorial -organism mm9 -g cell -c factor
+```
+
+<p align="center">
+<img src="../_static/rgt-viz/intersection_stackedbar.png" width=500 align="center">
+</p>
 
 ## Projection test
 
@@ -344,15 +355,3 @@ This command will generate a directory “<em>results/projection</em>” with fi
 
 These results indicates the majority of peaks associated with H3K4me3 in cDC are of PU.1 and Irf8 co-binding, while H34me3 pekas are associated with Irf8 peaks.
 
-
-## Combinatorial test
-
-Another variant of intersection test is combinatorial test which check all the combinations of the given query regions and calcuate their intersections to the reference. This test is useful in exploring the unknown association between region sets.
-
-```shell
-rgt-viz combinatorial -o results -q Matrix_H3K4me3_cDC_pDC.txt -r Matrix_PU1_IRF8_peaks.txt -t combinatorial -organism mm9 -g cell -c factor
-```
-
-<p align="center">
-<img src="../_static/rgt-viz/intersection_stackedbar.png" width=500 align="center">
-</p>
