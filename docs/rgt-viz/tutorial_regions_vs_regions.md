@@ -101,11 +101,10 @@ This command will generate a directory “<em>results/PU1_IRF8_intersection</em>
 
 The exact numbers of intersected regions between PU.1 and IRF8, and p-values are shown in below table:
 
-<p style="margin-left: 50">
+<p align="center" style="margin-left: 50">
 <table id="sortable" class="tablesorter">
 	<thead>
 		<tr>
-    		<th scope="col" width="10" align="center">#</th>
     		<th scope="col" width="10" align="center">Reference<br>name</th>
     		<th scope="col" width="10" align="center">Query<br>name</th>
     		<th scope="col" width="10" align="center">Reference<br>number</th>
@@ -120,7 +119,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 	</thead>
 	<tbody>
 		<tr>
-			<td align="center" >1</td>
 			<td align="center" >MPP_PU1_peaks</td>
 			<td align="center" >cDC_IRF8_peaks</td>
 			<td align="center" >6212</td>
@@ -133,7 +131,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >2</td>
 			<td align="center" >MPP_PU1_peaks</td>
 			<td align="center" >pDC_IRF8_peaks</td>
 			<td align="center" >6212</td>
@@ -146,7 +143,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >3</td>
 			<td align="center" >CDP_PU1_peaks</td>
 			<td align="center" >cDC_IRF8_peaks</td>
 			<td align="center" >20237</td>
@@ -159,7 +155,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >4</td>
 			<td align="center" >CDP_PU1_peaks</td>
 			<td align="center" >pDC_IRF8_peaks</td>
 			<td align="center" >20237</td>
@@ -172,7 +167,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >5</td>
 			<td align="center" >cDC_PU1_peaks</td>
 			<td align="center" >cDC_IRF8_peaks</td>
 			<td align="center" >20054</td>
@@ -185,7 +179,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >6</td>
 			<td align="center" >cDC_PU1_peaks</td>
 			<td align="center" >pDC_IRF8_peaks</td>
 			<td align="center" >20054</td>
@@ -198,7 +191,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >7</td>
 			<td align="center" >pDC_PU1_peaks</td>
 			<td align="center" >cDC_IRF8_peaks</td>
 			<td align="center" >21050</td>
@@ -211,7 +203,6 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" >1.00</td>
 		</tr>
 		<tr>
-			<td align="center" >8</td>
 			<td align="center" >pDC_PU1_peaks</td>
 			<td align="center" >pDC_IRF8_peaks</td>
 			<td align="center" >21050</td>
@@ -223,8 +214,9 @@ The exact numbers of intersected regions between PU.1 and IRF8, and p-values are
 			<td align="center" ><font color="red">0</font></td>
 			<td align="center" >1.00</td>
 		</tr>
-</tbody></table></p>
-	<p style="margin-left: 50"><font color="black" face="Arial" size="5">
+</tbody>
+</table>
+</p>
 
 
 ## Projection test
