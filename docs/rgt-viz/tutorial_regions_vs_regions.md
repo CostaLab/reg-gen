@@ -320,10 +320,10 @@ We can also look at the statistic numbers and p-values as shown below:
 </tbody></table></p>
 
 ## Projection test
-We next evaluate the association between IRF8 and PU.1 binding sites and histone modification markers. For this, we can use [projection test](https://reg-gen.readthedocs.io/en/latest/rgt-viz/method.html#projection-test). It evaluates the association between a set of region sets (peaks of Irf8, PU1 and Irf8/PU1) vs. a background regions (H3K4me3 peaks in cDC cells) by evaluating intersection counts with a random binomial model.
+We next evaluate the association between IRF8 and PU.1 binding sites and histone modification markers. For this, we can use [projection test](https://reg-gen.readthedocs.io/en/latest/rgt-viz/method.html#projection-test). It evaluates the association between a set of region sets (peaks of Irf8, PU1 and Irf8/PU1) vs. a background regions (H3K4me1 peaks in cDC cells) by evaluating intersection counts with a random binomial model.
 
 ```shell
-rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_cDC_pDC.txt -o results -t projection -c factor -organism mm9 -g cell
+rgt-viz projection -r Matrix_H3K4me1.txt -q Matrix_cDC_pDC.txt -o results -t projection -c factor -organism mm9 -g cell
 ```
 
 - -r is reference region set as the base for statistics;
