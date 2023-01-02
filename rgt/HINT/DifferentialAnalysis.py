@@ -22,6 +22,10 @@ from rgt.HINT.biasTable import BiasTable
 
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+from adjustText import adjust_text
+from matplotlib.lines import Line2D
+
 """
 Perform differential footprints analysis based on the prediction of transcription factor binding sites.
 
@@ -50,6 +54,9 @@ def diff_analysis_args(parser):
 
     parser.add_argument("--fdr", type=float, metavar="FLOAT", default=0.05,
                         help="The false discovery rate. DEFAULT: 0.05")
+    parser.add_argument("--lfc", type=float, metavar="FLOAT", default=0.1,
+                        help="The log2 fold change threshold. DEFAULT: 0.1")
+    
     parser.add_argument("--bc", action="store_true", default=False,
                         help="If set, all analysis will be based on bias corrected signal. DEFAULT: False")
     parser.add_argument("--nc", type=int, metavar="INT", default=1,
@@ -112,7 +119,7 @@ def diff_analysis_run(args):
         mpbs.read(mpbs_file)
 
     mpbs.sort()
-    mpbs.remove_duplicates()
+    # mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signals = np.zeros(shape=(len(conditions), len(mpbs_name_list), args.window_size), dtype=np.float32)
@@ -138,6 +145,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+                    
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift, bias_table)
                     try:
@@ -158,6 +169,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+                        
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift, bias_table)
                         arguments_list.append(arguments)
@@ -177,6 +192,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift)
                     signals[i, j, :] = get_raw_signal(arguments)
@@ -194,6 +213,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+                        
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift)
                         arguments_list.append(arguments)
@@ -241,7 +264,8 @@ def diff_analysis_run(args):
     # find the significant motifs and generate a scatter plot if two conditions are given
     if len(conditions) == 2:
         ps_tc_results = scatter_plot(args, ps_tc_results, mpbs_name_list, conditions)
-
+        volcano_plot(args, ps_tc_results, mpbs_name_list, conditions)
+        
     output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args)
 
 
@@ -576,6 +600,100 @@ def scatter_plot(args, ps_tc_results, mpbs_name_list, conditions):
 
     return ps_tc_results
 
+def map_color(a, fc_thr, pv_thr):
+    log2FoldChange, symbol, nlog10 = a
+
+    if log2FoldChange >= fc_thr and nlog10 >= pv_thr:
+        return 'very higher'
+    if log2FoldChange <= -fc_thr and nlog10 >= pv_thr:
+        return 'very lower'
+    if log2FoldChange >= fc_thr and nlog10 < pv_thr:
+        return 'higher'
+    if log2FoldChange <= -fc_thr and nlog10 < pv_thr:
+        return 'lower'
+    if abs(log2FoldChange) < fc_thr and nlog10 >= pv_thr:
+        return 'mix'
+    else:
+        return 'no'
+
+def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
+    """
+    plot volcano plot of p-values and fold changes
+    """
+    tf_activity_score1 = np.zeros(len(mpbs_name_list))
+    tf_activity_score2 = np.zeros(len(mpbs_name_list))
+
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        tf_activity_score1[i] = float(ps_tc_results[i][0][0]) + float(ps_tc_results[i][1][0])
+        tf_activity_score2[i] = float(ps_tc_results[i][0][1]) + float(ps_tc_results[i][1][1])
+    
+    foldchanges = np.log2(tf_activity_score2) - np.log2(tf_activity_score1)
+    
+    p_values = np.zeros(len(mpbs_name_list))
+    for i, mpbs_name in enumerate(mpbs_name_list):
+        p_values[i] = float(ps_tc_results[i][2][2])
+    
+    pv_thr = -np.log10(args.fdr)
+    
+    df = pd.DataFrame(columns=['log2FoldChange', 'nlog10', 'symbol'])
+    df['log2FoldChange'] = foldchanges
+    df['nlog10'] = -np.log10(p_values)
+    df['symbol'] = mpbs_name_list
+    df = df.fillna(0)
+    
+
+    df['color'] = df[['log2FoldChange', 'symbol', 'nlog10']].apply(map_color, fc_thr = args.lfc, pv_thr = pv_thr, axis = 1)
+    df['baseMean'] = df.nlog10*10
+    
+    filename = os.path.join(args.output_location, "{}_log2foldChange".format(args.output_prefix))
+    
+    plt.figure(figsize = (10,12), frameon=False, dpi=100)
+
+    ax = sns.scatterplot(data = df, x = 'log2FoldChange', y = 'nlog10', 
+                         hue = 'color', hue_order = ['no', 'very higher', 'higher', 'mix', 'very lower', 'lower'],
+                         palette = ['lightgrey', '#d62a2b', '#D62A2B7A', '#8172b3', '#1f77b4', '#1F77B47D'],
+                         size = 'baseMean', sizes = (40, 400)
+                        )
+    
+    ax.axhline(pv_thr, zorder = 0, c = 'k', lw = 2, ls = '--')
+    ax.axvline(args.lfc, zorder = 0, c = 'k', lw = 2, ls = '--')
+    ax.axvline(-args.lfc, zorder = 0, c = 'k', lw = 2, ls = '--')
+          
+    texts = []
+    for i in range(len(df)):
+        if df.iloc[i].nlog10 >= pv_thr and abs(df.iloc[i].log2FoldChange) >= args.lfc:
+            texts.append(plt.text(x = df.iloc[i].log2FoldChange, y = df.iloc[i].nlog10, s = df.iloc[i].symbol,
+                                 fontsize = 16, weight = 'normal', family = 'sans-serif'))
+    adjust_text(texts, arrowprops = dict(arrowstyle = '-', color = 'k', lw=0.5))
+    
+    
+    custom_lines = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#d62a2b', markersize=15),
+                   Line2D([0], [0], marker='o', color='w', markerfacecolor='#1f77b4', markersize=15)]
+    
+    plt.legend(custom_lines, ["Higher scores in {}".format(conditions[1]), "Higher scores in {}".format(conditions[0])],loc = 1,
+               bbox_to_anchor = (1,1), frameon = False, prop = {'weight': 'normal', 'size': 16})
+    
+    for axis in ['bottom', 'left']:
+        ax.spines[axis].set_linewidth(2)
+        
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    ax.tick_params(width = 2)
+    
+    plt.title("Activity Score", fontsize=20)
+    
+    plt.xlim(-round(np.max(np.abs(df['log2FoldChange']))), round(np.max(np.abs(df['log2FoldChange']))))
+    plt.ylim(0, round(-np.log10(np.min(df['nlog10']))))
+    
+    plt.xticks(size = 15, weight = 'bold')
+    plt.yticks(size = 15, weight = 'bold')
+    
+    plt.xlabel("$log_{2}$ (Fold Change)", size = 15)
+    plt.ylabel("-$log_{10}$ (P-value)", size = 15)
+    
+    plt.savefig(filename, dpi = 100, bbox_inches = 'tight', facecolor = 'white')
+    
 
 def output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args):
     output_filename = os.path.join(args.output_location, "{}_statistics.txt".format(args.output_prefix))

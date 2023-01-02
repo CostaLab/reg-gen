@@ -200,8 +200,8 @@ def main():
     parser_combinatorial.add_argument('-log', action="store_true",
                                       help='Set y axis of the plot in log scale. (default: %(default)s)')
     parser_combinatorial.add_argument('-color', action="store_true", help=help_define_color)
-    parser_combinatorial.add_argument('-venn', action="store_true",
-                                      help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
+    # parser_combinatorial.add_argument('-venn', action="store_true",
+    #                                   help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
     parser_combinatorial.add_argument('-show', action="store_true",
                                       help='Show the figure in the screen. (default: %(default)s)')
     parser_combinatorial.add_argument('-stest', type=int, default=0,
@@ -304,7 +304,13 @@ def main():
                                  help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
     parser_lineplot.add_argument('-add_region_number', action="store_true", default=False,
                                  help="Add the number of regions in the axis label. (default: %(default)s)")
-
+    parser_lineplot.add_argument('-heatmap', action="store_true", default=False,
+                                 help='Set the plot sense-specific. (default: %(default)s)')
+    parser_lineplot.add_argument('-hpsort', metavar='  ', type=int, default=None,
+                                help='Define the way to sort the signals for heatmap.' +
+                                     'Default is no sorting at all, the signals arrange in the order of their position; ' +
+                                     '"0" is sorting by the average ranking of all signals; ' +
+                                     '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on...  (default: %(default)s)')
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
 
@@ -325,6 +331,7 @@ def main():
                                      'Default is no sorting at all, the signals arrange in the order of their position; ' +
                                      '"0" is sorting by the average ranking of all signals; ' +
                                      '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on...  (default: %(default)s)')
+    parser_heatmap.add_argument('-g', metavar='  ', default='None', help=helpgroup)
     parser_heatmap.add_argument('-col', metavar='  ', default='regions', help=helpcol)
     parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor)
     parser_heatmap.add_argument('-row', metavar='  ', default='None', help=helprow)
@@ -346,6 +353,12 @@ def main():
                                 help='Show the figure in the screen. (default: %(default)s)')
     parser_heatmap.add_argument('-table', action="store_true",
                                 help='Store the tables of the figure in text format. (default: %(default)s)')
+    parser_heatmap.add_argument('-dft', metavar='  ', default=None,
+                                 help="Add one more tag for calculating difference. (default: %(default)s)")
+    parser_heatmap.add_argument('-extend_outside', action="store_true", default=False,
+                                 help='Extend the window outside of the given regions and compress the given region into fixed internal. (default: %(default)s)')
+    parser_heatmap.add_argument('-add_region_number', action="store_true", default=False,
+                                 help="Add the number of regions in the axis label. (default: %(default)s)")
 
     ################### Venn Diagram ########################################
     parser_venn = subparsers.add_parser('venn', help='Generate Venn Diagram with peaks of gene list.')
@@ -660,8 +673,8 @@ def main():
 
             output(f=inter.sbar, directory=args.o, folder=args.t, filename="intersection_stackedbar",
                    extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
-            if args.venn:
-                inter.comb_venn(directory=os.path.join(args.o, args.t))
+            # if args.venn:
+            #     inter.comb_venn(directory=os.path.join(args.o, args.t))
 
             # if args.lineplot:
             #    inter.comb_lineplot()
@@ -786,23 +799,56 @@ def main():
             print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2 - t1)))))
 
             # Plotting
-            print2(parameter, "\nStep 3/3: Plotting the lineplots")
-            lineplot.colormap(colorby=args.c, definedinEM=args.color)
-            lineplot.plot(output=args.o, printtable=args.table, ylog=args.log,
-                          scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
-            for i, f in enumerate(lineplot.fig):
-                output(f=f, directory=args.o, folder=args.t, filename="lineplot_" + lineplot.group_tags[i],
-                       extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
+            if not args.heatmap:
+                print2(parameter, "\nStep 3/3: Plotting the lineplots")
+                lineplot.colormap(colorby=args.c, definedinEM=args.color)
+                lineplot.plot(output=args.o, printtable=args.table, ylog=args.log,
+                            scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
+                for i, f in enumerate(lineplot.fig):
+                    output(f=f, directory=args.o, folder=args.t, filename="lineplot_" + lineplot.group_tags[i],
+                        extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
 
-            lineplot.gen_html(args.o, args.t)
-            t3 = time.time()
-            print2(parameter, "\t--- finished in {0} secs".format(str(round(t3 - t2))))
-            print2(parameter,
-                   "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3 - t0))) + "(H:M:S)\n")
-            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
-            output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
-            copy_em(em=args.input, directory=args.o, folder=args.t)
-            list_all_index(path=args.o)
+                lineplot.gen_html(args.o, args.t)
+                t3 = time.time()
+                print2(parameter, "\t--- finished in {0} secs".format(str(round(t3 - t2))))
+                print2(parameter,
+                    "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3 - t0))) + "(H:M:S)\n")
+                print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
+                output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
+                copy_em(em=args.input, directory=args.o, folder=args.t)
+                list_all_index(path=args.o)
+            else:
+                # Sorting 
+                print2(parameter, "\nStep 3/3: Plotting the heatmap")
+                lineplot.hmsort(sort=args.hpsort)
+                lineplot.hmcmlist(colorby=args.c, definedinEM=args.color)
+                lineplot.heatmap(args.log)
+                for i, name in enumerate(lineplot.hmfiles):
+                    output(f=lineplot.figs[i], directory=args.o, folder=args.t, filename=name, pdf=True, show=args.show)
+                lineplot.gen_htmlhm(args.o, args.t)
+
+                t3 = time.time()
+                print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(seconds=round(t3 - t2)))))
+                print2(parameter,
+                    "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3 - t0))) + "(H:M:S)\n")
+                print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
+                output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
+                copy_em(em=args.input, directory=args.o, folder=args.t)
+                list_all_index(path=args.o)
+
+
+                # # Plotting
+                # print2(parameter, "\nStep 4/4: Plotting the heatmap")
+                
+                
+                # t4 = time.time()
+                # print2(parameter, "    --- finished in {0} secs".format(str(round(t4 - t3))))
+                # print2(parameter,
+                #     "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4 - t0))) + "(H:M:S)\n")
+                # print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
+                # output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
+                # copy_em(em=args.input, directory=args.o, folder=args.t)
+                # list_all_index(path=args.o)
 
         ################### Heatmap ##########################################
         if args.mode == 'heatmap':
@@ -826,7 +872,8 @@ def main():
             lineplot = Lineplot(em_path=args.input, title=args.t, annotation=args.ga,
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs,
                                 bs=args.bs, ss=args.ss, df=False, fields=[args.col, args.row, args.c],
-                                dft=args.dft, flipnegative=False, sense=False, strand=False, test=False)
+                                dft=args.dft, flipnegative=False, sense=False, strand=False, test=False,
+                                outside=args.extend_outside, add_number=args.add_region_number)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -838,9 +885,9 @@ def main():
                        "\nStep 2/4: Calculating the coverage to all reads and averaging with multiprocessing ")
             else:
                 print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
+            lineplot.group_tags(groupby=args.g, rowby=args.row, columnby=args.col, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log, mp=args.mp)
+            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log, average=args.average)
             t2 = time.time()
             print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(seconds=round(t2 - t1)))))
 

@@ -160,24 +160,10 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(list(exps.fieldsDict[colorby].keys()))
             # print(n)
 
-            cmap = plt.cm.get_cmap('jet')
-            print(cmap)
-            sys.exit()
-            color_res = cmap(numpy.arange(n))
-
-            # if n < 8:
-            #     indn = np.linspace(0, 32, 256)
-            #     color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
-            # else:
-            #     set1 = plt.get_cmap('Set1')
-            #     cNorm = colormat.Normalize(vmin=0, vmax=n)
-            #     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
-            #     color_res = [scalarMap.to_rgba(d) for d in range(n)]
-
-            # color_res = plt.cm.Set1(numpy.linspace(0.1, 0.9, n)).tolist()
-            # print(len(plt.cm.Set1().tolist()))
-            #
-            # np.linspace(0, 1, 9)
+            # cmap = plt.cm.get_cmap('Set1')
+            # print(cmap)
+            # sys.exit()
+            color_res = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
 
     color_res = unique(color_res)
     return color_res
@@ -367,34 +353,35 @@ def value2str(value):
         return r
 
 
-def multiple_correction(dic):
+def multiple_correction(plist):
     """
-    dic[ty][r][q] = p
+    plist[ty][r][q] = p
     """
-    for ty in list(dic.keys()):
+
+    for ty in list(plist.keys()):
         all_p = []
-        rn = len(list(dic[ty].keys()))
-        qn = len(list(dic[ty].values())[0].keys())
+        rn = len(list(plist[ty].keys()))
+        qn = len(list(list(plist[ty].values())[0].keys()))
         cue = {}
         i = 0
         if rn == 1 and qn == 1: return
         # get all p values from the dictionary
-        for r in list(dic[ty].keys()):
-            for q in list(dic[ty][r].keys()):
+        for r in list(plist[ty].keys()):
+            for q in list(plist[ty][r].keys()):
 
-                if isinstance(dic[ty][r][q], str):
+                if isinstance(plist[ty][r][q], str):
                     pass
                 else:
-                    all_p.append(dic[ty][r][q])
+                    all_p.append(plist[ty][r][q])
                     cue[ty + r + q] = i
                     i = i + 1
         # correction
         reject, pvals_corrected = multiple_test_correction(all_p, alpha=0.05, method='indep')
         # modify all p values
-        for ir, r in enumerate(dic[ty].keys()):
-            for iq, q in enumerate(dic[ty][r].keys()):
+        for ir, r in enumerate(plist[ty].keys()):
+            for iq, q in enumerate(plist[ty][r].keys()):
                 try:
-                    dic[ty][r][q] = pvals_corrected[cue[ty + r + q]]
+                    plist[ty][r][q] = pvals_corrected[cue[ty + r + q]]
                 except:
                     pass
 
@@ -838,26 +825,24 @@ def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
 
     return newcmap
 
-
 class NoDaemonProcess(multiprocessing.Process):
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
 
-    def _set_daemon(self, value):
+    @daemon.setter
+    def daemon(self, value):
         pass
 
-    daemon = property(_get_daemon, _set_daemon)
-
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
 class MyPool(multiprocessing.pool.Pool):
-    def __reduce__(self):
-        pass
-
-    Process = NoDaemonProcess
-
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(MyPool, self).__init__(*args, **kwargs)
 
 def walklevel(some_dir, level=1):
     some_dir = some_dir.rstrip(os.path.sep)

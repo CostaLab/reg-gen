@@ -166,6 +166,7 @@ class Intersect:
                         if r.name == q.name:
                             continue
                         else:
+                            # print(q.name)
                             mp_input.append([q, self.nalist, self.mode_count, self.qlen, threshold,
                                              self.counts, frequency, self.frequency, ty, r])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
@@ -566,7 +567,7 @@ class Intersect:
             sys.stdout.flush()
 
             for ind_q, q in enumerate(self.frequency[ty].keys()):
-                html.add_figure("venn_" + ty + "_" + q + ".png", align="center", width="600")
+                # html.add_figure("venn_" + ty + "_" + q + ".png", align="center", width="600")
                 data_table.append([q, str(self.qlen[ty][q]),
                                    ",".join([str(v).rjust(7, " ") for v in list(self.frequency[ty][q].values())])])
 
@@ -574,7 +575,9 @@ class Intersect:
 
             header_list = ["Query 1", "Query 2", "Chi square", "p value"]
             data_table = []
+            # print(self.frequency[ty].keys())
             n = len(list(self.frequency[ty].keys()))
+            # print(n)
             for q in itertools.combinations(list(range(n)), 2):
                 # print(q)
                 q1 = list(self.frequency[ty].keys())[q[0]]
@@ -730,8 +733,9 @@ class Intersect:
                 width = 0.6
                 bottom = 0
                 summ = sum(self.frequency[ty][q].values())
-                for ind_r, r in enumerate(self.referencenames):
+                for ind_r, r in enumerate(self.frequency[ty][q].keys()):
                     # for ind_r, rc in enumerate(self.frequency[ty][q]):
+                    # print([ty, q, r])
                     rc = self.frequency[ty][q][r]
                     if ind_q == 0:
                         # r = self.groupedreference[ty][ind_r].name

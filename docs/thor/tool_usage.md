@@ -65,19 +65,19 @@ The headers are:
 
 The headers #inputs1, #inputs2 and #genome are optional. All other headers are required. An example for a config file is given [here](https://reg-gen.readthedocs.io/en/latest/thor/introduction.html).
 
-**\#rep **
+<b>\#rep</b>
 
 Headers #rep1 and #rep2 give all BAM files to be analysed. All files are listed line by line for the first (#rep1) and second (#rep2) biological condition.
 
-**\#chrom\_sizes **
+<b>\#chrom\_sizes</b>
 
 The chromosome sizes is a tab limited file with the chromosome name and the size of the chromosome. To download the chromosome size file of an organism, follow these [instructions](http://wiki.bits.vib.be/index.php/FetchChromSizes).
 
-**\#inputs **
+<b>\#inputs</b>
 
 For each BAM file, we can also provide control input-DNA BAM files by using headers #inputs1 and #inputs2. Input-DNA helps to handle bias in ChIP-seq profiles and can therefore improve the differential peak estimation.
 
-**\#genome **
+<b>\#genome</b>
 
 Input-DNA and the genome (in [fasta](http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml) format) is necessary to correct for GC-content. GC-content correction can lead to more precise DP estimates. For instance, to download the human genome hg19.fa, run
 
@@ -115,7 +115,7 @@ As the narrowPeak format does not give the possibility to store the counts of co
 
 The 11th column in the BED file gives a semicolon separated list for each differential peak. The first (second) element of the semicolon separated list contains a comma separated list of the counts of each replicate of the first (second) biological conditions. The third element of the list gives the calculated p-value.
 
-For downstream analysis of this BED file, we provide two [tools](http://www.regulatory-genomics.org/wp-content/uploads/2015/07/THOR-tools.tar.gz). The first tool separates the BED file by differential peaks that gain peaks in condition 1 and that gain peaks in condition 2. The second tool filters the BED file by p-value.
+For downstream analysis of this BED file, we provide two [tools](https://costalab.ukaachen.de/open_data/RGT/THOR/THOR-tools.tar.gz). The first tool separates the BED file by differential peaks that gain peaks in condition 1 and that gain peaks in condition 2. The second tool filters the BED file by p-value.
 
 **Please note:** In both files, \*-diffpeaks.bed and \*-diffpeaks.narrowPeak, the strand column (6th column) indicates whether the peak gains condition 1 (positive strand) or gains condition 2 (negative strand).
 
@@ -159,6 +159,6 @@ The following command finds differential peaks in the two conditions MPP and CDP
 rgt-THOR THOR_DC.config --report --housekeeping-genes hk_genes_new_promotor_mm9.bed --no-correction --output-dir ~/my_MPP_CDP_exp -n THOR_DC
 ```
 
-THOR\_DC.config contains all information necessary to run THOR. With *\-\-output-dir* we determine the working directory <em>~/my\_MPP\_CDP\_exp</em>. THOR stops, if the folder already exists. All files created in <em>~/my\_MPP\_CDP\_exp</em> have the prefix *THOR\_DC* (specific by the option *-n*). The p-value is not corrected (option *\-\-no-correction*). Instead of using a TMM based approach to normalize the ChIP-seq profiles (default), we use a housekeeping genes approach. For that, please [download](http://www.regulatory-genomics.org/wp-content/uploads/2015/07/hk_THOR.tar.gz) the housekeeping genes and use the option *\-\-house-keeping-genes*.
+THOR\_DC.config contains all information necessary to run THOR. With *\-\-output-dir* we determine the working directory <em>~/my\_MPP\_CDP\_exp</em>. THOR stops, if the folder already exists. All files created in <em>~/my\_MPP\_CDP\_exp</em> have the prefix *THOR\_DC* (specific by the option *-n*). The p-value is not corrected (option *\-\-no-correction*). Instead of using a TMM based approach to normalize the ChIP-seq profiles (default), we use a housekeeping genes approach. For that, please [download](https://costalab.ukaachen.de/open_data/RGT/THOR/hk_THOR.tar.gz) the housekeeping genes and use the option *\-\-house-keeping-genes*.
 
 Moreover, we create a HTML report of our experiment (option *-\-report*). The HTML report contains useful information about our experiment, such as, the the experimental configuration (also described by _\*-setup.info_), the function THOR is using to model the mean-variance relationship, the function used to estimate the fragmentation size, and the quality check of the house-keeping-gene normalization approach.

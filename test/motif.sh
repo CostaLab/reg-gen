@@ -17,7 +17,7 @@ echo
 echo "# Full-Site Test"
 echo
 
-url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_FullSiteTest.tar.gz"
+url="https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_FullSiteTest.tar.gz"
 
 # Download the data
 DEST="RGT_MotifAnalysis_FullSiteTest"
@@ -72,7 +72,7 @@ cd $DIR
 echo "# Promoter Test"
 echo
 
-url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_PromoterTest.tar.gz"
+url="https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_PromoterTest.tar.gz"
 
 # Download the data
 DEST="RGT_MotifAnalysis_PromoterTest"
@@ -97,7 +97,7 @@ echo
 echo "# Gene Association Test:"
 echo
 
-url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_GeneAssocTest.tar.gz"
+url="https://costalab.ukaachen.de/open_data/RGT/MotifAnalysis/RGT_MotifAnalysis_GeneAssocTest.tar.gz"
 
 # Download the data
 DEST="RGT_MotifAnalysis_GeneAssocTest"

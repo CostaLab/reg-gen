@@ -4,45 +4,35 @@ set -e
 
 RGTTEST=${RGTTEST:-"$HOME/rgt_test"}
 
-DIR="${RGTTEST}/viz"
-mkdir -p $DIR
-cd ${DIR}
+VizDIR="${RGTTEST}/viz"
+mkdir -p $VizDIR
+cd ${VizDIR}
 
 echo "**********************************************"
-echo "Testing Viz"
+echo "******** Testing RGT-Viz *********************"
+echo "**********************************************"
 
 # Download the data
-file="${DIR}/viz_examples/scripts.sh"
-if [ -f "$file" ]
+DEST="${VizDIR}/rgt_viz_example"
+if [ -d "$DEST" ]
 then
-    echo "Example data are loaded."
+    echo "dir found."
 else
+    echo "$DEST not found."
     echo "Downloading example files for rgt-viz"
-    wget --no-check-certificate -qO- -O viz_examples.zip http://www.regulatory-genomics.org/wp-content/uploads/2016/09/rgt_viz_example.zip
-    unzip -o viz_examples.zip
-    rm viz_examples.zip
-    mv zip viz_examples
-fi
-
-# Download the BW files
-file="${DIR}/viz_examples/data/cDC_H3K4me1.bw"
-if [ -f "$file" ]
-then
-    echo "Example data exist."
-else
-    echo "Downloading BW files for rgt-viz"
-    cd viz_examples/
-    sh download_examples_RGT-viz.sh
+    wget --no-check-certificate -qO- -O rgt_viz_example.zip https://costalab.ukaachen.de/open_data/RGT/rgt_viz_example.zip
+    unzip -o rgt_viz_example.zip
+    rm rgt_viz_example.zip
 fi
 
 # Run test script
-cd ${DIR}/viz_examples/
+cd ${VizDIR}/rgt_viz_example/
 # Basic lineplot
-rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP -test
+rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP
 # Add one more cell type
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC -col cell -row regions -srow -test
+rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC -col cell -row regions -srow
 # Chagne the layout
-rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions -srow -test
+rgt-viz lineplot Matrix_CDP_cDC.txt -o results -t lineplot_CDP_cDC_2 -c cell -row reads -col regions -srow
 # Projection test
 rgt-viz projection -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t projection -g cell -organism mm9
 # Jaccard test

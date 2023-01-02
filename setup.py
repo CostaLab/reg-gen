@@ -5,6 +5,7 @@ import re
 from shutil import copy
 from pwd import getpwnam
 from sys import platform, exit
+import subprocess
 from distutils import dir_util
 from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
@@ -76,9 +77,20 @@ common_deps = ["cython",
                "pysam>=0.12.0",
                "pyBigWig"]
 
+def is_apple_m1():
+    chip = subprocess.check_output(['sysctl','-n','machdep.cpu.brand_string']).decode('utf-8')
+    if chip in ['Apple M1\n', 'Apple M1 Pro\n']:
+        return True
+    else:
+        return False
+
 if platform.startswith("darwin"):
     bin_dir = "mac"
-    libRGT = "librgt_mac.so"
+    # check if being installed on Apple M1 chip
+    if is_apple_m1():
+        libRGT = "librgt_mac_m1.so"
+    else:
+        libRGT = "librgt_mac.so"
     triplexes_file = "lib/libtriplexator.dylib"
 else:
     bin_dir = "linux"
@@ -103,7 +115,7 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib"],
+        ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "pandas", "logomaker", "pyx", "joblib", "seaborn", "adjustText"],
         []
     ),
     "THOR": (
@@ -112,12 +124,6 @@ tools_dictionary = {
         ["scikit-learn>=0.19.0", "hmmlearn==0.2.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
-    ),
-    "filterVCF": (
-        "rgt-filterVCF",
-        "rgt.filterVCF.filterVCF:main",
-        [],
-        []
     ),
     "viz": (
         "rgt-viz",
@@ -243,6 +249,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm9.
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM1.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "mm10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_mm10.fa\n"))
@@ -251,6 +258,7 @@ data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm10.
 data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_mm10.bed # alternative to Gencode\n"))
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
+
 genome = "mm39"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_mm39.fa\n"))
@@ -258,6 +266,7 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.mm3
 data_config_file.write("gene_regions: " + path.join(genome, "genes_Gencode_mm39.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "gencode.vM25.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_mouse.txt\n\n"))
+
 genome = "hg19"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_hg19.fa\n"))
@@ -267,6 +276,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_hg19
 data_config_file.write("annotation: " + path.join(genome, "gencode.v19.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "hg38"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_hg38.fa\n"))
@@ -276,6 +286,7 @@ data_config_file.write("# gene_regions: " + path.join(genome, "genes_RefSeq_hg38
 data_config_file.write("annotation: " + path.join(genome, "gencode.v21.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome, "repeat_maskers\n\n"))
+
 genome = "zv9"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv9_ensembl_release_79.fa\n"))
@@ -283,6 +294,7 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv9
 data_config_file.write("gene_regions: " + path.join(genome, "genes_zv9.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.Zv9.79.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
+
 genome = "zv10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_zv10_ensembl_release_84.fa\n"))
@@ -290,13 +302,23 @@ data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.zv1
 data_config_file.write("gene_regions: " + path.join(genome, "genes_zv10.bed\n"))
 data_config_file.write("annotation: " + path.join(genome, "Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_zebrafish.txt\n\n"))
+
 genome = "tair10"
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome, "genome_tair10_ensembl_release_51.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.tair10\n"))
 data_config_file.write("gene_regions: " + path.join(genome, "genes_tair10.bed\n"))
-data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n\n"))
+data_config_file.write("annotation: " + path.join(genome, "Arabidopsis_thaliana.TAIR10.51.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome, "alias_tair10.txt\n\n"))
+
+genome = "bt8"
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome, "bosTau8.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome, "chrom.sizes.bt8\n"))
+data_config_file.write("gene_regions: " + path.join(genome, "genes_bt8.bed\n"))
+data_config_file.write("annotation: " + path.join(genome, "bosTau8.refGene.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome, "alias_bt8\n\n"))
+
 
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
@@ -318,9 +340,8 @@ data_config_file.write("default_bias_table_F_DH: fp_hmms/double_hit_bias_table_F
 data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R.txt\n")
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n")
-data_config_file.write("dependency_model: fp_hmms/LearnDependencyModel.jar\n")
-data_config_file.write("slim_dimont_predictor: fp_hmms/SlimDimontPredictor.jar\n")
 data_config_file.write("default_test_fa: fp_hmms/test.fa\n\n")
+
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + triplexes_file + "\n")
 data_config_file.write("path_c_rgt: " + path.join("lib", libRGT) + "\n")
@@ -373,8 +394,7 @@ copy_files_dictionary = {
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
                 "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac_paired.pkl", "atac_single.pkl",
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
-                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
-                "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
+                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm", "test.fa"],
     "motifs": ["createMtf.py", "createPwm.py",
                "jaspar_vertebrates", "jaspar_plants", "jaspar_insects", "uniprobe_primary", "uniprobe_secondary", "hocomoco",
                "jaspar_vertebrates.mtf", "jaspar_plants.mtf", "jaspar_insects.mtf", "uniprobe_primary.mtf", "uniprobe_secondary.mtf", "hocomoco.mtf"],
@@ -408,8 +428,8 @@ for copy_folder in list(copy_files_dictionary.keys()):
 short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
-keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
+keywords_list = ["ChIP-seq", "ATAC-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
+author_list = ["Zhijian Li", "Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
@@ -441,7 +461,7 @@ for tool_option in options.param_rgt_tool:
         external_scripts.append(e)
 
 # Fetching Additional Structural Files
-readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.rst")
+readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 
 # Fetching Long Description
 readme_file = open(readme_file_name, "r")
@@ -449,11 +469,10 @@ long_description = readme_file.read()
 readme_file.close()
 
 # Setup Function
-
 setup(name="RGT",
       version=current_version,
       description=short_description,
-      long_description=long_description,
+      long_description='',
       classifiers=classifiers_list,
       keywords=", ".join(keywords_list),
       author=", ".join(author_list),
@@ -464,7 +483,7 @@ setup(name="RGT",
       install_requires=current_install_requires,
       scripts=external_scripts,
       python_requires='>=3.6',
-      url="http://www.regulatory-genomics.org",
+      url="https://reg-gen.readthedocs.io",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
 
