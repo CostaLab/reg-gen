@@ -119,7 +119,7 @@ def diff_analysis_run(args):
         mpbs.read(mpbs_file)
 
     mpbs.sort()
-    mpbs.remove_duplicates()
+    # mpbs.remove_duplicates()
     mpbs_name_list = list(set(mpbs.get_names()))
 
     signals = np.zeros(shape=(len(conditions), len(mpbs_name_list), args.window_size), dtype=np.float32)
@@ -145,6 +145,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+                    
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift, bias_table)
                     try:
@@ -165,6 +169,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+                        
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift, bias_table)
                         arguments_list.append(arguments)
@@ -184,6 +192,10 @@ def diff_analysis_run(args):
             for i, condition in enumerate(conditions):
                 for j, mpbs_name in enumerate(mpbs_name_list):
                     mpbs_regions = mpbs.by_names([mpbs_name])
+
+                    # we here remove the duplicate regions for one TF
+                    mpbs_regions.remove_duplicates()
+
                     arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                  args.reverse_shift)
                     signals[i, j, :] = get_raw_signal(arguments)
@@ -201,6 +213,10 @@ def diff_analysis_run(args):
                     arguments_list = list()
                     for mpbs_name in mpbs_name_list:
                         mpbs_regions = mpbs.by_names([mpbs_name])
+
+                        # we here remove the duplicate regions for one TF
+                        mpbs_regions.remove_duplicates()
+                        
                         arguments = (mpbs_regions, reads_files[i], args.organism, args.window_size, args.forward_shift,
                                      args.reverse_shift)
                         arguments_list.append(arguments)
@@ -631,7 +647,8 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
     
     filename = os.path.join(args.output_location, "{}_log2foldChange".format(args.output_prefix))
     
-    plt.figure(figsize = (10,12), frameon=False, dpi=100)
+    fig = plt.figure(figsize = (20,10), frameon=False, dpi=100, facecolor='white')
+    plt.style.use('default')
 
     ax = sns.scatterplot(data = df, x = 'log2FoldChange', y = 'nlog10', 
                          hue = 'color', hue_order = ['no', 'very higher', 'higher', 'mix', 'very lower', 'lower'],
@@ -648,7 +665,7 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
         if df.iloc[i].nlog10 >= pv_thr and abs(df.iloc[i].log2FoldChange) >= args.lfc:
             texts.append(plt.text(x = df.iloc[i].log2FoldChange, y = df.iloc[i].nlog10, s = df.iloc[i].symbol,
                                  fontsize = 16, weight = 'normal', family = 'sans-serif'))
-    adjust_text(texts, arrowprops = dict(arrowstyle = '-', color = 'k', lw=0.5))
+    adjust_text(texts)#, arrowprops = dict(arrowstyle = '-', color = 'k', lw=0.5))
     
     
     custom_lines = [Line2D([0], [0], marker='o', color='w', markerfacecolor='#d62a2b', markersize=15),
@@ -667,8 +684,8 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
     
     plt.title("Activity Score", fontsize=20)
     
-    plt.xlim(-round(np.max(np.abs(df['log2FoldChange']))), round(np.max(np.abs(df['log2FoldChange']))))
-    plt.ylim(0, round(-np.log10(np.min(df['nlog10']))))
+    plt.xlim(-ceil(np.max(np.abs(df['log2FoldChange']))), ceil(np.max(np.abs(df['log2FoldChange']))))
+    plt.ylim(0, ceil(np.max(df['nlog10'])))
     
     plt.xticks(size = 15, weight = 'bold')
     plt.yticks(size = 15, weight = 'bold')
@@ -676,7 +693,7 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
     plt.xlabel("$log_{2}$ (Fold Change)", size = 15)
     plt.ylabel("-$log_{10}$ (P-value)", size = 15)
     
-    plt.savefig(filename, dpi = 100, bbox_inches = 'tight', facecolor = 'white')
+    fig.savefig(filename, format="pdf", dpi=300)
     
 
 def output_stat_results(ps_tc_results, conditions, mpbs_name_list, motif_num, args):
