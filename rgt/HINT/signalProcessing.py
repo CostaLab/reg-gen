@@ -3,7 +3,7 @@
 ###################################################################################################
 from math import log, ceil, floor, isnan
 import numpy as np
-from numpy import exp, array, abs, int, mat, linalg, convolve, nan_to_num
+from numpy import exp, array, abs, mat, linalg, convolve, nan_to_num
 from pysam import Samfile, Fastafile
 from pysam import __version__ as ps_version
 from scipy.stats import scoreatpercentile
