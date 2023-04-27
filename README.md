@@ -33,9 +33,8 @@ pip install RGT
 
 Detailed installation instructions and basic problem solving can be found on our [website](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
 
-Detailed installation instructions and basic problem solving can be found on our [website](https://reg-gen.readthedocs.io/en/latest/rgt/installation.html).
-
 Please also consider citing our main paper if you used any sub-tools from RGT:
+```
 @article{li2023rgt,
   title={RGT: a toolbox for the integrative analysis of high throughput regulatory genomics data},
   author={Li, Zhijian and Kuo, Chao-Chung and Ticconi, Fabio and Shaigan, Mina and Gehrmann, Julia and Gusmao, Eduardo Gade and Allhoff, Manuel and Manolov, Martin and Zenke, Martin and Costa, Ivan G},
@@ -46,3 +45,6 @@ Please also consider citing our main paper if you used any sub-tools from RGT:
   year={2023},
   publisher={BioMed Central}
 }
+```
+
+
