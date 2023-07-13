@@ -933,7 +933,7 @@ def get_rna_region_str(rna):
                             except:
                                 r = [e[1], int(e[3]), int(e[4]), e[5]]
                 
-                elif "chr" in line:
+                elif "chr:" in line:
                     try:
                         line = line.split()
                         loci_ind = 0

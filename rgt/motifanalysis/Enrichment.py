@@ -706,10 +706,10 @@ def main(args):
 
             # Preparing results for printing
             for r in result_list:
-                r.p_value = "%.4e" % r.p_value
-                r.corr_p_value = "%.4e" % r.corr_p_value
-                r.percent = str(round(r.percent, 4) * 100) + "%"
-                r.back_percent = str(round(r.back_percent, 4) * 100) + "%"
+                r.p_value = "%.2e" % r.p_value
+                r.corr_p_value = "%.2e" % r.corr_p_value
+                r.percent = str(round(r.percent*100, 2)) + "%"
+                r.back_percent = str(round(r.back_percent*100, 2)) + "%"
 
             # Printing ev if it was not already print in geneset
             if not curr_input.gene_set:

@@ -88,7 +88,8 @@ if platform.startswith("darwin"):
     bin_dir = "mac"
     # check if being installed on Apple M1 chip
     if is_apple_m1():
-        libRGT = "librgt_mac_m1.so"
+        #libRGT = "librgt_mac_m1.so"
+        libRGT = "librgt_mac.so"
     else:
         libRGT = "librgt_mac.so"
     triplexes_file = "lib/libtriplexator.dylib"
