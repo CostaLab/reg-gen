@@ -44,6 +44,13 @@ pip install cython numpy scipy
 pip install RGT --no-binary RGT
 ```
 
+<!-- ### Installation with Apple silicon 
+When you are using Mac with Apple Silicon chip (M1/2), the installation can be complicated, since they are based on arm64.
+
+We have 
+
+there are two scenarios,  -->
+
 ## Windows
 Sorry. We don’t support windows environment this moment.
 
