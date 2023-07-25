@@ -77,21 +77,28 @@ common_deps = ["cython",
                "pysam>=0.12.0",
                "pyBigWig"]
 
-def is_apple_m1():
-    chip = subprocess.check_output(['sysctl','-n','machdep.cpu.brand_string']).decode('utf-8')
-    if chip in ['Apple M1\n', 'Apple M1 Pro\n']:
+def is_arm64():
+    import platform
+    
+    if platform.uname()[4] == 'arm64':
         return True
     else:
         return False
+    
+    # chip = subprocess.check_output(['sysctl','-n','machdep.cpu.brand_string']).decode('utf-8')
+    # if chip in ['Apple M1\n', 'Apple M1 Pro\n']:
+    #     return True
+    # else:
+    #     return False
 
 if platform.startswith("darwin"):
     bin_dir = "mac"
-    # check if being installed on Apple M1 chip
-    if is_apple_m1():
-        #libRGT = "librgt_mac_m1.so"
-        libRGT = "librgt_mac.so"
+    # check if being installed on arm64 or x86_64
+    if is_arm64():
+        libRGT = "librgt_mac_arm64.so"
     else:
         libRGT = "librgt_mac.so"
+        
     triplexes_file = "lib/libtriplexator.dylib"
 else:
     bin_dir = "linux"
