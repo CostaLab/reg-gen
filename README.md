@@ -18,16 +18,21 @@ ChIP-Seq differential peak caller
 
 See https://reg-gen.readthedocs.io for documentation and tutorials.
 
-# Installation
+# Installation with conda
 
-The quickest and easiest way to get RGT is to to use pip. First some dependencies:
+We recommend using conda to manange the python environmont to avoid issues.
+
+You can install conda from [here](https://docs.conda.io/en/latest/miniconda.html)
+
+Once you successfully installed conda, first create a specific environment:
 
 ```shell
-pip install cython numpy scipy
+conda create -n rgt python=3.9
 ```
 
-Then install the full RGT suite with all other dependencies:
+Then activate your environment and install the full RGT suite with all other dependencies:
 ```shell
+conda activate rgt
 pip install RGT
 ```
 

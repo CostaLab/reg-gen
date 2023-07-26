@@ -7,8 +7,8 @@ These instructions are only to be attempted if you know what you are doing and t
 The recommended way of installing RGT is via [pip](https://pip.pypa.io/en/stable/), the main python package manager. After installing pip, type in this order:
 
 ```shell
-pip install --user cython numpy scipy
-pip install --user RGT --no-binary RGT
+pip install cython numpy scipy
+pip install RGT
 ```
 
 This will install the full RGT suite with all python dependencies. A few more libraries will be needed, but should be installed via your own distribution’s package manager.
@@ -43,6 +43,13 @@ option**, otherwise you’ll have to add another directory to your PATH.
 pip install cython numpy scipy
 pip install RGT --no-binary RGT
 ```
+
+<!-- ### Installation with Apple silicon 
+When you are using Mac with Apple Silicon chip (M1/2), the installation can be complicated, since they are based on arm64.
+
+We have 
+
+there are two scenarios,  -->
 
 ## Windows
 Sorry. We don’t support windows environment this moment.
