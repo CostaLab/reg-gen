@@ -20,7 +20,7 @@ See https://reg-gen.readthedocs.io for documentation and tutorials.
 
 # Installation with conda
 
-We recommend using conda to manange the python environmont to avoid issues.
+We recommend using conda to manage the python environment to avoid issues.
 
 You can install conda from [here](https://docs.conda.io/en/latest/miniconda.html)
 
