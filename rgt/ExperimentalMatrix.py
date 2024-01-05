@@ -61,7 +61,7 @@ class ExperimentalMatrix:
             [ ... ]
             ======== ======== ========= ==================
         """
-        f = open(file_path, 'rU')
+        f = open(file_path, 'r')
 
         base_dir = ""
         for line in f:

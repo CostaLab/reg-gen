@@ -44,7 +44,7 @@ class BedProfile:
             self.bednames = natsort.order_by_index(self.bednames, index)
 
         elif os.path.isfile(input_path):
-            if input_path.endswith(".bed"):
+            if input_path.endswith(".bed") or input_path.endswith("Peak"):
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
                 bed.read(input_path)
@@ -55,7 +55,7 @@ class BedProfile:
                 self.bednames = [name]
             else:
                 self.EM = ExperimentalMatrix()
-                self.EM.read(input)
+                self.EM.read(input_path)
                 self.beds = self.EM.get_regionsets()
                 self.bednames = self.EM.get_regionsnames()
         else:
