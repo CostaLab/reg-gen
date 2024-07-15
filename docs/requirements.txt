@@ -1,2 +1,2 @@
-setuptools==65.5.1
+setuptools==70.0.0
 myst_parser
