@@ -3,7 +3,7 @@
 ###################################################################################################
 from math import log, ceil, floor, isnan
 import numpy as np
-from numpy import exp, array, abs, mat, linalg, convolve, nan_to_num
+from numpy import exp, array, abs, asmatrix, linalg, convolve, nan_to_num
 from pysam import Samfile, Fastafile
 from pysam import __version__ as ps_version
 from scipy.stats import scoreatpercentile
@@ -636,7 +636,7 @@ class GenomicSignal:
         half_window = (window_size - 1) // 2
 
         # Precompute Coefficients
-        b = mat([[k ** i for i in order_range] for k in range(-half_window, half_window + 1)])
+        b = asmatrix([[k ** i for i in order_range] for k in range(-half_window, half_window + 1)])
         m = linalg.pinv(b).A[deriv]
         return m[::-1]
 
