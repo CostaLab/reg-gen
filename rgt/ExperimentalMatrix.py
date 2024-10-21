@@ -292,16 +292,16 @@ class ExperimentalMatrix:
             self.files.pop(name, None)
 
             for f in self.fieldsDict:
+                keys_to_remove = []
                 for t in self.fieldsDict[f]:
                     # try:
                     if name in self.fieldsDict[f][t]:
                         self.fieldsDict[f][t].remove(name)
                     if not self.fieldsDict[f][t]:
-                        self.fieldsDict[f].pop(t, None)
-            try:
-                self.objectsDict.pop(name, None)
-            except:
-                pass
+                        keys_to_remove.append(t)
+                for key in keys_to_remove:
+                    self.fieldsDict[f].pop(key, None)
+            self.objectsDict.pop(name, None)
         self.trash = []
 
     def match_ms_tags(self, field, test=False):
