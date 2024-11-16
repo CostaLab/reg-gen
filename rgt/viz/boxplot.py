@@ -265,7 +265,7 @@ class Boxplot:
         # self.xtickrotation, self.xtickalign = 70,"right"
 
         canvas = FigureCanvas(f)
-        canvas.set_window_title(title)
+        # canvas.set_window_title(title)
         try:
             axarr = axarr.reshape(-1)
         except:
