@@ -638,7 +638,7 @@ def volcano_plot(args, ps_tc_results, mpbs_name_list, conditions):
     df = pd.DataFrame(columns=['log2FoldChange', 'nlog10', 'symbol'])
     df['log2FoldChange'] = foldchanges
     df['nlog10'] = -np.log10(p_values)
-    df['symbol'] = mpbs_name_list
+    df['symbol'] = [x.split('.', 2)[-1] for x in mpbs_name_list]
     df = df.fillna(0)
     
 
